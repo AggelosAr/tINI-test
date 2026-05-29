@@ -22,7 +22,7 @@ def main():
             full_module_name = '%s.%s' % (module, test_file)
 
             test_module = ModuleTests(module=full_module_name,
-                                      mode=Mode.SORT)
+                                      mode=Mode.NORMAL)
 
             test_module.gather_tests()
             test_module.run_tests()

@@ -66,6 +66,7 @@ class Test:
         self.test_name = test.__name__
 
         self._no_op = args
+        self._fail_reason = ''
 
         self.steps = [
             TestStep(func=cleanup,
@@ -130,9 +131,16 @@ class Test:
     
     @cached_property
     def is_fail(self) -> bool:
-        assert self.operations, 'XXX'
         return any(TestStatus.is_abort_cause(op.status) for op in self.operations)
     
+    @property
+    def fail_reason(self) -> None:
+        return self._fail_reason
+
+    @fail_reason.setter
+    def fail_reason(self, reason: str) -> None:
+        self._fail_reason = reason
+
     def box_test(self) -> list[OperationState]:
         
         while self.steps:
@@ -144,6 +152,7 @@ class Test:
             # This is wrong. We want to call cleanup in case the test fails 
             # and we have called the set up
             if TestStatus.is_abort_cause(status=test_step.status):
+                self.fail_reason = test_step.exception_trace
                 break
 
         match self.is_fail:
@@ -158,7 +167,8 @@ class Test:
         
         #!
         if self._no_op:
-            self._no_op.__call__()
+            with redirect_stdout(io.StringIO()):
+                self._no_op.__call__()
 
         return self.operations
 
@@ -231,6 +241,7 @@ class ModuleTests:
 
         minimal = list('[%s]' % (' '*self.total_tests, ))
         failed_tests = []
+        stacktraces = []
 
         for idx, test_case in enumerate(self.collector.values(), start=1):
             
@@ -240,15 +251,15 @@ class ModuleTests:
 
                     print(str(test_case) % (idx, self.total_tests, ))
 
-                    if test_case.is_fail:
-                        failed_tests.append(test_case.test_name)
-
                 case False:
 
                     match test_case.is_fail:
+
                         case True:
                             failed_tests.append(test_case.test_name)
+                            stacktraces.append(test_case.fail_reason)
                             minimal[idx] = '%s . %s' % (Config.RED.value, Config.RESET.value, )
+
                         case False:
                             minimal[idx] = '%s . %s' % (Config.GREEN.value, Config.RESET.value, )
 
@@ -259,6 +270,13 @@ class ModuleTests:
 
         print('\nTests passed: [ %d / %d ]' 
               % (self.total_tests - len(failed_tests), self.total_tests, ))
+
+        if not verbocity and failed_tests:
+            print('Failed tests: %s\n' % failed_tests)
+            for test, trace in zip(failed_tests, stacktraces):
+                print('TEST : %s' % (test, ))
+                print(trace)
+
         print()
 
     def run_tests(self) -> None:

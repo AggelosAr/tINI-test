@@ -64,7 +64,7 @@ class OperationState:
                         s_msg = ('%s%s*** EXCEPTION DURING TEST <%s> ***%s' 
                                 % ( pad, Config.RED.value, detail, Config.RESET.value, ))
                         
-                e_msg = ('\n%s%s--------- [FAIL] ---------%s' 
+                e_msg = ('\n%s%s------ [FAIL] ------%s' 
                         % (pad, Config.RED.value, Config.RESET.value))
                 
                 return '\n'.join([s_msg, e_msg, self.seperator])
@@ -81,7 +81,7 @@ class OperationState:
                 s_msg = ('%s%s[*] Skipping test since set up failed.\n\t%sReason: %s%s' 
                         % (pad, Config.YELLOW.value, pad, detail, Config.RESET.value, ))
             
-                e_msg = '\n%s%s------ [SET UP FAILED] ------%s' % (pad, Config.YELLOW.value, Config.RESET.value)
+                e_msg = '\n%s%s------ [SET UP FAILED] ------%s\n' % (pad, Config.YELLOW.value, Config.RESET.value)
                 
                 return '\n'.join([s_msg, e_msg])
         
@@ -96,7 +96,7 @@ class OperationState:
                 s_msg = ('%s%s[*] Cleaning up failed.\n\t%sReason: %s%s' % 
                         (pad, Config.YELLOW.value, pad, detail, Config.RESET.value, ))
                 
-                e_msg = '\n%s%s------ [BREAK DOWN FAILED] ------%s' % (pad, Config.YELLOW.value, Config.RESET.value)
+                e_msg = '\n%s%s------ [BREAK DOWN FAILED] ------%s\n' % (pad, Config.YELLOW.value, Config.RESET.value)
                 
                 return '\n'.join([s_msg, e_msg])
 
