@@ -41,3 +41,19 @@ def no_op():
 @Test.case(cleanup=lambda: cleanup(), _no_op=lambda: no_op())
 def test_cleanup_provided():
     assert _GG == 999
+
+
+GG = 2_999
+def __cleanup():
+    global GG
+    GG = 3_999
+    print('__cleanup called val-> %d' % (GG, ))
+
+def __no_op():
+    global GG
+    print('__no_op called val-> %d' % (GG, ))
+    assert GG == 3_999
+
+@Test.case(cleanup=lambda: __cleanup(), _no_op=lambda: __no_op())
+def test_cleanup_works_even_if_test_fails():
+    1/0

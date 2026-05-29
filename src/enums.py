@@ -54,7 +54,7 @@ class TestStatus(Enum):
 
     @classmethod
     def abort_operations(cls) -> set['TestStatus']:
-        return set([cls.FAIL, 
+        return set([cls.FAIL,
                     cls.SET_UP_FAIL, 
                     cls.BREAK_DOWN_FAIL])
     

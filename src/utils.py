@@ -7,14 +7,14 @@ from functools import cached_property, partial
 from typing import Any, Callable, Optional
 
 from src.enums import Config, Mode, TestStatus
-from src.misc.annotations import F_Callable, S_Callable
+from src.misc.annotations import F_Callable, S_Callable, StackTrace
 from src.state import OperationState
 
 
 class TestStep:
 
     def __init__(self,
-                 func: F_Callable | S_Callable,
+                 func: F_Callable | S_Callable | None,
                  success_status: TestStatus,
                  fail_status: TestStatus,
                  entry_status: Optional[TestStatus] = TestStatus.NO_OP,
@@ -30,7 +30,7 @@ class TestStep:
         self.fail_status = fail_status
 
     def run_step(self):
-
+        
         if self.func is None:
             return OperationState(status=TestStatus.NO_OP)
 
@@ -66,6 +66,8 @@ class Test:
         self.test_name = test.__name__
 
         self._no_op = args
+
+        self._fail_state = TestStatus.NO_OP
         self._fail_reason = ''
 
         self.steps = [
@@ -77,7 +79,7 @@ class Test:
                      args=test_args,
                      kwargs=test_kwargs,
                      success_status=TestStatus.NO_OP,
-                     fail_status=TestStatus.NO_OP),
+                     fail_status=TestStatus.FAIL),
             TestStep(func=setup,
                      entry_status=TestStatus.SET_UP_ENTRY,
                      success_status=TestStatus.SET_UP_SUCCESS,
@@ -134,11 +136,20 @@ class Test:
         return any(TestStatus.is_abort_cause(op.status) for op in self.operations)
     
     @property
-    def fail_reason(self) -> None:
+    def fail_state(self) -> TestStatus:
+        return self._fail_state
+
+    @fail_state.setter
+    def fail_state(self, new_state: StackTrace) -> None:
+        # TODO assert new_state is indeed fail state
+        self._fail_state = new_state
+
+    @property
+    def fail_reason(self) -> StackTrace:
         return self._fail_reason
 
     @fail_reason.setter
-    def fail_reason(self, reason: str) -> None:
+    def fail_reason(self, reason: StackTrace) -> None:
         self._fail_reason = reason
 
     def box_test(self) -> list[OperationState]:
@@ -152,18 +163,21 @@ class Test:
             # This is wrong. We want to call cleanup in case the test fails 
             # and we have called the set up
             if TestStatus.is_abort_cause(status=test_step.status):
+                self.fail_state = test_step.status
                 self.fail_reason = test_step.exception_trace
                 break
+        
 
-        match self.is_fail:
+        if any([self.fail_state == TestStatus.SET_UP_FAIL,
+                self.fail_state == TestStatus.BREAK_DOWN_FAIL]):
 
-            case True:
                 fail_op = OperationState(TestStatus.FAIL)
                 self.operations.append(fail_op)
 
-            case False:
-                success_op = OperationState(TestStatus.SUCCESS)
-                self.operations.append(success_op)
+        if not self.is_fail:
+            success_op = OperationState(TestStatus.SUCCESS)
+            self.operations.append(success_op)
+
         
         #!
         if self._no_op:
@@ -228,7 +242,6 @@ class ModuleTests:
         list(map(lambda l: l(), self.d_to_tests))
     
     def sort_tests(self) -> None:
-        # TODO maybe sort tests first by setp fails and then by actual fails?
         self.collector = dict(sorted(self.collector.items(), 
                                      key=lambda kv: kv[1].is_fail))
         
@@ -250,6 +263,9 @@ class ModuleTests:
                 case True:
 
                     print(str(test_case) % (idx, self.total_tests, ))
+
+                    if test_case.is_fail:
+                        failed_tests.append(test_case.test_name)
 
                 case False:
 

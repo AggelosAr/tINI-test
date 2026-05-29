@@ -13,3 +13,7 @@
 
 
 # TODO calculate coverage?
+
+
+
+# TODO maybe sort tests first by setp fails and then by actual fails?
