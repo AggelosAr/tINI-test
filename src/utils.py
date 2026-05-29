@@ -174,12 +174,8 @@ class ModuleTests:
                 self.mode = Mode.MINIMAL
             case _:
                 raise Exception(Mode.supported_modes())
-            
-        try:
-            self.module = importlib.import_module(module)
-        except Exception as e:
-            print('Failed to initialize tests <%s>' % (str(e), ))
-            raise
+
+        self.module = importlib.import_module(module)
 
         # list of decorated tests
         self.d_to_tests: list[Callable] = []
@@ -251,7 +247,6 @@ class ModuleTests:
                     if idx != self.total_tests:
                         print(Config.LINE_UP.value, end=Config.LINE_CLEAR.value)
 
-   
         print('\nTests passed: [ %d / %d ]' 
               % (self.total_tests - len(failed_tests), self.total_tests, ))
         print()

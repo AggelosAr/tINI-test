@@ -19,15 +19,6 @@ class ModuleCollector:
 
     def __init__(self) -> None:
         self.test_modules: dict[str, list[str]] = {}
-
-    # @property
-    # def modules(self) -> dict[str, list[str]]:
-    #     self.normalize_test_modules()
-    #     f_modules = {}
-    #     for module, test_files in self.test_modules.keys():
-    #         for test_file in test_files:
-    #             f_modules[module] = '%s.%s' % (module, test_file)
-    #     return f_modules
     
     def is_valid_test_file(self, file_name: str) -> bool:
         return all([

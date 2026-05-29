@@ -9,20 +9,10 @@ from src.utils import ModuleTests
 
 def main():
 
-    test_modules = [
-       # 'tests/test_get_files_info',
-        'tests.test_get_file_content',
-        # 'tests/test_write_file',
-        # 'tests/test_run_python_file'
-    ]
-
     test_collector = ModuleCollector()
     test_collector.walk_collect_test_files(root=Path(os.getcwd()))
     test_collector.normalize_test_modules()
 
-    print(test_collector.test_modules)
-
-    print('-----------')
 
     for module, test_files in test_collector.test_modules.items():
 
@@ -31,15 +21,10 @@ def main():
             full_module_name = '%s.%s' % (module, test_file)
 
             test_module = ModuleTests(module=full_module_name,
-                                      mode=Mode.SORT)
-
-            # input()
+                                      mode=Mode.MINIMAL)
 
             test_module.gather_tests()
             test_module.run_tests()
-
-
-            
 
 
 if __name__=='__main__':
