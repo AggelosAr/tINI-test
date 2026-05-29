@@ -50,15 +50,6 @@ class TestStatus(Enum):
     ATTEMPT_BREAK_DOWN_SUCCESS = 'ATTEMPT_BREAK_DOWN_SUCCESS'
     ATTEMPT_BREAK_DOWN_FAIL = 'ATTEMPT_BREAK_DOWN_FAIL'
 
-    # TODO unused maybe update?
-    @classmethod
-    def continue_operations(cls) -> set['TestStatus']:
-        1/0
-        return set([cls.NO_OP, 
-                    cls.SUCCESS, 
-                    cls.SET_UP_SUCCESS,
-                    cls.BREAK_DOWN_SUCCESS])
-
     @classmethod
     def abort_operations(cls) -> set['TestStatus']:
         return set([cls.FAIL,

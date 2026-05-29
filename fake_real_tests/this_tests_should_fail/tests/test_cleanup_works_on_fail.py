@@ -65,9 +65,9 @@ def _setupX():
 def _cleanupX():
     global _GGX
     print('_cleanupX called val-> %d' % (_GGX, ))
-    _GGX = 2_999
-    print('_cleanupX called change val-> %d' % (_GGX, ))
-
+    print('_cleanupX will now break')
+    1/0
+    
 def _no_opX():
     global _GGX
     print('_no_opX called val-> %d' % (_GGX, ))

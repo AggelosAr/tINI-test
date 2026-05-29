@@ -14,6 +14,7 @@ from src.state import OperationState
 
 class TestStep:
 
+    # TODO maybe add exit status here? Will this make our lives easier?
     def __init__(self,
                  func: F_Callable | S_Callable | None,
                  success_status: TestStatus,
@@ -141,7 +142,7 @@ class Test:
         return self._fail_state
 
     @fail_state.setter
-    def fail_state(self, new_state: StackTrace) -> None:
+    def fail_state(self, new_state: TestStatus) -> None:
         # TODO assert new_state is indeed fail state
         self._fail_state = new_state
 
@@ -160,6 +161,7 @@ class Test:
 
             test_step = self.steps.pop().run_step()
             self.operations.append(test_step)
+            
 
             if TestStatus.is_abort_cause(status=test_step.status):
                 self.fail_state = test_step.status
@@ -169,7 +171,8 @@ class Test:
         # What happens if user stops the program?
         # If test fails and there is a cleanup 
         # Attempt to run it XXX
-        if self.is_fail and self.steps:
+        if self.is_fail and self.steps and self.steps[0].func:
+
             cleanup = self.steps[0]
             
             assert self.operations, LastOpNotExpected
@@ -203,10 +206,10 @@ class Test:
                 self.fail_state == TestStatus.BREAK_DOWN_FAIL,
                 self.fail_state == TestStatus.ATTEMPT_BREAK_DOWN_SUCCESS,
                 self.fail_state == TestStatus.ATTEMPT_BREAK_DOWN_FAIL]):
-              
+                
                 fail_op = OperationState(TestStatus.FAIL)
                 self.operations.append(fail_op)
-
+            
         if not self.is_fail:
             success_op = OperationState(TestStatus.SUCCESS)
             self.operations.append(success_op)

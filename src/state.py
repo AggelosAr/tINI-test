@@ -4,7 +4,6 @@ from typing import Optional
 from src.enums import Config, TestStatus
 
 
-# TODO optimize ...
 class OperationState:
 
     def __init__(self, 
@@ -55,7 +54,7 @@ class OperationState:
                 return '\n'.join([s_msg, self.seperator])
             
             case TestStatus.FAIL:
-                
+
                 match len(detail):
                     case 0:
                         s_msg = '\n%s%s*** EXCEPTION DURING TEST ***%s' % ( pad, Config.RED.value, Config.RESET.value, )

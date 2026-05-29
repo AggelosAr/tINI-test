@@ -21,14 +21,16 @@ def main():
 
         for test_file in test_files:
             
-            # if 'test_cleanup_works_on_fail' != test_file:
-            #     continue
+            # test_fails test_broken_test
+            #
+            if 'test_cleanup_works_on_fail' != test_file:
+                continue
 
 
             full_module_name = '%s.%s' % (module, test_file)
 
             test_module = ModuleTests(module=full_module_name,
-                                      mode=Mode.MINIMAL_NO_STACK)
+                                      mode=Mode.MINIMAL)
 
             test_module.gather_tests()
             test_module.run_tests()
@@ -36,3 +38,13 @@ def main():
 
 if __name__=='__main__':
     main()
+
+# TODO FIX MINIMAL WITH STACK 
+# Tests passed: [ 0 / 3 ]
+# Failed tests: ['test_cleanup_works_even_if_setup_fails', 'test_cleanup_works_even_if_setup_fails_and_then_breaks', 'test_cleanup_works_even_if_test_fails']
+
+# TEST : test_cleanup_works_even_if_setup_fails
+
+# TEST : test_cleanup_works_even_if_setup_fails_and_then_breaks
+
+# TEST : test_cleanup_works_even_if_test_fails

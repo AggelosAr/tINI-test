@@ -20,3 +20,5 @@
 
 
 # TODO rewrite < this_tests_should_fail > tests with unittest to assert pass...
+
+# TODO add a seperator on MINIMAL stacktraces
