@@ -108,11 +108,11 @@ class Test:
              setup: Optional[S_Callable] = None, 
              cleanup: Optional[S_Callable] = None,
              _no_op: Callable = None) -> F_Callable:
-
+        
         def wrapper(test_func: F_Callable):
             
             def _wrapper(*args, ____collector, **kwargs) -> Any:
-                
+
                 test_case = Test(_no_op,
                                  test=test_func,
                                  test_args=args,
@@ -181,7 +181,7 @@ class Test:
         
         #!
         if self._no_op:
-            with redirect_stdout(io.StringIO()):
+            #with redirect_stdout(io.StringIO()):
                 self._no_op.__call__()
 
         return self.operations
@@ -234,7 +234,8 @@ class ModuleTests:
                         # TODO remove this 
                         hasattr(obj_v, '_xyz_is_a_test_case_uwu')]):
                 continue 
-
+            
+            # TODO fix
             p_obj = partial(obj_v, _Test____collector=self.collector)
             self.d_to_tests.append(p_obj)
     
