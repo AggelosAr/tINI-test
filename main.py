@@ -21,7 +21,7 @@ def main():
             full_module_name = '%s.%s' % (module, test_file)
 
             test_module = ModuleTests(module=full_module_name,
-                                      mode=Mode.MINIMAL)
+                                      mode=Mode.SORT)
 
             test_module.gather_tests()
             test_module.run_tests()

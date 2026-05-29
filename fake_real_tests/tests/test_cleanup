@@ -1,0 +1,35 @@
+from src.utils import Test
+
+
+_GG = 999
+
+def cleanup():
+    global _GG
+    _GG = 2_000
+    print('cleanup called -> %d' % (_GG, ))
+
+@Test.case(cleanup=lambda: cleanup())
+def test_cleanup_provided():
+    assert _GG == 999
+# TODO 
+# assert _GG == 2_000
+
+
+__GG = 0
+
+def _setup():
+    global __GG
+    __GG = -10
+    print('_setup called -> %d' % (__GG))
+
+def _cleanup():
+    global __GG
+    __GG = 10
+    print('_cleanup called -> %d' % (__GG, ))
+
+@Test.case(setup=lambda: _setup(), cleanup=lambda: _cleanup())
+def test_setup_cleanup_provided():
+    print('This should show !~')
+    assert __GG == -10
+
+
