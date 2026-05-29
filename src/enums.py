@@ -17,6 +17,7 @@ class Config(Enum):
 
 
 class Mode(Enum):
+    
     NORMAL = 'NORMAL'
     SORT = 'SORT'
     MINIMAL = 'MINIMAL'
@@ -34,14 +35,18 @@ class TestStatus(Enum):
     SUCCESS = 'SUCCESS'
     FAIL = 'FAIL'
 
+    SET_UP_ENTRY = 'SET_UP_ENTRY'
     SET_UP_SUCCESS = 'SET_UP_SUCCESS'
     SET_UP_FAIL = 'SET_UP_FAIL'
     
+    BREAK_DOWN_ENTRY = 'BREAK_DOWN_ENTRY'
     BREAK_DOWN_SUCCESS = 'BREAK_DOWN_SUCCESS'
     BREAK_DOWN_FAIL = 'BREAK_DOWN_FAIL'
 
+    # TODO unused maybe update?
     @classmethod
     def continue_operations(cls) -> set['TestStatus']:
+        1/0
         return set([cls.NO_OP, 
                     cls.SUCCESS, 
                     cls.SET_UP_SUCCESS,
@@ -53,7 +58,7 @@ class TestStatus(Enum):
                     cls.SET_UP_FAIL, 
                     cls.BREAK_DOWN_FAIL])
     
+    # TODO OPT cache this
     @classmethod
     def is_abort_cause(cls, status: 'TestStatus') -> bool:
         return status in cls.abort_operations()
-    

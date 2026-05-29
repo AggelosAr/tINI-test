@@ -8,100 +8,16 @@ from typing import Any, Callable, Optional
 
 from src.enums import Config, Mode, TestStatus
 from src.misc.annotations import F_Callable, S_Callable
-
-
-class OperationState:
-
-    def __init__(self, 
-                 status: TestStatus,
-                 redirected_output: Optional[io.StringIO] = io.StringIO(''),
-                 detail: Optional[str] = '',
-                 exception_trace: Optional[str] = ''):
-        
-        self.status = status
-
-        self.redirected_output = redirected_output
-
-        self.detail = self.format_detail(detail=detail)
-        self.exception_trace = exception_trace
-
-    def __str__(self) -> str:
-        return '\n'.join(filter(lambda l: l != str(), # type: ignore[arg-type]
-                                [
-                                    self.inner_state,
-                                    self.exception_trace,
-                                    self.detail
-                                ])
-                        )
-                            
-    def __repr__(self) -> str:
-        raise NotImplementedError
-    
-    @property
-    def inner_state(self) -> str:
-        return self.redirected_output.getvalue() # type: ignore[union-attr]
-    
-    def format_detail(self, 
-                      indent: Optional[int] = 2,
-                      detail: Optional[str] = '') -> str:
-
-        pad = (lambda lvl: '\t'*lvl)(indent) # type: ignore[operator]
-
-        match self.status:
-            # (**1**)
-            case TestStatus.SUCCESS:
-                return '\n%s%s--------- [PASS] ---------%s' % (pad, Config.GREEN.value, Config.RESET.value)
-            
-            case TestStatus.FAIL:
-
-                s_msg = ('%s%s*** EXCEPTION DURING TEST <%s> ***%s' 
-                        % ( pad, Config.RED.value, detail, Config.RESET.value, ))
-                e_msg = ('\n%s%s--------- [FAIL] ---------%s' 
-                        % (pad, Config.RED.value, Config.RESET.value))
-                
-                return '%s\n%s' % (s_msg, e_msg)
-        
-        
-            case TestStatus.SET_UP_SUCCESS:
-                return '%s%s[*] Set up succeeded%s\n' % (pad, Config.BLUE.value, Config.RESET.value)
-            
-            case TestStatus.SET_UP_FAIL:
-
-                s_msg = ('%s%s[*] Skipping test since set up failed.\n\t%sReason: %s%s' 
-                        % (pad, Config.YELLOW.value, pad, detail, Config.RESET.value, ))
-            
-                e_msg = '\n%s%s------ [SET UP FAILED] ------%s' % (pad, Config.YELLOW.value, Config.RESET.value)
-
-                t_msg = ('\n%s%s --------- [FAIL] ---------%s' 
-                        % (pad, Config.RED.value, Config.RESET.value))
-                
-                return '%s\n%s\n%s' % (s_msg, e_msg, t_msg, )
-        
-
-            case TestStatus.BREAK_DOWN_SUCCESS:
-                return '%s%s[*] Break down succeeded%s' % (pad, Config.BLUE.value, Config.RESET.value)
-            
-            case TestStatus.BREAK_DOWN_FAIL:
-                s_msg = ('%s%s[*] Cleaning up failed.\n\t%sReason: %s%s' % 
-                        (pad, Config.YELLOW.value, pad, detail, Config.RESET.value, ))
-                
-                e_msg = '\n%s%s------ [BREAK DOWN FAILED] ------%s' % (pad, Config.YELLOW.value, Config.RESET.value)
-
-                t_msg = ('\n%s%s  --------- [FAIL] ---------%s' 
-                        % (pad, Config.RED.value, Config.RESET.value))
-                
-                return '%s\n%s\n%s' % (s_msg, e_msg, t_msg, )
-
-            case TestStatus.NO_OP:
-                return ''
+from src.state import OperationState
 
 
 class TestStep:
 
     def __init__(self,
-                 func,
-                 success_status,
-                 fail_status,
+                 func: F_Callable | S_Callable,
+                 success_status: TestStatus,
+                 fail_status: TestStatus,
+                 entry_status: Optional[TestStatus] = TestStatus.NO_OP,
                  args: Optional[tuple] = (),
                  kwargs: Optional[dict[str, Any]] = {}) -> None:
 
@@ -109,6 +25,7 @@ class TestStep:
         self.args = args
         self.kwargs = kwargs
 
+        self.entry_status = entry_status
         self.success_status = success_status
         self.fail_status = fail_status
 
@@ -124,12 +41,14 @@ class TestStep:
                 self.func(*self.args, **self.kwargs)
         except Exception as e:
             exception_trace = traceback.format_exc()
-            return OperationState(status=self.fail_status,
-                                  redirected_output=buffer,
+            return OperationState(entry_status=self.entry_status,
+                                  status=self.fail_status,
                                   detail=str(e),
+                                  redirected_output=buffer,
                                   exception_trace=exception_trace)
         
-        return OperationState(status=self.success_status,
+        return OperationState(entry_status=self.entry_status,
+                              status=self.success_status,
                               redirected_output=buffer)
 
 
@@ -146,20 +65,16 @@ class Test:
 
         self.steps = [
             TestStep(func=cleanup,
+                     entry_status=TestStatus.BREAK_DOWN_ENTRY,
                      success_status=TestStatus.BREAK_DOWN_SUCCESS,
                      fail_status=TestStatus.BREAK_DOWN_FAIL),
             TestStep(func=test,
                      args=test_args,
                      kwargs=test_kwargs,
-                     # (**1**) 
-                     # We will use no op here
-                     # Since the print order is not the 
-                     # same as the excecution order...
-                     # success_status=TestStatus.SUCCESS,
-                     # fail_status=TestStatus.FAIL),
                      success_status=TestStatus.NO_OP,
                      fail_status=TestStatus.NO_OP),
             TestStep(func=setup,
+                     entry_status=TestStatus.SET_UP_ENTRY,
                      success_status=TestStatus.SET_UP_SUCCESS,
                      fail_status=TestStatus.SET_UP_FAIL)
         ]
@@ -168,7 +83,7 @@ class Test:
     
     def __str__(self) -> str:
         test = []
-        # Placeholder for test enumeration kinda bad...
+        # Placeholder for test enumeration
         test.append('[ %%s / %%s ] %s%s< %s >\n' 
                     % ('\t', '\t', self.test_name, ))
 
@@ -209,18 +124,32 @@ class Test:
     
     @cached_property
     def is_fail(self) -> bool:
+        assert self.operations, 'XXX'
         return any(TestStatus.is_abort_cause(op.status) for op in self.operations)
     
     def box_test(self) -> list[OperationState]:
         
         while self.steps:
 
-            step_state = self.steps.pop().run_step()
-            self.operations.append(step_state)
+            test_step = self.steps.pop().run_step()
+            self.operations.append(test_step)
 
-            if TestStatus.is_abort_cause(status=step_state.status):
+            # TODO 
+            # This is wrong. We want to call cleanup in case the test fails 
+            # and we have called the set up
+            if TestStatus.is_abort_cause(status=test_step.status):
                 break
-              
+
+        match self.is_fail:
+
+            case True:
+                fail_op = OperationState(TestStatus.FAIL)
+                self.operations.append(fail_op)
+
+            case False:
+                success_op = OperationState(TestStatus.SUCCESS)
+                self.operations.append(success_op)
+                
         return self.operations
 
 
@@ -257,23 +186,9 @@ class ModuleTests:
 
         self.collector: dict[str, Test] = dict()
 
-    @property
+    @cached_property
     def total_tests(self) -> int:
         return len(self.collector.values())
-    
-    @cached_property
-    def seperator(self) -> str:
-
-        match self.mode:
-
-            case Mode.NORMAL | Mode.SORT:
-                return '\n%s%s%s%s\n' % (Config.NEGATIVE.value, Config.CYAN.value, 120*'=', Config.RESET.value, )
-            
-            case Mode.MINIMAL:
-                return '\n'
-            
-            case _:
-                raise NotImplementedError
 
     @cached_property
     def file_name(self) -> str:
@@ -307,7 +222,6 @@ class ModuleTests:
     def show_test_results(self, verbocity: Optional[bool] = True) -> None:
         
         print('Running tests for < %s >\n' % (self.file_name, ))
-        print(self.seperator)
 
         minimal = list('[%s]' % (' '*self.total_tests, ))
         failed_tests = []
@@ -317,16 +231,11 @@ class ModuleTests:
             match verbocity:
 
                 case True:
+
                     print(str(test_case) % (idx, self.total_tests, ))
 
-                    match test_case.is_fail:
-                        case True:
-                            failed_tests.append(test_case.test_name)
-                        case False:
-                            # (**1**)
-                            print(OperationState(status=TestStatus.SUCCESS))
-
-                    print(self.seperator)
+                    if test_case.is_fail:
+                        failed_tests.append(test_case.test_name)
 
                 case False:
 
@@ -353,10 +262,13 @@ class ModuleTests:
         self.box_tests()
 
         match self.mode:
+
             case Mode.NORMAL:
                 self.show_test_results()
+
             case Mode.SORT:
                 self.sort_tests()
                 self.show_test_results()
+
             case Mode.MINIMAL:
                 self.show_test_results(verbocity=False)
