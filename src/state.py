@@ -58,17 +58,15 @@ class OperationState:
                 
                 match len(detail):
                     case 0:
-                        s_msg = ('%s%s*** EXCEPTION DURING TEST ***%s' 
-                                % ( pad, Config.RED.value, Config.RESET.value, ))
+                        s_msg = '\n%s%s*** EXCEPTION DURING TEST ***%s' % ( pad, Config.RED.value, Config.RESET.value, )
                     case _:
-                        s_msg = ('%s%s*** EXCEPTION DURING TEST <%s> ***%s' 
-                                % ( pad, Config.RED.value, detail, Config.RESET.value, ))
+                        s_msg = '\n%s%s*** EXCEPTION DURING TEST <%s> ***%s' % ( pad, Config.RED.value, detail, Config.RESET.value, )
                         
                 e_msg = ('\n%s%s------ [FAIL] ------%s' 
                         % (pad, Config.RED.value, Config.RESET.value))
                 
                 return '\n'.join([s_msg, e_msg, self.seperator])
-        
+
 
             case TestStatus.SET_UP_ENTRY:
                 return '%s%s[*] Set up started%s\n' % (pad, Config.BLUE.value, Config.RESET.value)
@@ -78,8 +76,7 @@ class OperationState:
             
             case TestStatus.SET_UP_FAIL:
 
-                s_msg = ('%s%s[*] Skipping test since set up failed.\n\t%sReason: %s%s' 
-                        % (pad, Config.YELLOW.value, pad, detail, Config.RESET.value, ))
+                s_msg = '%s%s[*] Skipping test since set up failed.\n\t%sReason: %s%s' % (pad, Config.YELLOW.value, pad, detail, Config.RESET.value, )
             
                 e_msg = '\n%s%s------ [SET UP FAILED] ------%s\n' % (pad, Config.YELLOW.value, Config.RESET.value)
                 
@@ -93,14 +90,28 @@ class OperationState:
                 return '%s%s[*] Break down succeeded%s' % (pad, Config.BLUE.value, Config.RESET.value)
             
             case TestStatus.BREAK_DOWN_FAIL:
-                s_msg = ('%s%s[*] Cleaning up failed.\n\t%sReason: %s%s' % 
-                        (pad, Config.YELLOW.value, pad, detail, Config.RESET.value, ))
+                s_msg = '%s%s[*] Cleaning up failed.\n\t%sReason: %s%s' % (pad, Config.YELLOW.value, pad, detail, Config.RESET.value, )
                 
                 e_msg = '\n%s%s------ [BREAK DOWN FAILED] ------%s\n' % (pad, Config.YELLOW.value, Config.RESET.value)
                 
                 return '\n'.join([s_msg, e_msg])
 
+
+            case TestStatus.ATTEMPT_BREAK_DOWN_ENTRY_FROM_SETUP_FAIL:
+                return '%s%s[*] Break down started after failed setup%s\n' % (pad, Config.MAGENTA.value, Config.RESET.value)
+            
+            case TestStatus.ATTEMPT_BREAK_DOWN_ENTRY_FROM_FAIL:
+                return '%s%s[*] Break down started after failed test%s\n' % (pad, Config.MAGENTA.value, Config.RESET.value)
+            
+            case TestStatus.ATTEMPT_BREAK_DOWN_SUCCESS:
+                return '%s%s[*] Break down succeeded after failed test%s' % (pad, Config.MAGENTA.value, Config.RESET.value)
+            
+            case TestStatus.ATTEMPT_BREAK_DOWN_FAIL:
+                s_msg = '%s%s[*] Test failed and attempting Cleaning up failed.\n\t%sReason: %s%s' % (pad, Config.MAGENTA.value, pad, detail, Config.RESET.value, )
+
+                e_msg = '\n%s%s------ [ATTEMPT BREAK DOWN FAILED] ------%s\n' % (pad, Config.YELLOW.value, Config.RESET.value)
+                
+                return '\n'.join([s_msg, e_msg])
+
             case TestStatus.NO_OP:
-                # TODO 
-                # return 'XXXXXXX NO_OP XXXXXXX'
                 return ''

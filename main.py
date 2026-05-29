@@ -21,7 +21,7 @@ def main():
 
         for test_file in test_files:
             
-            if 'test_fails' != test_file:
+            if 'test_cleanup_works_on_fail' != test_file:
                 continue
 
 

@@ -8,6 +8,7 @@ from typing import Any, Callable, Optional
 
 from src.enums import Config, Mode, TestStatus
 from src.misc.annotations import F_Callable, S_Callable, StackTrace
+from src.misc.exceptions import LastOpNotExpected
 from src.state import OperationState
 
 
@@ -152,6 +153,7 @@ class Test:
     def fail_reason(self, reason: StackTrace) -> None:
         self._fail_reason = reason
 
+    # this is kinda weird may refactor it 
     def box_test(self) -> list[OperationState]:
         
         while self.steps:
@@ -159,29 +161,59 @@ class Test:
             test_step = self.steps.pop().run_step()
             self.operations.append(test_step)
 
-            # TODO 
-            # This is wrong. We want to call cleanup in case the test fails 
-            # and we have called the set up
             if TestStatus.is_abort_cause(status=test_step.status):
                 self.fail_state = test_step.status
                 self.fail_reason = test_step.exception_trace
                 break
         
+        # What happens if user stops the program?
+        # If test fails and there is a cleanup 
+        # Attempt to run it XXX
+        if self.is_fail and self.steps:
+            cleanup = self.steps[0]
+            
+            assert self.operations, LastOpNotExpected
+            last_op = self.operations.pop()
+          
+            
+            match last_op.status:
+                case TestStatus.SET_UP_FAIL:
+                    cleanup.entry_status=TestStatus.ATTEMPT_BREAK_DOWN_ENTRY_FROM_SETUP_FAIL
+                case TestStatus.FAIL:
+                    # Modify the last_op for visual purposes
+                    last_op.status = TestStatus.NO_OP
+                    cleanup.entry_status=TestStatus.ATTEMPT_BREAK_DOWN_ENTRY_FROM_FAIL
+                case _:
+                    raise LastOpNotExpected
+                
+            cleanup.success_status=TestStatus.ATTEMPT_BREAK_DOWN_SUCCESS
+            cleanup.fail_status=TestStatus.ATTEMPT_BREAK_DOWN_FAIL
+            
+            test_step = cleanup.run_step()
+
+            self.operations.append(last_op)
+            self.operations.append(test_step)
+
+            if TestStatus.is_fail_cause(status=test_step.status):
+                self.fail_state = test_step.status
+                self.fail_reason = test_step.exception_trace
+            
 
         if any([self.fail_state == TestStatus.SET_UP_FAIL,
-                self.fail_state == TestStatus.BREAK_DOWN_FAIL]):
-
+                self.fail_state == TestStatus.BREAK_DOWN_FAIL,
+                self.fail_state == TestStatus.ATTEMPT_BREAK_DOWN_SUCCESS,
+                self.fail_state == TestStatus.ATTEMPT_BREAK_DOWN_FAIL]):
+              
                 fail_op = OperationState(TestStatus.FAIL)
                 self.operations.append(fail_op)
 
         if not self.is_fail:
             success_op = OperationState(TestStatus.SUCCESS)
             self.operations.append(success_op)
-
-        
+       
         #!
         if self._no_op:
-            #with redirect_stdout(io.StringIO()):
+            with redirect_stdout(io.StringIO()):
                 self._no_op.__call__()
 
         return self.operations

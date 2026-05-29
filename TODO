@@ -17,3 +17,6 @@
 
 
 # TODO maybe sort tests first by setp fails and then by actual fails?
+
+
+# TODO rewrite < this_tests_should_fail > tests with unittest to assert pass...

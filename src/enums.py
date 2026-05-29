@@ -8,6 +8,7 @@ class Config(Enum):
     YELLOW = '\033[93m'
     BLUE = '\033[94m'
     CYAN = "\033[96m"
+    MAGENTA = '\033[95m'
 
     NEGATIVE = "\033[7m"
     RESET = '\033[0m'
@@ -43,6 +44,11 @@ class TestStatus(Enum):
     BREAK_DOWN_SUCCESS = 'BREAK_DOWN_SUCCESS'
     BREAK_DOWN_FAIL = 'BREAK_DOWN_FAIL'
 
+    ATTEMPT_BREAK_DOWN_ENTRY_FROM_SETUP_FAIL = 'ATTEMPT_BREAK_DOWN_ENTRY_FROM_SETUP_FAIL'
+    ATTEMPT_BREAK_DOWN_ENTRY_FROM_FAIL = 'ATTEMPT_BREAK_DOWN_ENTRY_FROM_FAIL'
+    ATTEMPT_BREAK_DOWN_SUCCESS = 'ATTEMPT_BREAK_DOWN_SUCCESS'
+    ATTEMPT_BREAK_DOWN_FAIL = 'ATTEMPT_BREAK_DOWN_FAIL'
+
     # TODO unused maybe update?
     @classmethod
     def continue_operations(cls) -> set['TestStatus']:
@@ -58,7 +64,21 @@ class TestStatus(Enum):
                     cls.SET_UP_FAIL, 
                     cls.BREAK_DOWN_FAIL])
     
-    # TODO OPT cache this
+    # TODO some of these are not used. 
+    @classmethod
+    def fail_operations(cls) -> set['TestStatus']:
+        return set([cls.FAIL,
+                    cls.SET_UP_FAIL, 
+                    cls.BREAK_DOWN_FAIL,
+                    cls.ATTEMPT_BREAK_DOWN_ENTRY_FROM_SETUP_FAIL,
+                    cls.ATTEMPT_BREAK_DOWN_ENTRY_FROM_FAIL,
+                    cls.ATTEMPT_BREAK_DOWN_SUCCESS,
+                    cls.ATTEMPT_BREAK_DOWN_FAIL]) 
+    
     @classmethod
     def is_abort_cause(cls, status: 'TestStatus') -> bool:
         return status in cls.abort_operations()
+    
+    @classmethod
+    def is_fail_cause(cls, status: 'TestStatus') -> bool:
+        return status in cls.fail_operations()
