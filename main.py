@@ -21,14 +21,14 @@ def main():
 
         for test_file in test_files:
             
-            if 'test_cleanup_works_on_fail' != test_file:
-                continue
+            # if 'test_cleanup_works_on_fail' != test_file:
+            #     continue
 
 
             full_module_name = '%s.%s' % (module, test_file)
 
             test_module = ModuleTests(module=full_module_name,
-                                      mode=Mode.SORT)
+                                      mode=Mode.MINIMAL_NO_STACK)
 
             test_module.gather_tests()
             test_module.run_tests()

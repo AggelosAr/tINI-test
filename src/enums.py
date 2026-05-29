@@ -22,6 +22,7 @@ class Mode(Enum):
     NORMAL = 'NORMAL'
     SORT = 'SORT'
     MINIMAL = 'MINIMAL'
+    MINIMAL_NO_STACK = 'MINIMAL_NO_STACK'
 
     @classmethod
     def supported_modes(cls) -> str:

@@ -238,6 +238,10 @@ class ModuleTests:
                 self.mode = Mode.MINIMAL
             case Mode.MINIMAL.value:
                 self.mode = Mode.MINIMAL
+            case Mode.MINIMAL_NO_STACK:
+                self.mode = Mode.MINIMAL_NO_STACK
+            case Mode.MINIMAL_NO_STACK.value:
+                self.mode = Mode.MINIMAL_NO_STACK
             case _:
                 raise Exception(Mode.supported_modes())
 
@@ -321,10 +325,16 @@ class ModuleTests:
               % (self.total_tests - len(failed_tests), self.total_tests, ))
 
         if not verbocity and failed_tests:
+
             print('Failed tests: %s\n' % failed_tests)
+
             for test, trace in zip(failed_tests, stacktraces):
-                print('TEST : %s' % (test, ))
-                print(trace)
+                
+                if self.mode == Mode.MINIMAL_NO_STACK:
+                    ...
+                else:
+                    print('TEST : %s' % (test, ))
+                    print(trace)
 
         print()
 
@@ -342,5 +352,5 @@ class ModuleTests:
                 self.sort_tests()
                 self.show_test_results()
 
-            case Mode.MINIMAL:
+            case Mode.MINIMAL | Mode.MINIMAL_NO_STACK:
                 self.show_test_results(verbocity=False)
