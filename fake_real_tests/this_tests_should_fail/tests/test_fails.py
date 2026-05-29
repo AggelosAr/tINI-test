@@ -6,25 +6,28 @@ from src.utils import Test
 def setup_breaks():
     print('setup_breaks---->This should print and fail the test')
     1/0
+
 @Test.case(setup=lambda: setup_breaks())
 def test_setup_breaks():
     print('test_setup_breaks---->This should never print')
     assert_never()
 
 
+
 def cleanup_breaks():
     print('cleanup_breaks---->This should print and fail the test')
     1/0
-    print('cleanup_breaks---->This should never print')
 
 @Test.case(cleanup=lambda: cleanup_breaks())
 def test_cleanup_breaks():
     print('test_cleanup_breaks---->This should print')
 
 
+
 def setup_breaks():
     print('setup_breaks---->This should print and fail the test')
     1/0
+
 def _cleanup_breaks():
     print('_cleanup_breaks---->This should never print')
     assert_never()

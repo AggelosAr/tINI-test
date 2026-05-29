@@ -13,6 +13,7 @@ def main():
     test_collector.walk_collect_test_files(root=Path(os.getcwd()))
     test_collector.normalize_test_modules()
 
+    print(test_collector.test_modules)
 
     for module, test_files in test_collector.test_modules.items():
 

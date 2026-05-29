@@ -55,6 +55,8 @@ class TestStep:
 class Test:
 
     def __init__(self,
+                 args,
+                 /,
                  test: F_Callable, 
                  test_args: tuple,
                  test_kwargs: dict[str, Any],
@@ -62,6 +64,8 @@ class Test:
                  cleanup: Optional[S_Callable] = None) -> None:
 
         self.test_name = test.__name__
+
+        self._no_op = args
 
         self.steps = [
             TestStep(func=cleanup,
@@ -97,15 +101,17 @@ class Test:
     @classmethod
     def case(cls,
              test_func: Optional[F_Callable] = None,
-             *, 
+             *,
              setup: Optional[S_Callable] = None, 
-             cleanup: Optional[S_Callable] = None) -> F_Callable:
+             cleanup: Optional[S_Callable] = None,
+             _no_op: Callable = None) -> F_Callable:
 
         def wrapper(test_func: F_Callable):
             
             def _wrapper(*args, ____collector, **kwargs) -> Any:
                 
-                test_case = Test(test=test_func,
+                test_case = Test(_no_op,
+                                 test=test_func,
                                  test_args=args,
                                  test_kwargs=kwargs,
                                  setup=setup,
@@ -149,7 +155,11 @@ class Test:
             case False:
                 success_op = OperationState(TestStatus.SUCCESS)
                 self.operations.append(success_op)
-                
+        
+        #!
+        if self._no_op:
+            self._no_op.__call__()
+
         return self.operations
 
 
