@@ -13,3 +13,4 @@ class WillRaise(object):
     def __exit__(self, exc_type, exc, exc_tb):
         if exc_type in self.exceptions:
             return True
+

@@ -1,11 +1,5 @@
 
-# TODO make assertEquals
-
-
-# TODO register tests on groups 
-# 1. common setup for all of them -> setup runs once 
-# 2. break down runs after each test or once
-
-
 
 # TODO package this 
+
+# TODO add assert quelas

@@ -86,12 +86,22 @@ GROUPS
 
 ROADMAP
 -------
-# TODO add config for colors and maybe formatting
+
 # TODO calculate coverage
-# TODO update sort to sort based on category of failure instead of simple fail
-# TODO make correclty failing tests to pass using small_test
-# TODO add a total test summary in the end 
-# TODO add start seperator on normal / sort ...
+
 # TODO add a seperator on MINIMAL stacktraces (maybe?)
 # TODO maybe dont show detail on exception fail
 # TODO maybe on minimal with stack traces we want to push the exceptions at the end ?
+
+
+# TODO register tests on groups 
+# 1. common setup for all of them -> setup runs once 
+# 2. break down runs after each test or once
+
+# TODO add start seperator on normal / sort ...( easy )
+# TODO add a total test summary in the end ( easy )
+# TODO make correclty failing tests to pass using small_test ( hard )
+# TODO update sort to sort based on category of failure instead of simple fail ( medium )
+
+# TODO maybe allow test finder to collect from any file?
+# TODO add config for colors and maybe formatting
