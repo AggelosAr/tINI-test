@@ -75,6 +75,7 @@ class ModuleCollector:
                 if res:
                     return res
 
+
     def walk_and_collect_test_files(self, root) -> None:
         """
         Walk the directory tree and collect Python modules that:
