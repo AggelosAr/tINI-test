@@ -1,9 +1,10 @@
-from src.runner import collect_tests
 from src.asserts import WillRaise
-from src.misc.exceptions import (CantFindRelativePathToRoot, TestFunctionNotFound,
+from src.misc.exceptions import (CantFindRelativePathToRoot,
+                                 TestFunctionNotFound,
                                  TooManyArgumentsDirAndFile)
 from src.module_collector import ModuleCollector
-from src.utils import Test
+from src.runner import collect_tests
+from src.test_suite import Test
 
 # Recursion indeed stops early when searching for file. maybe add a test.
 # !

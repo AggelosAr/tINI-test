@@ -1,10 +1,9 @@
-from collections import defaultdict
 from typing import Optional
 
 from src.enums import Mode
 from src.misc.exceptions import TestFunctionNotFound
 from src.module_collector import ModuleCollector
-from src.utils import TestSuite, TestsContainer
+from src.test_suite import TestsContainer, TestSuite
 
 
 def collect_tests(mode: Optional[str | Mode]=None,
@@ -29,16 +28,12 @@ def collect_tests(mode: Optional[str | Mode]=None,
 
         # TODO run multiple test_files in the same time. what about modules? what about the collector in the test file?
         for test_file in test_files:
-            
-            # if 'test_cleanup_works_on_fail' != test_file:
-            #     continue
 
             full_module_name = '%s.%s' % (module, test_file, )
 
             suite = TestSuite(module=full_module_name,
                               mode=mode)
 
-            
             suite.gather_tests()
 
 

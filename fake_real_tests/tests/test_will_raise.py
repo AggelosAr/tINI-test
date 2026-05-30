@@ -1,5 +1,5 @@
 from src.asserts import WillRaise
-from src.utils import Test
+from src.test_suite import Test
 
 # TODO test context on WillRaise
 

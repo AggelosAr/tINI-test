@@ -1,7 +1,7 @@
 from typing import assert_never
 
 from src.asserts import WillRaise
-from src.utils import Test
+from src.test_suite import Test
 
 GG = 0
 

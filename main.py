@@ -9,6 +9,7 @@ if __name__=='__main__':
     # mode, search_dir, search_file, search_test_function = argument_parser()
 
     search_dir = 'fake_real_tests/test_module_collector/tests'
+    search_dir = ''
     search_file = ''
     search_test_function = ''
     mode = 'NORMAL'
