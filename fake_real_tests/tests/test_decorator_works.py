@@ -6,6 +6,7 @@ def test_decorator_works_no_parenthesis():
     ...
 
 
+
 @Test.case()
 def test_decorator_works_with_parenthesis():
     ...

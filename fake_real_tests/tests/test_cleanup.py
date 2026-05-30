@@ -1,5 +1,6 @@
 from src.test_utils import Test
 
+
 __GG = 0
 
 def _setup():
@@ -22,6 +23,7 @@ def _no_op():
     global __GG
     print('_no_op called val-> %d' % (__GG, ))
    
+
 
 @Test.case(setup=lambda: _setup(), cleanup=lambda: _cleanup(), _no_op=lambda: _no_op())
 def test_setup_cleanup_provided():
@@ -51,6 +53,4 @@ def no_op():
 def test_cleanup_provided():
     print('main called val is-> %d' % (_GG, ))
     assert _GG == 999
-
-
 

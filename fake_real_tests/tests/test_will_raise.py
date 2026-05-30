@@ -11,6 +11,7 @@ def test_will_raise_catches_correct_exception():
         1/0
 
 
+
 @Test.case
 def test_will_raise_catches_many_exceptions():
 
@@ -18,11 +19,13 @@ def test_will_raise_catches_many_exceptions():
         1/0
 
 
+
 @Test.case
 def test_will_raise_catches_from_many_exceptions_ordered_differently():
 
     with WillRaise(ZeroDivisionError, TypeError) as context:
         1/0
+
 
 
 @Test.case
@@ -34,6 +37,7 @@ def test_will_raise_doesnt_catch_wrong_exception():
     
     with WillRaise(ZeroDivisionError) as context:
         _test_will_raise_doesnt_catch_wrong_exception()
+
 
 
 @Test.case
