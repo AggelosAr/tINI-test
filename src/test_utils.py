@@ -8,6 +8,7 @@ from src.enums import TestStatus
 from src.misc.annotations import F_Callable, S_Callable, StackTrace
 from src.misc.exceptions import LastOpNotExpected
 from src.state import OperationState
+from src.consts import SEPERATOR_LENGTH
 
 
 class TestStep:
@@ -215,11 +216,22 @@ class Test:
                 success_op = OperationState(TestStatus.SUCCESS)
                 self.operations.append(success_op)
 
+    def align_messages(self) -> None:
+        # Go full up and then align all messages
+        # default indent is 2 tabs (fix) TODO(**3**) REMOVE PAD
+        # after indent find longest message 
+        # and align based on that
+        return 
+        longest = float('-inf')
+        for op in self.operations:
+            longest = max(longest, op.entry_status)
+
     def box_test(self) -> list[OperationState]:
 
         self.run_steps()
         self.run_for_cleanup_if_needed()
         self.attach_end_seperator()
+        self.align_messages()
 
         #!
         if self._no_op:
