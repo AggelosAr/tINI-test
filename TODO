@@ -1,7 +1,5 @@
 
-e.g. FIX test collector
-# TODO run specific test file
-# TODO run specific test case in the test case 
+# TODO make assertEquals
 
 
 # TODO register tests on groups 
@@ -10,12 +8,13 @@ e.g. FIX test collector
 
 
 
-# TODO make assertEquals
-
-
 # TODO align error messages
 # TODO add a seperator on MINIMAL stacktraces
 
 
 # TODO package this 
 
+
+
+TODO 
+maybe on minimal with stack traces we want to push the exceptions at the end ?

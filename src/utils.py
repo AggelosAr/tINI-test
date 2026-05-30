@@ -103,6 +103,7 @@ class Test:
     def __repr__(self) -> str:
         raise NotImplementedError
     
+    # TODO fix this XXX
     @classmethod
     def case(cls,
              test_func: Optional[F_Callable] = None,
@@ -277,7 +278,7 @@ class ModuleTests:
                         hasattr(obj_v, '_xyz_is_a_test_case_uwu')]):
                 continue 
             
-            # TODO fix
+            # TODO fix this XXX
             p_obj = partial(obj_v, _Test____collector=self.collector)
             self.d_to_tests.append(p_obj)
     

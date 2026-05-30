@@ -18,17 +18,25 @@ VERBOCITY
 -MINIMAL_NO_STACK
 
 
+This test framework ? was tested on it self
+
 directory will be used as relative from terminal current dir
 
-if directory is used it will find all the tests in that dir and run them 
+if directory is provided it will find all the tests in that dir and run them 
+e.g. it will try to connect the current dir to the requested dir
+edge case is that if multiple same nested sub dirs exists it will only collect one it finds
 
-if test file is used it will search the entire project for that test file
 
-if test is used it will search the entire project for that sepecific test in the test file
+if test file is provided it will search the entire project for that test file
+and run all the tests of that specific file
+The test file can be given with or without the extension
+
+if test is provided it will search the entire project for that sepecific test in the test file
 
 
 if no search flags are provided the test suite will search 
 for all the tests in the current directory 
+
 
 Discovery works as follows 
 
