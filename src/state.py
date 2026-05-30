@@ -2,7 +2,7 @@ import io
 from typing import Optional
 
 from src.enums import Config, TestStatus
-from src.consts import SEPERATOR_LENGTH
+from src.consts import SEPERATOR_LENGTH, SEPERATOR_SYMBOL
 
 class OperationState:
 
@@ -55,7 +55,7 @@ class OperationState:
     
     @property
     def seperator(self) -> str:
-        return '%s%s%s%s' % (Config.NEGATIVE.value, Config.CYAN.value, SEPERATOR_LENGTH*'=', Config.RESET.value, )
+        return '%s%s%s%s' % (Config.NEGATIVE.value, Config.CYAN.value, SEPERATOR_LENGTH*SEPERATOR_SYMBOL, Config.RESET.value, )
     
     def get_and_format_detail(self,
                               status: TestStatus,
