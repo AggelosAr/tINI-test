@@ -1,24 +1,21 @@
 
+e.g. FIX test collector
+# TODO run specific test file
+# TODO run specific test case in the test case 
+
 
 # TODO register tests on groups 
 # 1. common setup for all of them -> setup runs once 
 # 2. break down runs after each test or once
 
-# TODO add config for colors and maybe formatting
+
+
+# TODO make assertEquals
+
 
 # TODO align error messages
+# TODO add a seperator on MINIMAL stacktraces
 
 
 # TODO package this 
 
-
-# TODO calculate coverage?
-
-
-
-# TODO maybe sort tests first by setp fails and then by actual fails?
-
-
-# TODO rewrite < this_tests_should_fail > tests with unittest to assert pass...
-
-# TODO add a seperator on MINIMAL stacktraces

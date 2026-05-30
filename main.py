@@ -6,8 +6,7 @@ from src.enums import Mode
 from src.module_collector import ModuleCollector
 from src.utils import ModuleTests
 
-# TODO run specific test file
-# TODO run specific test case in the test case 
+
 
 def main():
 
