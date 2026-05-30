@@ -7,7 +7,7 @@ from typing import Any, Optional
 from src.enums import TestStatus
 from src.misc.annotations import F_Callable, S_Callable, StackTrace
 from src.misc.exceptions import LastOpNotExpected
-from src.state import OperationState
+from state.state import OperationState
 from src.consts import SEPERATOR_LENGTH
 
 

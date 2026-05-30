@@ -66,7 +66,6 @@ class OperationState:
     def exit_msg(self, new_msg: list[str]) -> None:
         self._exit_msg = new_msg
     
-    
     # TODO use map here 
     def get_boxed_information(self) -> list[list[str]]:
         box = ['\n'.join(filter(lambda l: l != [''], self.entry_msg)),
@@ -75,6 +74,7 @@ class OperationState:
                '\n'.join(filter(lambda l: l != [''], self.exit_msg))]
         return box
 
+    # TODO move the messages @ state_messages.py
     def get_and_format_detail(self,
                               status: TestStatus,
                               detail: Optional[str] = None) -> list[str]:
