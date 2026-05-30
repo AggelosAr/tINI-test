@@ -1,12 +1,8 @@
-
-import os
-from pathlib import Path
-
-from src.misc.exceptions import CantFindRelativePathToRoot, TooManyArgumentsDirAndFile
 from src.enums import Mode
+from src.misc.exceptions import (CantFindRelativePathToRoot,
+                                 TooManyArgumentsDirAndFile)
 from src.module_collector import ModuleCollector
 from src.utils import ModuleTests
-
 
 
 def main():

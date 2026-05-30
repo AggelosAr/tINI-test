@@ -2,7 +2,8 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from src.misc.exceptions import CantFindRelativePathToRoot, TooManyArgumentsDirAndFile
+from src.misc.exceptions import (CantFindRelativePathToRoot,
+                                 TooManyArgumentsDirAndFile)
 
 
 class ModuleCollector:

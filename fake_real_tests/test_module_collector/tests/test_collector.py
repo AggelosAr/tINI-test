@@ -1,8 +1,8 @@
 from src.asserts import WillRaise
-from src.misc.exceptions import CantFindRelativePathToRoot, TooManyArgumentsDirAndFile
+from src.misc.exceptions import (CantFindRelativePathToRoot,
+                                 TooManyArgumentsDirAndFile)
 from src.module_collector import ModuleCollector
 from src.utils import Test
-
 
 # Recursion indeed stops early when searching for file. maybe add a test.
 # !
