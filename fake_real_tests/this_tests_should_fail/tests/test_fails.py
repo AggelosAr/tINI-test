@@ -40,10 +40,6 @@ def test_cleanup_breaks():
 
 
 
-def setup_breaks():
-    print('setup_breaks---->This should print and fail the test')
-    1/0
-
 def _cleanup_breaks():
     print('_cleanup_breaks---->This should never print')
     assert_never()

@@ -38,13 +38,3 @@ def main():
 
 if __name__=='__main__':
     main()
-
-# TODO FIX MINIMAL WITH STACK 
-# Tests passed: [ 0 / 3 ]
-# Failed tests: ['test_cleanup_works_even_if_setup_fails', 'test_cleanup_works_even_if_setup_fails_and_then_breaks', 'test_cleanup_works_even_if_test_fails']
-
-# TEST : test_cleanup_works_even_if_setup_fails
-
-# TEST : test_cleanup_works_even_if_setup_fails_and_then_breaks
-
-# TEST : test_cleanup_works_even_if_test_fails

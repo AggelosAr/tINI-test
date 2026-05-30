@@ -72,7 +72,6 @@ class ModuleCollector:
 
             normalized_file_names = self.normalize_file_names(self.test_modules[path_name])
 
-
             updates[new_name] = normalized_file_names
 
         self.test_modules = updates
