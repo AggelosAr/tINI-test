@@ -5,6 +5,7 @@ from typing import Optional
 from src.misc.exceptions import (CantFindRelativePathToRoot,
                                  TooManyArgumentsDirAndFile)
 
+# TODO test edge cases of file paths with . .. / etc ...
 
 class ModuleCollector:
 
@@ -75,6 +76,7 @@ class ModuleCollector:
                 if res:
                     return res
 
+        return None
 
     def walk_and_collect_test_files(self, root) -> None:
         """
@@ -141,5 +143,4 @@ class ModuleCollector:
             updates[new_name] = normalized_file_names
 
             
-
         self.test_modules = updates

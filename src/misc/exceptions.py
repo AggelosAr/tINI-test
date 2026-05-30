@@ -1,12 +1,5 @@
 
 
-class LastOpNotExpected(Exception):
-
-    def __init__(self, _ = ''):
-        super().__init__('Cleanup logic failed.')
-
-
-
 class TooManyArgumentsDirAndFile(Exception):
 
     def __init__(self, _ = ''):
@@ -17,3 +10,21 @@ class CantFindRelativePathToRoot(Exception):
 
     def __init__(self, _ = ''):
         super().__init__("Can't find the requested relative path to root")
+
+
+class NotSupportedMode(Exception):
+
+    def __init__(self, msg):
+        super().__init__(msg)
+
+
+class TestFunctionNotFound(Exception):
+
+    def __init__(self, _ = ''):
+        super().__init__("Can't find the requested relative path to root")
+
+
+class LastOpNotExpected(Exception):
+
+    def __init__(self, _ = ''):
+        super().__init__('Cleanup logic failed.')

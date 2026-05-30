@@ -5,7 +5,7 @@ cli tool
 
 can be used from the command line with 
 
-small_test [-VERBOCITY] [-d | -f | -t]
+small_test [-VERBOCITY] [-d | -f] [ -func ]
 
 -d directory
 -f file
@@ -31,8 +31,10 @@ if test file is provided it will search the entire project for that test file
 and run all the tests of that specific file
 The test file can be given with or without the extension
 
-if test is provided it will search the entire project for that sepecific test in the test file
-
+if test is provided it will search the entire project for that sepecific test if not d or f is provided 
+else it will search for the test file in all the project . in case multiple same test files exists it will only find the first one it finds
+e.g. if you want to run only def testing_something(*args, **kwargs): ...
+you should run something lke this -t testing_something
 
 if no search flags are provided the test suite will search 
 for all the tests in the current directory 

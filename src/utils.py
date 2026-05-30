@@ -8,7 +8,7 @@ from typing import Any, Callable, Optional
 
 from src.enums import Config, Mode, TestStatus
 from src.misc.annotations import F_Callable, S_Callable, StackTrace
-from src.misc.exceptions import LastOpNotExpected
+from src.misc.exceptions import LastOpNotExpected, NotSupportedMode
 from src.state import OperationState
 
 
@@ -65,7 +65,7 @@ class Test:
                  setup: Optional[S_Callable] = None, 
                  cleanup: Optional[S_Callable] = None) -> None:
 
-        self.test_name = test.__name__
+        self.test = test
 
         self._no_op = args
 
@@ -137,6 +137,10 @@ class Test:
     @cached_property
     def is_fail(self) -> bool:
         return any(TestStatus.is_abort_cause(op.status) for op in self.operations)
+    
+    @property
+    def test_name(self) -> str:
+        return self.test.__name__
     
     @property
     def fail_state(self) -> TestStatus:
@@ -226,7 +230,7 @@ class Test:
 
         return self.operations
 
-class ModuleTests:
+class TestSuite:
     
     def __init__(self, 
                  module: str, 
@@ -250,15 +254,20 @@ class ModuleTests:
             case Mode.MINIMAL_NO_STACK.value:
                 self.mode = Mode.MINIMAL_NO_STACK
             case _:
-                raise Exception(Mode.supported_modes())
+                raise NotSupportedMode(msg=Mode.supported_modes())
 
         self.module = importlib.import_module(module)
 
-        # list of decorated tests
-        self.d_to_tests: list[Callable] = []
+        self.decorated_tests: list[Callable] = []
 
         self.collector: dict[str, Test] = dict()
 
+    @property
+    def gathered_tests(self) -> list[str]:
+        # helper field to show test names before 
+        # tests start running
+        return list(map(lambda l: l.__name__, self.decorated_tests))
+    
     @cached_property
     def total_tests(self) -> int:
         return len(self.collector.values())
@@ -267,6 +276,11 @@ class ModuleTests:
     def file_name(self) -> str:
         return self.module.__name__
     
+    def filter_tests(self, test_name: str) -> None:
+        filtered_tests = filter(lambda l: l.__name__ == test_name, self.decorated_tests)
+        self.decorated_tests = list(filtered_tests)
+
+    # TODO maybe merge the filter_tests logic with the gather_tests
     def gather_tests(self) -> None:
         
         for obj in dir(self.module):
@@ -280,10 +294,10 @@ class ModuleTests:
             
             # TODO fix this XXX
             p_obj = partial(obj_v, _Test____collector=self.collector)
-            self.d_to_tests.append(p_obj)
+            self.decorated_tests.append(p_obj)
     
     def populate_tests(self) -> None:
-        list(map(lambda l: l(), self.d_to_tests))
+        list(map(lambda l: l(), self.decorated_tests))
     
     def sort_tests(self) -> None:
         self.collector = dict(sorted(self.collector.items(), 
@@ -292,6 +306,7 @@ class ModuleTests:
     def box_tests(self) -> None:
         list(map(lambda l: l.box_test(), self.collector.values()))
     
+    # TODO refactor to show_test_result
     def show_test_results(self, verbocity: Optional[bool] = True) -> None:
         
         print('Running tests for < %s >\n' % (self.file_name, ))
@@ -318,10 +333,12 @@ class ModuleTests:
                         case True:
                             failed_tests.append(test_case.test_name)
                             stacktraces.append(test_case.fail_reasons)
-                            minimal[idx] = '%s . %s' % (Config.RED.value, Config.RESET.value, )
+                            minimal[idx] = ('%s . %s' 
+                                            % (Config.RED.value, Config.RESET.value, ))
 
                         case False:
-                            minimal[idx] = '%s . %s' % (Config.GREEN.value, Config.RESET.value, )
+                            minimal[idx] = ('%s . %s' 
+                                            % (Config.GREEN.value, Config.RESET.value, ))
 
                     print('%s' % ''.join(minimal))
                     
