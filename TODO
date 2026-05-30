@@ -3,3 +3,9 @@
 # TODO package this 
 
 # TODO add assert quelas
+
+
+ON TOML
+[project.urls]
+Homepage = "https://github.com/pypa/small-test"
+Issues = "https://github.com/pypa/sampleproject/issues"

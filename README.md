@@ -1,107 +1,248 @@
+# Small Test
 
+A lightweight Python test framework focused on simple test discovery and execution from the command line.
 
+## Usage
 
-cli tool 
+```bash
+small_test [VERBOSITY] [-d DIRECTORY | -f FILE] [-t TEST]
+```
 
-can be used from the command line with 
+### Verbosity Modes
 
-small_test [-VERBOCITY] [-d | -f] [ -func ]
+One verbosity mode may be specified:
 
--d directory
--f file
--t specific test 
-
-VERBOCITY
+```text
 -NORMAL
 -SORT
 -MINIMAL
 -MINIMAL_NO_STACK
+```
 
+If no verbosity mode is provided, `NORMAL` is used.
 
-This test framework ? was tested on it self
+| Mode             | Description                                                     |
+| ---------------- | --------------------------------------------------------------- |
+| NORMAL           | Full execution flow, detailed output, and stack traces.         |
+| SORT             | Results are displayed in sorted order with failures shown last. |
+| MINIMAL          | Only failed tests and their stack traces are displayed.         |
+| MINIMAL_NO_STACK | Same as MINIMAL, but stack traces are suppressed.               |
 
-directory will be used as relative from terminal current dir
+## Search Options
 
-if directory is provided it will find all the tests in that dir and run them 
-e.g. it will try to connect the current dir to the requested dir
-edge case is that if multiple same nested sub dirs exists it will only collect one it finds
+### `-d DIRECTORY`
 
+Run all discovered tests within a directory.
 
-if test file is provided it will search the entire project for that test file
-and run all the tests of that specific file
-The test file can be given with or without the extension
+The directory path is resolved relative to the current terminal working directory.
 
-if test is provided it will search the entire project for that sepecific test if not d or f is provided 
-else it will search for the test file in all the project . in case multiple same test files exists it will only find the first one it finds
-e.g. if you want to run only def testing_something(*args, **kwargs): ...
-you should run something lke this -t testing_something
+Example:
 
-if no search flags are provided the test suite will search 
-for all the tests in the current directory 
-
-
-Discovery works as follows 
-
-the files that have a prefix of <test_> and are python files 
-thaty are inside a folder with the name <tests>
-
-e.g.
-
-
+```bash
 small_test -NORMAL -d src/test_folder
+```
 
+Notes:
+
+* All discovered tests under the target directory are executed.
+* If multiple nested directories share the same name, only the first matching directory found will be collected.
+
+### `-f FILE`
+
+Run all tests contained in a specific test file.
+
+The framework searches the entire project for the file.
+
+The file may be provided with or without the `.py` extension.
+
+Example:
+
+```bash
 small_test -SORT -f test_concurrency
+```
 
+Notes:
+
+* All tests inside the matching file are executed.
+* If multiple files with the same name exist, only the first match is used.
+
+### `-t TEST`
+
+Run a specific test function.
+
+Example:
+
+```bash
+small_test -MINIMAL -t testing_something
+```
+
+Behavior:
+
+* If neither `-d` nor `-f` is specified, the framework searches the entire project for the test function.
+* If `-d` or `-f` is specified, the search is limited to the discovered test files within that scope.
+* If multiple matching test files exist, only the first matching file is used.
+
+Example:
+
+```python
+def testing_something(*args, **kwargs):
+    ...
+```
+
+Run:
+
+```bash
+small_test -t testing_something
+```
+
+## Default Behavior
+
+If no search option is provided, the framework discovers and executes all tests within the current directory.
+
+```bash
+small_test
+```
+
+## Test Discovery
+
+A test file is considered discoverable when:
+
+* The file name begins with `test_`
+* The file is a Python file (`.py`)
+* The file resides somewhere under a directory named `tests`
+
+Example:
+
+```text
+project/
+└── tests/
+    ├── test_math.py
+    └── test_concurrency.py
+```
+
+## Test Registration
+
+Tests are collected from functions decorated with the Small Test decorator.
+
+```python
+@small_test(...)
+def test_example():
+    ...
+```
+
+The decorator accepts up to two optional arguments:
+
+```python
+@small_test(setup, cleanup)
+```
+
+Both arguments must be callables (typically lambdas).
+
+### Setup
+
+Executed before the test function runs.
+
+### Cleanup
+
+Executed after the test completes.
+
+If the setup or the test itself fails, an attempt will still be made to execute the cleanup function.
+
+## Output Modes
+
+### NORMAL
+
+Displays:
+
+* Test discovery information
+* Setup execution
+* Test execution
+* Cleanup execution
+* Full exception details
+* Stack traces
+
+Print statements executed within tests are displayed.
+
+### SORT
+
+Same behavior as NORMAL, but results are grouped and sorted.
+
+Failures are displayed after successful tests.
+
+Print statements executed within tests are displayed.
+
+### MINIMAL
+
+Displays:
+
+* Only failed tests
+* Stack traces for failures
+
+### MINIMAL_NO_STACK
+
+Displays:
+
+* Only failed tests
+* No stack traces
+
+## Example Commands
+
+Run all tests under a directory:
+
+```bash
+small_test -NORMAL -d src/test_folder
+```
+
+Run all tests in a file:
+
+```bash
+small_test -SORT -f test_concurrency
+```
+
+Run a specific test:
+
+```bash
 small_test -MINIMAL -t function_that_tests_something
+```
 
+## Framework Validation
 
-The test suite will collect functions that are decorated with <>
+The framework has been tested using its own test suite.
 
-the decorator accepts at most 2 arguments which should be lambda with a setup or cleanup
+## Roadmap
 
-The setup will wun before the test 
-The cleanup will run after test finishes.
+### Assertions
 
-In case the setup or the main function fails and a setup is provided 
-an attempt will be made to run the cleanup
+* [ ] Create assert_equals helpers
 
+### Coverage
 
-Modes
------
+* [ ] Calculate test coverage
 
-In NORMAL mode the full flow excecution of the test will be shown with details and stacktraces
+### Output Improvements
 
-In SORT mode the results will be shown in a sorted fashion and the failuer will appear last 
-In NORMAL and SORT mode prints work isnide the functions calling.
+* [ ] Add separators to MINIMAL stack traces
+* [ ] Reduce exception detail verbosity
+* [ ] Move exceptions to the end in MINIMAL mode
+* [ ] Add start separators in NORMAL and SORT modes
+* [ ] Add final execution summary
 
-In MINIMAL mode the tests will run and only the stacktraces of failed tests will be shown 
-In MINIMAL_NO_STACK which is the same as MINIMAL mode there will be no stacktraces in case the test fails
+### Test Execution
 
+* [ ] Support correctly failing tests
+* [ ] Improve SORT mode by grouping failures by category
 
+### Groups
 
-GROUPS
-------
-...
+* [ ] Register tests into groups
+* [ ] Support group-level setup executed once
+* [ ] Support group-level cleanup execution
 
+### Discovery
 
-ROADMAP
--------
+* [ ] Allow discovery from non-test files
 
-# TODO calculate coverage
+### Configuration
 
-# TODO add a seperator on MINIMAL stacktraces (maybe?)
-# TODO maybe dont show detail on exception fail
-# TODO maybe on minimal with stack traces we want to push the exceptions at the end ?
-
-
-# TODO register tests on groups 
-# 1. common setup for all of them -> setup runs once 
-# 2. break down runs after each test or once
-
-# TODO add start seperator on normal / sort ...( easy )
-# TODO add a total test summary in the end ( easy )
-# TODO make correclty failing tests to pass using small_test ( hard )
-# TODO update sort to sort based on category of failure instead of simple fail ( medium )
-
-# TODO maybe allow test finder to collect from any file?
-# TODO add config for colors and maybe formatting
+* [ ] Support configurable colors
+* [ ] Support configurable output formatting

@@ -1,53 +1,99 @@
-
 import argparse
 
 from src.enums import Mode
 
 
-def argument_parser() -> tuple[str | Mode, str, str, str]:
-    parser = argparse.ArgumentParser(description="Run on a file or directory with optional function")
+def argument_parser() -> tuple[Mode, str, str, str]:
+    parser = argparse.ArgumentParser(
+        description="Small Test Framework"
+    )
 
-    # mutually exclusive: -d OR -f
-    group = parser.add_mutually_exclusive_group(required=True)
+    #
+    # Verbosity modes
+    #
+    verbosity = parser.add_mutually_exclusive_group()
 
-    group.add_argument(
+    verbosity.add_argument(
+        "-NORMAL",
+        action="store_true",
+        help="Normal output mode"
+    )
+
+    verbosity.add_argument(
+        "-SORT",
+        action="store_true",
+        help="Sorted output mode"
+    )
+
+    verbosity.add_argument(
+        "-MINIMAL",
+        action="store_true",
+        help="Minimal output mode"
+    )
+
+    verbosity.add_argument(
+        "-MINIMAL_NO_STACK",
+        action="store_true",
+        help="Minimal output mode without stack traces"
+    )
+
+    #
+    # Search options
+    #
+    search = parser.add_mutually_exclusive_group()
+
+    search.add_argument(
         "-d",
         "--directory",
-        help="Path to directory"
+        help="Run all tests in a directory"
     )
 
-    group.add_argument(
+    search.add_argument(
         "-f",
         "--file",
-        help="Path to file"
+        help="Run all tests in a file"
     )
 
-    # optional argument
+    #
+    # Specific test
+    #
     parser.add_argument(
-        "-func",
-        help="Optional function to run"
+        "-t",
+        "--test",
+        help="Run a specific test function"
     )
 
     args = parser.parse_args()
 
-    # handle input source
-    target = args.directory if args.directory else args.file
+    #
+    # Mode
+    #
+    mode = Mode.NORMAL
 
-    if args.directory:
-        print(f"Mode: directory -> {target}")
-    else:
-        print(f"Mode: file -> {target}")
+    if args.SORT:
+        mode = Mode.SORT
+    elif args.MINIMAL:
+        mode = Mode.MINIMAL
+    elif args.MINIMAL_NO_STACK:
+        mode = Mode.MINIMAL_NO_STACK
 
-    # handle optional function
-    if args.func:
-        print(f"Function: {args.func}")
-    else:
-        print("No function specified")
+    #
+    # Search targets
+    #
+    search_dir = args.directory or ""
+    search_file = args.file or ""
+    search_test_function = args.test or ""
 
-    # TODO update
-    search_dir = 'fake_real_tests/test_module_collector/tests'
-    search_file = ''
-    search_test_function = ''
-    mode = 'NORMAL'
-    
-    return mode, search_dir, search_file, search_test_function
+    #
+    # Default behavior:
+    # search current directory
+    #
+    if not search_dir and not search_file and not search_test_function:
+        search_dir = "."
+
+    return (
+        mode,
+        search_dir,
+        search_file,
+        search_test_function,
+    )

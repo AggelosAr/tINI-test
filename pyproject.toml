@@ -1,10 +1,24 @@
 [project]
 name = "small-test"
+authors = [
+  { name="Aggelos Arelakis", email="aggelosarelakis@gmail.com" },
+]
 version = "0.1.0"
-description = "Add your description here"
+description = "A small library/framework used for testing your source code."
+
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = [
-    "isort>=8.0.1",
-    "mypy>=2.1.0",
+dependencies = []
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
 ]
+
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
