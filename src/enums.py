@@ -51,13 +51,6 @@ class TestStatus(Enum):
     ATTEMPT_BREAK_DOWN_FAIL = 'ATTEMPT_BREAK_DOWN_FAIL'
 
     @classmethod
-    def abort_operations(cls) -> set['TestStatus']:
-        return set([cls.FAIL,
-                    cls.SET_UP_FAIL, 
-                    cls.BREAK_DOWN_FAIL])
-    
-    # TODO some of these are not used. 
-    @classmethod
     def fail_operations(cls) -> set['TestStatus']:
         return set([cls.FAIL,
                     cls.SET_UP_FAIL, 
@@ -69,7 +62,7 @@ class TestStatus(Enum):
     
     @classmethod
     def is_abort_cause(cls, status: 'TestStatus') -> bool:
-        return status in cls.abort_operations()
+        return status in cls.fail_operations()
     
     @classmethod
     def is_fail_cause(cls, status: 'TestStatus') -> bool:

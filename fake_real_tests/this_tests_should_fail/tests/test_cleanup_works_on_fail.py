@@ -2,7 +2,6 @@ from typing import assert_never
 
 from src.utils import Test
 
-
 # If there is a cleanup provided 
 # We will attempt to run it in case the test fails
 

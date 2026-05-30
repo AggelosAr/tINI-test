@@ -70,7 +70,7 @@ class Test:
         self._no_op = args
 
         self._fail_state = TestStatus.NO_OP
-        self._fail_reason = ''
+        self._fail_reasons = []
 
         self.steps = [
             TestStep(func=cleanup,
@@ -147,80 +147,83 @@ class Test:
         self._fail_state = new_state
 
     @property
-    def fail_reason(self) -> StackTrace:
-        return self._fail_reason
+    def fail_reasons(self) -> list[StackTrace]:
+        return self._fail_reasons
 
-    @fail_reason.setter
-    def fail_reason(self, reason: StackTrace) -> None:
-        self._fail_reason = reason
+    @fail_reasons.setter
+    def fail_reasons(self, reason: StackTrace) -> None:
+        self._fail_reasons.append(reason)
 
-    # this is kinda weird may refactor it 
-    def box_test(self) -> list[OperationState]:
+    def run_steps(self) -> None:
         
         while self.steps:
 
             test_step = self.steps.pop().run_step()
             self.operations.append(test_step)
             
-
             if TestStatus.is_abort_cause(status=test_step.status):
                 self.fail_state = test_step.status
-                self.fail_reason = test_step.exception_trace
+                self.fail_reasons.append(test_step.exception_trace)
                 break
-        
+    
+    def run_for_cleanup_if_needed(self) -> None:
         # What happens if user stops the program?
         # If test fails and there is a cleanup 
-        # Attempt to run it XXX
-        if self.is_fail and self.steps and self.steps[0].func:
+        # Attempt to run it
+        
+        if not (self.is_fail and self.steps and self.steps[0].func):
+            return 
 
-            cleanup = self.steps[0]
+        cleanup = self.steps[0]
+        last_op = self.operations.pop()
+        
+        match last_op.status:
+            case TestStatus.SET_UP_FAIL:
+                cleanup.entry_status=TestStatus.ATTEMPT_BREAK_DOWN_ENTRY_FROM_SETUP_FAIL
+            case TestStatus.FAIL:
+                # Modify the last_op for visual purposes
+                last_op.status = TestStatus.NO_OP
+                cleanup.entry_status=TestStatus.ATTEMPT_BREAK_DOWN_ENTRY_FROM_FAIL
+            case _:
+                raise LastOpNotExpected
             
-            assert self.operations, LastOpNotExpected
-            last_op = self.operations.pop()
-          
-            
-            match last_op.status:
-                case TestStatus.SET_UP_FAIL:
-                    cleanup.entry_status=TestStatus.ATTEMPT_BREAK_DOWN_ENTRY_FROM_SETUP_FAIL
-                case TestStatus.FAIL:
-                    # Modify the last_op for visual purposes
-                    last_op.status = TestStatus.NO_OP
-                    cleanup.entry_status=TestStatus.ATTEMPT_BREAK_DOWN_ENTRY_FROM_FAIL
-                case _:
-                    raise LastOpNotExpected
-                
-            cleanup.success_status=TestStatus.ATTEMPT_BREAK_DOWN_SUCCESS
-            cleanup.fail_status=TestStatus.ATTEMPT_BREAK_DOWN_FAIL
-            
-            test_step = cleanup.run_step()
+        cleanup.success_status=TestStatus.ATTEMPT_BREAK_DOWN_SUCCESS
+        cleanup.fail_status=TestStatus.ATTEMPT_BREAK_DOWN_FAIL
+        
+        test_step = cleanup.run_step()
 
-            self.operations.append(last_op)
-            self.operations.append(test_step)
+        self.operations.append(last_op)
+        self.operations.append(test_step)
 
-            if TestStatus.is_fail_cause(status=test_step.status):
-                self.fail_state = test_step.status
-                self.fail_reason = test_step.exception_trace
-            
+        if TestStatus.is_fail_cause(status=test_step.status):
+            self.fail_state = test_step.status
+            self.fail_reasons.append(test_step.exception_trace)
+        
+    def attach_end_seperator(self) -> None:
+        
+        match self.is_fail:
 
-        if any([self.fail_state == TestStatus.SET_UP_FAIL,
-                self.fail_state == TestStatus.BREAK_DOWN_FAIL,
-                self.fail_state == TestStatus.ATTEMPT_BREAK_DOWN_SUCCESS,
-                self.fail_state == TestStatus.ATTEMPT_BREAK_DOWN_FAIL]):
-                
-                fail_op = OperationState(TestStatus.FAIL)
-                self.operations.append(fail_op)
+            case True:
+                if self.operations[-1].status != TestStatus.FAIL:
+                    fail_op = OperationState(TestStatus.FAIL)
+                    self.operations.append(fail_op)
             
-        if not self.is_fail:
-            success_op = OperationState(TestStatus.SUCCESS)
-            self.operations.append(success_op)
-       
+            case False:
+                success_op = OperationState(TestStatus.SUCCESS)
+                self.operations.append(success_op)
+
+    def box_test(self) -> list[OperationState]:
+
+        self.run_steps()
+        self.run_for_cleanup_if_needed()
+        self.attach_end_seperator()
+
         #!
         if self._no_op:
             with redirect_stdout(io.StringIO()):
                 self._no_op.__call__()
 
         return self.operations
-
 
 class ModuleTests:
     
@@ -313,7 +316,7 @@ class ModuleTests:
 
                         case True:
                             failed_tests.append(test_case.test_name)
-                            stacktraces.append(test_case.fail_reason)
+                            stacktraces.append(test_case.fail_reasons)
                             minimal[idx] = '%s . %s' % (Config.RED.value, Config.RESET.value, )
 
                         case False:
@@ -331,13 +334,14 @@ class ModuleTests:
 
             print('Failed tests: %s\n' % failed_tests)
 
-            for test, trace in zip(failed_tests, stacktraces):
+            for test, traces in zip(failed_tests, stacktraces):
                 
                 if self.mode == Mode.MINIMAL_NO_STACK:
                     ...
                 else:
                     print('TEST : %s' % (test, ))
-                    print(trace)
+                    for trace in traces:
+                        print(trace)
 
         print()
 
