@@ -10,7 +10,8 @@ if __name__=='__main__':
 
     search_dir = 'fake_real_tests/test_module_collector/tests'
     search_dir = ''
-    search_file = ''
+    search_file = 'test_cleanup_works_on_fail'
+    search_test_function = 'test_cleanup_works_even_if_setup_fails_and_then_breaks'
     search_test_function = ''
     mode = 'NORMAL'
 

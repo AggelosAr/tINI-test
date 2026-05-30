@@ -203,7 +203,7 @@ class Test:
             self.fail_state = test_step.status
             self.fail_reasons.append(test_step.exception_trace)
         
-    def attach_end_seperator(self) -> None:
+    def attach_end_state(self) -> None:
         
         match self.is_fail:
 
@@ -216,23 +216,29 @@ class Test:
                 success_op = OperationState(TestStatus.SUCCESS)
                 self.operations.append(success_op)
 
+    def align_message(self, el: str) -> str:
+        return '%s%s' % ((SEPERATOR_LENGTH // 2 - (len(el) // 2)) * str(' '), el, )
+
+    # TODO align messages relative to each other also 
     def align_messages(self) -> None:
-        # Go full up and then align all messages
-        # default indent is 2 tabs (fix) TODO(**3**) REMOVE PAD
-        # after indent find longest message 
-        # and align based on that
-        return 
-        longest = float('-inf')
+
         for op in self.operations:
-            longest = max(longest, op.entry_status)
+            op.entry_msg = list(map(self.align_message, op.entry_msg))
+            op.exit_msg = list(map(self.align_message, op.exit_msg))
+
+    def close_state(self) -> None:
+        end_state = OperationState(TestStatus.NO_OP) # fishy
+        end_state.exit_msg = OperationState.get_seperator()
+        self.operations.append(end_state)
 
     def box_test(self) -> list[OperationState]:
 
         self.run_steps()
         self.run_for_cleanup_if_needed()
-        self.attach_end_seperator()
+        self.attach_end_state()
         self.align_messages()
-
+        self.close_state()
+        
         #!
         if self._no_op:
             with redirect_stdout(io.StringIO()):
