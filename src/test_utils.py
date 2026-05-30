@@ -4,16 +4,15 @@ from contextlib import redirect_stdout
 from functools import cached_property
 from typing import Any, Optional
 
+from src.consts import SEPERATOR_LENGTH
 from src.enums import TestStatus
 from src.misc.annotations import F_Callable, S_Callable, StackTrace
-from src.misc.exceptions import LastOpNotExpected
-from state.state import OperationState
-from src.consts import SEPERATOR_LENGTH
+from src.misc.exceptions import FailStateWasNotFail, LastOpNotExpected
+from src.state.state import OperationState
 
 
 class TestStep:
 
-    # TODO maybe add exit status here? Will this make our lives easier?
     def __init__(self,
                  func: F_Callable | S_Callable | None,
                  success_status: TestStatus,
@@ -147,7 +146,7 @@ class Test:
 
     @fail_state.setter
     def fail_state(self, new_state: TestStatus) -> None:
-        # TODO assert new_state is indeed fail state
+        assert TestStatus.is_abort_cause(new_state), FailStateWasNotFail
         self._fail_state = new_state
 
     @property

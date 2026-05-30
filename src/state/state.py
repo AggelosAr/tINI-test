@@ -1,8 +1,8 @@
 import io
 from typing import Optional
 
-from src.enums import Config, TestStatus
 from src.consts import SEPERATOR_LENGTH, SEPERATOR_SYMBOL
+from src.enums import Config, TestStatus
 
 
 # TODO maybe move seperator at NO_OP? is this possible?
@@ -67,7 +67,7 @@ class OperationState:
         self._exit_msg = new_msg
     
     # TODO use map here 
-    def get_boxed_information(self) -> list[list[str]]:
+    def get_boxed_information(self) -> list[str]:
         box = ['\n'.join(filter(lambda l: l != [''], self.entry_msg)),
                '\n'.join(filter(lambda l: l != [''], [self.redirected_output.getvalue()])), 
                '\n'.join(filter(lambda l: l != [''], [self.exception_trace])),
