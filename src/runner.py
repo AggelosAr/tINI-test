@@ -1,25 +1,25 @@
 from typing import Optional
 
 from src.enums import Mode
-from src.misc.exceptions import TestFunctionNotFound
+from src.misc.exceptions import TestNotFound
 from src.module_collector import ModuleCollector
 from src.test_suite import TestsContainer, TestSuite
 
 
-def collect_tests(mode: Optional[str | Mode]=None,
-                  search_dir: Optional[str]=None, 
-                  search_file: Optional[str]=None, 
-                  search_test_function: Optional[str]=None) -> TestsContainer:
+def get_test_container(mode: Optional[str | Mode]=None,
+                       search_dir: Optional[str]=None, 
+                       search_file: Optional[str]=None, 
+                       test_function: Optional[str]=None) -> TestsContainer:
 
-    test_collector = ModuleCollector(search_dir=search_dir,
-                                     search_file=search_file)
+    test_collector = ModuleCollector(search_dir,
+                                     search_file)
    
     test_collector.walk_and_collect_test_files(root=test_collector.root)
-    test_collector.normalize_test_modules()
+    test_collector.normalize_collected_data()
 
     tests_container: TestsContainer = {}
 
-    found_specific_test = False
+    found_specific_test_function = False
 
     for module, test_files in test_collector.test_modules.items():
         
@@ -37,13 +37,13 @@ def collect_tests(mode: Optional[str | Mode]=None,
             suite.gather_tests()
 
 
-            if search_test_function:
+            if test_function:
                 
-                if search_test_function in suite.gathered_test_names:
-                    suite.filter_tests(test_name=search_test_function)
+                if test_function in suite.gathered_test_names:
+                    suite.filter_tests(based_on=test_function)
 
                     if suite.decorated_tests:
-                        found_specific_test = True
+                        found_specific_test_function = True
                         tests_container[module][test_file] = suite
 
             else:
@@ -51,8 +51,8 @@ def collect_tests(mode: Optional[str | Mode]=None,
                 tests_container[module][test_file] = suite
     
 
-    if search_test_function and not found_specific_test:
-        raise TestFunctionNotFound
+    if test_function and not found_specific_test_function:
+        raise TestNotFound
     
     # cleanup tests_container maybe implement it using defaultdict
     for module in list(tests_container.keys()):
@@ -65,7 +65,7 @@ def collect_tests(mode: Optional[str | Mode]=None,
 def run_tests(tests_container: TestsContainer) -> None:
     
     for module, test_files in tests_container.items():
-
+        
         for test_file, test_suite in test_files.items():
 
             test_suite.run_tests()

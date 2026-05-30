@@ -1,7 +1,7 @@
 from typing import assert_never
 
 
-class TooManyArgumentsDirAndFile(Exception):
+class TooManyArgumentsGivenDirAndFile(Exception):
 
     def __init__(self, _ = ''):
         super().__init__('Module collector should accept either a directory or a file.')
@@ -19,7 +19,7 @@ class NotSupportedMode(Exception):
         super().__init__(msg)
 
 
-class TestFunctionNotFound(Exception):
+class TestNotFound(Exception):
 
     def __init__(self, _ = ''):
         super().__init__('Test function was not found.')

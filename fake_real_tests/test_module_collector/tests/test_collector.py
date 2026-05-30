@@ -1,9 +1,9 @@
 from src.asserts import WillRaise
 from src.misc.exceptions import (CantFindRelativePathToRoot,
-                                 TestFunctionNotFound,
-                                 TooManyArgumentsDirAndFile)
+                                 TestNotFound,
+                                 TooManyArgumentsGivenDirAndFile)
 from src.module_collector import ModuleCollector
-from src.runner import collect_tests
+from src.runner import get_test_container
 from src.test_suite import Test
 
 # Recursion indeed stops early when searching for file. maybe add a test.
@@ -14,11 +14,8 @@ from src.test_suite import Test
 def test_collector_collects_all():
     test_collector = ModuleCollector()
     test_collector.walk_and_collect_test_files(root=test_collector.root)
-    test_collector.normalize_test_modules()
+    test_collector.normalize_collected_data()
 
-    print('-------------------')
-    print(dict(test_collector.test_modules.items()))
-    print('-------------------')
 
     correct_items = {'fake_real_tests.test_module_collector.tests': ['test_collector'], 
                      'fake_real_tests.test_dir.tests': ['test_smth'], 
@@ -37,7 +34,7 @@ def test_collector_collects_all():
 
 @Test.case
 def test_collector_bad_initialiazation():
-    with WillRaise(TooManyArgumentsDirAndFile) as context:
+    with WillRaise(TooManyArgumentsGivenDirAndFile) as context:
         _ = ModuleCollector(search_dir='.', search_file='.')
   
 
@@ -46,7 +43,7 @@ def test_collector_bad_initialiazation():
 def test_collector_can_find_correct_dir_from_search_dir():
     test_collector = ModuleCollector(search_dir='this_tests_should_fail/tests')
     test_collector.walk_and_collect_test_files(root=test_collector.root)
-    test_collector.normalize_test_modules()
+    test_collector.normalize_collected_data()
 
     correct_items = {'fake_real_tests.this_tests_should_fail.tests': 
                      ['test_fails', 
@@ -67,7 +64,7 @@ def test_collector_will_not_find_tests_from_wrong_search_dir():
 def test_collector_finds_correct_file_without_extension():
     test_collector = ModuleCollector(search_file='test_fails')
     test_collector.walk_and_collect_test_files(root=test_collector.root)
-    test_collector.normalize_test_modules()
+    test_collector.normalize_collected_data()
     
     correct_items = {'fake_real_tests.this_tests_should_fail.tests': ['test_fails']}
     assert correct_items == dict(test_collector.test_modules.items())
@@ -78,7 +75,7 @@ def test_collector_finds_correct_file_without_extension():
 def test_collector_finds_correct_file_with_extension():
     test_collector = ModuleCollector(search_file='test_fails.py')
     test_collector.walk_and_collect_test_files(root=test_collector.root)
-    test_collector.normalize_test_modules()
+    test_collector.normalize_collected_data()
 
     correct_items = {'fake_real_tests.this_tests_should_fail.tests': ['test_fails']}
     assert correct_items == dict(test_collector.test_modules.items())
@@ -89,7 +86,7 @@ def test_collector_finds_correct_file_with_extension():
 def test_collector_will_not_find_anything_if_nonexisting_file_is_requested():
     test_collector = ModuleCollector(search_file='file_that_is_not_here')
     test_collector.walk_and_collect_test_files(root=test_collector.root)
-    test_collector.normalize_test_modules()
+    test_collector.normalize_collected_data()
     
     correct_items = {}
     assert correct_items == dict(test_collector.test_modules.items())
@@ -98,14 +95,14 @@ def test_collector_will_not_find_anything_if_nonexisting_file_is_requested():
 
 @Test.case
 def test_test_module_will_not_collect_a_single_function_if_it_doesnt_exist():
-    with WillRaise(TestFunctionNotFound):
-        _ = collect_tests(search_test_function='file_that_is_not_here')
+    with WillRaise(TestNotFound):
+        _ = get_test_container(test_function='file_that_is_not_here')
 
 
 
 @Test.case
 def test_test_module_will_collect_a_single_function():
-    tests_container = collect_tests(search_test_function='test_decorator_works_with_parenthesis')
+    tests_container = get_test_container(test_function='test_decorator_works_with_parenthesis')
 
     correct_item = 'test_decorator_works_with_parenthesis'
 
@@ -125,7 +122,7 @@ def test_test_module_will_collect_a_single_function():
 def test_test_module_will_collect_this_function():
 
     t = 'test_test_module_will_collect_this_function'
-    tests_container = collect_tests(search_test_function=t)
+    tests_container = get_test_container(test_function=t)
 
     assert len(tests_container['fake_real_tests.test_module_collector.tests']) == 1
 

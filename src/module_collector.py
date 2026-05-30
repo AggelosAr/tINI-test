@@ -3,9 +3,9 @@ from pathlib import Path
 from typing import Optional
 
 from src.misc.exceptions import (CantFindRelativePathToRoot,
-                                 TooManyArgumentsDirAndFile)
+                                 TooManyArgumentsGivenDirAndFile)
 
-# TODO test edge cases of file paths with . .. / etc ...
+# TODO test edge cases of file paths with .. / etc ...
 
 class ModuleCollector:
 
@@ -19,7 +19,7 @@ class ModuleCollector:
         ".git",
         ".pytest_cache",
         ".mypy_cache",
-        "node_modules",
+        "node_modules"
     }
 
     def __init__(self, 
@@ -34,13 +34,13 @@ class ModuleCollector:
             self.search_file = '%s.py' % (self.search_file, )
        
         if search_dir and search_file:
-            raise TooManyArgumentsDirAndFile 
+            raise TooManyArgumentsGivenDirAndFile 
 
         self.root = Path(os.getcwd())
 
-        if search_dir:
+        if search_dir and search_dir != '.':
             # here we need to connect the 2 dirs
-
+            
             self.search_dir = search_dir
 
             dest_parts = os.path.split(self.search_dir)
@@ -66,7 +66,12 @@ class ModuleCollector:
         if found_dir:
             return p_dir
         
-        for _, dirs, _ in os.walk(p_dir):
+        for c_path, dirs, _ in os.walk(p_dir):
+            
+            _, s = os.path.split(Path(c_path))
+
+            if s in self.SKIP_DIRS:
+                break 
 
             for _dir in dirs:
                 
@@ -83,9 +88,9 @@ class ModuleCollector:
         - gather all `test_*.py` files inside that folder
         """
         
-        for current_path, dirs, files in os.walk(root):
+        for c_path, dirs, files in os.walk(root):
             
-            _, s = os.path.split(Path(current_path))
+            _, s = os.path.split(Path(c_path))
 
             if s in self.SKIP_DIRS:
                 break 
@@ -94,7 +99,7 @@ class ModuleCollector:
 
                 py_files = list(filter(lambda l: self.is_valid_test_file(l), files))
                 
-                self.test_modules[current_path] = py_files
+                self.test_modules[c_path] = py_files
 
                 if self.search_file in py_files:
                     return
@@ -111,7 +116,7 @@ class ModuleCollector:
     def path_to_python_module(self, path_name: str) -> str:
         return '.'.join(Path(path_name).parts).lstrip('.').lstrip('/').lstrip('.')
     
-    def normalize_test_modules(self) -> None:
+    def normalize_collected_data(self) -> None:
         # TODO do we need cd here ?
         cd = os.getcwd()
 
@@ -127,7 +132,7 @@ class ModuleCollector:
 
             common_prefix = os.path.commonprefix([cd, path_name])
 
-            new_name = os.path.normpath(path_name.replace(common_prefix, ''))
+            new_name = os.path.normpath(path_name.replace(common_prefix, str()))
         
             new_name = self.path_to_python_module(new_name)
 

@@ -7,3 +7,5 @@ F_Callable: TypeAlias = Callable[..., Any]
 S_Callable: TypeAlias = Callable[[], Callable[..., Any]]
 
 StackTrace: TypeAlias = str
+
+Results: TypeAlias = dict[str, dict[str, Callable[[], None]]]

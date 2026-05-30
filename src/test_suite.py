@@ -56,9 +56,8 @@ class TestSuite:
     @property
     def gathered_test_names(self) -> list[str]:
         # helper field to show test names before 
-        # tests start running, this will should unwrap 
+        # tests start running, this should unwrap 
         # the partial object to get the function name
-        # TODO fix
         return list(map(lambda l: self._get_name_from_partial(l), self.decorated_tests))
     
     # TODO (**2**)
@@ -66,8 +65,8 @@ class TestSuite:
         return p_obj.func.__closure__[-1].cell_contents.__name__
     
     # TODO (**2**)
-    def filter_tests(self, test_name: str) -> None:
-        filtered_tests = filter(lambda l: self._get_name_from_partial(l) == test_name, self.decorated_tests)
+    def filter_tests(self, based_on: str) -> None:
+        filtered_tests = filter(lambda l: self._get_name_from_partial(l) == based_on, self.decorated_tests)
         self.decorated_tests = list(filtered_tests)
 
     # TODO maybe merge the filter_tests logic with the gather_tests
