@@ -4,6 +4,8 @@ from typing import Optional
 from src.enums import Config, TestStatus
 from src.consts import SEPERATOR_LENGTH, SEPERATOR_SYMBOL
 
+
+# TODO maybe move seperator at NO_OP? is this possible?
 class OperationState:
 
     def __init__(self, 
@@ -34,37 +36,45 @@ class OperationState:
         self.status = status
         self.detail = detail
 
+        self._entry_msg = self.get_and_format_detail(status=self.entry_status)
+        self._exit_msg = self.get_and_format_detail(status=self.status, detail=self.detail)
+
     def __str__(self) -> str:
-        return '\n'.join(filter(lambda l: l != str(), self.get_boxed_information))
+        return '\n'.join(filter(lambda l: l != str(), self.get_boxed_information()))
                             
     def __repr__(self) -> str:
         raise NotImplementedError
-    
-    # def entry_msg(self):
-    #     return self.get_and_format_detail(status=self.entry_status)
 
-    # def exit_msg(self):
-    #     return self.get_and_format_detail(status=self.status, detail=self.detail)
-
-    @property
-    def get_boxed_information(self) -> list[str]:
-        return [self.get_and_format_detail(status=self.entry_status),
-                self.redirected_output.getvalue(), 
-                self.exception_trace,
-                self.get_and_format_detail(status=self.status, detail=self.detail)]
-    
     @property
     def seperator(self) -> str:
         return '%s%s%s%s' % (Config.NEGATIVE.value, Config.CYAN.value, SEPERATOR_LENGTH*SEPERATOR_SYMBOL, Config.RESET.value, )
     
+    @property
+    def entry_msg(self) -> str:
+        return self._entry_msg
+
+    @entry_msg.setter
+    def entry_msg(self, new_msg: str) -> None:
+        self._entry_msg = new_msg
+
+    @property
+    def exit_msg(self) -> str:
+        return self._exit_msg
+
+    @exit_msg.setter
+    def exit_msg(self, new_msg: str) -> None:
+        self._exit_msg = new_msg
+    
+    def get_boxed_information(self) -> list[str]:
+        return [self.entry_msg,
+                self.redirected_output.getvalue(), 
+                self.exception_trace,
+                self.exit_msg]
+
     def get_and_format_detail(self,
                               status: TestStatus,
-                              detail: Optional[str] = None,
-                              indent: Optional[int] = None,) -> str:
+                              detail: Optional[str] = None) -> str:
 
-        if not indent:
-            indent = 2
-        
         if not detail:
             detail = ''
 
