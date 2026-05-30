@@ -6,7 +6,13 @@ from src.runner import collect_tests, run_tests
 
 if __name__=='__main__':
 
-    mode, search_dir, search_file, search_test_function = argument_parser()
+    # mode, search_dir, search_file, search_test_function = argument_parser()
+
+    search_dir = 'fake_real_tests/test_module_collector/tests'
+    search_file = ''
+    search_test_function = ''
+    mode = 'NORMAL'
+
 
     try:
         tests_container = collect_tests(mode=mode,
@@ -15,13 +21,13 @@ if __name__=='__main__':
                                         search_test_function=search_test_function)
     # TODO see command line behaviour
     except TooManyArgumentsDirAndFile:
-        ...
+        raise
     except CantFindRelativePathToRoot:
-        ...
+        raise
     except NotSupportedMode:
-        ...
+        raise
     except TestFunctionNotFound:
-        ...
+        raise
     else:
         run_tests(tests_container)
     finally:

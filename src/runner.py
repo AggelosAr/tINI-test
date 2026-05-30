@@ -19,12 +19,13 @@ def collect_tests(mode: str | Mode,
     test_collector.walk_and_collect_test_files(root=test_collector.root)
     test_collector.normalize_test_modules()
 
-    tests_container: TestsContainer = defaultdict()
+    tests_container: TestsContainer = defaultdict(lambda: defaultdict(lambda: TestSuite))
 
     found_specific_test = False
 
     for module, test_files in test_collector.test_modules.items():
         
+
         # TODO run multiple test_files in the same time. what about modules? what about the collector in the test file?
         for test_file in test_files:
             
@@ -53,7 +54,7 @@ def collect_tests(mode: str | Mode,
                 tests_container[module][test_file] = suite
     
 
-    if not found_specific_test:
+    if search_test_function and not found_specific_test:
         raise TestFunctionNotFound
     
     return tests_container
