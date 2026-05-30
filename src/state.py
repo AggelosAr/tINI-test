@@ -8,11 +8,23 @@ class OperationState:
 
     def __init__(self, 
                  status: TestStatus,
-                 entry_status: Optional[TestStatus] = TestStatus.NO_OP,
-                 redirected_output: Optional[io.StringIO] = io.StringIO(''),
-                 detail: Optional[str] = '',
-                 exception_trace: Optional[str] = ''):
+                 entry_status: Optional[TestStatus] = None,
+                 redirected_output: Optional[io.StringIO] = None,
+                 detail: Optional[str] = None,
+                 exception_trace: Optional[str] = None):
         
+        if not entry_status:
+            entry_status = TestStatus.NO_OP
+        
+        if not redirected_output:
+            redirected_output = io.StringIO('')
+
+        if not detail:
+            detail = ''
+
+        if not exception_trace:
+            exception_trace = ''
+
         self.entry_status = entry_status
 
         self.redirected_output = redirected_output
@@ -41,10 +53,16 @@ class OperationState:
     
     def get_and_format_detail(self,
                               status: TestStatus,
-                              indent: Optional[int] = 2,
-                              detail: Optional[str] = '') -> str:
+                              detail: Optional[str] = None,
+                              indent: Optional[int] = None,) -> str:
 
-        pad = (lambda lvl: '\t'*lvl)(indent) # type: ignore[operator]
+        if not indent:
+            indent = 2
+        
+        if not detail:
+            detail = ''
+
+        pad = (lambda lvl: '\t'*lvl)(indent)
 
         match status:
 

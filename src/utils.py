@@ -70,7 +70,7 @@ class Test:
         self._no_op = args
 
         self._fail_state = TestStatus.NO_OP
-        self._fail_reasons = []
+        self._fail_reasons: list[StackTrace] = []
 
         self.steps = [
             TestStep(func=cleanup,
@@ -109,7 +109,7 @@ class Test:
              *,
              setup: Optional[S_Callable] = None, 
              cleanup: Optional[S_Callable] = None,
-             _no_op: Callable = None) -> F_Callable:
+             _no_op: Optional[S_Callable] = None) -> F_Callable:
         
         def wrapper(test_func: F_Callable):
             
