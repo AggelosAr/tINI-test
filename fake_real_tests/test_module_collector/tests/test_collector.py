@@ -16,6 +16,10 @@ def test_collector_collects_all():
     test_collector.walk_and_collect_test_files(root=test_collector.root)
     test_collector.normalize_test_modules()
 
+    print('-------------------')
+    print(dict(test_collector.test_modules.items()))
+    print('-------------------')
+
     correct_items = {'fake_real_tests.test_module_collector.tests': ['test_collector'], 
                      'fake_real_tests.test_dir.tests': ['test_smth'], 
                      'fake_real_tests.this_tests_should_fail.tests': ['test_fails', 
@@ -25,7 +29,8 @@ def test_collector_collects_all():
                                                'test_will_raise', 
                                                'test_db_setup_cleanup', 
                                                'test_setup', 
-                                               'test_cleanup']}
+                                               'test_cleanup'],
+                     'tests': []}
     assert correct_items == dict(test_collector.test_modules.items())
 
 

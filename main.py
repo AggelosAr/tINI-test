@@ -13,8 +13,8 @@ if __name__=='__main__':
     search_file = 'test_cleanup_works_on_fail'
     search_file = ''
     search_test_function = 'test_cleanup_works_even_if_setup_fails_and_then_breaks'
-    search_test_function = ''
-    mode = 'MINIMAL_NO_STACK'
+    search_test_function = 'test_collector_collects_all'
+    mode = 'SORT'
 
 
     try:
