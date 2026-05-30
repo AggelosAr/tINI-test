@@ -14,7 +14,7 @@
 
 # TODO package this 
 
-
+# TODO maybe dont show detail on exception fail
 
 TODO 
 maybe on minimal with stack traces we want to push the exceptions at the end ?

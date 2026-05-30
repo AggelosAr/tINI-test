@@ -4,12 +4,13 @@ import traceback
 import types
 from contextlib import redirect_stdout
 from functools import cached_property, partial
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, TypeAlias
 
 from src.enums import Config, Mode, TestStatus
-from src.misc.annotations import F_Callable, S_Callable, StackTrace
+from src.misc.annotations import F_Callable, PartialObject, S_Callable, StackTrace
 from src.misc.exceptions import LastOpNotExpected, NotSupportedMode
 from src.state import OperationState
+
 
 
 class TestStep:
@@ -236,6 +237,9 @@ class TestSuite:
                  module: str, 
                  mode: Optional[Mode | str] = Mode.SORT) -> None:
         
+        if mode is None:
+            mode = Mode.SORT
+
         match mode:
             case Mode.NORMAL:
                 self.mode = Mode.NORMAL
@@ -262,12 +266,6 @@ class TestSuite:
 
         self.collector: dict[str, Test] = dict()
 
-    @property
-    def gathered_tests(self) -> list[str]:
-        # helper field to show test names before 
-        # tests start running
-        return list(map(lambda l: l.__name__, self.decorated_tests))
-    
     @cached_property
     def total_tests(self) -> int:
         return len(self.collector.values())
@@ -276,8 +274,22 @@ class TestSuite:
     def file_name(self) -> str:
         return self.module.__name__
     
+    # TODO (**2**)
+    @property
+    def gathered_test_names(self) -> list[str]:
+        # helper field to show test names before 
+        # tests start running, this will should unwrap 
+        # the partial object to get the function name
+        # TODO fix
+        return list(map(lambda l: self._get_name_from_partial(l), self.decorated_tests))
+    
+    # TODO (**2**)
+    def _get_name_from_partial(self, p_obj: PartialObject) -> str:
+        return p_obj.func.__closure__[-1].cell_contents.__name__
+    
+    # TODO (**2**)
     def filter_tests(self, test_name: str) -> None:
-        filtered_tests = filter(lambda l: l.__name__ == test_name, self.decorated_tests)
+        filtered_tests = filter(lambda l: self._get_name_from_partial(l) == test_name, self.decorated_tests)
         self.decorated_tests = list(filtered_tests)
 
     # TODO maybe merge the filter_tests logic with the gather_tests
@@ -379,3 +391,7 @@ class TestSuite:
 
             case Mode.MINIMAL | Mode.MINIMAL_NO_STACK:
                 self.show_test_results(verbocity=False)
+
+
+# TODO move @annotations
+TestsContainer: TypeAlias = dict[str, dict[str, TestSuite]]

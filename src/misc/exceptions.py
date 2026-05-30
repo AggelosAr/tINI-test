@@ -3,13 +3,13 @@
 class TooManyArgumentsDirAndFile(Exception):
 
     def __init__(self, _ = ''):
-        super().__init__('Module collector should accept either a directory or a file')
+        super().__init__('Module collector should accept either a directory or a file.')
 
 
 class CantFindRelativePathToRoot(Exception):
 
     def __init__(self, _ = ''):
-        super().__init__("Can't find the requested relative path to root")
+        super().__init__("Can't find the requested relative path to root.")
 
 
 class NotSupportedMode(Exception):
@@ -21,7 +21,7 @@ class NotSupportedMode(Exception):
 class TestFunctionNotFound(Exception):
 
     def __init__(self, _ = ''):
-        super().__init__("Can't find the requested relative path to root")
+        super().__init__('Test function was not found.')
 
 
 class LastOpNotExpected(Exception):

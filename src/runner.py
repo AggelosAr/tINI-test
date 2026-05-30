@@ -2,16 +2,15 @@ from collections import defaultdict
 from typing import Optional
 
 from src.enums import Mode
-from src.misc.annotations import TestsContainer
 from src.misc.exceptions import TestFunctionNotFound
 from src.module_collector import ModuleCollector
-from src.utils import TestSuite
+from src.utils import TestSuite, TestsContainer
 
 
-def collect_tests(mode: str | Mode,
-                  search_dir: Optional[str], 
-                  search_file: Optional[str], 
-                  search_test_function: Optional[str]) -> TestsContainer:
+def collect_tests(mode: Optional[str | Mode]=None,
+                  search_dir: Optional[str]=None, 
+                  search_file: Optional[str]=None, 
+                  search_test_function: Optional[str]=None) -> TestsContainer:
 
     test_collector = ModuleCollector(search_dir=search_dir,
                                      search_file=search_file)
@@ -19,12 +18,14 @@ def collect_tests(mode: str | Mode,
     test_collector.walk_and_collect_test_files(root=test_collector.root)
     test_collector.normalize_test_modules()
 
-    tests_container: TestsContainer = defaultdict(lambda: defaultdict(lambda: TestSuite))
+    tests_container: TestsContainer = {}
 
     found_specific_test = False
 
     for module, test_files in test_collector.test_modules.items():
         
+        if module not in tests_container:
+            tests_container[module] = {}
 
         # TODO run multiple test_files in the same time. what about modules? what about the collector in the test file?
         for test_file in test_files:
@@ -37,12 +38,13 @@ def collect_tests(mode: str | Mode,
             suite = TestSuite(module=full_module_name,
                               mode=mode)
 
+            
             suite.gather_tests()
 
-            
-            if search_test_function:
 
-                if search_test_function in suite.gathered_tests:
+            if search_test_function:
+                
+                if search_test_function in suite.gathered_test_names:
                     suite.filter_tests(test_name=search_test_function)
 
                     if suite.decorated_tests:
@@ -57,6 +59,11 @@ def collect_tests(mode: str | Mode,
     if search_test_function and not found_specific_test:
         raise TestFunctionNotFound
     
+    # cleanup tests_container maybe implement it using defaultdict
+    for module in list(tests_container.keys()):
+        if not len(tests_container[module]):
+            del tests_container[module]
+
     return tests_container
 
 

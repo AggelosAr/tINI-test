@@ -41,8 +41,6 @@ class ModuleCollector:
         if search_dir:
             # here we need to connect the 2 dirs
 
-            self.root = Path(os.getcwd())
-
             self.search_dir = search_dir
 
             dest_parts = os.path.split(self.search_dir)
