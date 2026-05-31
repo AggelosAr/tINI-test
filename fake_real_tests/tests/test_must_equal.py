@@ -2,16 +2,14 @@ from src.asserts import WillRaise
 from src.equals import must_equal
 from src.misc.equal_exceptions import (DictionaryMismatchError,
                                        DictionarySizeMismatchError,
-                                       SetSizeMismatchError, SetMismatchError,
                                        FloatMismatchError,
                                        IntegerMismatchError, ListMismatchError,
-                                       ListSizeMismatchError,
+                                       ListSizeMismatchError, SetMismatchError,
+                                       SetSizeMismatchError,
                                        TupleMismatchError,
                                        TupleSizeMismatchError,
                                        TypeMismatchError)
 from src.test_utils import Test
-
-
 
 #####################
 ### NONE
