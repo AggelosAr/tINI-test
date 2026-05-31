@@ -1,11 +1,12 @@
 from difflib import unified_diff
 from typing import Any
 
-from misc.equal_exceptions import (DictionaryMismatchError,
-                                   DictionarySizeMismatchError,
-                                   FloatMismatchError, IntegerMismatchError,
-                                   ListMismatchError, ListSizeMismatchError,
-                                   StringMismatchError, TypeMismatchError)
+from src.misc.equal_exceptions import (DictionaryMismatchError,
+                                       DictionarySizeMismatchError,
+                                       FloatMismatchError,
+                                       IntegerMismatchError, ListMismatchError,
+                                       ListSizeMismatchError,
+                                       StringMismatchError, TypeMismatchError)
 
 
 def must_equal(a: Any, b: Any) -> None:
