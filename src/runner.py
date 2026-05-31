@@ -13,7 +13,7 @@ def get_test_container(mode: Optional[str | Mode] = None,
 
     search_dir = None
     #search_file = 'test_must_equal'
-    mode = 'MINIMAL_NO_STACK'
+    mode = 'SUPER_MINIMAL'
     #mode = 'SORT'
     #test_function = 'test_dict_key_mismatch'
 
@@ -40,8 +40,13 @@ def get_test_container(mode: Optional[str | Mode] = None,
 
             suite = TestSuite(module, test_file, mode)
 
-            found_test |= test_function in suite.gather_tests(func_name=test_function)
-          
+            collected_tests = suite.gather_tests(func_name=test_function)
+
+            if not collected_tests:
+                continue
+            
+            found_test |= test_function in collected_tests
+            
             if test_function and not found_test:
                 continue
             

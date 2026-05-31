@@ -14,7 +14,6 @@ Homepage = "https://github.com/pypa/small-test"
 Issues = "https://github.com/pypa/sampleproject/issues"
 
 
-ADD super minimal
 
 # WHAT happens when the lib crashes?>
 

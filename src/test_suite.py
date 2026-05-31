@@ -8,6 +8,9 @@ from src.misc.exceptions import NotSupportedMode
 from src.test_utils import Test
 
 
+_MINIMALS = {Mode.MINIMAL, Mode.MINIMAL_NO_STACK, Mode.SUPER_MINIMAL}
+
+
 class TestSuite:
     
     def __init__(self, 
@@ -31,6 +34,10 @@ class TestSuite:
                 self.mode = Mode.MINIMAL
             case Mode.MINIMAL.value:
                 self.mode = Mode.MINIMAL
+            case Mode.SUPER_MINIMAL:
+                self.mode = Mode.SUPER_MINIMAL
+            case Mode.SUPER_MINIMAL.value:
+                self.mode = Mode.SUPER_MINIMAL
             case Mode.MINIMAL_NO_STACK:
                 self.mode = Mode.MINIMAL_NO_STACK
             case Mode.MINIMAL_NO_STACK.value:
@@ -90,7 +97,8 @@ class TestSuite:
     # TODO refactor to show_test_result
     def show_test_results(self, verbocity: Optional[bool] = True) -> None:
         
-        print('Running tests for < %s >\n' % (self.file_name, ))
+        if self.mode != Mode.SUPER_MINIMAL:
+            print('Running tests for < %s >\n' % (self.file_name, ))
 
         minimal = list('[%s]' % (' '*self.total_tests, ))
         failed_tests = []
@@ -129,8 +137,12 @@ class TestSuite:
         print('\nTests passed: [ %d / %d ]' 
               % (self.total_tests - len(failed_tests), self.total_tests, ))
 
-        if self.mode in {Mode.MINIMAL, Mode.MINIMAL_NO_STACK} and failed_tests:
 
+        if self.mode in _MINIMALS and failed_tests:
+            
+            if self.mode == Mode.SUPER_MINIMAL:
+                return
+            
             print('Failed tests: %s\n' % failed_tests)
 
             for test, traces in zip(failed_tests, stacktraces):
@@ -158,7 +170,7 @@ class TestSuite:
                 self.sort_tests()
                 self.show_test_results()
 
-            case Mode.MINIMAL | Mode.MINIMAL_NO_STACK:
+            case Mode.MINIMAL | Mode.MINIMAL_NO_STACK | Mode.SUPER_MINIMAL:
                 self.show_test_results(verbocity=False)
 
 
