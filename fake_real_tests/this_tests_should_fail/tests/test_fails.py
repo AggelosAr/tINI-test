@@ -1,7 +1,7 @@
 from typing import assert_never
 
 from src.context_manager import WillRaise
-from src.equals_engine import must_equal
+from src.equals_engine import _must_equal
 from src.test_suite import Test
 
 
@@ -61,7 +61,7 @@ def test_will_raise_fails_to_catch_exception() -> None:
     b = 0.3
 
     with WillRaise(ZeroDivisionError) as context: 
-        must_equal(a, b)
+        _must_equal(a, b)
 
     assert_never
 

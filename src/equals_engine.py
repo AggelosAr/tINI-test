@@ -11,7 +11,7 @@ from src.misc._internal_exceptions.comparison_exceptions import (
 # TODO add custom comperator 
 
 
-def must_equal(a: Any, b: Any) -> None:
+def _must_equal(a: Any, b: Any) -> None:
 
     if a is None and b is None:
         return
@@ -22,38 +22,31 @@ def must_equal(a: Any, b: Any) -> None:
     if type(a) != type(b):
         type_mismatch(a, b)
 
-    print('-------------------')
-
-
-    print('COMPARING -> ', a, b, )
-    print('COMPARING -> ', type(a), type(b), )
-    print('-------------------')
-
     match type(a).__name__:
         
         case bool.__name__:
-            compare_bool(a, b)
+            _compare_bool(a, b)
 
         case int.__name__:
-            compare_int(a, b)
+            _compare_int(a, b)
 
         case float.__name__:
-            compare_float(a, b)
+            _compare_float(a, b)
 
         case str.__name__:
-            compare_str(a, b)
+            _compare_str(a, b)
 
         case tuple.__name__:
-            compare_tuple(a, b)
+            _compare_tuple(a, b)
 
         case list.__name__:
-            compare_list(a, b)
+            _compare_list(a, b)
 
         case set.__name__:
-            compare_set(a, b)
+            _compare_set(a, b)
 
         case dict.__name__:
-            compare_dict(a, b)
+            _compare_dict(a, b)
 
         case _:
             raise NotImplementedError
@@ -70,32 +63,33 @@ def _safe_diff(a, b):
     return "diff-not-implemented"
 
 
+
 def type_mismatch(a: Any, b: Any) -> None:
     raise TypeMismatchError(a, b)
 
 
-def compare_bool(a: bool, b: bool) -> None:
+def _compare_bool(a: bool, b: bool) -> None:
     if a != b:
         raise BoolMismatchError(a, b)
     
 
-def compare_int(a: int, b: int) -> None:
+def _compare_int(a: int, b: int) -> None:
     if a != b:
         raise IntegerMismatchError(a, b)
 
 
-def compare_float(a: float, b: float) -> None:
+def _compare_float(a: float, b: float) -> None:
     if a != b:
         raise FloatMismatchError(a, b)
     
 
-def compare_str(a: str, b: str) -> None:
+def _compare_str(a: str, b: str) -> None:
     if a != b:
-        diff = _safe_diff(a, b)
+        _ = _safe_diff(a, b)
         raise StringMismatchError(a, b)
 
 
-def compare_tuple(a: tuple[Any], b: tuple[Any]) -> None:
+def _compare_tuple(a: tuple[Any], b: tuple[Any]) -> None:
 
     if len(a) != len(b):
         raise TupleSizeMismatchError(
@@ -118,7 +112,7 @@ def compare_tuple(a: tuple[Any], b: tuple[Any]) -> None:
             )
 
 
-def compare_list(a: list[Any], b: list[Any]) -> None:
+def _compare_list(a: list[Any], b: list[Any]) -> None:
     if len(a) != len(b):
         raise ListSizeMismatchError(a, b, "length mismatch")
 
@@ -131,7 +125,7 @@ def compare_list(a: list[Any], b: list[Any]) -> None:
             )
 
 
-def compare_set(a: set[Any], b: set[Any]) -> None:
+def _compare_set(a: set[Any], b: set[Any]) -> None:
 
     if len(a) != len(b):
         raise SetSizeMismatchError(
@@ -154,7 +148,7 @@ def compare_set(a: set[Any], b: set[Any]) -> None:
         )
 
 
-def compare_dict(a: dict[Any, Any], b: dict[Any, Any]) -> None:
+def _compare_dict(a: dict[Any, Any], b: dict[Any, Any]) -> None:
 
     if len(a) != len(b):
         raise DictionarySizeMismatchError(a, b, "size mismatch")
@@ -171,6 +165,6 @@ def compare_dict(a: dict[Any, Any], b: dict[Any, Any]) -> None:
             )
 
 #?
-def must_not_equal(a, b):
+def _must_not_equal(a, b):
     return not a == b
 
