@@ -39,7 +39,7 @@ def test_dict_value_dont_match() -> None:
 
 
 @Test.case
-def test_dict_value_dont_match() -> None:
+def test_dict_value_dont_match_case() -> None:
     a = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
     b = 'RRRRRRRRRRRRRRRRRRRRRRRsadasdasdasd'
 

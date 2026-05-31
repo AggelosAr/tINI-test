@@ -5,7 +5,7 @@ from src.enums import Mode
 
 def recieve_args() -> tuple[Mode, str, str, str]:
     parser = argparse.ArgumentParser(
-        description="Small Test Framework"
+        description='Small Test Framework'
     )
 
     #
@@ -14,27 +14,33 @@ def recieve_args() -> tuple[Mode, str, str, str]:
     verbosity = parser.add_mutually_exclusive_group()
 
     verbosity.add_argument(
-        "-NORMAL",
-        action="store_true",
-        help="Normal output mode"
+        '-NORMAL',
+        action='store_true',
+        help='Normal output mode'
     )
 
     verbosity.add_argument(
-        "-SORT",
-        action="store_true",
-        help="Sorted output mode"
+        '-SORT',
+        action='store_true',
+        help='Sorted output mode'
     )
 
     verbosity.add_argument(
-        "-MINIMAL",
-        action="store_true",
-        help="Minimal output mode"
+        '-MINIMAL',
+        action='store_true',
+        help='Minimal output mode'
     )
 
     verbosity.add_argument(
-        "-MINIMAL_NO_STACK",
-        action="store_true",
-        help="Minimal output mode without stack traces"
+        '-MINIMAL_NO_STACK',
+        action='store_true',
+        help='Minimal output mode without stack traces'
+    )
+
+    verbosity.add_argument(
+        '-SUPER_MINIMAL',
+        action='store_true',
+        help='Super Minimal output mode'
     )
 
     #
@@ -43,24 +49,24 @@ def recieve_args() -> tuple[Mode, str, str, str]:
     search = parser.add_mutually_exclusive_group()
 
     search.add_argument(
-        "-d",
-        "--directory",
-        help="Run all tests in a directory"
+        '-d',
+        '--directory',
+        help='Run all tests in a directory'
     )
 
     search.add_argument(
-        "-f",
-        "--file",
-        help="Run all tests in a file"
+        '-f',
+        '--file',
+        help='Run all tests in a file'
     )
 
     #
     # Specific test
     #
     parser.add_argument(
-        "-t",
-        "--test",
-        help="Run a specific test function"
+        '-t',
+        '--test',
+        help='Run a specific test function'
     )
 
     args = parser.parse_args()
@@ -80,16 +86,16 @@ def recieve_args() -> tuple[Mode, str, str, str]:
     #
     # Search targets
     #
-    search_dir = args.directory or ""
-    search_file = args.file or ""
-    search_test_function = args.test or ""
+    search_dir = args.directory or ''
+    search_file = args.file or ''
+    search_test_function = args.test or ''
 
     #
     # Default behavior:
     # search current directory
     #
     if not search_dir and not search_file and not search_test_function:
-        search_dir = "."
+        search_dir = '.'
 
     return (
         mode,

@@ -47,7 +47,7 @@ class OperationState:
 
     @classmethod
     def get_end_seperator(cls) -> list[str]:
-        return ['%s%s%s%s' % (Config.NEGATIVE.value, Config.CYAN.value, Config.SEPERATOR_LENGTH*Config.SEPERATOR_SYMBOL, Config.RESET.value, )]
+        return ['%s%s%s%s' % (Config.NEGATIVE.value, Config.CYAN.value, Config.SEPERATOR_LENGTH.value*Config.SEPERATOR_SYMBOL.value, Config.RESET.value, )]
     
     @property
     def entry_msg(self) -> list[str]:
