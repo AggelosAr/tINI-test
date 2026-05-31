@@ -19,11 +19,11 @@ class Config(Enum):
 
 class Mode(Enum):
     
-    NORMAL = 'NORMAL'
     SORT = 'SORT'
+    NORMAL = 'NORMAL'
     MINIMAL = 'MINIMAL'
-    MINIMAL_NO_STACK = 'MINIMAL_NO_STACK'
     SUPER_MINIMAL = 'SUPER_MINIMAL'
+    MINIMAL_NO_STACK = 'MINIMAL_NO_STACK'
 
     @classmethod
     def supported_modes(cls) -> str:

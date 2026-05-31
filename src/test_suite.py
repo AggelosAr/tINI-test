@@ -21,14 +21,14 @@ class TestSuite:
             mode = Mode.SORT
 
         match mode:
-            case Mode.NORMAL:
-                self.mode = Mode.NORMAL
-            case Mode.NORMAL.value:
-                self.mode = Mode.NORMAL
             case Mode.SORT:
                 self.mode = Mode.SORT
             case Mode.SORT.value:
                 self.mode = Mode.SORT
+            case Mode.NORMAL:
+                self.mode = Mode.NORMAL
+            case Mode.NORMAL.value:
+                self.mode = Mode.NORMAL
             case Mode.MINIMAL:
                 self.mode = Mode.MINIMAL
             case Mode.MINIMAL.value:
