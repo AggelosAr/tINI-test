@@ -9,3 +9,5 @@ S_Callable: TypeAlias = Callable[[], Callable[..., Any]]
 StackTrace: TypeAlias = str
 
 Results: TypeAlias = dict[str, dict[str, Callable[[], None]]]
+
+DiffMessage: TypeAlias = str

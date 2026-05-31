@@ -11,6 +11,9 @@ def get_test_container(mode: Optional[str | Mode] = None,
                        search_file: Optional[str] = None, 
                        test_function: Optional[str] = None) -> TestsContainer:
 
+    search_dir = None
+    search_file = 'test_must_equals'
+
     test_collector = ModuleCollector(search_dir, search_file)
     test_collector.walk_and_collect_test_files(test_collector.root)
     test_collector.normalize_collected_data()
