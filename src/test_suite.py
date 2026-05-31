@@ -1,10 +1,9 @@
 import importlib
 import types
-from functools import cached_property, partial
+from functools import partial
 from typing import Callable, Optional, TypeAlias
 
 from src.enums import Config, Mode
-from src.misc.annotations import PartialObject
 from src.misc.exceptions import NotSupportedMode
 from src.test_utils import Test
 
@@ -45,15 +44,15 @@ class TestSuite:
 
         self.collector: dict[str, Test] = dict()
 
-    @cached_property
+    @property
     def total_tests(self) -> int:
         return len(self.collector.values())
 
-    @cached_property
+    @property
     def file_name(self) -> str:
         return self.module.__name__
     
-    def gather_tests(self, func_name: str) -> list[str]:
+    def gather_tests(self, func_name: Optional[str] = None) -> list[str]:
 
         tests = []
 

@@ -1,6 +1,5 @@
 from src.test_utils import Test
 
-
 __GG = 0
 
 def _setup():

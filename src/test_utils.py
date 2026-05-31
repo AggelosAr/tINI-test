@@ -86,7 +86,7 @@ class Test:
                      fail_status=TestStatus.SET_UP_FAIL)
         ]
     
-        self.operations: list[OperationState] = []
+        self.operation_states: list[OperationState] = []
     
     def __str__(self) -> str:
         test = []
@@ -94,14 +94,13 @@ class Test:
         test.append('[ %%s / %%s ] %s%s< %s >\n' 
                     % ('\t', '\t', self.test_name, ))
 
-        test.extend(filter(lambda l: l != str(), map(str, self.operations)))
+        test.extend(filter(lambda l: l != str(), map(str, self.operation_states)))
         
         return '\n'.join(test)
 
     def __repr__(self) -> str:
         raise NotImplementedError
     
-    # TODO fix this XXX
     @classmethod
     def case(cls,
              test_func: Optional[F_Callable] = None,
@@ -122,7 +121,7 @@ class Test:
                                  cleanup=cleanup)
 
                 ____collector[test_func.__name__] = test_case
-
+            # TODO update this XXX
             _wrapper._xyz_is_a_test_case_uwu = True # type: ignore[attr-defined]
 
             return _wrapper
@@ -134,7 +133,7 @@ class Test:
     
     @cached_property
     def is_fail(self) -> bool:
-        return any(TestStatus.is_abort_cause(op.status) for op in self.operations)
+        return any(TestStatus.is_fail_cause(op.status) for op in self.operation_states)
     
     @property
     def test_name(self) -> str:
@@ -146,7 +145,7 @@ class Test:
 
     @fail_state.setter
     def fail_state(self, new_state: TestStatus) -> None:
-        assert TestStatus.is_abort_cause(new_state), FailStateWasNotFail
+        assert TestStatus.is_fail_cause(new_state), FailStateWasNotFail
         self._fail_state = new_state
 
     @property
@@ -161,59 +160,61 @@ class Test:
         
         while self.steps:
 
-            test_step = self.steps.pop().run_step()
-            self.operations.append(test_step)
+            step_state = self.steps.pop().run_step()
+            self.operation_states.append(step_state)
             
-            if TestStatus.is_abort_cause(status=test_step.status):
-                self.fail_state = test_step.status
-                self.fail_reasons.append(test_step.exception_trace)
+            if TestStatus.is_fail_cause(status=step_state.status):
+                self.fail_state = step_state.status
+                self.fail_reasons.append(step_state.exception_trace)
                 break
     
     def run_for_cleanup_if_needed(self) -> None:
-        # What happens if user stops the program?
+        # TODO What happens if user stops the program?
         # If test fails and there is a cleanup 
         # Attempt to run it
         
         if not (self.is_fail and self.steps and self.steps[0].func):
             return 
 
-        cleanup = self.steps[0]
-        last_op = self.operations.pop()
+        # There are two cases either the test failed on setup or on main
+        cleanup_step = self.steps[0]
+        failed_op = self.operation_states.pop()
         
-        match last_op.status:
+        match failed_op.status:
             case TestStatus.SET_UP_FAIL:
-                cleanup.entry_status=TestStatus.ATTEMPT_BREAK_DOWN_ENTRY_FROM_SETUP_FAIL
+                cleanup_step.entry_status=TestStatus.ATTEMPT_BREAK_DOWN_ENTRY_FROM_SETUP_FAIL
             case TestStatus.FAIL:
-                # Modify the last_op for visual purposes
-                last_op.status = TestStatus.NO_OP
-                cleanup.entry_status=TestStatus.ATTEMPT_BREAK_DOWN_ENTRY_FROM_FAIL
+                # Modify the failed_op status for visual purposes
+                failed_op.status = TestStatus.NO_OP
+                cleanup_step.entry_status=TestStatus.ATTEMPT_BREAK_DOWN_ENTRY_FROM_FAIL
             case _:
                 raise LastOpNotExpected
             
-        cleanup.success_status=TestStatus.ATTEMPT_BREAK_DOWN_SUCCESS
-        cleanup.fail_status=TestStatus.ATTEMPT_BREAK_DOWN_FAIL
+        cleanup_step.success_status=TestStatus.ATTEMPT_BREAK_DOWN_SUCCESS
+        cleanup_step.fail_status=TestStatus.ATTEMPT_BREAK_DOWN_FAIL
         
-        test_step = cleanup.run_step()
+        cleanup_op = cleanup_step.run_step()
 
-        self.operations.append(last_op)
-        self.operations.append(test_step)
+        # Put back the states in the correct order
+        self.operation_states.append(failed_op)
+        self.operation_states.append(cleanup_op)
 
-        if TestStatus.is_fail_cause(status=test_step.status):
-            self.fail_state = test_step.status
-            self.fail_reasons.append(test_step.exception_trace)
+        if TestStatus.is_fail_cause(status=cleanup_op.status):
+            self.fail_state = cleanup_op.status
+            self.fail_reasons.append(cleanup_op.exception_trace)
         
     def attach_end_state(self) -> None:
         
         match self.is_fail:
 
             case True:
-                if self.operations[-1].status != TestStatus.FAIL:
+                if self.operation_states[-1].status != TestStatus.FAIL:
                     fail_op = OperationState(TestStatus.FAIL)
-                    self.operations.append(fail_op)
+                    self.operation_states.append(fail_op)
             
             case False:
                 success_op = OperationState(TestStatus.SUCCESS)
-                self.operations.append(success_op)
+                self.operation_states.append(success_op)
 
     def align_message(self, el: str) -> str:
         return '%s%s' % ((SEPERATOR_LENGTH // 2 - (len(el) // 2)) * str(' '), el, )
@@ -221,14 +222,14 @@ class Test:
     # TODO align messages relative to each other also 
     def align_messages(self) -> None:
 
-        for op in self.operations:
+        for op in self.operation_states:
             op.entry_msg = list(map(self.align_message, op.entry_msg))
             op.exit_msg = list(map(self.align_message, op.exit_msg))
 
     def close_state(self) -> None:
-        end_state = OperationState(TestStatus.NO_OP) # fishy
-        end_state.exit_msg = OperationState.get_seperator()
-        self.operations.append(end_state)
+        end_state = OperationState(TestStatus.NO_OP) # fishy maybe add another state
+        end_state.exit_msg = OperationState.get_end_seperator()
+        self.operation_states.append(end_state)
 
     def box_test(self) -> list[OperationState]:
 
@@ -243,4 +244,4 @@ class Test:
             with redirect_stdout(io.StringIO()):
                 self._no_op.__call__()
 
-        return self.operations
+        return self.operation_states

@@ -45,7 +45,7 @@ class ModuleCollector:
         self.test_modules: dict[str, list[str]] = {}
 
         self.search_file = search_file
-        if search_file and not self.search_file.endswith('.py'):
+        if self.search_file and not self.search_file.endswith('.py'):
             self.search_file = '%s.py' % (self.search_file, )
        
     def is_valid_test_file(self, file_name: str) -> bool:

@@ -47,7 +47,7 @@ class OperationState:
         raise NotImplementedError
 
     @classmethod
-    def get_seperator(cls) -> list[str]:
+    def get_end_seperator(cls) -> list[str]:
         return ['%s%s%s%s' % (Config.NEGATIVE.value, Config.CYAN.value, SEPERATOR_LENGTH*SEPERATOR_SYMBOL, Config.RESET.value, )]
     
     @property
@@ -141,7 +141,7 @@ class OperationState:
                 return ['%s[*] Break down succeeded after failed test%s' % (Config.MAGENTA.value, Config.RESET.value, )]
             
             case TestStatus.ATTEMPT_BREAK_DOWN_FAIL:
-                s_msg = '%s[*] Test failed and attempting Cleaning up failed.Reason: %s%s' % (Config.MAGENTA.value, detail, Config.RESET.value, )
+                s_msg = '%s[*] Test failed and attempting cgit statleaning up failed.Reason: %s%s' % (Config.MAGENTA.value, detail, Config.RESET.value, )
 
                 e_msg = '%s------ [ATTEMPT BREAK DOWN FAILED] ------%s' % (Config.YELLOW.value, Config.RESET.value, )
                 

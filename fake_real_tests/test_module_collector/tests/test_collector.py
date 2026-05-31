@@ -1,6 +1,5 @@
 from src.asserts import WillRaise
-from src.misc.exceptions import (CantFindRelativePathToRoot,
-                                 TestNotFound,
+from src.misc.exceptions import (CantFindRelativePathToRoot, TestNotFound,
                                  TooManyArgumentsGivenDirAndFile)
 from src.module_collector import ModuleCollector
 from src.runner import get_test_container

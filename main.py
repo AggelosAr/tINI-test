@@ -1,7 +1,6 @@
 from src.arg_parser import recieve_args
 from src.misc.exceptions import (CantFindRelativePathToRoot, NotSupportedMode,
-                                 TestNotFound,
-                                 TooManyArgumentsGivenDirAndFile)
+                                 TestNotFound, TooManyArgumentsGivenDirAndFile)
 from src.runner import get_test_container, run_tests
 
 if __name__=='__main__':

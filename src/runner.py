@@ -6,11 +6,10 @@ from src.module_collector import ModuleCollector
 from src.test_suite import TestsContainer, TestSuite
 
 
-
-def get_test_container(mode: Optional[str] = None,
-                       search_dir: Optional[str] = '', 
-                       search_file: Optional[str] = '', 
-                       test_function: Optional[str] = '') -> TestsContainer:
+def get_test_container(mode: Optional[str | Mode] = None,
+                       search_dir: Optional[str] = None, 
+                       search_file: Optional[str] = None, 
+                       test_function: Optional[str] = None) -> TestsContainer:
 
     test_collector = ModuleCollector(search_dir, search_file)
     test_collector.walk_and_collect_test_files(test_collector.root)
@@ -19,7 +18,6 @@ def get_test_container(mode: Optional[str] = None,
     tests_container: TestsContainer = {}
     found_test = False
 
-    mode = 'MINIMAL'
 
     for module, test_files in test_collector.test_modules.items():
         

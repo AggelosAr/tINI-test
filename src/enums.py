@@ -61,9 +61,5 @@ class TestStatus(Enum):
                     cls.ATTEMPT_BREAK_DOWN_FAIL]) 
     
     @classmethod
-    def is_abort_cause(cls, status: 'TestStatus') -> bool:
-        return status in cls.fail_operations()
-    
-    @classmethod
     def is_fail_cause(cls, status: 'TestStatus') -> bool:
         return status in cls.fail_operations()
