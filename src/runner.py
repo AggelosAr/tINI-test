@@ -13,6 +13,11 @@ def get_test_container(mode: Optional[str | Mode] = None,
 
     search_dir = None
     search_file = 'test_must_equal'
+    mode = 'SORT'
+    #test_function = 'test_dict_key_mismatch'
+
+    #search_file = 'test_will_raise'
+
 
     test_collector = ModuleCollector(search_dir, search_file)
     test_collector.walk_and_collect_test_files(test_collector.root)

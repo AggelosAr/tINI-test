@@ -1,7 +1,7 @@
 from src.asserts import WillRaise
 from src.test_suite import Test
 
-# TODO test context on WillRaise
+# context on WillRaise is tested on must equal tests
 
 
 @Test.case

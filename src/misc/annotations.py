@@ -10,4 +10,5 @@ StackTrace: TypeAlias = str
 
 Results: TypeAlias = dict[str, dict[str, Callable[[], None]]]
 
+
 DiffMessage: TypeAlias = str

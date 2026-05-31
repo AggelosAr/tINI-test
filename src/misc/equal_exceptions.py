@@ -7,6 +7,7 @@ class MustEqualError(Exception):
     '''Base exception for all must_equal failures.'''
     def __init__(self, message: DiffMessage):
         super().__init__(message)
+        # self.message = message
 
 
 class TypeMismatchError(MustEqualError):
@@ -16,6 +17,13 @@ class TypeMismatchError(MustEqualError):
             type(a).__name__,
             type(b).__name__
         )
+        super().__init__(msg)
+
+
+class BoolMismatchError(MustEqualError):
+
+    def __init__(self, a: bool, b: bool) -> None:
+        msg = '%s != %s' % (a, b, )
         super().__init__(msg)
 
 
@@ -42,8 +50,8 @@ class StringMismatchError(MustEqualError):
 
 class TupleSizeMismatchError(MustEqualError):
 
-    def __init__(self, a: list[Any], b: list[Any]) -> None:
-        msg = '%s != %s | %s' % (a, b, )
+    def __init__(self, a: list[Any], b: list[Any], detail='') -> None:
+        msg = '%s != %s | %s' % (len(a), len(b), detail, )
         super().__init__(msg)
 
 
@@ -56,8 +64,8 @@ class TupleMismatchError(MustEqualError):
 
 class ListSizeMismatchError(MustEqualError):
 
-    def __init__(self, a: list[Any], b: list[Any]) -> None:
-        msg = '%s != %s | %s' % (a, b, )
+    def __init__(self, a: list[Any], b: list[Any], detail='') -> None:
+        msg = '%s != %s | %s' % (len(a), len(b), detail, )
         super().__init__(msg)
 
 
@@ -70,8 +78,8 @@ class ListMismatchError(MustEqualError):
 
 class SetSizeMismatchError(MustEqualError):
 
-    def __init__(self, a: set[Any], b: set[Any]) -> None:
-        msg = '%s != %s | %s' % (a, b, )
+    def __init__(self, a: set[Any], b: set[Any], detail='') -> None:
+        msg = '%s != %s | %s' % (len(a), len(b), detail, )
         super().__init__(msg)
 
 
@@ -84,8 +92,15 @@ class SetMismatchError(MustEqualError):
 
 class DictionarySizeMismatchError(MustEqualError):
 
-    def __init__(self, a: dict[Any, Any], b: dict[Any, Any]) -> None:
-        msg = '%s != %s | %s' % (a, b, )
+    def __init__(self, a: dict[Any, Any], b: dict[Any, Any], detail='') -> None:
+        msg = '%s != %s | %s' % (len(a), len(b), detail, )
+        super().__init__(msg)
+
+
+class DictionaryKeysMismatchError(MustEqualError):
+
+    def __init__(self, a: dict[Any, Any], b: dict[Any, Any], detail='') -> None:
+        msg = '%s != %s | %s' % (sorted(a.keys()), sorted(b.keys()), detail, )
         super().__init__(msg)
 
 
