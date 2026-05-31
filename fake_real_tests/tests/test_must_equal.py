@@ -1,6 +1,6 @@
-from src.asserts import WillRaise
+from src.context_manager import WillRaise
 from src.equals_engine import must_equal
-from src.misc._internal_comparison_exceptions.comparison_exceptions import (
+from src.misc._internal_exceptions.comparison_exceptions import (
     BoolMismatchError, DictionaryKeysMismatchError, DictionaryMismatchError,
     DictionarySizeMismatchError, FloatMismatchError, IntegerMismatchError,
     ListMismatchError, ListSizeMismatchError, SetMismatchError,

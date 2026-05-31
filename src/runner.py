@@ -12,11 +12,12 @@ def get_test_container(mode: Optional[str | Mode] = None,
                        test_function: Optional[str] = None) -> TestsContainer:
 
     search_dir = None
-    search_file = 'test_must_equal'
+    #search_file = 'test_must_equal'
+    mode = 'MINIMAL_NO_STACK'
     mode = 'SORT'
     #test_function = 'test_dict_key_mismatch'
 
-    #search_file = 'test_will_raise'
+    test_function = 'test_will_raise_correclty_raises_exception'
 
 
     test_collector = ModuleCollector(search_dir, search_file)

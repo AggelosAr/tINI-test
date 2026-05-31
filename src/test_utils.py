@@ -6,8 +6,9 @@ from typing import Any, Optional
 
 from src.consts import SEPERATOR_LENGTH
 from src.enums import TestStatus
+from src.misc._internal_exceptions._exceptions import (_FailStateWasNotFail,
+                                                       _LastOpNotExpected)
 from src.misc.annotations import F_Callable, S_Callable, StackTrace
-from src.misc.exceptions import FailStateWasNotFail, LastOpNotExpected
 from src.state.state import OperationState
 
 
@@ -145,7 +146,7 @@ class Test:
 
     @fail_state.setter
     def fail_state(self, new_state: TestStatus) -> None:
-        assert TestStatus.is_fail_cause(new_state), FailStateWasNotFail
+        assert TestStatus.is_fail_cause(new_state), _FailStateWasNotFail
         self._fail_state = new_state
 
     @property
@@ -188,7 +189,7 @@ class Test:
                 failed_op.status = TestStatus.NO_OP
                 cleanup_step.entry_status=TestStatus.ATTEMPT_BREAK_DOWN_ENTRY_FROM_FAIL
             case _:
-                raise LastOpNotExpected
+                raise _LastOpNotExpected
             
         cleanup_step.success_status=TestStatus.ATTEMPT_BREAK_DOWN_SUCCESS
         cleanup_step.fail_status=TestStatus.ATTEMPT_BREAK_DOWN_FAIL

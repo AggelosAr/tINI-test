@@ -50,7 +50,7 @@ class StringMismatchError(MustEqualError):
 
 class TupleSizeMismatchError(MustEqualError):
 
-    def __init__(self, a: list[Any], b: list[Any], detail='') -> None:
+    def __init__(self, a: tuple[Any], b: tuple[Any], detail='') -> None:
         msg = '%s != %s | %s' % (len(a), len(b), detail, )
         super().__init__(msg)
 

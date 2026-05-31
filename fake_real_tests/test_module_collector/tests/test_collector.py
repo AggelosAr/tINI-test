@@ -1,4 +1,4 @@
-from src.asserts import WillRaise
+from src.context_manager import WillRaise
 from src.misc.exceptions import (CantFindRelativePathToRoot, TestNotFound,
                                  TooManyArgumentsGivenDirAndFile)
 from src.module_collector import ModuleCollector

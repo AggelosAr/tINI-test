@@ -1,7 +1,7 @@
 from difflib import unified_diff
 from typing import Any
 
-from src.misc._internal_comparison_exceptions.comparison_exceptions import (
+from src.misc._internal_exceptions.comparison_exceptions import (
     BoolMismatchError, DictionaryKeysMismatchError, DictionaryMismatchError,
     DictionarySizeMismatchError, FloatMismatchError, IntegerMismatchError,
     ListMismatchError, ListSizeMismatchError, SetMismatchError,
@@ -14,7 +14,7 @@ from src.misc._internal_comparison_exceptions.comparison_exceptions import (
 def must_equal(a: Any, b: Any) -> None:
 
     if a is None and b is None:
-        return True
+        return
     
     if a is None or b is None and not (a is None and b is None):
         raise TypeMismatchError(a, b)

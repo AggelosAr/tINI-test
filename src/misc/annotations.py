@@ -1,6 +1,6 @@
 from typing import Any, Callable, TypeAlias
 
-# TODO FIX 
+# TODO update 
 PartialObject: TypeAlias = Callable
 
 F_Callable: TypeAlias = Callable[..., Any]

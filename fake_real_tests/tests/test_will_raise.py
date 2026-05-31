@@ -1,4 +1,5 @@
-from src.asserts import WillRaise
+from src.context_manager import WillRaise
+from src.misc.exceptions import WillRaiseReceivedNotAnException
 from src.test_suite import Test
 
 # context on WillRaise is tested on must equal tests
@@ -49,3 +50,15 @@ def test_will_raise_will_not_catch_from_many_exceptions() -> None:
 
     with WillRaise(ZeroDivisionError) as context:
         _test_will_raise_will_not_catch_from_many_exceptions()
+
+
+
+@Test.case
+def test_will_raise_correclty_raises_exception() -> None:
+
+    def _test_will_raise_correclty_raises_exception() -> None:
+        with WillRaise(1, None, Exception) as context:
+            ...
+
+    with WillRaise(WillRaiseReceivedNotAnException) as context:
+        _test_will_raise_correclty_raises_exception()

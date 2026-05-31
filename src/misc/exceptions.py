@@ -1,4 +1,3 @@
-from typing import assert_never
 
 
 class TooManyArgumentsGivenDirAndFile(Exception):
@@ -25,14 +24,7 @@ class TestNotFound(Exception):
         super().__init__('Test function was not found.')
 
 
-class LastOpNotExpected(Exception):
+class WillRaiseReceivedNotAnException(Exception):
 
     def __init__(self, _ = ''):
-        super().__init__('Cleanup logic failed.')
-
-
-class FailStateWasNotFail(Exception):
-
-    def __init__(self, _ = ''):
-        super().__init__('Tried to set the fail state with a success or no op state.')
-        assert_never()
+        super().__init__('Objects passed to WillRaise should be exceptions.')
