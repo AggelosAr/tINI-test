@@ -12,7 +12,8 @@ from src.test_utils import Test
 class TestSuite:
     
     def __init__(self, 
-                 module: str, 
+                 module: str,
+                 file: str,
                  mode: Optional[Mode | str] = Mode.SORT) -> None:
         
         if mode is None:
@@ -38,7 +39,7 @@ class TestSuite:
             case _:
                 raise NotSupportedMode(msg=Mode.supported_modes())
 
-        self.module = importlib.import_module(module)
+        self.module = importlib.import_module('%s.%s' % (module, file, ))
 
         self.decorated_tests: list[Callable] = []
 
@@ -52,38 +53,30 @@ class TestSuite:
     def file_name(self) -> str:
         return self.module.__name__
     
-    # TODO (**2**)
-    @property
-    def gathered_test_names(self) -> list[str]:
-        # helper field to show test names before 
-        # tests start running, this should unwrap 
-        # the partial object to get the function name
-        return list(map(lambda l: self._get_name_from_partial(l), self.decorated_tests))
-    
-    # TODO (**2**)
-    def _get_name_from_partial(self, p_obj: PartialObject) -> str:
-        return p_obj.func.__closure__[-1].cell_contents.__name__
-    
-    # TODO (**2**)
-    def filter_tests(self, based_on: str) -> None:
-        filtered_tests = filter(lambda l: self._get_name_from_partial(l) == based_on, self.decorated_tests)
-        self.decorated_tests = list(filtered_tests)
+    def gather_tests(self, func_name: str) -> list[str]:
 
-    # TODO maybe merge the filter_tests logic with the gather_tests
-    def gather_tests(self) -> None:
-        
+        tests = []
+
         for obj in dir(self.module):
 
-            obj_v = getattr(self.module, obj)
-
-            if not all([isinstance(obj_v, types.FunctionType), 
+            g_obj = getattr(self.module, obj)
+            
+            if not all([isinstance(g_obj, types.FunctionType), 
                         # TODO remove this 
-                        hasattr(obj_v, '_xyz_is_a_test_case_uwu')]):
+                        hasattr(g_obj, '_xyz_is_a_test_case_uwu')]):
                 continue 
             
+            f_name = g_obj.__closure__[-1].cell_contents.__name__
+            if func_name and f_name != func_name:
+                continue
+            
+            tests.append(f_name)
+
             # TODO fix this XXX
-            p_obj = partial(obj_v, _Test____collector=self.collector)
-            self.decorated_tests.append(p_obj)
+            test_obj = partial(g_obj, _Test____collector=self.collector)
+            self.decorated_tests.append(test_obj)
+
+        return tests
     
     def populate_tests(self) -> None:
         list(map(lambda l: l(), self.decorated_tests))

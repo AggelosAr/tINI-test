@@ -26,47 +26,44 @@ class ModuleCollector:
                  search_dir: Optional[str] = None, 
                  search_file: Optional[str] = None) -> None:
         
-        self.test_modules: dict[str, list[str]] = {}
-
-        self.search_file = search_file
-
-        if search_file and not search_file.endswith('.py'):
-            self.search_file = '%s.py' % (self.search_file, )
-       
         if search_dir and search_file:
             raise TooManyArgumentsGivenDirAndFile 
-
+        
         self.root = Path(os.getcwd())
-
         if search_dir and search_dir != '.':
             # here we need to connect the 2 dirs
-            
             self.search_dir = search_dir
 
             dest_parts = os.path.split(self.search_dir)
             self.dest_prefix, _ = dest_parts
 
-            if new_root := self.connect_d_to_d(p_dir=self.root):
+            if new_root := self.connect_d_to_d(self.root):
                 self.root = new_root
             else:
                 raise CantFindRelativePathToRoot
+            
+        self.test_modules: dict[str, list[str]] = {}
 
+        self.search_file = search_file
+        if search_file and not self.search_file.endswith('.py'):
+            self.search_file = '%s.py' % (self.search_file, )
+       
     def is_valid_test_file(self, file_name: str) -> bool:
         return all([
             file_name.startswith('test_'),
             file_name.endswith('.py')
         ])
     
-    def connect_d_to_d(self, p_dir: Path) -> Optional[Path]:
+    def connect_d_to_d(self, root: Path) -> Optional[Path]:
         
-        parts = str(p_dir).partition(self.search_dir)
+        parts = str(root).partition(self.search_dir)
         found_dir = sum(map(lambda x: x is str(), parts)) == 1
         found_dir |= os.path.normpath(self.search_dir) == self.dest_prefix
 
         if found_dir:
-            return p_dir
+            return root
         
-        for c_path, dirs, _ in os.walk(p_dir):
+        for c_path, dirs, _ in os.walk(root):
             
             _, s = os.path.split(Path(c_path))
 
@@ -75,13 +72,13 @@ class ModuleCollector:
 
             for _dir in dirs:
                 
-                res = self.connect_d_to_d(p_dir=Path(os.path.join(p_dir, _dir)))
+                res = self.connect_d_to_d(Path(os.path.join(root, _dir)))
                 if res:
                     return res
 
         return None
 
-    def walk_and_collect_test_files(self, root) -> None:
+    def walk_and_collect_test_files(self, root: Path) -> None:
         """
         Walk the directory tree and collect Python modules that:
         - contain a `tests` folder
@@ -137,7 +134,6 @@ class ModuleCollector:
             new_name = self.path_to_python_module(new_name)
 
             file_names = self.test_modules[path_name]
-
             if self.search_file:
                 file_names = list(filter(lambda l: l == self.search_file, file_names))
 

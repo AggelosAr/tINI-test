@@ -100,6 +100,7 @@ def test_test_module_will_not_collect_a_single_function_if_it_doesnt_exist():
 
 
 
+# TODO maybe update
 @Test.case
 def test_test_module_will_collect_a_single_function():
     tests_container = get_test_container(test_function='test_decorator_works_with_parenthesis')
@@ -110,14 +111,15 @@ def test_test_module_will_collect_a_single_function():
     assert len(tests_container['fake_real_tests.tests']) == 1
 
     module_tests = tests_container['fake_real_tests.tests']['test_decorator_works']
-    gathered_test_names = module_tests.gathered_test_names
+    gathered_tests = module_tests.decorated_tests
 
-    assert len(gathered_test_names) == 1
+    
+    assert len(gathered_tests) == 1
+    assert correct_item == gathered_tests[0].func.__closure__[-1].cell_contents.__name__
 
-    assert correct_item == list(gathered_test_names)[0]
 
 
-
+# TODO maybe update
 @Test.case
 def test_test_module_will_collect_this_function():
 
@@ -127,8 +129,7 @@ def test_test_module_will_collect_this_function():
     assert len(tests_container['fake_real_tests.test_module_collector.tests']) == 1
 
     module_tests = tests_container['fake_real_tests.test_module_collector.tests']['test_collector']
-    gathered_test_names = module_tests.gathered_test_names
+    gathered_tests = module_tests.decorated_tests
 
-    assert len(gathered_test_names) == 1
-
-    assert t == list(gathered_test_names)[0]
+    assert len(gathered_tests) == 1
+    assert t == gathered_tests[0].func.__closure__[-1].cell_contents.__name__

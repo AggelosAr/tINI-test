@@ -6,66 +6,54 @@ from src.module_collector import ModuleCollector
 from src.test_suite import TestsContainer, TestSuite
 
 
-def get_test_container(mode: Optional[str | Mode]=None,
-                       search_dir: Optional[str]=None, 
-                       search_file: Optional[str]=None, 
-                       test_function: Optional[str]=None) -> TestsContainer:
 
-    test_collector = ModuleCollector(search_dir,
-                                     search_file)
-   
-    test_collector.walk_and_collect_test_files(root=test_collector.root)
+def get_test_container(mode: Optional[str] = None,
+                       search_dir: Optional[str] = '', 
+                       search_file: Optional[str] = '', 
+                       test_function: Optional[str] = '') -> TestsContainer:
+
+    test_collector = ModuleCollector(search_dir, search_file)
+    test_collector.walk_and_collect_test_files(test_collector.root)
     test_collector.normalize_collected_data()
 
     tests_container: TestsContainer = {}
+    found_test = False
 
-    found_specific_test_function = False
+    mode = 'MINIMAL'
 
     for module, test_files in test_collector.test_modules.items():
         
         if module not in tests_container:
             tests_container[module] = {}
 
-        # TODO run multiple test_files in the same time. what about modules? what about the collector in the test file?
         for test_file in test_files:
+            
+            if found_test:
+                break
 
-            full_module_name = '%s.%s' % (module, test_file, )
+            suite = TestSuite(module, test_file, mode)
 
-            suite = TestSuite(module=full_module_name,
-                              mode=mode)
-
-            suite.gather_tests()
-
-
-            if test_function:
-                
-                if test_function in suite.gathered_test_names:
-                    suite.filter_tests(based_on=test_function)
-
-                    if suite.decorated_tests:
-                        found_specific_test_function = True
-                        tests_container[module][test_file] = suite
-
-            else:
-
-                tests_container[module][test_file] = suite
-    
-
-    if test_function and not found_specific_test_function:
-        raise TestNotFound
-    
-    # cleanup tests_container maybe implement it using defaultdict
-    for module in list(tests_container.keys()):
+            found_test |= test_function in suite.gather_tests(func_name=test_function)
+          
+            if test_function and not found_test:
+                continue
+            
+            tests_container[module][test_file] = suite
+            
         if not len(tests_container[module]):
             del tests_container[module]
 
+
+    if test_function and not found_test:
+        raise TestNotFound
+   
     return tests_container
 
 
 def run_tests(tests_container: TestsContainer) -> None:
     
-    for module, test_files in tests_container.items():
+    for _, test_files in tests_container.items():
         
-        for test_file, test_suite in test_files.items():
+        for _, test_suite in test_files.items():
 
             test_suite.run_tests()
