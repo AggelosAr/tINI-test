@@ -7,7 +7,6 @@ from src.enums import Config, Mode
 from src.misc.exceptions import NotSupportedMode
 from src.test_utils import Test
 
-
 _MINIMALS = {Mode.MINIMAL, Mode.MINIMAL_NO_STACK, Mode.SUPER_MINIMAL}
 
 
