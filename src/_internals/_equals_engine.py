@@ -49,7 +49,7 @@ def _must_equal(a: Any, b: Any) -> None:
             _compare_dict(a, b)
 
         case _:
-            raise NotImplementedError
+            raise NotImplementedError # TODO here we must hard break !
 
 
 def _type_mismatch(a: Any, b: Any) -> None:
