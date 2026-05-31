@@ -4,10 +4,10 @@ from contextlib import redirect_stdout
 from functools import cached_property
 from typing import Any, Optional
 
+from src._internals._internal_exceptions._exceptions import (
+    _FailStateWasNotFail, _LastOpNotExpected)
 from src.consts import SEPERATOR_LENGTH
 from src.enums import TestStatus
-from src.misc._internal_exceptions._exceptions import (_FailStateWasNotFail,
-                                                       _LastOpNotExpected)
 from src.misc.annotations import F_Callable, S_Callable, StackTrace
 from src.state.state import OperationState
 

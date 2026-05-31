@@ -1,7 +1,7 @@
 from typing import assert_never
 
+from src._internals._equals_engine import _must_equal
 from src.context_manager import WillRaise
-from src.equals_engine import _must_equal
 from src.test_suite import Test
 
 
@@ -64,6 +64,7 @@ def test_will_raise_fails_to_catch_exception() -> None:
         _must_equal(a, b)
 
     assert_never
+
 
 
 # @Test.case

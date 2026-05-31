@@ -1,11 +1,11 @@
+from src._internals._equals_engine import _must_equal
+from src._internals._internal_exceptions._comparison_exceptions import (
+    _BoolMismatchError, _DictionaryKeysMismatchError, _DictionaryMismatchError,
+    _DictionarySizeMismatchError, _FloatMismatchError, _IntegerMismatchError,
+    _ListMismatchError, _ListSizeMismatchError, _SetMismatchError,
+    _SetSizeMismatchError, _TupleMismatchError, _TupleSizeMismatchError,
+    _TypeMismatchError)
 from src.context_manager import WillRaise
-from src.equals_engine import _must_equal
-from src.misc._internal_exceptions.comparison_exceptions import (
-    BoolMismatchError, DictionaryKeysMismatchError, DictionaryMismatchError,
-    DictionarySizeMismatchError, FloatMismatchError, IntegerMismatchError,
-    ListMismatchError, ListSizeMismatchError, SetMismatchError,
-    SetSizeMismatchError, TupleMismatchError, TupleSizeMismatchError,
-    TypeMismatchError)
 from src.test_utils import Test
 
 # TODO test case where it wont crash and see context 
@@ -43,7 +43,7 @@ def test_ints_dont_match() -> None:
     a = 10
     b = 20
 
-    with WillRaise(IntegerMismatchError) as context: 
+    with WillRaise(_IntegerMismatchError) as context: 
         _must_equal(a, b)
 
     _must_equal('10 != 20', str(context.exception))
@@ -68,7 +68,7 @@ def test_floats_dont_match() -> None:
     a = 3.14
     b = 2.71
 
-    with WillRaise(FloatMismatchError) as context:  
+    with WillRaise(_FloatMismatchError) as context:  
         _must_equal(a, b)
 
     print(str(context.exception))
@@ -81,7 +81,7 @@ def test_float_precision() -> None:
     a = 0.1 + 0.2
     b = 0.3
 
-    with WillRaise(FloatMismatchError) as context: 
+    with WillRaise(_FloatMismatchError) as context: 
         _must_equal(a, b)
 
 
@@ -105,7 +105,7 @@ def test_bool_dont_match() -> None:
     a = True
     b = False
 
-    with WillRaise(BoolMismatchError) as context: 
+    with WillRaise(_BoolMismatchError) as context: 
         _must_equal(a, b)
 
     print(str(context.exception))
@@ -131,7 +131,7 @@ def test_tuple_size_dont_match() -> None:
     a = (1, 2, 3)
     b = (1, 2, 3, 9)
 
-    with WillRaise(TupleSizeMismatchError) as context: 
+    with WillRaise(_TupleSizeMismatchError) as context: 
         _must_equal(a, b)
 
     print(str(context.exception))
@@ -144,7 +144,7 @@ def test_tuple_dont_match() -> None:
     a = (1, 2, 3)
     b = (1, 2, 9)
 
-    with WillRaise(TupleMismatchError) as context: 
+    with WillRaise(_TupleMismatchError) as context: 
         _must_equal(a, b)
 
     print(str(context.exception))
@@ -177,7 +177,7 @@ def test_list_size_mismatch() -> None:
     a = [1, 2, 3]
     b = [1, 2]
 
-    with WillRaise(ListSizeMismatchError) as context: 
+    with WillRaise(_ListSizeMismatchError) as context: 
         _must_equal(a, b)
 
     print(str(context.exception))
@@ -190,7 +190,7 @@ def test_list_value_dont_match() -> None:
     a = [1, 2, 3]
     b = [1, 2, 4]
 
-    with WillRaise(ListMismatchError) as context: 
+    with WillRaise(_ListMismatchError) as context: 
         _must_equal(a, b)
 
     print(str(context.exception))
@@ -203,7 +203,7 @@ def test_nested_list_mismatch() -> None:
     a = [1, [2, 3], 4]
     b = [1, [2, 99], 4]
 
-    with WillRaise(ListMismatchError) as context: 
+    with WillRaise(_ListMismatchError) as context: 
         _must_equal(a, b)
 
     print(str(context.exception))
@@ -229,7 +229,7 @@ def test_set_size_dont_match() -> None:
     a = {1, 2, 3}
     b = {1, 2, 3, 6}
 
-    with WillRaise(SetSizeMismatchError) as context: 
+    with WillRaise(_SetSizeMismatchError) as context: 
         _must_equal(a, b)
 
     print(str(context.exception))
@@ -242,7 +242,7 @@ def test_set_dont_match() -> None:
     a = {1, 2, 3}
     b = {1, 2, 4}
 
-    with WillRaise(SetMismatchError) as context: 
+    with WillRaise(_SetMismatchError) as context: 
         _must_equal(a, b)
 
     print(str(context.exception))
@@ -273,7 +273,7 @@ def test_dict_size_mismatch() -> None:
     a = {"x": 1, "y": 2, "z": 1}
     b = {"x": 1, "y": 2}
 
-    with WillRaise(DictionarySizeMismatchError) as context: 
+    with WillRaise(_DictionarySizeMismatchError) as context: 
         _must_equal(a, b)
 
     print(str(context.exception))
@@ -286,7 +286,7 @@ def test_dict_key_mismatch() -> None:
     a = {"x": 1, "y": 2}
     b = {"x": 1, "z": 2}
 
-    with WillRaise(DictionaryKeysMismatchError) as context: 
+    with WillRaise(_DictionaryKeysMismatchError) as context: 
         _must_equal(a, b)
 
     print(str(context.exception))
@@ -299,7 +299,7 @@ def test_dict_value_mismatch() -> None:
     a = {"x": 1, "y": 2}
     b = {"x": 1, "y": 3}
 
-    with WillRaise(DictionaryMismatchError) as context: 
+    with WillRaise(_DictionaryMismatchError) as context: 
         _must_equal(a, b)
 
     print(str(context.exception))
@@ -312,7 +312,7 @@ def test_nested_dict() -> None:
     a = {"a": {"b": {"c": 1}}}
     b = {"a": {"b": {"c": 2}}}
 
-    with WillRaise(DictionaryMismatchError) as context: 
+    with WillRaise(_DictionaryMismatchError) as context: 
         _must_equal(a, b)
 
     print(str(context.exception))
@@ -330,7 +330,7 @@ def test_type_mismatch_int_str() -> None:
     a = 10
     b = "10"
 
-    with WillRaise(TypeMismatchError) as context: 
+    with WillRaise(_TypeMismatchError) as context: 
         _must_equal(a, b)
 
     print(str(context.exception))
@@ -341,7 +341,7 @@ def test_type_mismatch_int_str() -> None:
 @Test.case
 def test_none_vs_int() -> None:
 
-    with WillRaise(TypeMismatchError) as context: 
+    with WillRaise(_TypeMismatchError) as context: 
         _must_equal(None, 1)
 
     print(str(context.exception))
