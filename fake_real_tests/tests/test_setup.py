@@ -5,7 +5,7 @@ from src.test_suite import Test
 
 GG = 0
 
-def setup():
+def setup() -> None:
     global GG
     assert GG == 0
     print('inside setup current val-> %d' % (GG, ))
@@ -13,7 +13,7 @@ def setup():
     print('inside setup updated val-> %d' % (GG, ))
 
 @Test.case(setup=lambda: setup())
-def test_setup_provided():
+def test_setup_provided() -> None:
     print('inside test_setup_provided val-----------> %d' % (GG, ))
     assert GG == 1_000
 
@@ -21,16 +21,11 @@ def test_setup_provided():
 
 # TODO create smt to make this test pass. This is the correct behaviour
 # This test should fail.
-# def _setup():
+# def _setup() -> None:
 #     print('inside _setup')
 #     1/0
 
 # @Test.case(setup=lambda: _setup())
-# def test_setup_provided_fails_as_a_result_test_wont_run():
+# def test_setup_provided_fails_as_a_result_test_wont_run() -> None:
 #     print('this should never print')
 #     assert_never()
-
-
-
-
-

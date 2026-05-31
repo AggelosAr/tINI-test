@@ -16,6 +16,9 @@ class Config(Enum):
     LINE_UP = '\033[1A'
     LINE_CLEAR = '\x1b[2K'
 
+    SEPERATOR_LENGTH = 120
+    SEPERATOR_SYMBOL = '='
+
 
 class Mode(Enum):
     

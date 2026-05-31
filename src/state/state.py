@@ -1,7 +1,6 @@
 import io
 from typing import Optional
 
-from src.consts import SEPERATOR_LENGTH, SEPERATOR_SYMBOL
 from src.enums import Config, TestStatus
 
 
@@ -48,7 +47,7 @@ class OperationState:
 
     @classmethod
     def get_end_seperator(cls) -> list[str]:
-        return ['%s%s%s%s' % (Config.NEGATIVE.value, Config.CYAN.value, SEPERATOR_LENGTH*SEPERATOR_SYMBOL, Config.RESET.value, )]
+        return ['%s%s%s%s' % (Config.NEGATIVE.value, Config.CYAN.value, Config.SEPERATOR_LENGTH*Config.SEPERATOR_SYMBOL, Config.RESET.value, )]
     
     @property
     def entry_msg(self) -> list[str]:

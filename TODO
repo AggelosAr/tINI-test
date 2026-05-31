@@ -6,6 +6,11 @@
 # must_equal must compare the results and if it fails it must print some kind of diff
 
 
+
+# TODO add specific exception on detail and use it to format ndiff
+
+
+
 # TODO package this 
 
 ON TOML

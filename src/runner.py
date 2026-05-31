@@ -14,10 +14,11 @@ def get_test_container(mode: Optional[str | Mode] = None,
     search_dir = None
     #search_file = 'test_must_equal'
     mode = 'SUPER_MINIMAL'
-    #mode = 'SORT'
+    mode = 'SORT'
     #test_function = 'test_dict_key_mismatch'
 
     #test_function = 'test_will_raise_fails_to_catch_exception'
+    search_file = 'test_main_must_equal'
 
 
     test_collector = ModuleCollector(search_dir, search_file)
@@ -44,7 +45,7 @@ def get_test_container(mode: Optional[str | Mode] = None,
 
             if not collected_tests:
                 continue
-            
+
             found_test |= test_function in collected_tests
             
             if test_function and not found_test:

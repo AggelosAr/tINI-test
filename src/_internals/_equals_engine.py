@@ -52,18 +52,6 @@ def _must_equal(a: Any, b: Any) -> None:
             raise NotImplementedError
 
 
-def _safe_diff(a, b):
-    """
-    Placeholder for difflib integration.
-
-    You may later replace this with:
-        import difflib
-        difflib.ndiff(...)
-    """
-    return "diff-not-implemented"
-
-
-
 def _type_mismatch(a: Any, b: Any) -> None:
     raise _TypeMismatchError(a, b)
 
@@ -85,7 +73,6 @@ def _compare_float(a: float, b: float) -> None:
 
 def _compare_str(a: str, b: str) -> None:
     if a != b:
-        _ = _safe_diff(a, b)
         raise _StringMismatchError(a, b)
 
 
@@ -114,14 +101,14 @@ def _compare_tuple(a: tuple[Any], b: tuple[Any]) -> None:
 
 def _compare_list(a: list[Any], b: list[Any]) -> None:
     if len(a) != len(b):
-        raise _ListSizeMismatchError(a, b, "length mismatch")
+        raise _ListSizeMismatchError(a, b, 'length mismatch')
 
     for i, (x, y) in enumerate(zip(a, b)):
         if x != y:
             raise _ListMismatchError(
                 a,
                 b,
-                "element mismatch at index %s: %s != %s" % (i, x, y)
+                'element mismatch at index %s: %s != %s' % (i, x, y, )
             )
 
 
@@ -151,20 +138,15 @@ def _compare_set(a: set[Any], b: set[Any]) -> None:
 def _compare_dict(a: dict[Any, Any], b: dict[Any, Any]) -> None:
 
     if len(a) != len(b):
-        raise _DictionarySizeMismatchError(a, b, "size mismatch")
+        raise _DictionarySizeMismatchError(a, b, 'size mismatch')
     
     if a.keys() != b.keys():
-        raise _DictionaryKeysMismatchError(a, b, "key mismatch")
+        raise _DictionaryKeysMismatchError(a, b, 'key mismatch')
     
     for k in a:
         if a[k] != b[k]:
             raise _DictionaryMismatchError(
                 a,
                 b,
-                "value mismatch at key %s: %s != %s" % (k, a[k], b[k])
+                'value mismatch at key %s: %s != %s' % (k, a[k], b[k], )
             )
-
-#?
-def _must_not_equal(a, b):
-    return not a == b
-
