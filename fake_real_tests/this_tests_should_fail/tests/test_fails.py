@@ -1,5 +1,7 @@
 from typing import assert_never
 
+from src.context_manager import WillRaise
+from src.equals_engine import must_equal
 from src.test_suite import Test
 
 
@@ -50,6 +52,18 @@ def test_cleanup_breaks_test_and_break_down_wont_run():
     print('---->This should never print')
     assert_never()
 
+
+
+
+@Test.case
+def test_will_raise_fails_to_catch_exception() -> None:
+    a = 0.1 + 0.2
+    b = 0.3
+
+    with WillRaise(ZeroDivisionError) as context: 
+        must_equal(a, b)
+
+    assert_never
 
 
 # @Test.case

@@ -2,14 +2,15 @@
 
 # TODO package this 
 
-# TODO add assert quelas
-
-
 ON TOML
 [project.urls]
 Homepage = "https://github.com/pypa/small-test"
 Issues = "https://github.com/pypa/sampleproject/issues"
 
+
+
+
+# WHAT happens when the lib crashes?>
 
 
 # If expection has %s it breaks it , is this the only case ?

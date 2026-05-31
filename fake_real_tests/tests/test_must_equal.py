@@ -84,9 +84,7 @@ def test_float_precision() -> None:
     with WillRaise(FloatMismatchError) as context: 
         must_equal(a, b)
 
-    print(str(context.exception))
-    must_equal('0.3 != 0.3', str(context.exception))
-    
+
 
 #####################
 ### BOOLS

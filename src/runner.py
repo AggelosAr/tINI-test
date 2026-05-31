@@ -17,7 +17,7 @@ def get_test_container(mode: Optional[str | Mode] = None,
     mode = 'SORT'
     #test_function = 'test_dict_key_mismatch'
 
-    test_function = 'test_will_raise_correclty_raises_exception'
+    test_function = 'test_will_raise_fails_to_catch_exception'
 
 
     test_collector = ModuleCollector(search_dir, search_file)
