@@ -1,13 +1,12 @@
 from difflib import unified_diff
 from typing import Any
 
-from src.misc.equal_exceptions import (BoolMismatchError, DictionaryKeysMismatchError, DictionaryMismatchError,
-                                       DictionarySizeMismatchError,
-                                       FloatMismatchError,
-                                       IntegerMismatchError, ListMismatchError,
-                                       ListSizeMismatchError, SetMismatchError, SetSizeMismatchError,
-                                       StringMismatchError, TupleMismatchError, TupleSizeMismatchError, TypeMismatchError)
-
+from src.misc._internal_comparison_exceptions.comparison_exceptions import (
+    BoolMismatchError, DictionaryKeysMismatchError, DictionaryMismatchError,
+    DictionarySizeMismatchError, FloatMismatchError, IntegerMismatchError,
+    ListMismatchError, ListSizeMismatchError, SetMismatchError,
+    SetSizeMismatchError, StringMismatchError, TupleMismatchError,
+    TupleSizeMismatchError, TypeMismatchError)
 
 # TODO add custom comperator 
 
@@ -58,10 +57,6 @@ def must_equal(a: Any, b: Any) -> None:
 
         case _:
             raise NotImplementedError
-
-
-def must_not_equal(a, b):
-    return not a == b
 
 
 def _safe_diff(a, b):
@@ -174,3 +169,8 @@ def compare_dict(a: dict[Any, Any], b: dict[Any, Any]) -> None:
                 b,
                 "value mismatch at key %s: %s != %s" % (k, a[k], b[k])
             )
+
+#?
+def must_not_equal(a, b):
+    return not a == b
+

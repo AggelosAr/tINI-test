@@ -1,6 +1,5 @@
 from typing import Optional
 
-
 _exception = Exception.__str__
 
 

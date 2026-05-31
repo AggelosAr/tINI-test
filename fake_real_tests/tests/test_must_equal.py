@@ -1,14 +1,11 @@
 from src.asserts import WillRaise
 from src.equals_engine import must_equal
-from src.misc.equal_exceptions import (BoolMismatchError, DictionaryKeysMismatchError, DictionaryMismatchError,
-                                       DictionarySizeMismatchError,
-                                       FloatMismatchError,
-                                       IntegerMismatchError, ListMismatchError,
-                                       ListSizeMismatchError, SetMismatchError,
-                                       SetSizeMismatchError,
-                                       TupleMismatchError,
-                                       TupleSizeMismatchError,
-                                       TypeMismatchError)
+from src.misc._internal_comparison_exceptions.comparison_exceptions import (
+    BoolMismatchError, DictionaryKeysMismatchError, DictionaryMismatchError,
+    DictionarySizeMismatchError, FloatMismatchError, IntegerMismatchError,
+    ListMismatchError, ListSizeMismatchError, SetMismatchError,
+    SetSizeMismatchError, TupleMismatchError, TupleSizeMismatchError,
+    TypeMismatchError)
 from src.test_utils import Test
 
 # TODO test case where it wont crash and see context 
