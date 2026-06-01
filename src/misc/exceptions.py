@@ -47,6 +47,6 @@ class MustEqualReceivedNotKnownTypes(Exception):
 
     def __init__(self, expected: Type, actual: Type) -> None:
         super().__init__(
-            'Must equal comparison logic failed.\n\texpected=<>\n\tactual=<>' 
+            'Must equal comparison logic failed.\n\texpected=<>\n\tactual=<>\n\tPleace provide a custom compare function to the must_equals function' 
             % (expected, actual, )
             )

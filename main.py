@@ -22,8 +22,6 @@ if __name__=='__main__':
         raise
     except TestNotFound:
         raise
-    except MustEqualReceivedNotKnownTypes: # TODO we must not fail the test but inform the user.
-        raise
     except _FailStateWasNotFail: # TODO(**1**) This means something broke with small-test ? remove from here ?
         raise
     except _LastOpNotExpected: # TODO(**1**)
