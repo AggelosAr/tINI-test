@@ -10,11 +10,15 @@ from src.misc.exceptions import (ExpectedWasDifferentFromActual,
 
 def must_equal(expected: Any, actual: Any) -> None:
     
+    # format the exception to stop at the user level.
     try:
         _must_equal(expected, actual, path='root')
+
     except ExpectedWasDifferentFromActual as e:
-         # format the exception to stop at the user level.
-         raise ExpectedWasDifferentFromActual(str(e))
+        raise ExpectedWasDifferentFromActual(str(e))
+    
+    except MustEqualReceivedNotKnownTypes:
+        raise MustEqualReceivedNotKnownTypes
     
 # =========================================================
 # Helpers
@@ -84,7 +88,7 @@ def _must_equal(expected: Any, actual: Any, path: str) -> None:
         _diff_dict(expected, actual, path)
         return
 
-    raise MustEqualReceivedNotKnownTypes(type(expected), type(actual))
+    raise MustEqualReceivedNotKnownTypes
 
 
 # =========================================================

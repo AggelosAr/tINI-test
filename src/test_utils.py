@@ -42,7 +42,7 @@ class TestStep:
         try:
             with redirect_stdout(buffer):
                 self.func(*self.args, **self.kwargs)
-        # can this exception be replaced with users at runtime? if that is the case this breaks
+        # TODO(**2**) can this exception be replaced from users at runtime? if that is the case this breaks
         except ExpectedWasDifferentFromActual as e:
            
             exception_trace = '\n'.join(traceback.format_tb(e.__traceback__))
@@ -50,10 +50,8 @@ class TestStep:
             return OperationState(entry_status=self.entry_status,
                                   status=self.fail_status,
                                   detail=str(e),
-                                exception_trace=exception_trace,
+                                  exception_trace=exception_trace,
                                   redirected_output=buffer)
-        except MustEqualReceivedNotKnownTypes as e:
-            raise # TODO
 
         except Exception as e:
             exception_trace = traceback.format_exc()

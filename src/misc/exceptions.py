@@ -42,11 +42,7 @@ class ExpectedWasDifferentFromActual(Exception):
         return f"------DIFF------\n{self.msg}\n------DIFF------"
 
 
-# TODO ADD TEST # add custom comperator
 class MustEqualReceivedNotKnownTypes(Exception):
 
-    def __init__(self, expected: Type, actual: Type) -> None:
-        super().__init__(
-            'Must equal comparison logic failed.\n\texpected=<>\n\tactual=<>\n\tPleace provide a custom compare function to the must_equals function' 
-            % (expected, actual, )
-            )
+    def __init__(self) -> None:
+        super().__init__('Pleace provide a custom compare function to the must_equals function')

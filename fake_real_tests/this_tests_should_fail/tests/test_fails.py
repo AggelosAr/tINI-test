@@ -1,5 +1,6 @@
 from typing import assert_never
 
+from src.must_equals import must_equal
 from src._internals._equals_engine import _must_equal
 from src.context_manager import WillRaise
 from src.test_suite import Test
@@ -54,7 +55,6 @@ def test_cleanup_breaks_test_and_break_down_wont_run():
 
 
 
-
 @Test.case
 def test_will_raise_fails_to_catch_exception() -> None:
     a = 0.1 + 0.2
@@ -64,6 +64,17 @@ def test_will_raise_fails_to_catch_exception() -> None:
         _must_equal(a, b)
 
     assert_never
+
+
+
+@Test.case
+def test_must_equal_receives_unknwon_object_failure() -> None:
+
+    class A:
+        def __init__(self, a: int) -> None:
+            self.a = a
+
+    must_equal(A(10), A(20))
 
 
 
