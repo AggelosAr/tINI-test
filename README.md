@@ -212,10 +212,10 @@ The framework has been tested using its own test suite.
 ## Roadmap
 
 
-
 ### Coverage
 
 * [ ] Calculate test coverage
+
 
 ### Output Improvements
 
@@ -223,10 +223,11 @@ The framework has been tested using its own test suite.
 * [ ] Add start separators in NORMAL and SORT modes
 * [ ] Add final execution summary
 
+
 ### Test Execution
 
-* [ ] Make correctly failing tests pass.
 * [ ] Improve SORT mode by grouping failures by category
+
 
 ### Groups
 
@@ -243,6 +244,6 @@ The framework has been tested using its own test suite.
 
 ### Misc
 
-* [ ] test must equal on cleanup and breakup
-
+* [ ] Make correctly failing tests pass.
+* [ ] test must equal on cleanup and breakup ? 
 * [ ] remove capturing of std out in case of MINIMAL modes etc or a flag ... currently everything is captured always

@@ -75,6 +75,7 @@ def _assert_comperator(comperator: Optional[Comperator | Any] = None) -> None:
     if comperator.__code__.co_argcount != 2:
         raise ComperatorIsNotValid(reason='Comperator must accept two items')
     
+    # dis ->  With no argument, disassemble the last traceback. TODO XXX
     data = Bytecode(comperator).dis().split('\n')
     data = list(map(lambda l: l.replace(' ', ''), data))
     data = list(filter(lambda l: l != '', data))
