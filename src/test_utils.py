@@ -1,5 +1,5 @@
-import io
-import traceback
+from io import StringIO
+from traceback import format_tb, format_exc
 from contextlib import redirect_stdout
 from functools import cached_property
 from typing import Any, Optional
@@ -36,7 +36,7 @@ class TestStep:
         if self.func is None:
             return OperationState(status=TestStatus.NO_OP)
 
-        buffer = io.StringIO()
+        buffer = StringIO()
 
         try:
             with redirect_stdout(buffer):
@@ -44,7 +44,7 @@ class TestStep:
 
         except ExpectedWasDifferentFromActual as e:
            
-            exception_trace = '\n'.join(traceback.format_tb(e.__traceback__))
+            exception_trace = '\n'+'\n'.join(format_tb(e.__traceback__))+'\n'
            
             return OperationState(entry_status=self.entry_status,
                                   status=self.fail_status,
@@ -53,7 +53,7 @@ class TestStep:
                                   redirected_output=buffer)
 
         except Exception as e:
-            exception_trace = traceback.format_exc()
+            exception_trace = format_exc()
             return OperationState(entry_status=self.entry_status,
                                   status=self.fail_status,
                                   redirected_output=buffer,
@@ -255,7 +255,7 @@ class Test:
         
         #!
         if self._no_op:
-            with redirect_stdout(io.StringIO()):
+            with redirect_stdout(StringIO()):
                 self._no_op.__call__()
 
         return self.operation_states

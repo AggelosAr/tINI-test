@@ -1,10 +1,10 @@
-import argparse
+from argparse import ArgumentParser
 
 from src.enums import Mode
 
 
 def recieve_args() -> tuple[Mode, str, str, str]:
-    parser = argparse.ArgumentParser(
+    parser = ArgumentParser(
         description='Small Test Framework'
     )
 

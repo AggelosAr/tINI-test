@@ -1,5 +1,5 @@
-import importlib
-import types
+from importlib import import_module
+from types import FunctionType
 from functools import partial
 from typing import Callable, Optional, TypeAlias
 
@@ -45,7 +45,7 @@ class TestSuite:
             case _:
                 raise NotSupportedMode(msg=Mode.supported_modes())
 
-        self.module = importlib.import_module('%s.%s' % (module, file, ))
+        self.module = import_module('%s.%s' % (module, file, ))
 
         self.decorated_tests: list[Callable] = []
 
@@ -67,7 +67,7 @@ class TestSuite:
 
             g_obj = getattr(self.module, obj)
             
-            if not all([isinstance(g_obj, types.FunctionType), 
+            if not all([isinstance(g_obj, FunctionType), 
                         # TODO remove this 
                         hasattr(g_obj, '_xyz_is_a_test_case_uwu')]):
                 continue 

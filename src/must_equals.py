@@ -1,7 +1,7 @@
-import difflib
+from difflib import unified_diff
 import dis
 from functools import lru_cache
-from typing import Any, Never, Optional, assert_never
+from typing import Any, Optional, assert_never
 
 from src._internals.consts import COMPARE_OP, FALSE_LOAD, RETURN, TRUE_LOAD
 from src.misc.annotations import Comperator
@@ -105,7 +105,7 @@ def _unified_diff(expected: Any, actual: Any) -> str:
     act_lines = str(actual).splitlines(keepends=True)
 
     return ''.join(
-        difflib.unified_diff(
+        unified_diff(
             exp_lines,
             act_lines,
             fromfile='expected',

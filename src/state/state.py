@@ -1,4 +1,4 @@
-import io
+from io import StringIO
 from typing import Optional
 
 from src.enums import Config, TestStatus
@@ -11,7 +11,7 @@ class OperationState:
     def __init__(self, 
                  status: TestStatus,
                  entry_status: Optional[TestStatus] = None,
-                 redirected_output: Optional[io.StringIO] = None,
+                 redirected_output: Optional[StringIO] = None,
                  detail: Optional[str] = None,
                  exception_trace: Optional[str] = None):
         
@@ -19,7 +19,7 @@ class OperationState:
             entry_status = TestStatus.NO_OP
         
         if not redirected_output:
-            redirected_output = io.StringIO('')
+            redirected_output = StringIO('')
 
         if not detail:
             detail = ''
