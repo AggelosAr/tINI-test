@@ -102,7 +102,7 @@ class Test:
     
     def __str__(self) -> str:
         test = []
-        # Placeholder for test enumeration #!XXX
+        # Placeholder for test enumeration indexes
         test.append("[ %s / %s ]\t\t< %s >\n"
                     % ('{%s}' % (COUNT_INDEX, ), 
                        '{%s}' % (TOTAL_INDEX, ), 
@@ -135,8 +135,8 @@ class Test:
                                  cleanup=cleanup)
 
                 ____collector[test_func.__name__] = test_case
-            # TODO update this XXX
-            _wrapper._xyz_is_a_test_case_uwu = True # type: ignore[attr-defined]
+                
+            _wrapper._xyz_is_a_test_case_uwu = True # type: ignore[attr-defined] update this TODO
 
             return _wrapper
 
