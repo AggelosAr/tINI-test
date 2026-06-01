@@ -12,3 +12,5 @@ Results: TypeAlias = dict[str, dict[str, Callable[[], None]]]
 
 
 DiffMessage: TypeAlias = str
+
+Comperator: TypeAlias = Callable[[Any, Any], bool]

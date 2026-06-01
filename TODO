@@ -1,17 +1,5 @@
 
 
-# TODO add custom comperator 
-
-
-
-
-# On test utils 56
-except MustEqualReceivedNotKnownTypes as e:
-            raise # TODO
-
-
-
-
 # test exceptions withint exceptrions
 
 

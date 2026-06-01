@@ -1,8 +1,5 @@
 
 
-from typing import Any, Type
-
-
 class TooManyArgumentsGivenDirAndFile(Exception):
 
     def __init__(self) -> None:
@@ -42,7 +39,20 @@ class ExpectedWasDifferentFromActual(Exception):
         return f"------DIFF------\n{self.msg}\n------DIFF------"
 
 
+# this is never reached ? TODO XXX
 class MustEqualReceivedNotKnownTypes(Exception):
 
     def __init__(self) -> None:
         super().__init__('Pleace provide a custom compare function to the must_equals function')
+
+  
+class ComperatorWasNotProvided(Exception):
+
+    def __init__(self) -> None:
+        super().__init__('Unknown type encountered and a comperator was not provided.')
+
+
+class ComperatorIsNotValid(Exception):
+
+    def __init__(self, reason: str = '') -> None:
+        super().__init__(reason)
