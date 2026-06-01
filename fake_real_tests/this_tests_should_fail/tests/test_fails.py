@@ -1,8 +1,8 @@
 from typing import assert_never
 
-from src.must_equals import must_equal
 from src._internals._equals_engine import _must_equal
 from src.context_manager import WillRaise
+from src.must_equals import must_equal
 from src.test_suite import Test
 
 
