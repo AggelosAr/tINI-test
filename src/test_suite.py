@@ -1,6 +1,6 @@
+from functools import partial
 from importlib import import_module
 from types import FunctionType
-from functools import partial
 from typing import Callable, Optional, TypeAlias
 
 from src.consts import COUNT_INDEX, TOTAL_INDEX

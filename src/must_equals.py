@@ -1,5 +1,5 @@
 from difflib import unified_diff
-import dis
+from dis import Bytecode, dis
 from functools import lru_cache
 from typing import Any, Optional, assert_never
 
@@ -20,9 +20,11 @@ _known_types = set([bool,
 
 here = None
 
+
 # =========================================================
 # Public API
 # =========================================================
+
 
 def must_equal(expected: Any, 
                actual: Any, 
@@ -58,6 +60,7 @@ def must_equal(expected: Any,
     except ComperatorIsNotValid as e:
         raise ComperatorIsNotValid(str(e)) from here
     
+
 # =========================================================
 # Helpers
 # =========================================================
@@ -72,7 +75,7 @@ def _assert_comperator(comperator: Optional[Comperator | Any] = None) -> None:
     if comperator.__code__.co_argcount != 2:
         raise ComperatorIsNotValid(reason='Comperator must accept two items')
     
-    data = dis.Bytecode(comperator).dis().split('\n')
+    data = Bytecode(comperator).dis().split('\n')
     data = list(map(lambda l: l.replace(' ', ''), data))
     data = list(filter(lambda l: l != '', data))
 
@@ -113,9 +116,11 @@ def _unified_diff(expected: Any, actual: Any) -> str:
         )
     )
 
+
 # =========================================================
 # Core dispatcher
 # =========================================================
+
 
 def _must_equal(expected: Any, 
                 actual: Any, 
@@ -174,9 +179,11 @@ def _must_equal(expected: Any,
 
     assert_never(expected)
 
+
 # =========================================================
 # Primitive types
 # =========================================================
+
 
 def _diff_primitive(expected: Any, actual: Any, path: str) -> None:
     if expected != actual:
@@ -198,6 +205,7 @@ def _diff_alien_primitive(expected: Any,
     
     if comperator(expected, actual) is False:
         _raise_diff('%s: %r != %r' % (path, expected, actual, ))
+
 
 # =========================================================
 # Containers

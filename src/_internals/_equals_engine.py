@@ -3,10 +3,9 @@ from typing import Any
 from src._internals._internal_exceptions._comparison_exceptions import (
     _BoolMismatchError, _DictionaryMismatchError, _DictionarySizeMismatchError,
     _FloatMismatchError, _IntegerMismatchError, _ListMismatchError,
-    _ListSizeMismatchError, _SetMismatchError, _SetSizeMismatchError,
-    _StringMismatchError, _TupleMismatchError, _TupleSizeMismatchError,
-    _TypeMismatchError, _MustEqualReceivedNotKnownTypes)
-
+    _ListSizeMismatchError, _MustEqualReceivedNotKnownTypes, _SetMismatchError,
+    _SetSizeMismatchError, _StringMismatchError, _TupleMismatchError,
+    _TupleSizeMismatchError, _TypeMismatchError)
 
 
 def _must_equal(a: Any, b: Any) -> None:

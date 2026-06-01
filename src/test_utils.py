@@ -1,7 +1,7 @@
-from io import StringIO
-from traceback import format_tb, format_exc
 from contextlib import redirect_stdout
 from functools import cached_property
+from io import StringIO
+from traceback import format_exc, format_tb
 from typing import Any, Optional
 
 from src._internals._internal_exceptions._exceptions import (
