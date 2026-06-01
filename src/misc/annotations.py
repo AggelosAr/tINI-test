@@ -4,12 +4,12 @@ from typing import Any, Callable, TypeAlias
 PartialObject: TypeAlias = Callable
 
 F_Callable: TypeAlias = Callable[..., Any]
-S_Callable: TypeAlias = Callable[..., Any]
-#S_Callable: TypeAlias = Callable[[], Callable[..., Any]]
+S_Callable: TypeAlias = Callable[..., Any] # Callable[[], Callable[..., Any]]
+
 
 StackTrace: TypeAlias = str
 
 
 DiffMessage: TypeAlias = str
 
-Comperator: TypeAlias = Callable[[Any, Any], bool]
+Comperator: TypeAlias = Callable[..., Any] # Callable[[Any, Any], bool]
