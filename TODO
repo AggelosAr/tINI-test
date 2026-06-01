@@ -1,12 +1,7 @@
 
 
-# TODO remove detail from exception or truncate it ? since it already shows ?
-# TODO add specific exception on detail and use it to format ndiff
 # TODO add custom comperator 
-# TODO package this 
 
-
-# test must equal on cleanup and breakup ExpectedWasDifferentFromActual  MustEqualReceivedNotKnownTypes
 
 
 
@@ -16,39 +11,21 @@ except MustEqualReceivedNotKnownTypes as e:
 
 
 
-ON TOML
-[project.urls]
-Homepage = "https://github.com/pypa/small-test"
-Issues = "https://github.com/pypa/sampleproject/issues"
-
-
-
-# test must equal recieves more args ??
-
-
-
-
 
 # test exceptions withint exceptrions
 
 
-# if user exception traceback or detail ? has %s it breaks ! also in prints ? SHOULD BE FIXED
-
-
-
 # WHAT happens when the lib crashes?>
 
-# If expection has %s it breaks it , is this the only case ?
-class DictionarySizeMismatchError(MustEqualError):
+# Try to break it using %s
+# if user exception traceback or detail ? has %s it breaks ! also in prints ? SHOULD BE FIXED
 
-    def __init__(self, a: dict[Any, Any], b: dict[Any, Any], detail='') -> None:
-        msg = '%s != %s | %s' % (a, b, 1, 1)
-        super().__init__(msg)
-
+#TODO remove mode duplication
 
 #_equals_engine LINE 47 add test 
 
-
-
-
-#TODO remove mode duplication
+# TODO package this 
+ON TOML
+[project.urls]
+Homepage = "https://github.com/pypa/small-test"
+Issues = "https://github.com/pypa/sampleproject/issues"

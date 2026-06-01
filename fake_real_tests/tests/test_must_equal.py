@@ -4,6 +4,18 @@ from src.must_equals import must_equal
 from src.test_utils import Test
 
 
+
+@Test.case
+def test_must_equal_receives_more_args_than_expected() -> None:
+    expected = (1, 2)
+    actual = (1, 2, 3)
+
+    with WillRaise(TypeError) as context:
+        must_equal(expected, actual, 1)
+
+    must_equal('must_equal() takes 2 positional arguments but 3 were given', str(context.exception))
+
+
 @Test.case
 def test_tuple_size_dont_match() -> None:
     expected = (1, 2)

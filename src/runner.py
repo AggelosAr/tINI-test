@@ -12,12 +12,11 @@ def get_test_container(mode: Optional[str | Mode] = None,
                        test_function: Optional[str] = None) -> TestsContainer:
 
     search_dir = None
-    #search_file = 'test_must_equal'
+
     mode = 'SUPER_MINIMAL'
     mode = 'SORT'
-    #test_function = 'test_dict_key_mismatch'
 
-    test_function = 'test_dict_value_dont_match'
+    # test_function = 'test_dict_value_dont_match'
     search_file = 'test_must_equal'
 
 

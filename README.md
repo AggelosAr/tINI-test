@@ -211,9 +211,7 @@ The framework has been tested using its own test suite.
 
 ## Roadmap
 
-### Assertions
 
-* [ ] Create assert_equals helpers
 
 ### Coverage
 
@@ -238,11 +236,13 @@ The framework has been tested using its own test suite.
 * [ ] Support group-level setup executed once
 * [ ] Support group-level cleanup execution
 
-### Discovery
-
-* [ ] Allow discovery from non-test files
 
 ### Configuration
 
 * [ ] Support configurable colors
 * [ ] Support configurable output formatting
+
+
+### Misc
+
+* [ ] test must equal on cleanup and breakup ExpectedWasDifferentFromActual  MustEqualReceivedNotKnownTypes
