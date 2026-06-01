@@ -185,7 +185,7 @@ def _must_equal(expected: Any,
 
     if type(expected) != type(actual):
         _raise_diff(
-            '%s: type mismatch\nexpected: %s\nactual:   %s'
+            '%s: type mismatch\nexpected: %s\nactual:   %s\n'
             % (path, type(expected), type(actual), )
         )
 

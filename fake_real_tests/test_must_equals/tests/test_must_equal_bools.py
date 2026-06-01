@@ -11,11 +11,13 @@ def test_bool_true_true() -> None:
     must_equal(expected, actual)
 
 
+
 @Test.case
 def test_bool_false_false() -> None:
     expected = False
     actual = False
     must_equal(expected, actual)
+
 
 
 @Test.case
@@ -30,6 +32,9 @@ def test_bool_true_false_fail() -> None:
     print(str(context.exception))
     print('---------------------------------')
 
+    must_equal('True != False', str(context.exception))
+
+
 
 @Test.case
 def test_bool_false_true_fail() -> None:
@@ -42,6 +47,8 @@ def test_bool_false_true_fail() -> None:
     print('---------------------------------')
     print(str(context.exception))
     print('---------------------------------')
+
+    must_equal('False != True', str(context.exception))
 
 
 @Test.case
@@ -70,6 +77,13 @@ def test_bool_truthy_int_fail() -> None:
     print(str(context.exception))
     print('---------------------------------')
 
+    must_equal('''
+ITEM: type mismatch
+expected: <class 'bool'>
+actual:   <class 'int'>
+''', str(context.exception))
+
+
 
 @Test.case
 def test_bool_false_vs_zero_fail() -> None:
@@ -83,16 +97,9 @@ def test_bool_false_vs_zero_fail() -> None:
     print(str(context.exception))
     print('---------------------------------')
 
-
-@Test.case
-def test_bool_double_true() -> None:
-    expected = True
-    actual = True
-    must_equal(expected, actual)
-
-
-@Test.case
-def test_bool_double_false() -> None:
-    expected = False
-    actual = False
-    must_equal(expected, actual)
+    must_equal('''
+ITEM: type mismatch
+expected: <class 'bool'>
+actual:   <class 'int'>
+''', str(context.exception))
+    
