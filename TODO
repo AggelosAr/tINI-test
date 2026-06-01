@@ -8,7 +8,7 @@
 # Try to break it using %s
 # if user exception traceback or detail ? has %s it breaks ! also in prints ? SHOULD BE FIXED
 
-#TODO remove mode duplication
+
 
 #_equals_engine LINE 47 add test 
 

@@ -220,14 +220,12 @@ The framework has been tested using its own test suite.
 ### Output Improvements
 
 * [ ] Add separators to MINIMAL stack traces
-* [ ] Reduce exception detail verbosity
-* [ ] Move exceptions to the end in MINIMAL mode
 * [ ] Add start separators in NORMAL and SORT modes
 * [ ] Add final execution summary
 
 ### Test Execution
 
-* [ ] Support correctly failing tests
+* [ ] Make correctly failing tests pass.
 * [ ] Improve SORT mode by grouping failures by category
 
 ### Groups
@@ -245,4 +243,4 @@ The framework has been tested using its own test suite.
 
 ### Misc
 
-* [ ] test must equal on cleanup and breakup ExpectedWasDifferentFromActual  MustEqualReceivedNotKnownTypes
+* [ ] test must equal on cleanup and breakup
