@@ -4,6 +4,9 @@ from src.must_equals import must_equal
 from src.test_utils import Test
 
 
+# TODO add tests for big numbers!
+
+
 @Test.case
 def test_int_equal_small() -> None:
     expected = 1
