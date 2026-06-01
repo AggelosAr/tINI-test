@@ -1,5 +1,5 @@
 
-
+# TODO do something about new lines in the must_equals
 
 
 
@@ -16,8 +16,6 @@
 # if user exception traceback or detail ? has %s it breaks ! also in prints ? SHOULD BE FIXED
 
 
-
-#_equals_engine LINE 47 add test 
 
 # TODO package this 
 ON TOML

@@ -7,6 +7,7 @@ from src._internals._internal_exceptions._comparison_exceptions import (
     _SetSizeMismatchError, _StringMismatchError, _TupleMismatchError,
     _TupleSizeMismatchError, _TypeMismatchError)
 
+# Kinda deprecated version to test the core of the project . 
 
 def _must_equal(a: Any, b: Any) -> None:
 
