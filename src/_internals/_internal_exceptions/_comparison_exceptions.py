@@ -102,3 +102,7 @@ class _DictionaryMismatchError(_MustEqualError):
     def __init__(self, a: dict[Any, Any], b: dict[Any, Any], detail='') -> None:
         msg = '%s != %s | %s' % (a, b, detail, )
         super().__init__(msg)
+
+
+class _MustEqualReceivedNotKnownTypes(Exception):
+    ...

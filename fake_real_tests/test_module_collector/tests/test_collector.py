@@ -87,7 +87,7 @@ def test_collector_will_not_find_anything_if_nonexisting_file_is_requested() -> 
     test_collector.walk_and_collect_test_files(root=test_collector.root)
     test_collector.normalize_collected_data()
     
-    correct_items = {}
+    correct_items: dict = {}
     assert correct_items == dict(test_collector.test_modules.items())
 
 
@@ -113,7 +113,7 @@ def test_test_module_will_collect_a_single_function() -> None:
 
     
     assert len(gathered_tests) == 1
-    assert correct_item == gathered_tests[0].func.__closure__[-1].cell_contents.__name__
+    assert correct_item == gathered_tests[0].func.__closure__[-1].cell_contents.__name__ # type: ignore[attr-defined]
 
 
 
@@ -129,4 +129,4 @@ def test_test_module_will_collect_this_function() -> None:
     gathered_tests = module_tests.decorated_tests
 
     assert len(gathered_tests) == 1
-    assert t == gathered_tests[0].func.__closure__[-1].cell_contents.__name__
+    assert t == gathered_tests[0].func.__closure__[-1].cell_contents.__name__ # type: ignore[attr-defined]

@@ -5,8 +5,8 @@ from src._internals._internal_exceptions._comparison_exceptions import (
     _FloatMismatchError, _IntegerMismatchError, _ListMismatchError,
     _ListSizeMismatchError, _SetMismatchError, _SetSizeMismatchError,
     _StringMismatchError, _TupleMismatchError, _TupleSizeMismatchError,
-    _TypeMismatchError)
-from src.misc.exceptions import MustEqualReceivedNotKnownTypes
+    _TypeMismatchError, _MustEqualReceivedNotKnownTypes)
+
 
 
 def _must_equal(a: Any, b: Any) -> None:
@@ -44,7 +44,7 @@ def _must_equal(a: Any, b: Any) -> None:
             _compare_dict(a, b)
 
         case _:
-            raise MustEqualReceivedNotKnownTypes(type(a), type(b))
+            raise _MustEqualReceivedNotKnownTypes(type(a), type(b))
 
 
 def _type_mismatch(a: Any, b: Any) -> None:

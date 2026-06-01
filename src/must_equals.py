@@ -1,9 +1,9 @@
 import difflib
 import dis
 from functools import lru_cache
-from typing import Any, Optional, assert_never
+from typing import Any, Never, Optional, assert_never
 
-from src._internals.consts import FALSE_LOAD, RETURN, TRUE_LOAD
+from src._internals.consts import COMPARE_OP, FALSE_LOAD, RETURN, TRUE_LOAD
 from src.misc.annotations import Comperator
 from src.misc.exceptions import (ComperatorIsNotValid,
                                  ComperatorWasNotProvided,
@@ -42,7 +42,7 @@ def must_equal(expected: Any,
     try:
 
         if comperator:
-            _assert_comperator()
+            _assert_comperator(comperator)
 
         _must_equal(expected=expected,
                     actual=actual, 
@@ -62,35 +62,36 @@ def must_equal(expected: Any,
 # Helpers
 # =========================================================
 
-# TODO add test 
+
 @lru_cache(maxsize=None)
 def _assert_comperator(comperator: Optional[Comperator | Any] = None) -> None:
 
-    if not callable(comperator):
+    if '__code__' not in dir(comperator):
         raise ComperatorIsNotValid(reason='Comperator is not a function')
     
     if comperator.__code__.co_argcount != 2:
         raise ComperatorIsNotValid(reason='Comperator must accept two items')
     
-    if True in comperator.__code__.co_consts or False in comperator.__code__.co_consts:
+    data = dis.Bytecode(comperator).dis().split('\n')
+    data = list(map(lambda l: l.replace(' ', ''), data))
+    data = list(filter(lambda l: l != '', data))
 
-        data = dis.Bytecode(function).dis().split('\n')
-        data = map(lambda l: l.replace(' ', ''), data)
-        data = filter(lambda l: l != '', data)
+    has_loads = False
+    has_loads_idx = -1
 
-        has_loads = False
-        has_loads_idx = -1
+    for idx, line in enumerate(data):
+        
+        if any([TRUE_LOAD in line,
+                FALSE_LOAD in line,
+                COMPARE_OP in line]):
+            has_loads = True
+            has_loads_idx = idx
+            continue
 
-        for idx, line in enumerate(data):
-
-            if TRUE_LOAD in line or FALSE_LOAD in line:
-                has_loads = True
-                continue
-
-            if all([RETURN in line,
-                    has_loads,
-                    idx-1 == has_loads_idx]):
-                return
+        if all([RETURN in line,
+                has_loads,
+                idx-1 == has_loads_idx]):
+            return
     
     raise ComperatorIsNotValid
 
@@ -160,19 +161,18 @@ def _must_equal(expected: Any,
         return
 
     if isinstance(expected, tuple):
-        _diff_tuple(expected, actual, path)
+        _diff_tuple(expected, actual, path, comperator)
         return
 
     if isinstance(expected, list):
-        _diff_list(expected, actual, path)
+        _diff_list(expected, actual, path, comperator)
         return
 
     if isinstance(expected, dict):
-        _diff_dict(expected, actual, path)
+        _diff_dict(expected, actual, path, comperator)
         return
 
-    assert_never()
-
+    assert_never(expected)
 
 # =========================================================
 # Primitive types
@@ -222,7 +222,8 @@ def _diff_set(expected: set[Any],
 
 def _diff_tuple(expected: tuple[Any, ...], 
                 actual: tuple[Any, ...], 
-                path: str) -> None:
+                path: str,
+                comperator: Optional[Comperator]) -> None:
 
     if len(expected) != len(actual):
         _raise_diff(
@@ -231,12 +232,13 @@ def _diff_tuple(expected: tuple[Any, ...],
         )
 
     for i, (e, a) in enumerate(zip(expected, actual)):
-        _must_equal(e, a, '%s[%d]' % (path, i, ))
+        _must_equal(e, a, '%s[%d]' % (path, i, ), comperator)
 
 
 def _diff_list(expected: list[Any], 
                actual: list[Any], 
-               path: str) -> None:
+               path: str,
+               comperator: Optional[Comperator]) -> None:
 
     if len(expected) != len(actual):
         _raise_diff(
@@ -245,12 +247,13 @@ def _diff_list(expected: list[Any],
         )
 
     for i, (e, a) in enumerate(zip(expected, actual)):
-        _must_equal(e, a, '%s[%d]' % (path, i, ))
+        _must_equal(e, a, '%s[%d]' % (path, i, ), comperator)
 
 
 def _diff_dict(expected: dict[Any, Any], 
                actual: dict[Any, Any], 
-               path: str) -> None:
+               path: str,
+               comperator: Optional[Comperator]) -> None:
 
     if expected.keys() != actual.keys():
         missing = expected.keys() - actual.keys()
@@ -262,4 +265,4 @@ def _diff_dict(expected: dict[Any, Any],
         )
 
     for key in expected:
-        _must_equal(expected[key], actual[key], '%s[%r]' % (path, key, ))
+        _must_equal(expected[key], actual[key], '%s[%r]' % (path, key, ), comperator)
