@@ -10,7 +10,7 @@
 # TODO add specific exception on detail and use it to format ndiff
 
 
-
+# TODO add custom comperator 
 # TODO package this 
 
 ON TOML
@@ -18,6 +18,16 @@ ON TOML
 Homepage = "https://github.com/pypa/small-test"
 Issues = "https://github.com/pypa/sampleproject/issues"
 
+
+
+
+
+MustEqualReceivedNotKnownTypes  -> test it 
+ExpectedWasDifferentFromActual  -> test it 
+
+
+
+# test must equal recieves more args ??
 
 
 # WHAT happens when the lib crashes?>
@@ -29,3 +39,23 @@ class DictionarySizeMismatchError(MustEqualError):
     def __init__(self, a: dict[Any, Any], b: dict[Any, Any], detail='') -> None:
         msg = '%s != %s | %s' % (a, b, 1, 1)
         super().__init__(msg)
+
+
+
+#_equals_engine LINE 47 add test 
+
+
+
+
+# test exceptions withint exceptrions
+
+
+# if user exception traceback or detail ? has %s it breaks ! also in prints ? SHOULD BE FIXED
+
+
+
+
+
+add more tests and implement the core must equals 
+
+

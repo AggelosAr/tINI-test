@@ -6,8 +6,11 @@ from typing import Any, Optional
 
 from src._internals._internal_exceptions._exceptions import (
     _FailStateWasNotFail, _LastOpNotExpected)
+from src.consts import COUNT_INDEX, TOTAL_INDEX
 from src.enums import Config, TestStatus
 from src.misc.annotations import F_Callable, S_Callable, StackTrace
+from src.misc.exceptions import (ExpectedWasDifferentFromActual,
+                                 MustEqualReceivedNotKnownTypes)
 from src.state.state import OperationState
 
 
@@ -39,11 +42,29 @@ class TestStep:
         try:
             with redirect_stdout(buffer):
                 self.func(*self.args, **self.kwargs)
-        except Exception as e:
-            exception_trace = traceback.format_exc()
+        # ExpectedWasDifferentFromActual  and MustEqualReceivedNotKnownTypes should only be allowed in main !!!!?
+        # can this exception be replaced with users at runtime? if that is the case this breaks
+        except ExpectedWasDifferentFromActual as e:
+           
+            exception_trace = '\n'.join(traceback.format_tb(e.__traceback__))
+            
+            # The assumption is that the run_step func will be called first 
+            # and somewhere later the must_equal will be called so we want only that traceback
+           
             return OperationState(entry_status=self.entry_status,
                                   status=self.fail_status,
                                   detail=str(e),
+                                   exception_trace=exception_trace, # remove this 
+                                  redirected_output=buffer)
+        except MustEqualReceivedNotKnownTypes as e:
+            raise # TODO
+
+        except Exception as e:
+            # I suppose here we dont want the detail anyways
+            exception_trace = traceback.format_exc()
+            return OperationState(entry_status=self.entry_status,
+                                  status=self.fail_status,
+                                  # detail=str(e),
                                   redirected_output=buffer,
                                   exception_trace=exception_trace)
         
@@ -90,9 +111,11 @@ class Test:
     
     def __str__(self) -> str:
         test = []
-        # Placeholder for test enumeration
-        test.append('[ %%s / %%s ] %s%s< %s >\n' 
-                    % ('\t', '\t', self.test_name, ))
+        # Placeholder for test enumeration #!XXX
+        test.append("[ %s / %s ]\t\t< %s >\n"
+                    % ('{%s}' % (COUNT_INDEX, ), 
+                       '{%s}' % (TOTAL_INDEX, ), 
+                       self.test_name, ))
 
         test.extend(filter(lambda l: l != str(), map(str, self.operation_states)))
         

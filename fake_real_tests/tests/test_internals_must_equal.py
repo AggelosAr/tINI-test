@@ -1,15 +1,15 @@
 from src._internals._equals_engine import _must_equal
 from src._internals._internal_exceptions._comparison_exceptions import (
-    _BoolMismatchError, _DictionaryKeysMismatchError, _DictionaryMismatchError,
-    _DictionarySizeMismatchError, _FloatMismatchError, _IntegerMismatchError,
-    _ListMismatchError, _ListSizeMismatchError, _SetMismatchError,
-    _SetSizeMismatchError, _TupleMismatchError, _TupleSizeMismatchError,
-    _TypeMismatchError)
+    _BoolMismatchError, _DictionaryMismatchError, _DictionarySizeMismatchError,
+    _FloatMismatchError, _IntegerMismatchError, _ListMismatchError,
+    _ListSizeMismatchError, _SetMismatchError, _SetSizeMismatchError,
+    _TupleMismatchError, _TupleSizeMismatchError, _TypeMismatchError)
 from src.context_manager import WillRaise
 from src.test_utils import Test
 
 # TODO test case where it wont crash and see context 
 
+# Base tests that further test correct behaviour...
 
 #####################
 ### NONE
@@ -83,7 +83,6 @@ def test_float_precision() -> None:
 
     with WillRaise(_FloatMismatchError) as context: 
         _must_equal(a, b)
-
 
 
 #####################
@@ -282,19 +281,6 @@ def test_dict_size_mismatch() -> None:
 
 
 @Test.case
-def test_dict_key_mismatch() -> None:
-    a = {"x": 1, "y": 2}
-    b = {"x": 1, "z": 2}
-
-    with WillRaise(_DictionaryKeysMismatchError) as context: 
-        _must_equal(a, b)
-
-    print(str(context.exception))
-    _must_equal("['x', 'y'] != ['x', 'z'] | key mismatch", str(context.exception))
-
-
-
-@Test.case
 def test_dict_value_mismatch() -> None:
     a = {"x": 1, "y": 2}
     b = {"x": 1, "y": 3}
@@ -317,7 +303,6 @@ def test_nested_dict() -> None:
 
     print(str(context.exception))
     _must_equal("{'a': {'b': {'c': 1}}} != {'a': {'b': {'c': 2}}} | value mismatch at key a: {'b': {'c': 1}} != {'b': {'c': 2}}", str(context.exception))
-
 
 
 #####################
@@ -353,4 +338,3 @@ def test_none_vs_int() -> None:
 def test_none_vs_none() -> None:
 
     _must_equal(None, None)
-

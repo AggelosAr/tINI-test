@@ -1,23 +1,18 @@
-from difflib import unified_diff
 from typing import Any
 
 from src._internals._internal_exceptions._comparison_exceptions import (
-    _BoolMismatchError, _DictionaryKeysMismatchError, _DictionaryMismatchError,
-    _DictionarySizeMismatchError, _FloatMismatchError, _IntegerMismatchError,
-    _ListMismatchError, _ListSizeMismatchError, _SetMismatchError,
-    _SetSizeMismatchError, _StringMismatchError, _TupleMismatchError,
-    _TupleSizeMismatchError, _TypeMismatchError)
-
-# TODO add custom comperator 
+    _BoolMismatchError, _DictionaryMismatchError, _DictionarySizeMismatchError,
+    _FloatMismatchError, _IntegerMismatchError, _ListMismatchError,
+    _ListSizeMismatchError, _SetMismatchError, _SetSizeMismatchError,
+    _StringMismatchError, _TupleMismatchError, _TupleSizeMismatchError,
+    _TypeMismatchError)
+from src.misc.exceptions import MustEqualReceivedNotKnownTypes
 
 
 def _must_equal(a: Any, b: Any) -> None:
 
     if a is None and b is None:
         return
-    
-    if a is None or b is None and not (a is None and b is None):
-        raise _TypeMismatchError(a, b)
     
     if type(a) != type(b):
         _type_mismatch(a, b)
@@ -49,7 +44,7 @@ def _must_equal(a: Any, b: Any) -> None:
             _compare_dict(a, b)
 
         case _:
-            raise NotImplementedError # TODO here we must hard break !
+            raise MustEqualReceivedNotKnownTypes(type(a), type(b))
 
 
 def _type_mismatch(a: Any, b: Any) -> None:
@@ -139,9 +134,6 @@ def _compare_dict(a: dict[Any, Any], b: dict[Any, Any]) -> None:
 
     if len(a) != len(b):
         raise _DictionarySizeMismatchError(a, b, 'size mismatch')
-    
-    if a.keys() != b.keys():
-        raise _DictionaryKeysMismatchError(a, b, 'key mismatch')
     
     for k in a:
         if a[k] != b[k]:

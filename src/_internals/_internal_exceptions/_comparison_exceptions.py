@@ -97,13 +97,6 @@ class _DictionarySizeMismatchError(_MustEqualError):
         super().__init__(msg)
 
 
-class _DictionaryKeysMismatchError(_MustEqualError):
-
-    def __init__(self, a: dict[Any, Any], b: dict[Any, Any], detail='') -> None:
-        msg = '%s != %s | %s' % (sorted(a.keys()), sorted(b.keys()), detail, )
-        super().__init__(msg)
-
-
 class _DictionaryMismatchError(_MustEqualError):
 
     def __init__(self, a: dict[Any, Any], b: dict[Any, Any], detail='') -> None:
