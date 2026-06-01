@@ -7,8 +7,7 @@ from src._internals.consts import FALSE_LOAD, RETURN, TRUE_LOAD
 from src.misc.annotations import Comperator
 from src.misc.exceptions import (ComperatorIsNotValid,
                                  ComperatorWasNotProvided,
-                                 ExpectedWasDifferentFromActual,
-                                 MustEqualReceivedNotKnownTypes)
+                                 ExpectedWasDifferentFromActual)
 
 _known_types = set([bool,
                     int,

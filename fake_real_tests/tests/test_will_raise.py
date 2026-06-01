@@ -2,8 +2,6 @@ from src.context_manager import WillRaise
 from src.misc.exceptions import WillRaiseReceivedNotAnException
 from src.test_suite import Test
 
-# context on WillRaise is tested on must equal tests
-
 
 @Test.case
 def test_will_raise_catches_correct_exception() -> None:

@@ -7,8 +7,6 @@ from src._internals._internal_exceptions._comparison_exceptions import (
 from src.context_manager import WillRaise
 from src.test_utils import Test
 
-# TODO test case where it wont crash and see context 
-
 # Base tests that further test correct behaviour...
 
 #####################
