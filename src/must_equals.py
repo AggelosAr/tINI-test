@@ -1,13 +1,14 @@
 import difflib
+import dis
 from functools import lru_cache
 from typing import Any, Optional, assert_never
-import dis 
 
 from src._internals.consts import FALSE_LOAD, RETURN, TRUE_LOAD
 from src.misc.annotations import Comperator
-from src.misc.exceptions import (ComperatorIsNotValid, ComperatorWasNotProvided, ExpectedWasDifferentFromActual,
+from src.misc.exceptions import (ComperatorIsNotValid,
+                                 ComperatorWasNotProvided,
+                                 ExpectedWasDifferentFromActual,
                                  MustEqualReceivedNotKnownTypes)
-
 
 _known_types = set([bool,
                     int,
@@ -174,8 +175,7 @@ def _must_equal(expected: Any,
         _diff_dict(expected, actual, path)
         return
 
-    assert_never(), MustEqualReceivedNotKnownTypes
-    raise MustEqualReceivedNotKnownTypes
+    assert_never()
 
 
 # =========================================================

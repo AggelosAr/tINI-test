@@ -38,13 +38,6 @@ class ExpectedWasDifferentFromActual(Exception):
     def _get_detail(self) -> str:
         return f"------DIFF------\n{self.msg}\n------DIFF------"
 
-
-# this is never reached ? TODO XXX
-class MustEqualReceivedNotKnownTypes(Exception):
-
-    def __init__(self) -> None:
-        super().__init__('Pleace provide a custom compare function to the must_equals function')
-
   
 class ComperatorWasNotProvided(Exception):
 
