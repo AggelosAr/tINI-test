@@ -244,3 +244,5 @@ The framework has been tested using its own test suite.
 ### Misc
 
 * [ ] test must equal on cleanup and breakup
+
+* [ ] remove capturing of std out in case of MINIMAL modes etc or a flag ... currently everything is captured always

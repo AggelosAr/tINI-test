@@ -93,12 +93,17 @@ class OperationState:
                 match len(detail):
                     case 0:
                         s_msg = '%s*** EXCEPTION DURING TEST ***%s' % (Config.RED.value, Config.RESET.value, )
+                        n_msg = ''
                     case _:
-                        s_msg = '%s*** EXCEPTION DURING TEST <%s> ***%s' % (Config.RED.value, detail, Config.RESET.value, )
+                        # TODO refactor since detail is not used in any state 
+                        # we will take advatage of that to put the MUST_EQUALS messages there.
+                        s_msg = '%s*** EXCEPTION DURING TEST ***%s' % (Config.RED.value, Config.RESET.value, )
+                        n_msg = '%s %s %s' % (Config.RED.value, detail, Config.RESET.value, )
                         
                 e_msg = '%s------ [FAIL] ------%s' % (Config.RED.value, Config.RESET.value, )
                 
-                return [s_msg, e_msg]
+                # TODO filter empty ...
+                return [s_msg, n_msg, e_msg]
 
 
             case TestStatus.SET_UP_ENTRY:

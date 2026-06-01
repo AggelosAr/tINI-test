@@ -44,11 +44,11 @@ class TestStep:
 
         except ExpectedWasDifferentFromActual as e:
            
-            exception_trace = '\n'+'\n'.join(format_tb(e.__traceback__))+'\n'
+            exception_trace = '\n'.join(format_tb(e.__traceback__))
            
             return OperationState(entry_status=self.entry_status,
                                   status=self.fail_status,
-                                  detail=str(e),
+                                  detail='\n\n'+str(e)+'\n\n',
                                   exception_trace=exception_trace,
                                   redirected_output=buffer)
 
