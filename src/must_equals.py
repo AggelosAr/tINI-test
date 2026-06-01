@@ -48,7 +48,7 @@ def must_equal(expected: Any,
 
         _must_equal(expected=expected,
                     actual=actual, 
-                    path='root',
+                    path='ITEM',
                     comperator=comperator)
 
     except ExpectedWasDifferentFromActual as e:
@@ -104,18 +104,70 @@ def _raise_diff(msg: str) -> None:
 
 
 def _unified_diff(expected: Any, actual: Any) -> str:
-    exp_lines = str(expected).splitlines(keepends=True)
-    act_lines = str(actual).splitlines(keepends=True)
+    expected = str(expected)
+    actual = str(actual)
 
+    if '\n' in expected or '\n' in actual:
+        return _multiline_diff(expected, actual)
+
+    return _single_line_diff(expected, actual)
+
+
+def _multiline_diff(expected: str, actual: str) -> str:
     return ''.join(
         unified_diff(
-            exp_lines,
-            act_lines,
+            expected.splitlines(keepends=True),
+            actual.splitlines(keepends=True),
             fromfile='expected',
             tofile='actual',
         )
     )
 
+
+def _single_line_diff(expected: str, actual: str) -> str:
+
+    for idx, (e, a) in enumerate(zip(expected, actual)):
+        if e != a:
+            break
+    else:
+        idx = min(len(expected), len(actual))
+
+    context = 30
+
+    start = max(0, idx - context)
+    end = idx + context
+
+    exp_snippet = expected[start:end]
+    act_snippet = actual[start:end]
+
+    exp_char = (
+        repr(expected[idx])
+        if idx < len(expected)
+        else '<end-of-string>'
+    )
+
+    act_char = (
+        repr(actual[idx])
+        if idx < len(actual)
+        else '<end-of-string>'
+    )
+
+    return (
+        'string mismatch at index %d\n'
+        'expected char: %s\n'
+        'actual char:   %s\n'
+        '\n'
+        'expected: %r\n'
+        'actual:   %r\n'
+        '          %s^'
+    ) % (
+        idx,
+        exp_char,
+        act_char,
+        exp_snippet,
+        act_snippet,
+        ' ' * (idx - start),
+    )
 
 # =========================================================
 # Core dispatcher
@@ -187,7 +239,7 @@ def _must_equal(expected: Any,
 
 def _diff_primitive(expected: Any, actual: Any, path: str) -> None:
     if expected != actual:
-        _raise_diff('%s: %r != %r' % (path, expected, actual, ))
+        _raise_diff('%r != %r' % (expected, actual, ))
 
 
 def _diff_str(expected: str, actual: str, path: str) -> None:

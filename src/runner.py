@@ -16,7 +16,7 @@ def get_test_container(mode: Optional[str | Mode] = None,
     mode = 'SUPER_MINIMAL'
     mode = 'SORT'
 
-    test_function = 'test_comperator_works_on_unknown_objects_in_containers'
+    #test_function = 'test_comperator_works_on_unknown_objects_in_containers'
     search_file = 'test_must_equal'
 
 
