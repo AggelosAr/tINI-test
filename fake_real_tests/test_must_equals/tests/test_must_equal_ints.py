@@ -14,6 +14,7 @@ def test_int_equal_small() -> None:
     must_equal(expected, actual)
 
 
+
 @Test.case
 def test_int_equal_zero() -> None:
     expected = 0
@@ -21,11 +22,13 @@ def test_int_equal_zero() -> None:
     must_equal(expected, actual)
 
 
+
 @Test.case
 def test_int_equal_negative() -> None:
     expected = -10
     actual = -10
     must_equal(expected, actual)
+
 
 
 @Test.case
@@ -41,6 +44,7 @@ def test_int_mismatch_small() -> None:
     print('---------------------------------')
 
 
+
 @Test.case
 def test_int_mismatch_negative() -> None:
     expected = -1
@@ -54,11 +58,13 @@ def test_int_mismatch_negative() -> None:
     print('---------------------------------')
 
 
+
 @Test.case
 def test_int_large_equal() -> None:
     expected = 10**12
     actual = 10**12
     must_equal(expected, actual)
+
 
 
 @Test.case
@@ -74,6 +80,7 @@ def test_int_large_mismatch() -> None:
     print('---------------------------------')
 
 
+
 @Test.case
 def test_int_boundary_zero_positive() -> None:
     expected = 0
@@ -87,6 +94,7 @@ def test_int_boundary_zero_positive() -> None:
     print('---------------------------------')
 
 
+
 @Test.case
 def test_int_boundary_zero_negative() -> None:
     expected = 0
@@ -98,6 +106,7 @@ def test_int_boundary_zero_negative() -> None:
     print('---------------------------------')
     print(str(context.exception))
     print('---------------------------------')
+
 
 
 @Test.case
