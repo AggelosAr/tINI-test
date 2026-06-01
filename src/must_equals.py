@@ -48,7 +48,7 @@ def must_equal(expected: Any,
 
         _must_equal(expected=expected,
                     actual=actual, 
-                    path='ITEM',
+                    path='\nITEM',
                     comperator=comperator)
 
     except ExpectedWasDifferentFromActual as e:
@@ -121,7 +121,7 @@ def _multiline_diff(expected: str, actual: str) -> str:
             fromfile='expected',
             tofile='actual',
         )
-    )
+    )+'\n'
 
 
 def _single_line_diff(expected: str, actual: str) -> str:
@@ -159,14 +159,14 @@ def _single_line_diff(expected: str, actual: str) -> str:
         '\n'
         'expected: %r\n'
         'actual:   %r\n'
-        '          %s^'
+        '          %s^\n'
     ) % (
         idx,
         exp_char,
         act_char,
         exp_snippet,
         act_snippet,
-        ' ' * (idx - start),
+        ' ' * (idx - start + 1),
     )
 
 # =========================================================

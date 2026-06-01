@@ -5,16 +5,35 @@ from src.misc.exceptions import (ComperatorIsNotValid,
 from src.must_equals import must_equal
 from src.test_utils import Test
 
+# #must_equal() test what happens here also 
+
 #################################################
 #####   String diffs
 #################################################
+
 
 @Test.case
 def test_multiline_string_diff() -> None:
     expected = 'hello\nworld\nfoo'
     actual = 'hello\nthere\nfoo'
 
-    must_equal(expected, actual)
+    with WillRaise(ExpectedWasDifferentFromActual) as context:
+        must_equal(expected, actual)
+
+    print('---------------------------------')
+    print(str(context.exception))
+    print('---------------------------------')
+    
+    must_equal('''
+ITEM:
+--- expected
++++ actual
+@@ -1,3 +1,3 @@
+ hello
+-world
++there
+ foo
+''', str(context.exception))
 
 
 
@@ -23,8 +42,24 @@ def test_string_middle_character_different() -> None:
     expected = 'hello world'
     actual = 'hello there'
 
-    must_equal(expected, actual)
+    with WillRaise(ExpectedWasDifferentFromActual) as context:
+        must_equal(expected, actual)
 
+    print('---------------------------------')
+    print(str(context.exception))
+    print('---------------------------------')
+
+    must_equal('''
+ITEM:
+string mismatch at index 6
+expected char: 'w'
+actual char:   't'
+
+expected: 'hello world'
+actual:   'hello there'
+                 ^
+''', str(context.exception))
+    
 
 
 @Test.case
@@ -32,8 +67,24 @@ def test_string_last_character_different() -> None:
     expected = 'abcdef'
     actual = 'abcdeg'
 
-    must_equal(expected, actual)
+    with WillRaise(ExpectedWasDifferentFromActual) as context:
+        must_equal(expected, actual)
 
+    print('---------------------------------')
+    print(str(context.exception))
+    print('---------------------------------')
+
+    must_equal('''
+ITEM:
+string mismatch at index 5
+expected char: 'f'
+actual char:   'g'
+
+expected: 'abcdef'
+actual:   'abcdeg'
+                ^
+''', str(context.exception))
+    
 
 
 @Test.case
@@ -41,8 +92,24 @@ def test_string_actual_shorter() -> None:
     expected = 'abcdef'
     actual = 'abc'
 
-    must_equal(expected, actual)
+    with WillRaise(ExpectedWasDifferentFromActual) as context:
+        must_equal(expected, actual)
 
+    print('---------------------------------')
+    print(str(context.exception))
+    print('---------------------------------')
+
+    must_equal('''
+ITEM:
+string mismatch at index 3
+expected char: 'd'
+actual char:   <end-of-string>
+
+expected: 'abcdef'
+actual:   'abc'
+              ^
+''', str(context.exception))
+    
 
 
 @Test.case
@@ -50,8 +117,24 @@ def test_string_actual_longer() -> None:
     expected = 'abc'
     actual = 'abcdef'
 
-    must_equal(expected, actual)
+    with WillRaise(ExpectedWasDifferentFromActual) as context:
+        must_equal(expected, actual)
 
+    print('---------------------------------')
+    print(str(context.exception))
+    print('---------------------------------')
+
+    must_equal('''
+ITEM:
+string mismatch at index 3
+expected char: <end-of-string>
+actual char:   'd'
+
+expected: 'abc'
+actual:   'abcdef'
+              ^
+''', str(context.exception))
+    
 
 
 @Test.case
@@ -68,7 +151,57 @@ def test_multiline_string_diff_case() -> None:
         'foo'
     )
 
-    must_equal(expected, actual)
+    with WillRaise(ExpectedWasDifferentFromActual) as context:
+        must_equal(expected, actual)
+
+    print('---------------------------------')
+    print(str(context.exception))
+    print('---------------------------------')
+
+    must_equal('''
+ITEM:
+--- expected
++++ actual
+@@ -1,3 +1,3 @@
+ hello
+-world
++there
+ foo
+''', str(context.exception))
+    
+
+
+@Test.case
+def test_multiline_string_diff_case_special() -> None:
+    expected = (
+        'hello Again my little garden\n'
+        'world was a small bee nest\n'
+        'in the other side'
+    )
+
+    actual = (
+        'hello Again my little garden\n'
+        'world was a XXX bee next\n'
+        'in the other side'
+    )
+
+    with WillRaise(ExpectedWasDifferentFromActual) as context:
+        must_equal(expected, actual)
+
+    print('---------------------------------')
+    print(str(context.exception))
+    print('---------------------------------')
+
+    must_equal('''
+ITEM:
+--- expected
++++ actual
+@@ -1,3 +1,3 @@
+ hello Again my little garden
+-world was a small bee nest
++world was a XXX bee next
+ in the other side
+''', str(context.exception))
 
 
 
@@ -77,7 +210,19 @@ def test_dict_value_dont_match_case() -> None:
     expected = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
     actual = 'RRRRRRRRRRRRRRRRRRRRRRRsadasdasdasd'
 
-    must_equal(expected, actual)
+    with WillRaise(ExpectedWasDifferentFromActual) as context:
+        must_equal(expected, actual)
+
+    must_equal('''
+ITEM:
+string mismatch at index 0
+expected char: 'X'
+actual char:   'R'
+
+expected: 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+actual:   'RRRRRRRRRRRRRRRRRRRRRRRsadasda'
+           ^
+''', str(context.exception))
 
 
 #################################################
