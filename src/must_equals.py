@@ -53,9 +53,6 @@ def must_equal(expected: Any,
     except ExpectedWasDifferentFromActual as e:
         raise ExpectedWasDifferentFromActual(str(e)) from here
     
-    except MustEqualReceivedNotKnownTypes:
-        raise MustEqualReceivedNotKnownTypes from here
-    
     except ComperatorWasNotProvided:
         raise ComperatorWasNotProvided from here
     

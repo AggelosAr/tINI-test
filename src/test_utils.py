@@ -9,8 +9,7 @@ from src._internals._internal_exceptions._exceptions import (
 from src.consts import COUNT_INDEX, TOTAL_INDEX
 from src.enums import Config, TestStatus
 from src.misc.annotations import F_Callable, S_Callable, StackTrace
-from src.misc.exceptions import (ExpectedWasDifferentFromActual,
-                                 MustEqualReceivedNotKnownTypes)
+from src.misc.exceptions import ExpectedWasDifferentFromActual
 from src.state.state import OperationState
 
 
@@ -42,7 +41,7 @@ class TestStep:
         try:
             with redirect_stdout(buffer):
                 self.func(*self.args, **self.kwargs)
-        # TODO(**2**) can this exception be replaced from users at runtime? if that is the case this breaks
+
         except ExpectedWasDifferentFromActual as e:
            
             exception_trace = '\n'.join(traceback.format_tb(e.__traceback__))

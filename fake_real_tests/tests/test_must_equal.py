@@ -6,7 +6,6 @@ from src.must_equals import must_equal
 from src.test_utils import Test
 
 
-
 @Test.case
 def test_must_equal_receives_not_a_valid_comperator() -> None:
     expected = (1, 2)
