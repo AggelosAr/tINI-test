@@ -4,7 +4,7 @@ authors = [
   { name="Aggelos Arelakis", email="aggelosarelakis@gmail.com" },
 ]
 version = "0.1.0"
-description = "A small library/framework used for testing your source code."
+description = "A small library/framework used for testing your python source code."
 
 readme = "README.md"
 requires-python = ">=3.13"
