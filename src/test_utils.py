@@ -42,29 +42,23 @@ class TestStep:
         try:
             with redirect_stdout(buffer):
                 self.func(*self.args, **self.kwargs)
-        # ExpectedWasDifferentFromActual  and MustEqualReceivedNotKnownTypes should only be allowed in main !!!!?
         # can this exception be replaced with users at runtime? if that is the case this breaks
         except ExpectedWasDifferentFromActual as e:
            
             exception_trace = '\n'.join(traceback.format_tb(e.__traceback__))
-            
-            # The assumption is that the run_step func will be called first 
-            # and somewhere later the must_equal will be called so we want only that traceback
            
             return OperationState(entry_status=self.entry_status,
                                   status=self.fail_status,
                                   detail=str(e),
-                                   exception_trace=exception_trace, # remove this 
+                                exception_trace=exception_trace,
                                   redirected_output=buffer)
         except MustEqualReceivedNotKnownTypes as e:
             raise # TODO
 
         except Exception as e:
-            # I suppose here we dont want the detail anyways
             exception_trace = traceback.format_exc()
             return OperationState(entry_status=self.entry_status,
                                   status=self.fail_status,
-                                  # detail=str(e),
                                   redirected_output=buffer,
                                   exception_trace=exception_trace)
         

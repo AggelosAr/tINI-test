@@ -1,17 +1,13 @@
 
 
-
 # TODO remove detail from exception or truncate it ? since it already shows ?
-# TODO use diff lib to show diff?
-# must_equal must compare the results and if it fails it must print some kind of diff
-
-
-
 # TODO add specific exception on detail and use it to format ndiff
-
-
 # TODO add custom comperator 
 # TODO package this 
+
+
+# test must equal on cleanup and breakup ExpectedWasDifferentFromActual  MustEqualReceivedNotKnownTypes
+
 
 ON TOML
 [project.urls]
@@ -20,29 +16,8 @@ Issues = "https://github.com/pypa/sampleproject/issues"
 
 
 
-
-
-MustEqualReceivedNotKnownTypes  -> test it 
-ExpectedWasDifferentFromActual  -> test it 
-
-
-
 # test must equal recieves more args ??
 
-
-# WHAT happens when the lib crashes?>
-
-
-# If expection has %s it breaks it , is this the only case ?
-class DictionarySizeMismatchError(MustEqualError):
-
-    def __init__(self, a: dict[Any, Any], b: dict[Any, Any], detail='') -> None:
-        msg = '%s != %s | %s' % (a, b, 1, 1)
-        super().__init__(msg)
-
-
-
-#_equals_engine LINE 47 add test 
 
 
 
@@ -54,8 +29,19 @@ class DictionarySizeMismatchError(MustEqualError):
 
 
 
+# WHAT happens when the lib crashes?>
+
+# If expection has %s it breaks it , is this the only case ?
+class DictionarySizeMismatchError(MustEqualError):
+
+    def __init__(self, a: dict[Any, Any], b: dict[Any, Any], detail='') -> None:
+        msg = '%s != %s | %s' % (a, b, 1, 1)
+        super().__init__(msg)
 
 
-add more tests and implement the core must equals 
+#_equals_engine LINE 47 add test 
 
 
+
+
+#TODO remove mode duplication

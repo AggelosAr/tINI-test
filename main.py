@@ -1,7 +1,7 @@
 from src._internals._internal_exceptions._exceptions import (
     _FailStateWasNotFail, _LastOpNotExpected)
 from src.arg_parser import recieve_args
-from src.misc.exceptions import (CantFindRelativePathToRoot, NotSupportedMode,
+from src.misc.exceptions import (CantFindRelativePathToRoot, MustEqualReceivedNotKnownTypes, NotSupportedMode,
                                  TestNotFound, TooManyArgumentsGivenDirAndFile)
 from src.runner import get_test_container, run_tests
 
@@ -21,6 +21,8 @@ if __name__=='__main__':
     except NotSupportedMode:
         raise
     except TestNotFound:
+        raise
+    except MustEqualReceivedNotKnownTypes: # TODO we must not fail the test but inform the user.
         raise
     except _FailStateWasNotFail: # TODO(**1**) This means something broke with small-test ? remove from here ?
         raise
