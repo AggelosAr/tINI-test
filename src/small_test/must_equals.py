@@ -8,7 +8,7 @@ from small_test.misc.annotations import Comperator
 from small_test.misc.exceptions import (ComperatorIsNotValid,
                                         ComperatorWasNotProvided,
                                         ExpectedWasDifferentFromActual)
-
+# Something is very fishy here. Check returns on _raise TODO 
 _known_types = set([type,
                     bool,
                     int,
@@ -202,7 +202,9 @@ def _must_equal(expected: Any,
 
     # review this ...
     if type(expected) == type(actual) and _is_alien:
-        return expected == actual
+        if expected != actual:
+            _raise_diff('%r != %r' % (expected, actual, ))
+            return
 
     if _is_alien and not comperator:
         raise ComperatorWasNotProvided
@@ -262,6 +264,7 @@ def _must_equal(expected: Any,
 def _diff_primitive(expected: Any, actual: Any, path: str) -> None:
     if expected != actual:
         _raise_diff('%r != %r' % (expected, actual, ))
+        return
 
 
 def _diff_str(expected: str, actual: str, path: str) -> None:
@@ -269,10 +272,12 @@ def _diff_str(expected: str, actual: str, path: str) -> None:
         return
 
     if len(expected) > _diff_threshold or len(actual) > _diff_threshold:
-        return _raise_diff('String mismatch')
+        _raise_diff('String mismatch')
+        return
     
     diff = _unified_diff(expected, actual)
     _raise_diff('%s:\n%s' % (path, diff, ))
+    return
 
 
 def _diff_alien_primitive(expected: Any, 
@@ -282,6 +287,7 @@ def _diff_alien_primitive(expected: Any,
     
     if comperator(expected, actual) is False:
         _raise_diff('%s: %r != %r' % (path, expected, actual, ))
+        return
 
 
 # =========================================================
@@ -303,6 +309,7 @@ def _diff_set(expected: set[Any],
         '%s: set mismatch\nmissing: %r\nextra: %r'
         % (path, missing, extra, )
     )
+    return
 
 
 def _diff_tuple(expected: tuple[Any, ...], 
@@ -315,6 +322,7 @@ def _diff_tuple(expected: tuple[Any, ...],
             'tuple length mismatch\nexpected=%d actual=%d'
             % (len(expected), len(actual), )
         )
+        return
 
     for i, (e, a) in enumerate(zip(expected, actual)):
         _must_equal(e, a, '%s[%d]' % (path, i, ), comperator)
@@ -330,6 +338,7 @@ def _diff_list(expected: list[Any],
             'list length mismatch\nexpected=%d actual=%d'
             % (len(expected), len(actual), )
         )
+        return
 
     for i, (e, a) in enumerate(zip(expected, actual)):
         _must_equal(e, a, '%s[%d]' % (path, i, ), comperator)
@@ -348,6 +357,7 @@ def _diff_dict(expected: dict[Any, Any],
             '%s: dict key mismatch\nmissing: %r\nextra: %r'
             % (path, missing, extra, )
         )
+        return
 
     for key in expected:
         _must_equal(expected[key], actual[key], '%s[%r]' % (path, key, ), comperator)
