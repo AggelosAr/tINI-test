@@ -1,4 +1,3 @@
-from functools import reduce
 from io import StringIO
 from typing import Iterator, Optional
 
