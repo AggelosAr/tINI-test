@@ -121,7 +121,7 @@ def test_test_module_will_collect_a_single_function() -> None:
 def test_test_module_will_collect_this_function() -> None:
 
     t = 'test_test_module_will_collect_this_function'
-    tests_container = get_test_container(test_function=t)
+    tests_container, _ = get_test_container(test_function=t)
 
     assert len(tests_container['fake_real_tests.test_module_collector.tests']) == 1
 

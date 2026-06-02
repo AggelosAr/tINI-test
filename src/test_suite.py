@@ -1,10 +1,13 @@
 from functools import partial
 from importlib import import_module
+from time import perf_counter
 from types import FunctionType
 from typing import Callable, Optional, TypeAlias
 
 from src._internals.consts import _LINE_CLEAR, _LINE_UP, _RESET
 from src.enums import Color, Mode
+from src.misc.annotations import (Failures, SuiteSize, TestName,
+                                  TestSuiteResults)
 from src.misc.exceptions import NotSupportedMode
 from src.test_utils import Test
 
@@ -59,9 +62,9 @@ class TestSuite:
     def file_name(self) -> str:
         return self.module.__name__
     
-    def gather_tests(self, func_name: Optional[str] = None) -> list[str]:
+    def gather_tests(self, func_name: Optional[str] = None) -> list[TestName]:
 
-        tests = []
+        test_names = []
 
         for obj in dir(self.module):
 
@@ -72,17 +75,17 @@ class TestSuite:
                         hasattr(g_obj, '_xyz_is_a_test_case_uwu')]):
                 continue 
             
-            f_name = g_obj.__closure__[-1].cell_contents.__name__
-            if func_name and f_name != func_name:
+            test_name = str(g_obj.__closure__[-1].cell_contents.__name__)  # TODO xxx
+            if func_name and test_name != func_name:
                 continue
             
-            tests.append(f_name)
+            test_names.append(test_name)
 
             # TODO fix this XXX
             test_obj = partial(g_obj, _Test____collector=self.collector)
             self.decorated_tests.append(test_obj)
 
-        return tests
+        return test_names
     
     def populate_tests(self) -> None:
         list(map(lambda l: l(), self.decorated_tests))
@@ -94,8 +97,8 @@ class TestSuite:
     def box_tests(self) -> None:
         list(map(lambda l: l.box_test(), self.collector.values()))
     
-    # TODO refactor to show_test_result
-    def show_test_results(self, verbocity: Optional[bool] = True) -> None:
+    # TODO refactor to show_test_result !!!
+    def show_test_results(self, verbocity: Optional[bool] = True) -> Failures:
         
         if self.mode != Mode.SUPER_MINIMAL:
             print('Running tests for < %s >\n' % (self.file_name, ))
@@ -142,7 +145,7 @@ class TestSuite:
         if self.mode in _MINIMALS and failed_tests:
             
             if self.mode == Mode.SUPER_MINIMAL:
-                return
+                return len(failed_tests)
             
             print('Failed tests: %s\n' % failed_tests)
 
@@ -157,23 +160,30 @@ class TestSuite:
 
         print()
 
-    def run_tests(self) -> None:
+        return len(failed_tests)
+
+    def run_tests(self) -> TestSuiteResults:
+        
+        _start = perf_counter()
 
         self.populate_tests()
         self.box_tests()
 
+        failures = 0
+        
         match self.mode:
 
             case Mode.NORMAL:
-                self.show_test_results()
+                failures += self.show_test_results()
 
             case Mode.SORT:
                 self.sort_tests()
-                self.show_test_results()
+                failures += self.show_test_results()
 
             case Mode.MINIMAL | Mode.MINIMAL_NO_STACK | Mode.SUPER_MINIMAL:
-                self.show_test_results(verbocity=False)
+                failures += self.show_test_results(verbocity=False)
 
-
+        return (perf_counter() - _start, failures)
+    
 # TODO move @annotations
 TestsContainer: TypeAlias = dict[str, dict[str, TestSuite]]

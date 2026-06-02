@@ -16,3 +16,16 @@ Comperator: TypeAlias = Callable[..., Any] # Callable[[Any, Any], bool]
 
 
 ColorValue: TypeAlias = str
+
+
+TestName: TypeAlias = str
+
+
+TimeTakenForTestDiscoveryAndSuiteInitialization: TypeAlias = float
+
+TimeTakenForModule: TypeAlias = float
+
+SuiteSize: TypeAlias = int
+Failures: TypeAlias = int
+
+TestSuiteResults: TypeAlias = tuple[TimeTakenForModule, Failures]

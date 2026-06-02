@@ -1,3 +1,5 @@
+import pyinstrument
+
 from src._internals._internal_exceptions._exceptions import (
     _FailStateWasNotFail, _LastOpNotExpected)
 from src.arg_parser import recieve_args
@@ -9,24 +11,26 @@ if __name__=='__main__':
 
     mode, search_dir, search_file, search_test_function = recieve_args()
 
-    try:
-        tests_container = get_test_container(mode,
-                                             search_dir,
-                                             search_file,
-                                             search_test_function)
-    except TooManyArgumentsGivenDirAndFile:
-        raise
-    except CantFindRelativePathToRoot:
-        raise
-    except NotSupportedMode:
-        raise
-    except TestNotFound:
-        raise
-    except _FailStateWasNotFail: # TODO(**1**) This means something broke with small-test ? remove from here ?
-        raise
-    except _LastOpNotExpected: # TODO(**1**)
-        raise
-    else:
-        run_tests(tests_container)
-    finally:
-        ...
+    with pyinstrument.profile():
+
+        try:
+            tests_container, time = get_test_container(mode,
+                                                    search_dir,
+                                                    search_file,
+                                                    search_test_function)
+        except TooManyArgumentsGivenDirAndFile:
+            raise
+        except CantFindRelativePathToRoot:
+            raise
+        except NotSupportedMode:
+            raise
+        except TestNotFound:
+            raise
+        except _FailStateWasNotFail: # TODO(**1**) This means something broke with small-test ? remove from here ?
+            raise
+        except _LastOpNotExpected: # TODO(**1**)
+            raise
+        else:
+            run_tests(time, tests_container)
+        finally:
+            ...
