@@ -3,21 +3,21 @@ from enum import Enum
 
 class Config(Enum):
 
-    RED = '\033[91m'
-    GREEN = '\033[92m'
-    YELLOW = '\033[93m'
-    BLUE = '\033[94m'
-    CYAN = "\033[96m"
-    MAGENTA = '\033[95m'
+    RED = '\033[91m'         # FAIL
+    GREEN = '\033[92m'       # SUCCESS
+    YELLOW = '\033[93m'      # SET_UP_FAIL | BREAK_DOWN_FAIL | ATTEMPT_BREAK_DOWN_FAIL
+    BLUE = '\033[94m'        # SET_UP_ENTRY | SET_UP_SUCCESS | BREAK_DOWN_ENTRY | BREAK_DOWN_SUCCESS
+    MAGENTA = '\033[95m'     # ALL ATTEMPTs
 
-    NEGATIVE = "\033[7m"
-    RESET = '\033[0m'
+    NEGATIVE = "\033[7m"     # Negative
+    RESET = '\033[0m'        # Reset line colours
 
-    LINE_UP = '\033[1A'
-    LINE_CLEAR = '\x1b[2K'
+    LINE_UP = '\033[1A'      # Used on minimal dots
+    LINE_CLEAR = '\x1b[2K'   # Used on minimal dots
 
-    SEPERATOR_LENGTH = 120
-    SEPERATOR_SYMBOL = '='
+    CYAN = "\033[96m"        # Seperator
+    SEPERATOR_LENGTH = 120   # Seperator length
+    SEPERATOR_SYMBOL = '='   # Seperator symbol
 
 
 class Mode(Enum):
