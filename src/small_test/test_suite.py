@@ -4,11 +4,11 @@ from time import perf_counter
 from types import FunctionType
 from typing import Callable, Optional, TypeAlias
 
-from src.small_test._internals.consts import _LINE_CLEAR, _LINE_UP, _RESET
-from src.small_test.enums import Color, Mode
-from src.small_test.misc.annotations import Failures, TestName, TestSuiteResults
-from src.small_test.misc.exceptions import NotSupportedMode
-from src.small_test.test_utils import Test
+from small_test._internals.consts import _LINE_CLEAR, _LINE_UP, _RESET
+from small_test.enums import Color, Mode
+from small_test.misc.annotations import Failures, TestName, TestSuiteResults
+from small_test.misc.exceptions import NotSupportedMode
+from small_test.test_utils import Test
 
 _MINIMALS = {Mode.MINIMAL, Mode.MINIMAL_NO_STACK, Mode.SUPER_MINIMAL}
 

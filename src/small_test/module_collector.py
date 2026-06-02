@@ -2,9 +2,13 @@ from os import getcwd, path, walk
 from pathlib import Path
 from typing import Optional
 
-from src.small_test.misc.exceptions import CantFindRelativePathToRoot
+from small_test.misc.exceptions import CantFindRelativePathToRoot
 
 # TODO test edge cases of file paths with .. / etc ...
+
+# what happens if dir of file is given but only function ? do we search? ...
+# review the search proccess , seems kinda stupid 
+
 
 class ModuleCollector:
 
@@ -43,7 +47,7 @@ class ModuleCollector:
         self.search_file = search_file
         if self.search_file and not self.search_file.endswith('.py'):
             self.search_file = '%s.py' % (self.search_file, )
-       
+
     def is_valid_test_file(self, file_name: str) -> bool:
         return all([
             file_name.startswith('test_'),

@@ -1,5 +1,6 @@
 from src.small_test.context_manager import WillRaise
-from src.small_test.misc.exceptions import CantFindRelativePathToRoot, TestNotFound
+from src.small_test.misc.exceptions import (CantFindRelativePathToRoot,
+                                            TestNotFound)
 from src.small_test.module_collector import ModuleCollector
 from src.small_test.runner import get_test_container
 from src.small_test.test_suite import Test

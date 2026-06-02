@@ -2,9 +2,10 @@ from functools import lru_cache
 from io import StringIO
 from typing import Iterator, Optional
 
-from src.small_test._internals.consts import (_RESET, SEPERATOR_CYAN, SEPERATOR_LENGTH,
-                                   SEPERATOR_NEGATIVE, SEPERATOR_SYMBOL)
-from src.small_test.enums import CONFIG, TestStatus
+from small_test._internals.consts import (_RESET, SEPERATOR_CYAN,
+                                          SEPERATOR_LENGTH, SEPERATOR_NEGATIVE,
+                                          SEPERATOR_SYMBOL)
+from small_test.enums import CONFIG, TestStatus
 
 _x_f = ['']
 

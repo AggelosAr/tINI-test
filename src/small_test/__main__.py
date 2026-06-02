@@ -1,12 +1,9 @@
-from src.small_test._internals._internal_exceptions._exceptions import (
+from small_test._internals._internal_exceptions._exceptions import (
     _FailStateWasNotFail, _LastOpNotExpected)
-from src.small_test.arg_parser import receive_args
-from src.small_test.misc.exceptions import (CantFindRelativePathToRoot, NotSupportedMode,
-                                 TestNotFound)
-from src.small_test.runner import get_test_container, run_tests
-
-
-print('HELLO')
+from small_test.arg_parser import receive_args
+from small_test.misc.exceptions import (CantFindRelativePathToRoot,
+                                        NotSupportedMode, TestNotFound)
+from small_test.runner import get_test_container, run_tests
 
 if __name__=='__main__':
 
@@ -14,9 +11,9 @@ if __name__=='__main__':
 
     try:
         tests_container, time = get_test_container(mode,
-                                                search_dir,
-                                                search_file,
-                                                search_test_function)
+                                                   search_dir,
+                                                   search_file,
+                                                   search_test_function)
     except CantFindRelativePathToRoot:
         raise
     except NotSupportedMode:

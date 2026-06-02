@@ -1,7 +1,7 @@
 from src.small_test.context_manager import WillRaise
 from src.small_test.misc.exceptions import (ComperatorIsNotValid,
-                                 ComperatorWasNotProvided,
-                                 ExpectedWasDifferentFromActual)
+                                            ComperatorWasNotProvided,
+                                            ExpectedWasDifferentFromActual)
 from src.small_test.must_equals import must_equal
 from src.small_test.test_utils import Test
 
