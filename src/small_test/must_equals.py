@@ -1,5 +1,6 @@
 from difflib import unified_diff
 from dis import Bytecode, dis  # TODO
+import enum
 from functools import lru_cache
 from typing import Any, Optional, assert_never
 
@@ -180,6 +181,7 @@ def _single_line_diff(expected: str, actual: str) -> str:
 # Core dispatcher
 # =========================================================
 
+# Optimize this 
 
 def _must_equal(expected: Any, 
                 actual: Any, 
@@ -195,7 +197,12 @@ def _must_equal(expected: Any,
             % (path, type(expected), type(actual), )
         )
 
-    _is_alien = type(expected) not in _known_types
+    # If they are equal type try to compare them ?
+    _is_alien = type(expected) not in _known_types # or type(actual) not in _known_types TODO do we need this ?
+
+    # review this ...
+    if type(expected) == type(actual) and _is_alien:
+        return expected == actual
 
     if _is_alien and not comperator:
         raise ComperatorWasNotProvided
