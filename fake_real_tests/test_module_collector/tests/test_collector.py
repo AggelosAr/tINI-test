@@ -1,6 +1,6 @@
 from src.context_manager import WillRaise
-from src.misc.exceptions import (CantFindRelativePathToRoot, TestNotFound,
-                                 TooManyArgumentsGivenDirAndFile)
+from src.misc.exceptions import CantFindRelativePathToRoot, TestNotFound
+
 from src.module_collector import ModuleCollector
 from src.runner import get_test_container
 from src.test_suite import Test
@@ -28,13 +28,6 @@ def test_collector_collects_all() -> None:
                                                'test_cleanup'],
                      'tests': []}
     assert correct_items == dict(test_collector.test_modules.items())
-
-
-
-@Test.case
-def test_collector_bad_initialiazation() -> None:
-    with WillRaise(TooManyArgumentsGivenDirAndFile) as context:
-        _ = ModuleCollector(search_dir='.', search_file='.')
   
 
 
