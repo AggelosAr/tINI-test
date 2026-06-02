@@ -20,7 +20,7 @@ _known_types = set([bool,
 
 here = None
 
-_diffThreshold = 2**16
+_diff_threshold = 2**16
 
 
 # =========================================================
@@ -253,7 +253,7 @@ def _diff_str(expected: str, actual: str, path: str) -> None:
     if expected == actual:
         return
 
-    if len(expected) > _diffThreshold or len(actual) > _diffThreshold:
+    if len(expected) > _diff_threshold or len(actual) > _diff_threshold:
         return _raise_diff('String mismatch')
     
     diff = _unified_diff(expected, actual)
