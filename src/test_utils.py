@@ -100,9 +100,7 @@ class Test:
         self.operation_states: list[OperationState] = []
     
     def __str__(self) -> str:
-        test = []
-        test.extend(filter(lambda l: l != str(), map(str, self.operation_states)))
-        return '\n'.join(test)
+        return '\n'.join(filter(lambda l: l != str(), map(str, self.operation_states)))
 
     def __repr__(self) -> str:
         raise NotImplementedError

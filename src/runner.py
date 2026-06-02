@@ -21,14 +21,8 @@ def get_test_container(mode: Optional[str | Mode] = None,
     #search_dir = 'test_must_equals'
  
     search_file = 'test_must_equal_works' # custom compartor n diff problem of repr
-    # search_file = 'test_must_equals_misc'
+    search_file = 'test_must_equals_misc'
 
-    search_file = 'test_must_equal_strings'
-
-
-
-
-    
     
     # BAD ?
     # src.misc.exceptions.TooManyArgumentsGivenDirAndFile: Module collector should accept either a directory or a file.

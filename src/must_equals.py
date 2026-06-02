@@ -69,7 +69,7 @@ def must_equal(expected: Any,
 
 
 @lru_cache(maxsize=None)
-def _assert_comperator(comperator: Optional[Comperator | Any] = None) -> None:
+def _assert_comperator(comperator: Comperator | Any) -> None:
 
     if '__code__' not in dir(comperator):
         raise ComperatorIsNotValid(reason='Comperator is not a function')
@@ -197,7 +197,7 @@ def _must_equal(expected: Any,
         raise ComperatorWasNotProvided
 
     if type(expected) not in _known_types:
-        _diff_alien_primitive(expected, actual, path, comperator)
+        _diff_alien_primitive(expected, actual, path, comperator) # type: ignore[arg-type]
         return
     
     if isinstance(expected, bool):

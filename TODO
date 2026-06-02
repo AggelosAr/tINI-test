@@ -1,10 +1,6 @@
 
 * [ ] Add final execution summary also time
 
-# TODO do something about new lines in the must_equals
-
-
-# TODO finish some last tests on the must equals 
 
 
 # use python 3.0
@@ -33,6 +29,3 @@ test functions are unordered
 
 ndiff multiline on single line ?
 
-
-
- # TODO  add test for very big string

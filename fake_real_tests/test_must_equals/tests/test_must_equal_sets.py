@@ -73,8 +73,8 @@ extra: {9}
 
 @Test.case
 def test_set_empty() -> None:
-    expected = set()
-    actual = set()
+    expected: set = set()
+    actual: set = set()
     must_equal(expected, actual)
 
 

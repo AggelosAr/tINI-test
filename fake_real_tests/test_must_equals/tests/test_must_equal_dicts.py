@@ -52,8 +52,8 @@ def test_dict_extra_key() -> None:
 
 @Test.case
 def test_dict_empty() -> None:
-    expected = {}
-    actual = {}
+    expected: dict = {}
+    actual: dict = {}
     must_equal(expected, actual)
 
 

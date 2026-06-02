@@ -52,8 +52,8 @@ def test_list_length_diff_longer() -> None:
 
 @Test.case
 def test_list_empty() -> None:
-    expected = []
-    actual = []
+    expected: list = []
+    actual: list = []
     must_equal(expected, actual)
 
 
