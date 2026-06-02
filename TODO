@@ -19,16 +19,5 @@ test functions are unordered
 
 
 
-# TODO package this 
-ON TOML
-[project.urls]
-Homepage = "https://github.com/pypa/small-test"
-Issues = "https://github.com/pypa/sampleproject/issues"
-
-
-
-
-
-
-ndiff multiline on single line ?
+# ndiff multiline on single line ?
 

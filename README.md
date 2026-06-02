@@ -223,12 +223,6 @@ The framework has been tested using its own test suite.
 * [ ] Add start separators in NORMAL and SORT modes
 
 
-
-### Test Execution
-
-* [ ] Improve SORT mode by grouping failures by category
-
-
 ### Groups
 
 * [ ] Register tests into groups
