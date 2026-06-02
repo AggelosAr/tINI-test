@@ -1,3 +1,4 @@
+from functools import reduce
 from io import StringIO
 from typing import Optional
 
@@ -69,13 +70,11 @@ class OperationState:
     def exit_msg(self, new_msg: list[str]) -> None:
         self._exit_msg = new_msg
     
-    # TODO use map here 
     def get_boxed_information(self) -> list[str]:
-        box = ['\n'.join(filter(lambda l: l != [''], self.entry_msg)),
-               '\n'.join(filter(lambda l: l != [''], [self.redirected_output.getvalue()])), 
-               '\n'.join(filter(lambda l: l != [''], [self.exception_trace])),
-               '\n'.join(filter(lambda l: l != [''], self.exit_msg))]
-        return box
+        return map(lambda l: '\n'.join(l), [self.entry_msg,
+                                            [self.redirected_output.getvalue()], 
+                                            [self.exception_trace],
+                                            self.exit_msg])
 
     def get_and_format_detail(self,
                               status: TestStatus,
