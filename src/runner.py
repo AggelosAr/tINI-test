@@ -15,14 +15,12 @@ def get_test_container(mode: Optional[str | Mode] = None,
                        test_function: Optional[str] = None) -> tuple[TestsContainer, 
                                                                      TimeTakenForTestDiscoveryAndSuiteInitialization]:
 
-    search_dir = None
 
-    
     # mode = 'SORT'
     # mode = 'SUPER_MINIMAL'
 
-    search_dir = 'test_must_equals'
-    search_file = 'test_must_equal_works' # custom compartor n diff problem of repr
+    # search_dir = 'test_must_equals'
+    # search_file = 'test_must_equal_works' # custom compartor n diff problem of repr
     # test_function = 'test_must_equal_type_case_different'
     # search_file = 'test_must_equal_strings'
 
