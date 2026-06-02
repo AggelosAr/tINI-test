@@ -196,13 +196,15 @@ def _must_equal(expected: Any,
             '%s: type mismatch\nexpected: %s\nactual:   %s'
             % (path, type(expected), type(actual), )
         )
+        return
 
-    # If they are equal type try to compare them ?
-    _is_alien = type(expected) not in _known_types # or type(actual) not in _known_types TODO do we need this ?
+    _is_alien = type(expected) not in _known_types
 
     # review this ...
     if type(expected) == type(actual) and _is_alien:
-        if expected != actual:
+        if expected == actual:
+            return
+        else:
             _raise_diff('%r != %r' % (expected, actual, ))
             return
 
