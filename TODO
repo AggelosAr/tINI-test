@@ -1,14 +1,10 @@
 
-* [ ] Add final execution summary also time
 
 test functions are unordered
 
 # bytes json frozenset
 
 
-
-
-# use python 3.0
 
 
 # test exceptions withint exceptrions,  functions within functions?
@@ -21,3 +17,9 @@ test functions are unordered
 
 # ndiff multiline on single line ?
 
+
+
+# do smthing about mode duplication code
+
+# format outputs 
+# see redirected stdout optimizations 

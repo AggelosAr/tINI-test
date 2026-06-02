@@ -82,6 +82,8 @@ def receive_args() -> tuple[Mode, str, str, str]:
         mode = Mode.MINIMAL
     elif args.MINIMAL_NO_STACK:
         mode = Mode.MINIMAL_NO_STACK
+    elif args.SUPER_MINIMAL:
+        mode = Mode.SUPER_MINIMAL
 
     #
     # Search targets
