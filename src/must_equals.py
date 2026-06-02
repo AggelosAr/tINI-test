@@ -1,5 +1,5 @@
 from difflib import unified_diff
-from dis import Bytecode, dis
+from dis import Bytecode, dis # TODO 
 from functools import lru_cache
 from typing import Any, Optional, assert_never
 
@@ -9,7 +9,8 @@ from src.misc.exceptions import (ComperatorIsNotValid,
                                  ComperatorWasNotProvided,
                                  ExpectedWasDifferentFromActual)
 
-_known_types = set([bool,
+_known_types = set([type,
+                    bool,
                     int,
                     float,
                     str,
@@ -198,6 +199,10 @@ def _must_equal(expected: Any,
 
     if type(expected) not in _known_types:
         _diff_alien_primitive(expected, actual, path, comperator) # type: ignore[arg-type]
+        return
+    
+    if isinstance(expected, type):
+        _diff_primitive(expected, actual, path)
         return
     
     if isinstance(expected, bool):

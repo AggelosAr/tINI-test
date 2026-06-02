@@ -15,12 +15,27 @@ def test_must_equal_frozen_set_passes() -> None:
 
 
 @Test.case
-def test_must_equal_type_none() -> None:
+def test_must_equal_type_none_case() -> None:
 
     s = type(None)
     t = type(None)
     
     must_equal(s, t)
+
+
+
+@Test.case
+def test_must_equal_type_case_different() -> None:
+
+    s = type(1)
+    t = type(None)
+    
+    with WillRaise(ExpectedWasDifferentFromActual) as e:
+        must_equal(s, t)
+
+    must_equal('''
+<class 'int'> != <class 'NoneType'>
+''', str(e.exception))
 
 
 

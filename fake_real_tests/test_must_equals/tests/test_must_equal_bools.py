@@ -32,7 +32,9 @@ def test_bool_true_false_fail() -> None:
     print(str(context.exception))
     print('---------------------------------')
 
-    must_equal('True != False', str(context.exception))
+    must_equal('''
+True != False
+''', str(context.exception))
 
 
 
@@ -48,7 +50,9 @@ def test_bool_false_true_fail() -> None:
     print(str(context.exception))
     print('---------------------------------')
 
-    must_equal('False != True', str(context.exception))
+    must_equal('''
+False != True
+''', str(context.exception))
 
 
 @Test.case

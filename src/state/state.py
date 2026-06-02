@@ -5,7 +5,6 @@ from src.enums import Config, TestStatus
 
 
 # TODO maybe move seperator at NO_OP? is this possible?
-# TODO something smells fishy with the NO_OPs -> investigate
 class OperationState:
 
     def __init__(self, 
@@ -152,4 +151,4 @@ class OperationState:
                 return [s_msg, e_msg]
 
             case TestStatus.NO_OP:
-                return ['']
+                return ['~~~']
