@@ -13,3 +13,6 @@ StackTrace: TypeAlias = str
 DiffMessage: TypeAlias = str
 
 Comperator: TypeAlias = Callable[..., Any] # Callable[[Any, Any], bool]
+
+
+ColorValue: TypeAlias = str

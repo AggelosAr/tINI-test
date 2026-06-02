@@ -2,6 +2,8 @@ from enum import Enum
 from functools import lru_cache
 from typing import Mapping
 
+from src.misc.annotations import ColorValue
+
 
 class Color(Enum):
 
@@ -64,7 +66,7 @@ class TestStatus(Enum):
         return status in cls.fail_operations()
 
 
-CONFIG: Mapping[TestStatus, Color] = {
+CONFIG: Mapping[TestStatus, ColorValue] = {
     TestStatus.SUCCESS: Color.GREEN.value,
     TestStatus.FAIL: Color.RED.value,
     TestStatus.SET_UP_ENTRY: Color.BLUE.value,

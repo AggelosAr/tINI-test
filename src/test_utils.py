@@ -4,9 +4,9 @@ from io import StringIO
 from traceback import format_exc, format_tb
 from typing import Any, Optional
 
-from src._internals.consts import SEPERATOR_LENGTH
 from src._internals._internal_exceptions._exceptions import (
     _FailStateWasNotFail, _LastOpNotExpected)
+from src._internals.consts import SEPERATOR_LENGTH
 from src.enums import TestStatus
 from src.misc.annotations import F_Callable, S_Callable, StackTrace
 from src.misc.exceptions import ExpectedWasDifferentFromActual

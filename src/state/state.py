@@ -3,7 +3,7 @@ from typing import Optional
 
 from src._internals.consts import (_RESET, SEPERATOR_CYAN, SEPERATOR_LENGTH,
                                    SEPERATOR_NEGATIVE, SEPERATOR_SYMBOL)
-from src.enums import CONFIG, Color, TestStatus
+from src.enums import CONFIG, TestStatus
 
 
 # TODO maybe move seperator at NO_OP? is this possible?
