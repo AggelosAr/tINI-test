@@ -1,6 +1,6 @@
 from typing import assert_never
 
-from src.test_suite import Test
+from src.small_test.test_suite import Test
 
 
 @Test.case

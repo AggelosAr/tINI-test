@@ -4,12 +4,12 @@ from io import StringIO
 from traceback import format_exc, format_tb
 from typing import Any, Optional
 
-from src._internals._internal_exceptions._exceptions import (
+from src.small_test._internals._internal_exceptions._exceptions import (
     _FailStateWasNotFail, _LastOpNotExpected)
-from src.enums import TestStatus
-from src.misc.annotations import F_Callable, S_Callable, StackTrace
-from src.misc.exceptions import ExpectedWasDifferentFromActual
-from src.state.state import OperationState
+from src.small_test.enums import TestStatus
+from src.small_test.misc.annotations import F_Callable, S_Callable, StackTrace
+from src.small_test.misc.exceptions import ExpectedWasDifferentFromActual
+from src.small_test.state.state import OperationState
 
 
 class TestStep:

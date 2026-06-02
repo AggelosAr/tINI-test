@@ -1,9 +1,9 @@
-from src.context_manager import WillRaise
-from src.misc.exceptions import (ComperatorIsNotValid,
+from src.small_test.context_manager import WillRaise
+from src.small_test.misc.exceptions import (ComperatorIsNotValid,
                                  ComperatorWasNotProvided,
                                  ExpectedWasDifferentFromActual)
-from src.must_equals import must_equal
-from src.test_utils import Test
+from src.small_test.must_equals import must_equal
+from src.small_test.test_utils import Test
 
 
 @Test.case

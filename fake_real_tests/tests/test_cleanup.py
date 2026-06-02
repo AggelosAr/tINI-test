@@ -1,4 +1,4 @@
-from src.test_utils import Test
+from src.small_test.test_utils import Test
 
 __GG = 0
 

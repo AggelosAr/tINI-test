@@ -1,6 +1,6 @@
 from typing import Any
 
-from src.misc.annotations import DiffMessage
+from src.small_test.misc.annotations import DiffMessage
 
 
 class _MustEqualError(Exception):

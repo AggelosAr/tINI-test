@@ -3,8 +3,8 @@ from dis import Bytecode, dis  # TODO
 from functools import lru_cache
 from typing import Any, Optional, assert_never
 
-from src.misc.annotations import Comperator
-from src.misc.exceptions import (ComperatorIsNotValid,
+from src.small_test.misc.annotations import Comperator
+from src.small_test.misc.exceptions import (ComperatorIsNotValid,
                                  ComperatorWasNotProvided,
                                  ExpectedWasDifferentFromActual)
 

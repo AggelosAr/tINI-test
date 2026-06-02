@@ -1,6 +1,6 @@
-from src.context_manager import WillRaise
-from src.misc.exceptions import WillRaiseReceivedNotAnException
-from src.test_suite import Test
+from src.small_test.context_manager import WillRaise
+from src.small_test.misc.exceptions import WillRaiseReceivedNotAnException
+from src.small_test.test_suite import Test
 
 
 @Test.case

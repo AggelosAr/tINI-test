@@ -1,12 +1,12 @@
 from time import perf_counter
 from typing import Optional
 
-from src.enums import Mode
-from src.misc.annotations import \
+from src.small_test.enums import Mode
+from src.small_test.misc.annotations import \
     TimeTakenForTestDiscoveryAndSuiteInitialization
-from src.misc.exceptions import TestNotFound
-from src.module_collector import ModuleCollector
-from src.test_suite import TestsContainer, TestSuite
+from src.small_test.misc.exceptions import TestNotFound
+from src.small_test.module_collector import ModuleCollector
+from src.small_test.test_suite import TestsContainer, TestSuite
 
 
 def get_test_container(mode: Optional[str | Mode] = None,

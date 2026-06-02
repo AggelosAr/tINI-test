@@ -1,6 +1,6 @@
 from typing import Optional
 
-from src.misc.exceptions import WillRaiseReceivedNotAnException
+from src.small_test.misc.exceptions import WillRaiseReceivedNotAnException
 
 _exception = Exception.__str__
 

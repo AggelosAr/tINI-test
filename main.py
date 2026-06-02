@@ -1,9 +1,14 @@
-from src._internals._internal_exceptions._exceptions import (
+#!/usr/bin/env python3
+
+from src.small_test._internals._internal_exceptions._exceptions import (
     _FailStateWasNotFail, _LastOpNotExpected)
-from src.arg_parser import receive_args
-from src.misc.exceptions import (CantFindRelativePathToRoot, NotSupportedMode,
+from src.small_test.arg_parser import receive_args
+from src.small_test.misc.exceptions import (CantFindRelativePathToRoot, NotSupportedMode,
                                  TestNotFound)
-from src.runner import get_test_container, run_tests
+from src.small_test.runner import get_test_container, run_tests
+
+
+print('HELLO')
 
 if __name__=='__main__':
 

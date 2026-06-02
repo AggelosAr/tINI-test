@@ -1,9 +1,9 @@
 from typing import assert_never
 
-from src._internals._equals_engine import _must_equal
-from src.context_manager import WillRaise
-from src.must_equals import must_equal
-from src.test_suite import Test
+from src.small_test._internals._equals_engine import _must_equal
+from src.small_test.context_manager import WillRaise
+from src.small_test.must_equals import must_equal
+from src.small_test.test_suite import Test
 
 
 @Test.case
