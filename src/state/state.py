@@ -1,6 +1,7 @@
 from io import StringIO
 from typing import Optional
 
+from src._internals.consts import _RESET
 from src.enums import Config, TestStatus
 
 
@@ -46,7 +47,7 @@ class OperationState:
 
     @classmethod
     def get_end_seperator(cls) -> list[str]:
-        return ['%s%s%s%s' % (Config.NEGATIVE.value, Config.CYAN.value, Config.SEPERATOR_LENGTH.value*Config.SEPERATOR_SYMBOL.value, Config.RESET.value, )]
+        return ['%s%s%s%s' % (Config.NEGATIVE.value, Config.CYAN.value, Config.SEPERATOR_LENGTH.value*Config.SEPERATOR_SYMBOL.value, _RESET, )]
     
     @property
     def entry_msg(self) -> list[str]:
@@ -83,7 +84,7 @@ class OperationState:
         match status:
 
             case TestStatus.SUCCESS:
-                s_msg = '%s--------- [PASS] ---------%s' % (Config.GREEN.value, Config.RESET.value, )
+                s_msg = '%s--------- [PASS] ---------%s' % (Config.GREEN.value, _RESET, )
 
                 return [s_msg]
             
@@ -91,62 +92,62 @@ class OperationState:
 
                 match len(detail):
                     case 0:
-                        s_msg = '%s*** EXCEPTION DURING TEST ***%s' % (Config.RED.value, Config.RESET.value, )
+                        s_msg = '%s*** EXCEPTION DURING TEST ***%s' % (Config.RED.value, _RESET, )
                         n_msg = ''
                     case _:
                         # TODO refactor since detail is not used in any state 
                         # we will take advatage of that to put the MUST_EQUALS messages there.
-                        s_msg = '%s*** EXCEPTION DURING TEST ***%s' % (Config.RED.value, Config.RESET.value, )
-                        n_msg = '%s %s %s' % (Config.RED.value, detail, Config.RESET.value, )
+                        s_msg = '%s*** EXCEPTION DURING TEST ***%s' % (Config.RED.value, _RESET, )
+                        n_msg = '%s %s %s' % (Config.RED.value, detail, _RESET, )
                         
-                e_msg = '%s------ [FAIL] ------%s' % (Config.RED.value, Config.RESET.value, )
+                e_msg = '%s------ [FAIL] ------%s' % (Config.RED.value, _RESET, )
                 
                 # TODO filter empty ...
                 return [s_msg, n_msg, e_msg]
 
 
             case TestStatus.SET_UP_ENTRY:
-                return ['%s[*] Set up started%s' % (Config.BLUE.value, Config.RESET.value, )]
+                return ['%s[*] Set up started%s' % (Config.BLUE.value, _RESET, )]
             
             case TestStatus.SET_UP_SUCCESS:
-                return ['%s[*] Set up succeeded%s' % (Config.BLUE.value, Config.RESET.value, )]
+                return ['%s[*] Set up succeeded%s' % (Config.BLUE.value, _RESET, )]
             
             case TestStatus.SET_UP_FAIL:
 
-                s_msg = '%s[*] Skipping test since set up failed.Reason: %s%s' % (Config.YELLOW.value, detail, Config.RESET.value, )
+                s_msg = '%s[*] Skipping test since set up failed.Reason: %s%s' % (Config.YELLOW.value, detail, _RESET, )
             
-                e_msg = '%s------ [SET UP FAILED] ------%s' % (Config.YELLOW.value, Config.RESET.value, )
+                e_msg = '%s------ [SET UP FAILED] ------%s' % (Config.YELLOW.value, _RESET, )
                 
                 return [s_msg, e_msg]
         
 
             case TestStatus.BREAK_DOWN_ENTRY:
-                return ['%s[*] Break down started%s' % (Config.BLUE.value, Config.RESET.value, )]
+                return ['%s[*] Break down started%s' % (Config.BLUE.value, _RESET, )]
             
             case TestStatus.BREAK_DOWN_SUCCESS:
-                return ['%s[*] Break down succeeded%s' % (Config.BLUE.value, Config.RESET.value, )]
+                return ['%s[*] Break down succeeded%s' % (Config.BLUE.value, _RESET, )]
             
             case TestStatus.BREAK_DOWN_FAIL:
-                s_msg = '%s[*] Cleaning up failed.Reason: %s%s' % (Config.YELLOW.value, detail, Config.RESET.value, )
+                s_msg = '%s[*] Cleaning up failed.Reason: %s%s' % (Config.YELLOW.value, detail, _RESET, )
                 
-                e_msg = '%s------ [BREAK DOWN FAILED] ------%s' % (Config.YELLOW.value, Config.RESET.value, )
+                e_msg = '%s------ [BREAK DOWN FAILED] ------%s' % (Config.YELLOW.value, _RESET, )
                 
                 return [s_msg, e_msg]
 
 
             case TestStatus.ATTEMPT_BREAK_DOWN_ENTRY_FROM_SETUP_FAIL:
-                return ['%s[*] Break down started after failed setup%s' % (Config.MAGENTA.value, Config.RESET.value, )]
+                return ['%s[*] Break down started after failed setup%s' % (Config.MAGENTA.value, _RESET, )]
             
             case TestStatus.ATTEMPT_BREAK_DOWN_ENTRY_FROM_FAIL:
-                return ['%s[*] Break down started after failed test%s' % (Config.MAGENTA.value, Config.RESET.value, )]
+                return ['%s[*] Break down started after failed test%s' % (Config.MAGENTA.value, _RESET, )]
             
             case TestStatus.ATTEMPT_BREAK_DOWN_SUCCESS:
-                return ['%s[*] Break down succeeded after failed test%s' % (Config.MAGENTA.value, Config.RESET.value, )]
+                return ['%s[*] Break down succeeded after failed test%s' % (Config.MAGENTA.value, _RESET, )]
             
             case TestStatus.ATTEMPT_BREAK_DOWN_FAIL:
-                s_msg = '%s[*] Test failed and attempting cgit statleaning up failed.Reason: %s%s' % (Config.MAGENTA.value, detail, Config.RESET.value, )
+                s_msg = '%s[*] Test failed and attempting cgit statleaning up failed.Reason: %s%s' % (Config.MAGENTA.value, detail, _RESET, )
 
-                e_msg = '%s------ [ATTEMPT BREAK DOWN FAILED] ------%s' % (Config.YELLOW.value, Config.RESET.value, )
+                e_msg = '%s------ [ATTEMPT BREAK DOWN FAILED] ------%s' % (Config.YELLOW.value, _RESET, )
                 
                 return [s_msg, e_msg]
 

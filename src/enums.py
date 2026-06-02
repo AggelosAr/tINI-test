@@ -10,7 +10,6 @@ class Config(Enum):
     MAGENTA = '\033[95m'     # ALL ATTEMPTs
 
     NEGATIVE = "\033[7m"     # Negative
-    RESET = '\033[0m'        # Reset line colours
 
     LINE_UP = '\033[1A'      # Used on minimal dots
     LINE_CLEAR = '\x1b[2K'   # Used on minimal dots

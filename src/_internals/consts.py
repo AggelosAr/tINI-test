@@ -1,7 +1,9 @@
 
-TRUE_LOAD = 'LOAD_CONST1(True)'
-FALSE_LOAD = 'LOAD_CONST2(False)'
+_RESET = '\033[0m'                   # Reset line colours
 
-COMPARE_OP = 'COMPARE_OP72(==)'
+TRUE_LOAD = 'LOAD_CONST1(True)'      #
+FALSE_LOAD = 'LOAD_CONST2(False)'    #
 
-RETURN = 'RETURN_VALUE'
+COMPARE_OP = 'COMPARE_OP72(==)'      #
+
+RETURN = 'RETURN_VALUE'              #
