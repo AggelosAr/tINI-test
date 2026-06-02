@@ -220,24 +220,24 @@ actual:   'RRRRRRRRRRRRRRRRRRRRRRRsadasda'
 
 @Test.case
 def test_str_empty() -> None:
-    expected = ""
-    actual = ""
+    expected = ''
+    actual = ''
     must_equal(expected, actual)
 
 
 
 @Test.case
 def test_str_unicode() -> None:
-    expected = "🔥"
-    actual = "🔥"
+    expected = '🔥'
+    actual = '🔥'
     must_equal(expected, actual)
 
 
 
 @Test.case
 def test_str_unicode_fail() -> None:
-    expected = "🔥a"
-    actual = "🔥b"
+    expected = '🔥a'
+    actual = '🔥b'
 
     with WillRaise(ExpectedWasDifferentFromActual) as context:
         must_equal(expected, actual)
@@ -250,16 +250,16 @@ def test_str_unicode_fail() -> None:
 
 @Test.case
 def test_str_long_equal() -> None:
-    expected = "a" * 100
-    actual = "a" * 100
+    expected = 'a' * 100
+    actual = 'a' * 100
     must_equal(expected, actual)
 
 
 
 @Test.case
 def test_str_long_fail() -> None:
-    expected = "a" * 100
-    actual = "a" * 99 + "b"
+    expected = 'a' * 100
+    actual = 'a' * 99 + 'b'
 
     with WillRaise(ExpectedWasDifferentFromActual) as context:
         must_equal(expected, actual)
@@ -268,3 +268,20 @@ def test_str_long_fail() -> None:
     print(str(context.exception))
     print('---------------------------------')
 
+
+
+@Test.case
+def test_str_very_long() -> None:
+    expected = 'a' * 2**16 + 'X'
+    actual = 'a' * 2**16 + 'b'
+
+    with WillRaise(ExpectedWasDifferentFromActual) as context:
+        must_equal(expected, actual)
+
+    print('---------------------------------')
+    print(str(context.exception))
+    print('---------------------------------')
+
+    must_equal('''
+String mismatch
+''', str(context.exception))

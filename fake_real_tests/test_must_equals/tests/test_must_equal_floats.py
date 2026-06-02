@@ -82,8 +82,8 @@ def test_float_small_diff_fail() -> None:
 
 @Test.case
 def test_float_nan_case() -> None:
-    expected = float("nan")
-    actual = float("nan")
+    expected = float('nan')
+    actual = float('nan')
 
     # NaN != NaN so this is expected failure behavior
     with WillRaise(ExpectedWasDifferentFromActual) as context:
@@ -97,7 +97,7 @@ def test_float_nan_case() -> None:
 
 @Test.case
 def test_float_infinity() -> None:
-    expected = float("inf")
-    actual = float("inf")
+    expected = float('inf')
+    actual = float('inf')
     must_equal(expected, actual)
 

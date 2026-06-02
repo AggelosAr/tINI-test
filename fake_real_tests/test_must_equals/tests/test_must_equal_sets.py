@@ -23,6 +23,13 @@ def test_set_missing() -> None:
     print(str(context.exception))
     print('---------------------------------')
 
+    must_equal('''
+ITEM: set mismatch
+missing: {3}
+extra: set()
+''', str(context.exception))
+    
+
 
 @Test.case
 def test_set_extra() -> None:
@@ -35,6 +42,13 @@ def test_set_extra() -> None:
     print('---------------------------------')
     print(str(context.exception))
     print('---------------------------------')
+
+    must_equal('''
+ITEM: set mismatch
+missing: set()
+extra: {3}
+''', str(context.exception))
+    
 
 
 @Test.case
@@ -49,6 +63,13 @@ def test_set_value_diff() -> None:
     print(str(context.exception))
     print('---------------------------------')
 
+    must_equal('''
+ITEM: set mismatch
+missing: {2}
+extra: {9}
+''', str(context.exception))
+    
+
 
 @Test.case
 def test_set_empty() -> None:
@@ -57,11 +78,13 @@ def test_set_empty() -> None:
     must_equal(expected, actual)
 
 
+
 @Test.case
 def test_set_single() -> None:
     expected = {1}
     actual = {1}
     must_equal(expected, actual)
+
 
 
 @Test.case
@@ -76,12 +99,20 @@ def test_set_single_fail() -> None:
     print(str(context.exception))
     print('---------------------------------')
 
+    must_equal('''
+ITEM: set mismatch
+missing: {1}
+extra: {2}
+''', str(context.exception))
+
+
 
 @Test.case
 def test_set_large() -> None:
     expected = set(range(50))
     actual = set(range(50))
     must_equal(expected, actual)
+
 
 
 @Test.case
@@ -96,11 +127,16 @@ def test_set_large_fail() -> None:
     print(str(context.exception))
     print('---------------------------------')
 
-    must_equal(expected, actual)
+    must_equal('''
+ITEM: set mismatch
+missing: {49}
+extra: set()
+''', str(context.exception))
+
 
 
 @Test.case
 def test_set_strings() -> None:
-    expected = {"a", "b", "c"}
-    actual = {"a", "b", "c"}
+    expected = {'a', 'b', 'c'}
+    actual = {'a', 'b', 'c'}
     must_equal(expected, actual)

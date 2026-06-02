@@ -79,15 +79,15 @@ def test_list_nested_diff() -> None:
 
 @Test.case
 def test_list_mixed_types() -> None:
-    expected = [1, "a", 3.0]
-    actual = [1, "a", 3.0]
+    expected = [1, 'a', 3.0]
+    actual = [1, 'a', 3.0]
     must_equal(expected, actual)
 
 
 @Test.case
 def test_list_mixed_types_fail() -> None:
-    expected = [1, "a", 3.0]
-    actual = [1, "b", 3.0]
+    expected = [1, 'a', 3.0]
+    actual = [1, 'b', 3.0]
 
     with WillRaise(ExpectedWasDifferentFromActual) as context:
         must_equal(expected, actual)

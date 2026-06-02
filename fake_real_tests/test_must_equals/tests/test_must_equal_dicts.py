@@ -6,15 +6,15 @@ from src.test_utils import Test
 
 @Test.case
 def test_dict_equal() -> None:
-    expected = {"a": 1, "b": 2}
-    actual = {"a": 1, "b": 2}
+    expected = {'a': 1, 'b': 2}
+    actual = {'a': 1, 'b': 2}
     must_equal(expected, actual)
 
 
 @Test.case
 def test_dict_value_diff() -> None:
-    expected = {"a": 1, "b": 2}
-    actual = {"a": 1, "b": 3}
+    expected = {'a': 1, 'b': 2}
+    actual = {'a': 1, 'b': 3}
 
     with WillRaise(ExpectedWasDifferentFromActual) as context:
         must_equal(expected, actual)
@@ -26,8 +26,8 @@ def test_dict_value_diff() -> None:
 
 @Test.case
 def test_dict_missing_key() -> None:
-    expected = {"a": 1, "b": 2}
-    actual = {"a": 1}
+    expected = {'a': 1, 'b': 2}
+    actual = {'a': 1}
 
     with WillRaise(ExpectedWasDifferentFromActual) as context:
         must_equal(expected, actual)
@@ -39,8 +39,8 @@ def test_dict_missing_key() -> None:
 
 @Test.case
 def test_dict_extra_key() -> None:
-    expected = {"a": 1}
-    actual = {"a": 1, "b": 2}
+    expected = {'a': 1}
+    actual = {'a': 1, 'b': 2}
 
     with WillRaise(ExpectedWasDifferentFromActual) as context:
         must_equal(expected, actual)
@@ -59,15 +59,15 @@ def test_dict_empty() -> None:
 
 @Test.case
 def test_dict_nested_equal() -> None:
-    expected = {"a": {"b": 2}}
-    actual = {"a": {"b": 2}}
+    expected = {'a': {'b': 2}}
+    actual = {'a': {'b': 2}}
     must_equal(expected, actual)
 
 
 @Test.case
 def test_dict_nested_diff() -> None:
-    expected = {"a": {"b": 2}}
-    actual = {"a": {"b": 9}}
+    expected = {'a': {'b': 2}}
+    actual = {'a': {'b': 9}}
 
     with WillRaise(ExpectedWasDifferentFromActual) as context:
         must_equal(expected, actual)
@@ -79,15 +79,15 @@ def test_dict_nested_diff() -> None:
 
 @Test.case
 def test_dict_mixed_values() -> None:
-    expected = {"a": [1, 2]}
-    actual = {"a": [1, 2]}
+    expected = {'a': [1, 2]}
+    actual = {'a': [1, 2]}
     must_equal(expected, actual)
 
 
 @Test.case
 def test_dict_mixed_values_fail() -> None:
-    expected = {"a": [1, 2]}
-    actual = {"a": [1, 9]}
+    expected = {'a': [1, 2]}
+    actual = {'a': [1, 9]}
 
     with WillRaise(ExpectedWasDifferentFromActual) as context:
         must_equal(expected, actual)
@@ -99,6 +99,6 @@ def test_dict_mixed_values_fail() -> None:
 
 @Test.case
 def test_dict_deep() -> None:
-    expected = {"a": {"b": {"c": 1}}}
-    actual = {"a": {"b": {"c": 1}}}
+    expected = {'a': {'b': {'c': 1}}}
+    actual = {'a': {'b': {'c': 1}}}
     must_equal(expected, actual)

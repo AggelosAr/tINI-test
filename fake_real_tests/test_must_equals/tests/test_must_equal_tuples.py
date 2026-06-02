@@ -66,15 +66,15 @@ def test_tuple_nested_diff() -> None:
 
 @Test.case
 def test_tuple_mixed() -> None:
-    expected = (1, "a", 3.0)
-    actual = (1, "a", 3.0)
+    expected = (1, 'a', 3.0)
+    actual = (1, 'a', 3.0)
     must_equal(expected, actual)
 
 
 @Test.case
 def test_tuple_mixed_fail() -> None:
-    expected = (1, "a", 3.0)
-    actual = (1, "b", 3.0)
+    expected = (1, 'a', 3.0)
+    actual = (1, 'b', 3.0)
 
     with WillRaise(ExpectedWasDifferentFromActual) as context:
         must_equal(expected, actual)
