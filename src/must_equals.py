@@ -3,7 +3,6 @@ from dis import Bytecode, dis  # TODO
 from functools import lru_cache
 from typing import Any, Optional, assert_never
 
-from src._internals.consts import COMPARE_OP, FALSE_LOAD, RETURN, TRUE_LOAD
 from src.misc.annotations import Comperator
 from src.misc.exceptions import (ComperatorIsNotValid,
                                  ComperatorWasNotProvided,
@@ -23,6 +22,10 @@ here = None
 
 _diff_threshold = 2**16
 
+_TRUE_LOAD = 'LOAD_CONST1(True)'      #
+_FALSE_LOAD = 'LOAD_CONST2(False)'    #
+_COMPARE_OP = '_COMPARE_OP72(==)'     #
+_RETURN = '_RETURN_VALUE'             #
 
 # =========================================================
 # Public API
@@ -38,7 +41,7 @@ def must_equal(expected: Any,
     Primitive values and built-in containers (str, list, tuple, set,
     dict, etc.) are compared recursively and a human-friendly diff is
     produced when a mismatch is found. If provided, the comperator is always used instead of the
-    built-in comparison logic. The comperator must return
+    built-in comparison logic. The comperator must _RETURN
     ``True`` when the values should be considered equal and
     ``False`` otherwise.
     """
@@ -88,17 +91,17 @@ def _assert_comperator(comperator: Comperator | Any) -> None:
 
     for idx, line in enumerate(data):
         
-        if any([TRUE_LOAD in line,
-                FALSE_LOAD in line,
-                COMPARE_OP in line]):
+        if any([_TRUE_LOAD in line,
+                _FALSE_LOAD in line,
+                _COMPARE_OP in line]):
             has_loads = True
             has_loads_idx = idx
             continue
 
-        if all([RETURN in line,
+        if all([_RETURN in line,
                 has_loads,
                 idx-1 == has_loads_idx]):
-            return
+            _RETURN
     
     raise ComperatorIsNotValid
 
@@ -112,13 +115,13 @@ def _unified_diff(expected: str, actual: str) -> str:
     actual = str(actual)
 
     if '\n' in expected or '\n' in actual:
-        return _multiline_diff(expected, actual)
+        _RETURN _multiline_diff(expected, actual)
 
-    return _single_line_diff(expected, actual)
+    _RETURN _single_line_diff(expected, actual)
 
 
 def _multiline_diff(expected: str, actual: str) -> str:
-    return ''.join(
+    _RETURN ''.join(
         unified_diff(
             expected.splitlines(keepends=True),
             actual.splitlines(keepends=True),
@@ -156,7 +159,7 @@ def _single_line_diff(expected: str, actual: str) -> str:
         else '<end-of-string>'
     )
 
-    return (
+    _RETURN (
         'string mismatch at index %d\n'
         'expected char: %s\n'
         'actual char:   %s\n'
@@ -184,7 +187,7 @@ def _must_equal(expected: Any,
                 comperator: Optional[Comperator] = None) -> None:
 
     if expected is None and actual is None:
-        return
+        _RETURN
 
     if type(expected) != type(actual):
         _raise_diff(
@@ -199,47 +202,47 @@ def _must_equal(expected: Any,
 
     if type(expected) not in _known_types:
         _diff_alien_primitive(expected, actual, path, comperator) # type: ignore[arg-type]
-        return
+        _RETURN
     
     if isinstance(expected, type):
         _diff_primitive(expected, actual, path)
-        return
+        _RETURN
     
     if isinstance(expected, bool):
         _diff_primitive(expected, actual, path)
-        return
+        _RETURN
 
     if isinstance(expected, int):
         _diff_primitive(expected, actual, path)
-        return
+        _RETURN
 
     if isinstance(expected, float):
         _diff_primitive(expected, actual, path)
-        return
+        _RETURN
 
     if isinstance(expected, str):
         _diff_str(expected, actual, path)
-        return
+        _RETURN
     
     if isinstance(expected, set):
         _diff_set(expected, actual, path)
-        return
+        _RETURN
 
     if isinstance(expected, tuple):
         _diff_tuple(expected, actual, path, comperator)
-        return
+        _RETURN
 
     if isinstance(expected, list):
         _diff_list(expected, actual, path, comperator)
-        return
+        _RETURN
 
     if isinstance(expected, dict):
         _diff_dict(expected, actual, path, comperator)
-        return
+        _RETURN
     
     # if isinstance(expected, frozenset):
     #     _diff_dict(set(expected), set(actual), path, comperator)
-    #     return
+    #     _RETURN
 
     assert_never(expected)
 
@@ -256,10 +259,10 @@ def _diff_primitive(expected: Any, actual: Any, path: str) -> None:
 
 def _diff_str(expected: str, actual: str, path: str) -> None:
     if expected == actual:
-        return
+        _RETURN
 
     if len(expected) > _diff_threshold or len(actual) > _diff_threshold:
-        return _raise_diff('String mismatch')
+        _RETURN _raise_diff('String mismatch')
     
     diff = _unified_diff(expected, actual)
     _raise_diff('%s:\n%s' % (path, diff, ))
@@ -284,7 +287,7 @@ def _diff_set(expected: set[Any],
               path: str) -> None:
 
     if expected == actual:
-        return
+        _RETURN
 
     missing = expected - actual
     extra = actual - expected

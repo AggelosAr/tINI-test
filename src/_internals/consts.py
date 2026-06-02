@@ -8,8 +8,3 @@ SEPERATOR_LENGTH = 120               # Seperator length
 SEPERATOR_SYMBOL = '='               # Seperator symbol
 SEPERATOR_NEGATIVE = "\033[7m"       # Seperator start
 SEPERATOR_CYAN = "\033[96m"          # Seperator color
-
-TRUE_LOAD = 'LOAD_CONST1(True)'      #
-FALSE_LOAD = 'LOAD_CONST2(False)'    #
-COMPARE_OP = 'COMPARE_OP72(==)'      #
-RETURN = 'RETURN_VALUE'              #
