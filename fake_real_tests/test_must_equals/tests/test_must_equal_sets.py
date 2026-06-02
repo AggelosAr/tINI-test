@@ -96,6 +96,8 @@ def test_set_large_fail() -> None:
     print(str(context.exception))
     print('---------------------------------')
 
+    must_equal(expected, actual)
+
 
 @Test.case
 def test_set_strings() -> None:

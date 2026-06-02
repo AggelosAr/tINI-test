@@ -221,7 +221,7 @@ The framework has been tested using its own test suite.
 
 * [ ] Add separators to MINIMAL stack traces
 * [ ] Add start separators in NORMAL and SORT modes
-* [ ] Add final execution summary
+
 
 
 ### Test Execution

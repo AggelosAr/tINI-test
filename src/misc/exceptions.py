@@ -36,7 +36,7 @@ class ExpectedWasDifferentFromActual(Exception):
         super().__init__(msg)
 
     def _get_detail(self) -> str:
-        return f"------DIFF------\n{self.msg}\n------DIFF------"
+        return f"\n{self.msg}\n"
 
   
 class ComperatorWasNotProvided(Exception):

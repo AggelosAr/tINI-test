@@ -6,7 +6,6 @@ from typing import Any, Optional
 
 from src._internals._internal_exceptions._exceptions import (
     _FailStateWasNotFail, _LastOpNotExpected)
-from src.consts import COUNT_INDEX, TOTAL_INDEX
 from src.enums import Config, TestStatus
 from src.misc.annotations import F_Callable, S_Callable, StackTrace
 from src.misc.exceptions import ExpectedWasDifferentFromActual
@@ -45,10 +44,10 @@ class TestStep:
         except ExpectedWasDifferentFromActual as e:
            
             exception_trace = '\n'.join(format_tb(e.__traceback__))
-           
+            
             return OperationState(entry_status=self.entry_status,
                                   status=self.fail_status,
-                                  detail='\n\n'+str(e)+'\n\n',
+                                  detail=e._get_detail(),
                                   exception_trace=exception_trace,
                                   redirected_output=buffer)
 
@@ -102,14 +101,7 @@ class Test:
     
     def __str__(self) -> str:
         test = []
-        # Placeholder for test enumeration indexes
-        test.append("[ %s / %s ]\t\t< %s >\n"
-                    % ('{%s}' % (COUNT_INDEX, ), 
-                       '{%s}' % (TOTAL_INDEX, ), 
-                       self.test_name, ))
-
         test.extend(filter(lambda l: l != str(), map(str, self.operation_states)))
-        
         return '\n'.join(test)
 
     def __repr__(self) -> str:

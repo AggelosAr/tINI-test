@@ -3,7 +3,6 @@ from importlib import import_module
 from types import FunctionType
 from typing import Callable, Optional, TypeAlias
 
-from src.consts import COUNT_INDEX, TOTAL_INDEX
 from src.enums import Config, Mode
 from src.misc.exceptions import NotSupportedMode
 from src.test_utils import Test
@@ -110,10 +109,8 @@ class TestSuite:
 
                 case True:
                     
-                    placeholders = {COUNT_INDEX: idx,
-                                    TOTAL_INDEX: self.total_tests}
-                    
-                    print(str(test_case).format(**placeholders))
+                    print("[ %s / %s ] TEST: < %s >\n" % (idx, self.total_tests, test_case.test_name))
+                    print(str(test_case))
                     
                     if test_case.is_fail:
                         failed_tests.append(test_case.test_name)

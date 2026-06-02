@@ -20,6 +20,8 @@ _known_types = set([bool,
 
 here = None
 
+_diffThreshold = 2**16
+
 
 # =========================================================
 # Public API
@@ -48,7 +50,7 @@ def must_equal(expected: Any,
 
         _must_equal(expected=expected,
                     actual=actual, 
-                    path='\nITEM',
+                    path='ITEM',
                     comperator=comperator)
 
     except ExpectedWasDifferentFromActual as e:
@@ -104,7 +106,7 @@ def _raise_diff(msg: str) -> None:
     raise ExpectedWasDifferentFromActual(msg)
 
 
-def _unified_diff(expected: Any, actual: Any) -> str:
+def _unified_diff(expected: str, actual: str) -> str:
     expected = str(expected)
     actual = str(actual)
 
@@ -122,7 +124,7 @@ def _multiline_diff(expected: str, actual: str) -> str:
             fromfile='expected',
             tofile='actual',
         )
-    )+'\n'
+    )
 
 
 def _single_line_diff(expected: str, actual: str) -> str:
@@ -160,7 +162,7 @@ def _single_line_diff(expected: str, actual: str) -> str:
         '\n'
         'expected: %r\n'
         'actual:   %r\n'
-        '          %s^\n'
+        '          %s^'
     ) % (
         idx,
         exp_char,
@@ -185,7 +187,7 @@ def _must_equal(expected: Any,
 
     if type(expected) != type(actual):
         _raise_diff(
-            '%s: type mismatch\nexpected: %s\nactual:   %s\n'
+            '%s: type mismatch\nexpected: %s\nactual:   %s'
             % (path, type(expected), type(actual), )
         )
 
@@ -229,6 +231,10 @@ def _must_equal(expected: Any,
     if isinstance(expected, dict):
         _diff_dict(expected, actual, path, comperator)
         return
+    
+    # if isinstance(expected, frozenset):
+    #     _diff_dict(set(expected), set(actual), path, comperator)
+    #     return
 
     assert_never(expected)
 
@@ -247,6 +253,9 @@ def _diff_str(expected: str, actual: str, path: str) -> None:
     if expected == actual:
         return
 
+    if len(expected) > _diffThreshold or len(actual) > _diffThreshold:
+        return _raise_diff('String mismatch')
+    
     diff = _unified_diff(expected, actual)
     _raise_diff('%s:\n%s' % (path, diff, ))
 
@@ -277,7 +286,7 @@ def _diff_set(expected: set[Any],
 
     _raise_diff(
         '%s: set mismatch\nmissing: %r\nextra: %r'
-        % (path, missing, extra)
+        % (path, missing, extra, )
     )
 
 
@@ -289,7 +298,7 @@ def _diff_tuple(expected: tuple[Any, ...],
     if len(expected) != len(actual):
         _raise_diff(
             'tuple length mismatch\nexpected=%d actual=%d'
-            % (len(expected), len(actual))
+            % (len(expected), len(actual), )
         )
 
     for i, (e, a) in enumerate(zip(expected, actual)):
@@ -304,7 +313,7 @@ def _diff_list(expected: list[Any],
     if len(expected) != len(actual):
         _raise_diff(
             'list length mismatch\nexpected=%d actual=%d'
-            % (len(expected), len(actual))
+            % (len(expected), len(actual), )
         )
 
     for i, (e, a) in enumerate(zip(expected, actual)):
@@ -322,7 +331,7 @@ def _diff_dict(expected: dict[Any, Any],
 
         _raise_diff(
             '%s: dict key mismatch\nmissing: %r\nextra: %r'
-            % (path, missing, extra)
+            % (path, missing, extra, )
         )
 
     for key in expected:

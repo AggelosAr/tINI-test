@@ -1,4 +1,6 @@
 
+* [ ] Add final execution summary also time
+
 # TODO do something about new lines in the must_equals
 
 
@@ -23,3 +25,14 @@ ON TOML
 [project.urls]
 Homepage = "https://github.com/pypa/small-test"
 Issues = "https://github.com/pypa/sampleproject/issues"
+
+
+
+test functions are unordered
+
+
+ndiff multiline on single line ?
+
+
+
+ # TODO  add test for very big string
