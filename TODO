@@ -1,18 +1,21 @@
 
 * [ ] Add final execution summary also time
 
+test functions are unordered
+
+# bytes json frozenset
+
+
 
 
 # use python 3.0
 
 
-# test exceptions withint exceptrions
+# test exceptions withint exceptrions,  functions within functions?
+
 
 
 # WHAT happens when the lib crashes?>
-
-# Try to break it using %s
-# if user exception traceback or detail ? has %s it breaks ! also in prints ? SHOULD BE FIXED
 
 
 
@@ -24,7 +27,7 @@ Issues = "https://github.com/pypa/sampleproject/issues"
 
 
 
-test functions are unordered
+
 
 
 ndiff multiline on single line ?

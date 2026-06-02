@@ -238,8 +238,8 @@ The framework has been tested using its own test suite.
 
 ### Configuration
 
-* [ ] Support configurable colors
-* [ ] Support configurable output formatting
+* [ ] Support configurable
+
 
 
 ### Misc
