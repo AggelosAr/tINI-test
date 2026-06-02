@@ -78,7 +78,6 @@ class OperationState:
                '\n'.join(filter(lambda l: l != [''], self.exit_msg))]
         return box
 
-    # TODO move the messages @ state_messages.py
     def get_and_format_detail(self,
                               status: TestStatus,
                               detail: Optional[str] = None) -> list[str]:
