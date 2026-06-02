@@ -32,11 +32,11 @@ class WillRaiseReceivedNotAnException(Exception):
 
 class ExpectedWasDifferentFromActual(Exception):
     def __init__(self, msg: str = '') -> None:
-        self.msg = msg
         super().__init__(msg)
-
+        self.msg = msg
+    
     def _get_detail(self) -> str:
-        return f"\n{self.msg}\n"
+        return f'\n{self.msg}\n'
 
   
 class ComperatorWasNotProvided(Exception):

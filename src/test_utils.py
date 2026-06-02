@@ -47,7 +47,7 @@ class TestStep:
             
             return OperationState(entry_status=self.entry_status,
                                   status=self.fail_status,
-                                  detail=e._get_detail(),
+                                  detail=str(e),
                                   exception_trace=exception_trace,
                                   redirected_output=buffer)
 

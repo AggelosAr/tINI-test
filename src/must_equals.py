@@ -54,7 +54,7 @@ def must_equal(expected: Any,
                     comperator=comperator)
 
     except ExpectedWasDifferentFromActual as e:
-        raise ExpectedWasDifferentFromActual(str(e)) from here
+        raise ExpectedWasDifferentFromActual(e._get_detail()) from here
     
     except ComperatorWasNotProvided:
         raise ComperatorWasNotProvided from here
