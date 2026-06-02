@@ -42,9 +42,9 @@ class TestStep:
                 self.func(*self.args, **self.kwargs)
 
         except ExpectedWasDifferentFromActual as e:
-           
-            exception_trace = '\n'.join(format_tb(e.__traceback__))
             
+            exception_trace = '\n'.join(format_tb(e.__traceback__))
+
             return OperationState(entry_status=self.entry_status,
                                   status=self.fail_status,
                                   detail=str(e),

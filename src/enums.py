@@ -47,6 +47,8 @@ class TestStatus(Enum):
     ATTEMPT_BREAK_DOWN_ENTRY_FROM_FAIL = 'ATTEMPT_BREAK_DOWN_ENTRY_FROM_FAIL'
     ATTEMPT_BREAK_DOWN_SUCCESS = 'ATTEMPT_BREAK_DOWN_SUCCESS'
     ATTEMPT_BREAK_DOWN_FAIL = 'ATTEMPT_BREAK_DOWN_FAIL'
+
+    # MUST_EQUALS_DIFF = 'MUST_EQUALS_DIFF' # not implemented
     
     @classmethod
     @lru_cache
@@ -58,7 +60,6 @@ class TestStatus(Enum):
                     cls.ATTEMPT_BREAK_DOWN_ENTRY_FROM_FAIL,
                     cls.ATTEMPT_BREAK_DOWN_SUCCESS,
                     cls.ATTEMPT_BREAK_DOWN_FAIL]) 
-    
     
     @classmethod
     @lru_cache

@@ -1,3 +1,4 @@
+from functools import lru_cache
 from io import StringIO
 from typing import Iterator, Optional
 
@@ -5,9 +6,9 @@ from src._internals.consts import (_RESET, SEPERATOR_CYAN, SEPERATOR_LENGTH,
                                    SEPERATOR_NEGATIVE, SEPERATOR_SYMBOL)
 from src.enums import CONFIG, TestStatus
 
-
 _x_f = ['']
 
+# Maybe add another state like exit so we have entry, main, exit.
 class OperationState:
 
     def __init__(self, 
@@ -48,6 +49,7 @@ class OperationState:
         raise NotImplementedError
 
     @classmethod
+    @lru_cache
     def get_end_seperator(cls) -> list[str]:
         return ['%s%s%s%s' % 
                 (SEPERATOR_NEGATIVE, 
@@ -113,7 +115,7 @@ class OperationState:
                         s_msg = '%s*** EXCEPTION DURING TEST ***%s' % (CONFIG.get(status), _RESET, )
                         n_msg = ''
                     case _:
-                        # TODO (refactor) since detail is not used in any state 
+                        # TODO (refactor) since detail is not used in any state
                         # we will take advatage of that to put the MUST_EQUALS messages there.
                         s_msg = '%s*** EXCEPTION DURING TEST ***%s' % (CONFIG.get(status), _RESET, )
                         n_msg = '%s %s %s' % (CONFIG.get(status), detail, _RESET, )
@@ -167,6 +169,7 @@ class OperationState:
                 e_msg = '%s------ [ATTEMPT BREAK DOWN FAILED] ------%s' % (CONFIG.get(status), _RESET, )
                 
                 return [s_msg, e_msg]
+
 
             case TestStatus.NO_OP:
                 return ['']
