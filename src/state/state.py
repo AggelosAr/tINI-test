@@ -6,6 +6,8 @@ from src._internals.consts import (_RESET, SEPERATOR_CYAN, SEPERATOR_LENGTH,
 from src.enums import CONFIG, TestStatus
 
 
+_x_f = ['']
+
 class OperationState:
 
     def __init__(self, 
@@ -62,6 +64,10 @@ class OperationState:
         self._entry_msg = new_msg
 
     @property
+    def _a_entry_msg(self) -> Iterator[str]:
+        return map(self.align_message, self.entry_msg)
+    
+    @property
     def exit_msg(self) -> list[str]:
         return self._exit_msg
 
@@ -69,15 +75,22 @@ class OperationState:
     def exit_msg(self, new_msg: list[str]) -> None:
         self._exit_msg = new_msg
     
+    @property
+    def _a_exit_msg(self) -> Iterator[str]:
+        return map(self.align_message, self.exit_msg)
+    
     def align_message(self, el: str) -> str:
         return '%s%s' % ((SEPERATOR_LENGTH // 2 - (len(el) // 2)) * str(' '), el, )
 
-    # TODO maybe align messages relative to each other also 
+    # TODO maybe align messages relative to each other also, maybe @test
     def get_boxed_information(self) -> Iterator[str]:
-        return map(lambda l: '\n'.join(l), [map(self.align_message, self.entry_msg),
-                                            [self.redirected_output.getvalue()], 
-                                            [self.exception_trace],
-                                            map(self.align_message, self.exit_msg)])
+
+        box = [self._a_entry_msg,
+               [self.redirected_output.getvalue()], 
+               [self.exception_trace],
+               self._a_exit_msg]
+        
+        return map(lambda l: '\n'.join(l), filter(lambda l: l != _x_f, box))
 
     def get_and_format_detail(self,
                               status: TestStatus,
@@ -156,4 +169,4 @@ class OperationState:
                 return [s_msg, e_msg]
 
             case TestStatus.NO_OP:
-                return ['XXX']
+                return ['']
