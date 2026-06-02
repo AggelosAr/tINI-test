@@ -1,5 +1,3 @@
-# import pyinstrument
-
 from src._internals._internal_exceptions._exceptions import (
     _FailStateWasNotFail, _LastOpNotExpected)
 from src.arg_parser import recieve_args
@@ -10,8 +8,6 @@ from src.runner import get_test_container, run_tests
 if __name__=='__main__':
 
     mode, search_dir, search_file, search_test_function = recieve_args()
-
-    # with pyinstrument.profile():
 
     try:
         tests_container, time = get_test_container(mode,
