@@ -1,6 +1,6 @@
 from functools import reduce
 from io import StringIO
-from typing import Optional
+from typing import Iterator, Optional
 
 from src._internals.consts import (_RESET, SEPERATOR_CYAN, SEPERATOR_LENGTH,
                                    SEPERATOR_NEGATIVE, SEPERATOR_SYMBOL)
@@ -70,11 +70,15 @@ class OperationState:
     def exit_msg(self, new_msg: list[str]) -> None:
         self._exit_msg = new_msg
     
-    def get_boxed_information(self) -> list[str]:
-        return map(lambda l: '\n'.join(l), [self.entry_msg,
+    def align_message(self, el: str) -> str:
+        return '%s%s' % ((SEPERATOR_LENGTH // 2 - (len(el) // 2)) * str(' '), el, )
+
+    # TODO maybe align messages relative to each other also 
+    def get_boxed_information(self) -> Iterator[str]:
+        return map(lambda l: '\n'.join(l), [map(self.align_message, self.entry_msg),
                                             [self.redirected_output.getvalue()], 
                                             [self.exception_trace],
-                                            self.exit_msg])
+                                            map(self.align_message, self.exit_msg)])
 
     def get_and_format_detail(self,
                               status: TestStatus,
@@ -153,4 +157,4 @@ class OperationState:
                 return [s_msg, e_msg]
 
             case TestStatus.NO_OP:
-                return ['']
+                return ['XXX']

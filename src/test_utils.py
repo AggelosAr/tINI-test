@@ -6,7 +6,6 @@ from typing import Any, Optional
 
 from src._internals._internal_exceptions._exceptions import (
     _FailStateWasNotFail, _LastOpNotExpected)
-from src._internals.consts import SEPERATOR_LENGTH
 from src.enums import TestStatus
 from src.misc.annotations import F_Callable, S_Callable, StackTrace
 from src.misc.exceptions import ExpectedWasDifferentFromActual
@@ -221,16 +220,6 @@ class Test:
                 success_op = OperationState(TestStatus.SUCCESS)
                 self.operation_states.append(success_op)
 
-    def align_message(self, el: str) -> str:
-        return '%s%s' % ((SEPERATOR_LENGTH // 2 - (len(el) // 2)) * str(' '), el, )
-
-    # TODO align messages relative to each other also 
-    def align_messages(self) -> None:
-
-        for op in self.operation_states:
-            op.entry_msg = list(map(self.align_message, op.entry_msg))
-            op.exit_msg = list(map(self.align_message, op.exit_msg))
-
     def close_state(self) -> None:
         end_state = OperationState(TestStatus.NO_OP) # fishy maybe add another state
         end_state.exit_msg = OperationState.get_end_seperator()
@@ -241,7 +230,6 @@ class Test:
         self.run_steps()
         self.run_for_cleanup_if_needed()
         self.attach_end_state()
-        self.align_messages()
         self.close_state()
         
         #!
