@@ -2,4 +2,4 @@
 
 source .venv/bin/activate
 
-python3.11 -m main
+python3.13 -m main
