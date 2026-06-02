@@ -145,7 +145,7 @@ class OperationState:
                 return ['%s[*] Break down succeeded after failed test%s' % (Config.MAGENTA.value, _RESET, )]
             
             case TestStatus.ATTEMPT_BREAK_DOWN_FAIL:
-                s_msg = '%s[*] Test failed and attempting cgit statleaning up failed.Reason: %s%s' % (Config.MAGENTA.value, detail, _RESET, )
+                s_msg = '%s[*] Test failed and attempting cleaning up failed.Reason: %s%s' % (Config.MAGENTA.value, detail, _RESET, )
 
                 e_msg = '%s------ [ATTEMPT BREAK DOWN FAILED] ------%s' % (Config.YELLOW.value, _RESET, )
                 
