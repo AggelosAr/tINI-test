@@ -1,8 +1,9 @@
 from io import StringIO
 from typing import Optional
 
-from src._internals.consts import _RESET
-from src.enums import CONFIG, Color, Symbol, TestStatus
+from src._internals.consts import (_RESET, SEPERATOR_CYAN, SEPERATOR_LENGTH,
+                                   SEPERATOR_NEGATIVE, SEPERATOR_SYMBOL)
+from src.enums import CONFIG, Color, TestStatus
 
 
 # TODO maybe move seperator at NO_OP? is this possible?
@@ -47,7 +48,11 @@ class OperationState:
 
     @classmethod
     def get_end_seperator(cls) -> list[str]:
-        return ['%s%s%s%s' % (Color.NEGATIVE.value, Symbol.CYAN.value, Symbol.SEPERATOR_LENGTH.value*Symbol.SEPERATOR_SYMBOL.value, _RESET, )]
+        return ['%s%s%s%s' % 
+                (SEPERATOR_NEGATIVE, 
+                 SEPERATOR_CYAN, 
+                 SEPERATOR_LENGTH*SEPERATOR_SYMBOL, 
+                 _RESET, )]
     
     @property
     def entry_msg(self) -> list[str]:

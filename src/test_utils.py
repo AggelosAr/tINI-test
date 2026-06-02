@@ -4,9 +4,10 @@ from io import StringIO
 from traceback import format_exc, format_tb
 from typing import Any, Optional
 
+from src._internals.consts import SEPERATOR_LENGTH
 from src._internals._internal_exceptions._exceptions import (
     _FailStateWasNotFail, _LastOpNotExpected)
-from src.enums import Symbol, TestStatus
+from src.enums import TestStatus
 from src.misc.annotations import F_Callable, S_Callable, StackTrace
 from src.misc.exceptions import ExpectedWasDifferentFromActual
 from src.state.state import OperationState
@@ -221,7 +222,7 @@ class Test:
                 self.operation_states.append(success_op)
 
     def align_message(self, el: str) -> str:
-        return '%s%s' % ((Symbol.SEPERATOR_LENGTH.value // 2 - (len(el) // 2)) * str(' '), el, )
+        return '%s%s' % ((SEPERATOR_LENGTH // 2 - (len(el) // 2)) * str(' '), el, )
 
     # TODO align messages relative to each other also 
     def align_messages(self) -> None:

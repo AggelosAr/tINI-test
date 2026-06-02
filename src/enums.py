@@ -11,15 +11,6 @@ class Color(Enum):
     BLUE = '\033[94m'
     MAGENTA = '\033[95m'
 
-    NEGATIVE = "\033[7m"
-
-
-class Symbol(Enum):
-    SEPERATOR_LENGTH = 120   # Seperator length
-    SEPERATOR_SYMBOL = '='   # Seperator symbol
-
-    CYAN = "\033[96m"        # Seperator color
-
 
 class Mode(Enum):
     
