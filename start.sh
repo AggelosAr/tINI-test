@@ -1,5 +1,11 @@
 #!/bin/bash
 
-source .venv/bin/activate
+# #!/usr/bin/env python3
 
-python3.13 -m main
+# source .venv/bin/activate
+
+# python3 -m small_test
+
+#python3 -m src/small_test/__main__
+
+PYTHONPATH=src python3 -m small_test

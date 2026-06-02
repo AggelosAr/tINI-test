@@ -24,7 +24,7 @@ _diff_threshold = 2**16
 
 _TRUE_LOAD = 'LOAD_CONST1(True)'      #
 _FALSE_LOAD = 'LOAD_CONST2(False)'    #
-_COMPARE_OP = '_COMPARE_OP72(==)'      #
+_COMPARE_OP = '_COMPARE_OP72(==)'     #
 _RETURN = 'RETURN_VALUE'              #
 
 # =========================================================

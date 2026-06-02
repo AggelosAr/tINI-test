@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 from src.small_test._internals._internal_exceptions._exceptions import (
     _FailStateWasNotFail, _LastOpNotExpected)
 from src.small_test.arg_parser import receive_args

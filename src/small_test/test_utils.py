@@ -11,6 +11,7 @@ from src.small_test.misc.annotations import F_Callable, S_Callable, StackTrace
 from src.small_test.misc.exceptions import ExpectedWasDifferentFromActual
 from src.small_test.state.state import OperationState
 
+print("HELLO")
 
 class TestStep:
 
