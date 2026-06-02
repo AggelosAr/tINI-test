@@ -6,7 +6,6 @@ from src._internals.consts import (_RESET, SEPERATOR_CYAN, SEPERATOR_LENGTH,
 from src.enums import CONFIG, TestStatus
 
 
-# TODO maybe move seperator at NO_OP? is this possible?
 class OperationState:
 
     def __init__(self, 
@@ -99,14 +98,13 @@ class OperationState:
                         s_msg = '%s*** EXCEPTION DURING TEST ***%s' % (CONFIG.get(status), _RESET, )
                         n_msg = ''
                     case _:
-                        # TODO refactor since detail is not used in any state 
+                        # TODO (refactor) since detail is not used in any state 
                         # we will take advatage of that to put the MUST_EQUALS messages there.
                         s_msg = '%s*** EXCEPTION DURING TEST ***%s' % (CONFIG.get(status), _RESET, )
                         n_msg = '%s %s %s' % (CONFIG.get(status), detail, _RESET, )
                         
                 e_msg = '%s------ [FAIL] ------%s' % (CONFIG.get(status), _RESET, )
                 
-                # TODO filter empty ...
                 return [s_msg, n_msg, e_msg]
 
 
@@ -156,4 +154,4 @@ class OperationState:
                 return [s_msg, e_msg]
 
             case TestStatus.NO_OP:
-                return ['~~~']
+                return ['']
