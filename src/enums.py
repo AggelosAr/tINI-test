@@ -1,4 +1,5 @@
 from enum import Enum
+from functools import lru_cache
 from typing import Mapping
 
 
@@ -55,6 +56,7 @@ class TestStatus(Enum):
     ATTEMPT_BREAK_DOWN_FAIL = 'ATTEMPT_BREAK_DOWN_FAIL'
     
     @classmethod
+    @lru_cache
     def fail_operations(cls) -> set['TestStatus']:
         return set([cls.FAIL,
                     cls.SET_UP_FAIL, 
@@ -64,9 +66,10 @@ class TestStatus(Enum):
                     cls.ATTEMPT_BREAK_DOWN_SUCCESS,
                     cls.ATTEMPT_BREAK_DOWN_FAIL]) 
     
+    
     @classmethod
+    @lru_cache
     def is_fail_cause(cls, status: 'TestStatus') -> bool:
-        print(';;;;;;;;;;;;;;;;;;;;;;;;is_fail_cause called')
         return status in cls.fail_operations()
 
 
