@@ -46,15 +46,14 @@ def receive_args() -> tuple[Mode, str, str, str]:
     #
     # Search options
     #
-    search = parser.add_mutually_exclusive_group()
 
-    search.add_argument(
+    parser.add_argument(
         '-d',
         '--directory',
         help='Run all tests in a directory'
     )
 
-    search.add_argument(
+    parser.add_argument(
         '-f',
         '--file',
         help='Run all tests in a file'
