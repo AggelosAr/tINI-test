@@ -4,7 +4,7 @@ from types import FunctionType
 from typing import Callable, Optional, TypeAlias
 
 from src._internals.consts import _LINE_CLEAR, _LINE_UP
-from src.enums import Config, Mode
+from src.enums import Color, Mode
 from src.misc.exceptions import NotSupportedMode
 from src.test_utils import Test
 
@@ -124,11 +124,11 @@ class TestSuite:
                             failed_tests.append(test_case.test_name)
                             stacktraces.append(test_case.fail_reasons)
                             minimal[idx] = ('%s . %s' 
-                                            % (Config.RED.value, Config.RESET.value, ))
+                                            % (Color.RED.value, Color.RESET.value, ))
 
                         case False:
                             minimal[idx] = ('%s . %s' 
-                                            % (Config.GREEN.value, Config.RESET.value, ))
+                                            % (Color.GREEN.value, Color.RESET.value, ))
 
                     print('%s' % ''.join(minimal))
                     

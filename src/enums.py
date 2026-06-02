@@ -1,19 +1,23 @@
 from enum import Enum
+from typing import Mapping
 
 
-class Config(Enum):
+class Color(Enum):
 
-    RED = '\033[91m'         # FAIL
-    GREEN = '\033[92m'       # SUCCESS
-    YELLOW = '\033[93m'      # SET_UP_FAIL | BREAK_DOWN_FAIL | ATTEMPT_BREAK_DOWN_FAIL
-    BLUE = '\033[94m'        # SET_UP_ENTRY | SET_UP_SUCCESS | BREAK_DOWN_ENTRY | BREAK_DOWN_SUCCESS
-    MAGENTA = '\033[95m'     # ALL ATTEMPTs
+    RED = '\033[91m'        
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    BLUE = '\033[94m'
+    MAGENTA = '\033[95m'
 
-    NEGATIVE = "\033[7m"     # Negative
+    NEGATIVE = "\033[7m"
 
-    CYAN = "\033[96m"        # Seperator
+
+class Symbol(Enum):
     SEPERATOR_LENGTH = 120   # Seperator length
     SEPERATOR_SYMBOL = '='   # Seperator symbol
+
+    CYAN = "\033[96m"        # Seperator color
 
 
 class Mode(Enum):
@@ -49,7 +53,7 @@ class TestStatus(Enum):
     ATTEMPT_BREAK_DOWN_ENTRY_FROM_FAIL = 'ATTEMPT_BREAK_DOWN_ENTRY_FROM_FAIL'
     ATTEMPT_BREAK_DOWN_SUCCESS = 'ATTEMPT_BREAK_DOWN_SUCCESS'
     ATTEMPT_BREAK_DOWN_FAIL = 'ATTEMPT_BREAK_DOWN_FAIL'
-
+    
     @classmethod
     def fail_operations(cls) -> set['TestStatus']:
         return set([cls.FAIL,
@@ -62,4 +66,21 @@ class TestStatus(Enum):
     
     @classmethod
     def is_fail_cause(cls, status: 'TestStatus') -> bool:
+        print(';;;;;;;;;;;;;;;;;;;;;;;;is_fail_cause called')
         return status in cls.fail_operations()
+
+
+CONFIG: Mapping[TestStatus, Color] = {
+    TestStatus.SUCCESS: Color.GREEN.value,
+    TestStatus.FAIL: Color.RED.value,
+    TestStatus.SET_UP_ENTRY: Color.BLUE.value,
+    TestStatus.SET_UP_SUCCESS: Color.BLUE.value,
+    TestStatus.SET_UP_FAIL: Color.YELLOW.value,
+    TestStatus.BREAK_DOWN_ENTRY: Color.BLUE.value,
+    TestStatus.BREAK_DOWN_SUCCESS: Color.BLUE.value,
+    TestStatus.BREAK_DOWN_FAIL: Color.YELLOW.value,
+    TestStatus.ATTEMPT_BREAK_DOWN_ENTRY_FROM_SETUP_FAIL: Color.MAGENTA.value,
+    TestStatus.ATTEMPT_BREAK_DOWN_ENTRY_FROM_FAIL: Color.MAGENTA.value,
+    TestStatus.ATTEMPT_BREAK_DOWN_SUCCESS: Color.MAGENTA.value,
+    TestStatus.ATTEMPT_BREAK_DOWN_FAIL: Color.MAGENTA.value,
+}
