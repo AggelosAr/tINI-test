@@ -11,9 +11,6 @@ class Config(Enum):
 
     NEGATIVE = "\033[7m"     # Negative
 
-    LINE_UP = '\033[1A'      # Used on minimal dots
-    LINE_CLEAR = '\x1b[2K'   # Used on minimal dots
-
     CYAN = "\033[96m"        # Seperator
     SEPERATOR_LENGTH = 120   # Seperator length
     SEPERATOR_SYMBOL = '='   # Seperator symbol

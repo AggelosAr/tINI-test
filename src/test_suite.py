@@ -3,6 +3,7 @@ from importlib import import_module
 from types import FunctionType
 from typing import Callable, Optional, TypeAlias
 
+from src._internals.consts import _LINE_CLEAR, _LINE_UP
 from src.enums import Config, Mode
 from src.misc.exceptions import NotSupportedMode
 from src.test_utils import Test
@@ -132,7 +133,7 @@ class TestSuite:
                     print('%s' % ''.join(minimal))
                     
                     if idx != self.total_tests:
-                        print(Config.LINE_UP.value, end=Config.LINE_CLEAR.value)
+                        print(_LINE_UP, end=_LINE_CLEAR)
 
         print('\nTests passed: [ %d / %d ]' 
               % (self.total_tests - len(failed_tests), self.total_tests, ))
