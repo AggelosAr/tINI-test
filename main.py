@@ -1,13 +1,13 @@
 from src._internals._internal_exceptions._exceptions import (
     _FailStateWasNotFail, _LastOpNotExpected)
-from src.arg_parser import recieve_args
+from src.arg_parser import receive_args
 from src.misc.exceptions import (CantFindRelativePathToRoot, NotSupportedMode,
                                  TestNotFound)
 from src.runner import get_test_container, run_tests
 
 if __name__=='__main__':
 
-    mode, search_dir, search_file, search_test_function = recieve_args()
+    mode, search_dir, search_file, search_test_function = receive_args()
 
     try:
         tests_container, time = get_test_container(mode,

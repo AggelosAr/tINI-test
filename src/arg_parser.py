@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 from src.enums import Mode
 
 
-def recieve_args() -> tuple[Mode, str, str, str]:
+def receive_args() -> tuple[Mode, str, str, str]:
     parser = ArgumentParser(
         description='Small Test Framework'
     )
