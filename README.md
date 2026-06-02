@@ -5,10 +5,28 @@ A lightweight Python test framework focused on simple test discovery and executi
 ## Usage
 
 ```bash
-small_test [VERBOSITY] [-d DIRECTORY | -f FILE] [-t TEST]
+small_test [VERBOSITY] [-d DIRECTORY] [-f FILE] [-t TEST]
 ```
 
-### Verbosity Modes
+Search options may be combined in any way.
+
+Examples:
+
+```bash
+small_test -d tests
+small_test -f test_math
+small_test -t test_addition
+
+small_test -d tests -t test_addition
+small_test -f test_math -t test_addition
+small_test -d tests -f test_math -t test_addition
+```
+
+If no verbosity mode is specified, `NORMAL` is used.
+
+---
+
+## Verbosity Modes
 
 One verbosity mode may be specified:
 
@@ -17,54 +35,60 @@ One verbosity mode may be specified:
 -SORT
 -MINIMAL
 -MINIMAL_NO_STACK
+-SUPER_MINIMAL
 ```
 
-If no verbosity mode is provided, `NORMAL` is used.
+| Mode             | Description                                                                                        |
+| ---------------- | -------------------------------------------------------------------------------------------------- |
+| NORMAL           | Full execution flow, detailed output, and stack traces.                                            |
+| SORT             | Same as NORMAL, but results are sorted with failures shown last.                                   |
+| MINIMAL          | Only failed tests and their stack traces are displayed.                                            |
+| MINIMAL_NO_STACK | Only failed tests are displayed. Stack traces are suppressed.                                      |
+| SUPER_MINIMAL    | Displays only final summary statistics. No failures, stack traces, or execution details are shown. |
 
-| Mode             | Description                                                     |
-| ---------------- | --------------------------------------------------------------- |
-| NORMAL           | Full execution flow, detailed output, and stack traces.         |
-| SORT             | Results are displayed in sorted order with failures shown last. |
-| MINIMAL          | Only failed tests and their stack traces are displayed.         |
-| MINIMAL_NO_STACK | Same as MINIMAL, but stack traces are suppressed.               |
+---
 
 ## Search Options
 
+Search options act as filters.
+
 ### `-d DIRECTORY`
 
-Run all discovered tests within a directory.
+Limit test discovery to a specific directory.
 
-The directory path is resolved relative to the current terminal working directory.
+The directory path is resolved relative to the current working directory.
 
 Example:
 
 ```bash
-small_test -NORMAL -d src/test_folder
+small_test -d src/tests
 ```
 
 Notes:
 
-* All discovered tests under the target directory are executed.
-* If multiple nested directories share the same name, only the first matching directory found will be collected.
+* All discoverable tests under the directory are collected.
+* If multiple directories share the same name, only the first match is used.
+
+---
 
 ### `-f FILE`
 
-Run all tests contained in a specific test file.
+Limit execution to tests contained in a specific file.
 
-The framework searches the entire project for the file.
-
-The file may be provided with or without the `.py` extension.
+The file may be supplied with or without the `.py` extension.
 
 Example:
 
 ```bash
-small_test -SORT -f test_concurrency
+small_test -f test_concurrency
 ```
 
 Notes:
 
-* All tests inside the matching file are executed.
-* If multiple files with the same name exist, only the first match is used.
+* All tests within the matching file are executed.
+* If multiple files share the same name, only the first match is used.
+
+---
 
 ### `-t TEST`
 
@@ -73,43 +97,79 @@ Run a specific test function.
 Example:
 
 ```bash
-small_test -MINIMAL -t testing_something
+small_test -t test_something
 ```
 
-Behavior:
-
-* If neither `-d` nor `-f` is specified, the framework searches the entire project for the test function.
-* If `-d` or `-f` is specified, the search is limited to the discovered test files within that scope.
-* If multiple matching test files exist, only the first matching file is used.
-
-Example:
+Example test:
 
 ```python
-def testing_something(*args, **kwargs):
+@small_test()
+def test_something():
     ...
 ```
 
-Run:
+Notes:
+
+* If used alone, the entire project is searched.
+* If combined with `-d`, searching is limited to that directory.
+* If combined with `-f`, searching is limited to that file.
+* If multiple matching tests are discovered, only the first match is executed.
+
+---
+
+## Filter Combination Behavior
+
+Filters are applied from broadest to narrowest scope:
+
+1. Discover tests within `-d` (if provided)
+2. Restrict to `-f` (if provided)
+3. Restrict to `-t` (if provided)
+
+Examples:
 
 ```bash
-small_test -t testing_something
+small_test -d tests
 ```
+
+Runs all discovered tests under `tests`.
+
+```bash
+small_test -f test_math
+```
+
+Runs all tests inside `test_math.py`.
+
+```bash
+small_test -d tests -f test_math
+```
+
+Runs all tests inside `test_math.py` located within `tests`.
+
+```bash
+small_test -d tests -f test_math -t test_addition
+```
+
+Runs only `test_addition` from `test_math.py` within `tests`.
+
+---
 
 ## Default Behavior
 
-If no search option is provided, the framework discovers and executes all tests within the current directory.
+If no search option is supplied, all discoverable tests under the current directory are executed.
 
 ```bash
 small_test
 ```
 
+---
+
 ## Test Discovery
 
-A test file is considered discoverable when:
+A file is considered discoverable when:
 
 * The file name begins with `test_`
-* The file is a Python file (`.py`)
-* The file resides somewhere under a directory named `tests`
+* The file has a `.py` extension
+* The file exists somewhere beneath a directory named `tests`
 
 Example:
 
@@ -120,23 +180,34 @@ project/
     └── test_concurrency.py
 ```
 
+---
+
 ## Test Registration
 
-Tests are collected from functions decorated with the Small Test decorator.
+Tests are registered using the Small Test decorator.
 
 ```python
-@small_test(...)
+@small_test()
 def test_example():
     ...
 ```
 
-The decorator accepts up to two optional arguments:
+The decorator accepts up to two optional callables:
 
 ```python
 @small_test(setup, cleanup)
 ```
 
-Both arguments must be callables (typically lambdas).
+Example:
+
+```python
+@small_test(
+    lambda: create_database(),
+    lambda: destroy_database()
+)
+def test_database():
+    ...
+```
 
 ### Setup
 
@@ -144,9 +215,11 @@ Executed before the test function runs.
 
 ### Cleanup
 
-Executed after the test completes.
+Executed after the test function completes.
 
-If the setup or the test itself fails, an attempt will still be made to execute the cleanup function.
+Cleanup execution is still attempted when setup or test execution fails.
+
+---
 
 ## Output Modes
 
@@ -161,36 +234,60 @@ Displays:
 * Full exception details
 * Stack traces
 
-Print statements executed within tests are displayed.
+Output written with `print()` is displayed.
+
+---
 
 ### SORT
 
-Same behavior as NORMAL, but results are grouped and sorted.
+Displays the same information as NORMAL.
 
-Failures are displayed after successful tests.
+Results are sorted with failed tests displayed after successful tests.
 
-Print statements executed within tests are displayed.
+Output written with `print()` is displayed.
+
+---
 
 ### MINIMAL
 
 Displays:
 
-* Only failed tests
-* Stack traces for failures
+* Failed tests only
+* Associated stack traces
+
+---
 
 ### MINIMAL_NO_STACK
 
 Displays:
 
-* Only failed tests
+* Failed tests only
 * No stack traces
 
+---
+
+### SUPER_MINIMAL
+
+Displays:
+
+* Final execution summary only
+
+No test output, stack traces, setup information, cleanup information, or failure details are shown.
+
+---
+
 ## Example Commands
+
+Run all tests:
+
+```bash
+small_test
+```
 
 Run all tests under a directory:
 
 ```bash
-small_test -NORMAL -d src/test_folder
+small_test -NORMAL -d tests
 ```
 
 Run all tests in a file:
@@ -199,18 +296,33 @@ Run all tests in a file:
 small_test -SORT -f test_concurrency
 ```
 
-Run a specific test:
+Run a single test:
 
 ```bash
-small_test -MINIMAL -t function_that_tests_something
+small_test -MINIMAL -t test_addition
 ```
+
+Run a specific test from a specific file:
+
+```bash
+small_test -f test_math -t test_addition
+```
+
+Run a specific test from a file within a directory:
+
+```bash
+small_test -d tests -f test_math -t test_addition
+```
+
+---
 
 ## Framework Validation
 
-The framework has been tested using its own test suite.
+The framework is tested using its own test suite.
+
+---
 
 ## Roadmap
-
 
 ### Coverage
 

@@ -6,8 +6,7 @@ from typing import Callable, Optional, TypeAlias
 
 from src._internals.consts import _LINE_CLEAR, _LINE_UP, _RESET
 from src.enums import Color, Mode
-from src.misc.annotations import (Failures, SuiteSize, TestName,
-                                  TestSuiteResults)
+from src.misc.annotations import Failures, TestName, TestSuiteResults
 from src.misc.exceptions import NotSupportedMode
 from src.test_utils import Test
 
@@ -54,13 +53,11 @@ class TestSuite:
 
         self.collector: dict[str, Test] = dict()
 
+        self.file_name = self.module.__name__
+
     @property
     def total_tests(self) -> int:
         return len(self.collector.values())
-
-    @property
-    def file_name(self) -> str:
-        return self.module.__name__
     
     def gather_tests(self, func_name: Optional[str] = None) -> list[TestName]:
 
@@ -89,7 +86,7 @@ class TestSuite:
     
     def populate_tests(self) -> None:
         list(map(lambda l: l(), self.decorated_tests))
-    
+
     def sort_tests(self) -> None:
         self.collector = dict(sorted(self.collector.items(), 
                                      key=lambda kv: kv[1].is_fail))
@@ -170,7 +167,7 @@ class TestSuite:
         self.box_tests()
 
         failures = 0
-        
+
         match self.mode:
 
             case Mode.NORMAL:

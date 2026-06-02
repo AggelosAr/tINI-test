@@ -2,8 +2,8 @@ from os import getcwd, path, walk
 from pathlib import Path
 from typing import Optional
 
-from src.misc.exceptions import (CantFindRelativePathToRoot,
-                                 TooManyArgumentsGivenDirAndFile)
+from src.misc.exceptions import CantFindRelativePathToRoot
+
 
 # TODO test edge cases of file paths with .. / etc ...
 
@@ -25,9 +25,6 @@ class ModuleCollector:
     def __init__(self, 
                  search_dir: Optional[str] = None, 
                  search_file: Optional[str] = None) -> None:
-        
-        if search_dir and search_file:
-            raise TooManyArgumentsGivenDirAndFile 
         
         self.root = Path(getcwd())
         if search_dir and search_dir != '.':

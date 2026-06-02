@@ -1,11 +1,5 @@
 
 
-class TooManyArgumentsGivenDirAndFile(Exception):
-
-    def __init__(self) -> None:
-        super().__init__('Module collector should accept either a directory or a file.')
-
-
 class CantFindRelativePathToRoot(Exception):
 
     def __init__(self) -> None:
