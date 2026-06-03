@@ -9,7 +9,7 @@ from small_test.test_suite import Test
 # !
  
 # TODO update to test edge cases like . .. ./././. etc .....
-
+# TODO add test that searches for both file and dir
 
 
 @Test.case
@@ -34,16 +34,16 @@ def test_collector_collects_all() -> None:
                                                                 'test_must_equal_floats'], 
                      'fake_real_tests.test_module_collector.tests': ['test_collector'], 
                      'fake_real_tests.test_dir.tests': ['test_smth'], 
-                     'this_tests_should_fail_but_we_made_them_pass': ['test_fails', 
-                                                                      'test_cleanup_works_on_fail', 
-                                                                      'test_broken_test'], 
+                     'fake_real_tests.this_tests_should_fail_but_we_made_them_pass.tests': 
+                     ['test_fails', 
+                      'test_cleanup_works_on_fail', 
+                      'test_broken_test'], 
                      'fake_real_tests.tests': ['test_decorator_works', 
                                                'test_will_raise', 
                                                'test_internals_must_equal', 
                                                'test_db_setup_cleanup', 
                                                'test_setup', 
-                                               'test_cleanup'], 
-                     'tests': []}
+                                               'test_cleanup']}
     must_equal(correct_items, dict(test_collector.test_modules.items()))
 
 
@@ -72,19 +72,18 @@ def test_collector_collects_all_and_exclude_dir_works() -> None:
                                                'test_internals_must_equal', 
                                                'test_db_setup_cleanup', 
                                                'test_setup', 
-                                               'test_cleanup'], 
-                     'tests': []}
+                                               'test_cleanup']}
     must_equal(correct_items, dict(test_collector.test_modules.items()))
 
 
 
 @Test.case
 def test_collector_can_find_correct_dir_from_search_dir() -> None:
-    test_collector = ModuleCollector(search_dir='this_tests_should_fail/tests')
+    test_collector = ModuleCollector(search_dir='this_tests_should_fail_but_we_made_them_pass/tests')
     test_collector.walk_and_collect_test_files(root=test_collector.root)
     test_collector.normalize_collected_data()
 
-    correct_items = {'fake_real_tests.this_tests_should_fail.tests': 
+    correct_items = {'fake_real_tests.this_tests_should_fail_but_we_made_them_pass.tests': 
                      ['test_fails', 
                       'test_cleanup_works_on_fail', 
                       'test_broken_test']}
@@ -101,22 +100,53 @@ def test_collector_will_not_find_tests_from_wrong_search_dir() -> None:
 
 @Test.case
 def test_collector_finds_correct_file_without_extension() -> None:
-    test_collector = ModuleCollector(search_file='test_fails')
+    test_collector = ModuleCollector(search_file='test_must_equal_bools')
     test_collector.walk_and_collect_test_files(root=test_collector.root)
     test_collector.normalize_collected_data()
     
-    correct_items = {'fake_real_tests.this_tests_should_fail.tests': ['test_fails']}
+    correct_items = {'fake_real_tests.test_must_equals.tests': ['test_must_equal_bools']}
     must_equal(correct_items, dict(test_collector.test_modules.items()))
 
 
 
 @Test.case
 def test_collector_finds_correct_file_with_extension() -> None:
+
+    test_collector = ModuleCollector(search_file='test_broken_test.py')
+    test_collector.walk_and_collect_test_files(root=test_collector.root)
+    test_collector.normalize_collected_data()
+
+    correct_items = {'fake_real_tests.this_tests_should_fail_but_we_made_them_pass.tests': ['test_broken_test']}
+    must_equal(correct_items, dict(test_collector.test_modules.items()))
+
+        # -----------------------------------------------------------
+
+    test_collector = ModuleCollector(search_file='test_cleanup_works_on_fail.py')
+    test_collector.walk_and_collect_test_files(root=test_collector.root)
+    test_collector.normalize_collected_data()
+
+    correct_items = {'fake_real_tests.this_tests_should_fail_but_we_made_them_pass.tests': ['test_cleanup_works_on_fail']}
+    must_equal(correct_items, dict(test_collector.test_modules.items()))
+    
+        # -----------------------------------------------------------
+
     test_collector = ModuleCollector(search_file='test_fails.py')
     test_collector.walk_and_collect_test_files(root=test_collector.root)
     test_collector.normalize_collected_data()
 
-    correct_items = {'fake_real_tests.this_tests_should_fail.tests': ['test_fails']}
+    correct_items = {'fake_real_tests.this_tests_should_fail_but_we_made_them_pass.tests': ['test_fails']}
+    must_equal(correct_items, dict(test_collector.test_modules.items()))
+
+
+
+@Test.case
+def test_collector_finds_correct_file_with_extension_case() -> None:
+
+    test_collector = ModuleCollector(search_file='test_fails.py')
+    test_collector.walk_and_collect_test_files(root=test_collector.root)
+    test_collector.normalize_collected_data()
+
+    correct_items = {'fake_real_tests.this_tests_should_fail_but_we_made_them_pass.tests': ['test_fails']}
     must_equal(correct_items, dict(test_collector.test_modules.items()))
 
 
