@@ -2,6 +2,7 @@ import enum
 from difflib import unified_diff
 from dis import Bytecode, dis  # TODO
 from functools import lru_cache
+from types import NotImplementedType
 from typing import Any, Optional, assert_never
 
 from small_test.misc.annotations import Comperator
@@ -26,10 +27,11 @@ here = None
 
 _diff_threshold = 2**16
 
-_TRUE_LOAD = 'LOAD_CONST1(True)'      #
-_FALSE_LOAD = 'LOAD_CONST2(False)'    #
-_COMPARE_OP = '_COMPARE_OP72(==)'     #
-_RETURN = 'RETURN_VALUE'              #
+_TRUE_LOAD = 'LOAD_CONST1(True)'           #
+_FALSE_LOAD = 'LOAD_CONST2(False)'         #
+_COMPARE_OP = '_COMPARE_OP72(==)'          #
+_COMPARE_OP_2 = 'COMPARE_OP2(==)'          #
+_RETURN = 'RETURN_VALUE'                   #
 
 # =========================================================
 # Public API
@@ -97,7 +99,8 @@ def _assert_comperator(comperator: Comperator | Any) -> None:
         
         if any([_TRUE_LOAD in line,
                 _FALSE_LOAD in line,
-                _COMPARE_OP in line]):
+                _COMPARE_OP in line,
+                _COMPARE_OP_2 in line]):
             has_loads = True
             has_loads_idx = idx
             continue
@@ -106,7 +109,7 @@ def _assert_comperator(comperator: Comperator | Any) -> None:
                 has_loads,
                 idx-1 == has_loads_idx]):
             return
-    
+
     raise ComperatorIsNotValid
 
 
@@ -202,24 +205,28 @@ def _must_equal(expected: Any,
 
     _is_alien = type(expected) not in _known_types or type(actual) not in _known_types
 
-    if type(expected) == type(actual) and _is_alien:
+    # If no comperator is proviced we will try to discover it.
+    if not comperator and type(expected) == type(actual) and _is_alien:
         
-        # If it is known enum we have compare them.
+        # If it is known enum we just have to compare them.
         if issubclass(expected.__class__, enum.Enum):
             _diff_enum(expected, actual, path)
             return
         
-        if expected.__eq__.__code__.co_argcount == 2:
-        
+        if '__eq__' in dir(expected):
+            
+            # Determine is __eq__ is implemented on that class.
+            if expected.__eq__(actual) is NotImplemented:
+                raise ComperatorWasNotProvided
+
             if expected.__eq__(actual):
-                    return
+                return
             else:
                 _raise_diff('%r != %r' % (expected, actual, ))
                 return
-    
-
-    if _is_alien and not comperator:
+            
         raise ComperatorWasNotProvided
+    
 
     if _is_alien:
         _diff_alien_primitive(expected, actual, path, comperator) # type: ignore[arg-type]
