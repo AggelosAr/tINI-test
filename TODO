@@ -34,4 +34,6 @@ test functions are unordered
 # if both directory and test file is given it runs the corretc one 
 
 
+
+# super minimal is 2 super
 # If specific test function is requested the test discovert will collect a single one . In case multiple same ones are defined scattered around the first one collected will run 

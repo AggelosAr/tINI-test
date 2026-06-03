@@ -72,5 +72,5 @@ def test_will_raise_fails_to_catch_exception() -> None:
         x[1_000_000]
 
     with WillRaise(KeyError) as context: 
-        y = {'a':a}
-        y[a]
+        y = {'a': a}
+        y[a] # type: ignore[index]

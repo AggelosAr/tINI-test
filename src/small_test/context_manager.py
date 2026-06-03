@@ -1,4 +1,3 @@
-from functools import partial
 from typing import Optional
 
 from small_test.misc.exceptions import (ExceptionWasNotRaised,
