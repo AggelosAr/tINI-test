@@ -22,3 +22,6 @@ test functions are unordered
 # see redirected stdout optimizations 
 
 
+# truncate big diffs 
+
+

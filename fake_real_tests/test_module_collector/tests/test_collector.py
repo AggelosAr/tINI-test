@@ -13,8 +13,8 @@ from src.small_test.test_suite import Test
 
 
 @Test.case
-def test_collector_collects_all() -> None:
-    test_collector = ModuleCollector()
+def test_collector_collects_all_and_exclude_dir_works() -> None:
+    test_collector = ModuleCollector(exclude_dir='this_tests_should_fail')
     test_collector.walk_and_collect_test_files(root=test_collector.root)
     test_collector.normalize_collected_data()
 
@@ -34,9 +34,9 @@ def test_collector_collects_all() -> None:
                                                                 'test_must_equal_floats'], 
                      'fake_real_tests.test_module_collector.tests': ['test_collector'], 
                      'fake_real_tests.test_dir.tests': ['test_smth'], 
-                     'fake_real_tests.this_tests_should_fail.tests': ['test_fails', 
-                                                                      'test_cleanup_works_on_fail', 
-                                                                      'test_broken_test'], 
+                    #  'fake_real_tests.this_tests_should_fail.tests': ['test_fails', 
+                    #                                                   'test_cleanup_works_on_fail', 
+                    #                                                   'test_broken_test'], 
                      'fake_real_tests.tests': ['test_decorator_works', 
                                                'test_will_raise', 
                                                'test_internals_must_equal', 
@@ -65,7 +65,7 @@ def test_collector_can_find_correct_dir_from_search_dir() -> None:
 @Test.case
 def test_collector_will_not_find_tests_from_wrong_search_dir() -> None:
     with WillRaise(CantFindRelativePathToRoot):
-        test_collector = ModuleCollector(search_dir='doesnt_exist/dir2')
+        _ = ModuleCollector(search_dir='doesnt_exist/dir2')
 
 
 

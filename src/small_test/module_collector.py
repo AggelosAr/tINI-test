@@ -6,6 +6,8 @@ from small_test.misc.exceptions import CantFindRelativePathToRoot
 
 # TODO test edge cases of file paths with .. / etc ...
 
+# TODO update arg parser to accept exclude dir 
+
 # what happens if dir of file is given but only function ? do we search? ...
 # review the search proccess , seems kinda stupid 
 
@@ -25,10 +27,14 @@ class ModuleCollector:
         "node_modules"
     }
 
-    def __init__(self, 
+    def __init__(self,
                  search_dir: Optional[str] = None, 
-                 search_file: Optional[str] = None) -> None:
+                 search_file: Optional[str] = None,
+                 exclude_dir: Optional[str] = None,) -> None:
         
+
+        self.SKIP_DIRS.add(exclude_dir if exclude_dir else str())
+
         self.root = Path(getcwd())
         if search_dir and search_dir != '.':
             # here we need to connect the 2 dirs

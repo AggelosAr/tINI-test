@@ -320,6 +320,10 @@ small_test -d tests -f test_math -t test_addition
 Comparing custom classes should try to autodiscover __eq__ and apply it althought 
 , better to be explicit and pass the comperator tho ...
 
+Currently exactly 14 tests should fail if u run python3 -m  small_test on root dir to show how the output is shown on the screen.
+this_tests_should_fail are failling to show the format 
+this_tests_should_fail_are_passing are the same tests passing 
+
 ## Framework Validation
 
 The framework is tested using its own test suite.

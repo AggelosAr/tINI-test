@@ -1,18 +1,19 @@
+from functools import partial
 from typing import Optional
 
 from small_test.misc.exceptions import (ExceptionWasNotRaised,
                                         WillRaiseReceivedNotAnException)
 
-_exception = Exception.__str__
+_exceptions = (Exception, BaseException)
 
 # TODO Maybe add MaybeWillRaise
 
 class WillRaise(object):
 
     def __init__(self,  *exceptions) -> None:
-        # use duck typing to determine if the obj is an exception 
+       
         try:
-            assert all(map(lambda obj: obj.__str__ is _exception, exceptions))
+            assert any(issubclass(e, _e) for e in exceptions for _e in _exceptions)
         except:
             raise WillRaiseReceivedNotAnException
 
