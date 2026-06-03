@@ -12,9 +12,10 @@ from src.small_test.test_suite import Test
 # TODO update to test edge cases like . .. ./././. etc .....
 
 
+
 @Test.case
-def test_collector_collects_all_and_exclude_dir_works() -> None:
-    test_collector = ModuleCollector(exclude_dir='this_tests_should_fail')
+def test_collector_collects_all() -> None:
+    test_collector = ModuleCollector()
     test_collector.walk_and_collect_test_files(root=test_collector.root)
     test_collector.normalize_collected_data()
 
@@ -34,9 +35,9 @@ def test_collector_collects_all_and_exclude_dir_works() -> None:
                                                                 'test_must_equal_floats'], 
                      'fake_real_tests.test_module_collector.tests': ['test_collector'], 
                      'fake_real_tests.test_dir.tests': ['test_smth'], 
-                    #  'fake_real_tests.this_tests_should_fail.tests': ['test_fails', 
-                    #                                                   'test_cleanup_works_on_fail', 
-                    #                                                   'test_broken_test'], 
+                     'this_tests_should_fail_but_we_made_them_pass': ['test_fails', 
+                                                                      'test_cleanup_works_on_fail', 
+                                                                      'test_broken_test'], 
                      'fake_real_tests.tests': ['test_decorator_works', 
                                                'test_will_raise', 
                                                'test_internals_must_equal', 
@@ -45,7 +46,37 @@ def test_collector_collects_all_and_exclude_dir_works() -> None:
                                                'test_cleanup'], 
                      'tests': []}
     must_equal(correct_items, dict(test_collector.test_modules.items()))
-  
+
+
+
+
+@Test.case
+def test_collector_collects_all_and_exclude_dir_works() -> None:
+    test_collector = ModuleCollector(exclude_dir='this_tests_should_fail_but_we_made_them_pass')
+    test_collector.walk_and_collect_test_files(root=test_collector.root)
+    test_collector.normalize_collected_data()
+
+    correct_items = {'fake_real_tests.test_must_equals.tests': ['test_must_equal_lists', 
+                                                                'test_must_equal_dicts', 
+                                                                'test_must_equal_works', 
+                                                                'test_must_equal_tuples', 
+                                                                'test_must_equal_strings', 
+                                                                'test_must_equal_sets', 
+                                                                'test_must_equal_ints', 
+                                                                'test_must_equal_bools', 
+                                                                'test_must_equals_misc', 
+                                                                'test_must_equal_floats'], 
+                     'fake_real_tests.test_module_collector.tests': ['test_collector'], 
+                     'fake_real_tests.test_dir.tests': ['test_smth'], 
+                     'fake_real_tests.tests': ['test_decorator_works', 
+                                               'test_will_raise', 
+                                               'test_internals_must_equal', 
+                                               'test_db_setup_cleanup', 
+                                               'test_setup', 
+                                               'test_cleanup'], 
+                     'tests': []}
+    must_equal(correct_items, dict(test_collector.test_modules.items()))
+
 
 
 @Test.case

@@ -25,3 +25,13 @@ test functions are unordered
 # truncate big diffs 
 
 
+
+
+# Maybe add flag to disable run for cleanup on fail 
+
+# If test_fails exist in multiple sub dirs it will run them both
+
+# if both directory and test file is given it runs the corretc one 
+
+
+# If specific test function is requested the test discovert will collect a single one . In case multiple same ones are defined scattered around the first one collected will run 

@@ -1,11 +1,8 @@
 from typing import assert_never
 
+from small_test.context_manager import WillRaise
 from src.small_test.test_suite import Test
 
-# If there is a cleanup provided 
-# We will attempt to run it in case the test fails
-
-# this tests should fail BUT _no_op should not fail
 
 
 GG = 2_999
@@ -23,16 +20,17 @@ def __no_op():
 
 @Test.case(cleanup=lambda: __cleanup(), _no_op=lambda: __no_op())
 def test_cleanup_works_even_if_test_fails():
-    1/0
+    with WillRaise(ZeroDivisionError):
+        1/0
 
 
 
-# Is there even a point to this test ? XXX
 _GG = 2_999
 def _setup():
     global _GG
-    print('_setup called val-> %d' % (_GG, ))
-    1/0
+    with WillRaise(ZeroDivisionError):
+        print('_setup called val-> %d' % (_GG, ))
+        1/0
     _GG = 0
 
 def _cleanup():
@@ -50,30 +48,41 @@ def _no_op():
            cleanup=lambda: _cleanup(), 
            _no_op=lambda: _no_op())
 def test_cleanup_works_even_if_setup_fails():
-    assert_never()
+
+    assert _GG == 0
+    with WillRaise(TypeError):
+        assert_never()
 
 
 
 _GGX = 2_999
 def _setupX():
     global _GGX
-    print('_setupX called val-> %d' % (_GGX, ))
-    1/0
+    with WillRaise(ZeroDivisionError):
+        print('_setupX called val-> %d' % (_GGX, ))
+        1/0
     _GGX = 0
 
 def _cleanupX():
     global _GGX
+
+    _GGX = 999_999
     print('_cleanupX called val-> %d' % (_GGX, ))
-    print('_cleanupX will now break')
-    1/0
+    print('_cleanupX will now break, not')
+    with WillRaise(ZeroDivisionError):
+        1/0
     
 def _no_opX():
     global _GGX
     print('_no_opX called val-> %d' % (_GGX, ))
-    assert _GGX == 2_999
+    assert _GGX == 999_999
 
 @Test.case(setup=lambda: _setupX(), 
            cleanup=lambda: _cleanupX(), 
            _no_op=lambda: _no_opX())
 def test_cleanup_works_even_if_setup_fails_and_then_breaks():
-    assert_never()
+
+    assert _GGX == 0
+
+    with WillRaise(TypeError):
+        assert_never()

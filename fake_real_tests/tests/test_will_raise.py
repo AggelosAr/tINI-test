@@ -53,7 +53,7 @@ def test_will_raise_will_not_catch_from_many_exceptions() -> None:
 
 
 @Test.case
-def test_will_raise_correclty_raises_exception() -> None:
+def test_will_raise_correclty_initializes() -> None:
 
     def _test_will_raise_correclty_raises_exception() -> None:
         with WillRaise(1, None, Exception) as context:
