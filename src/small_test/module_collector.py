@@ -2,7 +2,7 @@ from os import getcwd, path, walk
 from pathlib import Path
 from typing import Optional
 
-from small_test.misc.exceptions import CantFindRelativePathToRoot
+from .misc.exceptions import CantFindRelativePathToRoot
 
 # TODO test edge cases of file paths with .. / etc ...
 

@@ -2,11 +2,10 @@ import enum
 from difflib import unified_diff
 from dis import Bytecode, dis  # TODO
 from functools import lru_cache
-from types import NotImplementedType
 from typing import Any, Optional, assert_never
 
-from small_test.misc.annotations import Comperator
-from small_test.misc.exceptions import (ComperatorIsNotValid,
+from .misc.annotations import Comperator
+from .misc.exceptions import (ComperatorIsNotValid,
                                         ComperatorWasNotProvided,
                                         ExpectedWasDifferentFromActual)
 

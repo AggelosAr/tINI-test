@@ -1,6 +1,6 @@
 from argparse import ArgumentParser
 
-from small_test.enums import Mode
+from .enums import Mode
 
 
 def receive_args() -> tuple[Mode, str, str, str]:

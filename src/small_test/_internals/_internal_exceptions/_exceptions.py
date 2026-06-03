@@ -5,6 +5,7 @@ class _LastOpNotExpected(Exception):
 
     def __init__(self, _ = ''):
         super().__init__('<small-test-error> Cleanup logic failed.')
+        assert_never()
 
 
 class _FailStateWasNotFail(Exception):

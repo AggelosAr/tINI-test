@@ -2,7 +2,7 @@ from enum import Enum
 from functools import lru_cache
 from typing import Mapping
 
-from small_test.misc.annotations import ColorValue
+from .misc.annotations import ColorValue
 
 
 class Color(Enum):

@@ -1,9 +1,9 @@
-from small_test._internals._internal_exceptions._exceptions import (
+from ._internals._internal_exceptions._exceptions import (
     _FailStateWasNotFail, _LastOpNotExpected)
-from small_test.arg_parser import receive_args
-from small_test.misc.exceptions import (CantFindRelativePathToRoot,
+from .arg_parser import receive_args
+from .misc.exceptions import (CantFindRelativePathToRoot,
                                         NotSupportedMode, TestNotFound)
-from small_test.runner import get_test_container, run_tests
+from .runner import get_test_container, run_tests
 
 if __name__=='__main__':
 

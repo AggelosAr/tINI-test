@@ -1,6 +1,6 @@
 from typing import Optional
 
-from small_test.misc.exceptions import (ExceptionWasNotRaised,
+from .misc.exceptions import (ExceptionWasNotRaised,
                                         WillRaiseReceivedNotAnException)
 
 _exceptions = (Exception, BaseException)

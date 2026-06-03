@@ -1,6 +1,6 @@
 from typing import Any
 
-from src.small_test._internals._internal_exceptions._comparison_exceptions import (
+from small_test._internals._internal_exceptions._comparison_exceptions import (
     _BoolMismatchError, _DictionaryMismatchError, _DictionarySizeMismatchError,
     _FloatMismatchError, _IntegerMismatchError, _ListMismatchError,
     _ListSizeMismatchError, _MustEqualReceivedNotKnownTypes, _SetMismatchError,
