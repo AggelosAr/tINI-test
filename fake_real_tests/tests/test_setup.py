@@ -14,15 +14,3 @@ def test_setup_provided() -> None:
     print('inside test_setup_provided val-----------> %d' % (GG, ))
     assert GG == 1_000
 
-
-
-# TODO create smt to make this test pass. This is the correct behaviour
-# This test should fail.
-# def _setup() -> None:
-#     print('inside _setup')
-#     1/0
-
-# @Test.case(setup=lambda: _setup())
-# def test_setup_provided_fails_as_a_result_test_wont_run() -> None:
-#     print('this should never print')
-#     assert_never()

@@ -3,8 +3,6 @@ from typing import assert_never
 from small_test.context_manager import WillRaise
 from src.small_test.test_suite import Test
 
-
-
 GG = 2_999
 
 def __cleanup():

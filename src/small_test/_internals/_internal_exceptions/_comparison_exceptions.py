@@ -7,7 +7,6 @@ class _MustEqualError(Exception):
     '''Base exception for all must_equal failures.'''
     def __init__(self, message: DiffMessage):
         super().__init__(message)
-        # self.message = message
 
 
 class _TypeMismatchError(_MustEqualError):
