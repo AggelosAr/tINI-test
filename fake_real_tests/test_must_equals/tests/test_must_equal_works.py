@@ -63,6 +63,49 @@ def test_comperator_works_on_unknown_objects_in_containers() -> None:
 
 
 @Test.case
+def test_must_equals_auto_discovers_eq() -> None:
+
+    class A:
+        def __init__(self, a: int) -> None:
+            self.a = a
+
+        def __eq__(self, other: object) -> bool: # TODO 
+
+            if not isinstance(other, A):
+                return NotImplemented
+            
+            return self.a == other.a
+ 
+    obj1 = [A(a=10)]
+    obj2 = [A(a=10)]
+
+    must_equal(obj1, obj2)
+
+
+
+@Test.case
+def test_must_equals_auto_discovers_eq_and_returns_false() -> None:
+
+    class A:
+        def __init__(self, a: int) -> None:
+            self.a = a
+
+        def __eq__(self, other: object) -> bool: # TODO 
+
+            if not isinstance(other, A):
+                return NotImplemented
+            
+            return self.a == other.a
+ 
+    obj1 = [A(a=10)]
+    obj2 = [A(a=20)]
+
+    with WillRaise(ExpectedWasDifferentFromActual):
+        must_equal(obj1, obj2)
+
+
+
+@Test.case
 def test_comperator_works_on_unknown_objects_in_containers_case() -> None:
 
     class A:
