@@ -1,5 +1,6 @@
 from src.small_test.context_manager import WillRaise
-from src.small_test.misc.exceptions import ExceptionWasNotRaised, WillRaiseReceivedNotAnException
+from src.small_test.misc.exceptions import (ExceptionWasNotRaised,
+                                            WillRaiseReceivedNotAnException)
 from src.small_test.test_suite import Test
 
 
