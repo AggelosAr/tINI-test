@@ -1,39 +1,14 @@
 
+# Add comperator for json, bytes?  frozenset?
 
-test functions are unordered
+# test functions are unordered across entire run, order the fails at the bottom 
 
-# bytes json frozenset
+# Add single line diff on multiline diff ?  # truncate big diffs 
+ 
+# format outputs on modes
 
-
-
-# test exceptions withint exceptrions,  functions within functions?
-
-
-# WHAT happens when the lib crashes?>
-
-
-# ndiff multiline on single line ?
-
-
-# do smthing about mode duplication code
-
-# format outputs 
-
-# see redirected stdout optimizations 
-
-
-# truncate big diffs 
-
-
-
-
-# Maybe add flag to disable run for cleanup on fail 
-
-# If test_fails exist in multiple sub dirs it will run them both
+# Test same test file on multiple dirs 
+# Test multiple same test function
 
 # if both directory and test file is given it runs the corretc one 
 
-
-
-# super minimal is 2 super
-# If specific test function is requested the test discovert will collect a single one . In case multiple same ones are defined scattered around the first one collected will run 

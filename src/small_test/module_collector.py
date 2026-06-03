@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Optional
 
 from ._internals.consts import SKIP_DIRS
-
 from .misc.exceptions import CantFindRelativePathToRoot
 
 # TODO test edge cases of file paths with .. / etc ...
