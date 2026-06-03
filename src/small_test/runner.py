@@ -48,7 +48,7 @@ def get_test_container(mode: Optional[str | Mode] = None,
             suite = TestSuite(module, test_file, mode)
             collected_tests = suite.gather_tests(func_name=test_function)
             #except ImportError:
-            #    continue # if the python is broken this will fail in case the mode is set to seach for single files
+            #    continue # if the python is broken this will fail in case the mode is set to seach for single files TODO
             
 
             if not collected_tests:

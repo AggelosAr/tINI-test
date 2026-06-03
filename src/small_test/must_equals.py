@@ -1,6 +1,6 @@
+import enum
 from difflib import unified_diff
 from dis import Bytecode, dis  # TODO
-import enum
 from functools import lru_cache
 from typing import Any, Optional, assert_never
 
@@ -8,7 +8,10 @@ from small_test.misc.annotations import Comperator
 from small_test.misc.exceptions import (ComperatorIsNotValid,
                                         ComperatorWasNotProvided,
                                         ExpectedWasDifferentFromActual)
-# Something is very fishy here. Check returns on _raise TODO 
+
+# TODO enums and aliens have bad diff messages
+
+
 _known_types = set([type,
                     bool,
                     int,
@@ -174,14 +177,13 @@ def _single_line_diff(expected: str, actual: str) -> str:
         act_char,
         exp_snippet,
         act_snippet,
-        ' ' * (idx - start + 1),
+        ' ' * (idx - start + 1), # TODO if char is excaped +1 
     )
 
 # =========================================================
 # Core dispatcher
 # =========================================================
 
-# Optimize this 
 
 def _must_equal(expected: Any, 
                 actual: Any, 
@@ -198,20 +200,28 @@ def _must_equal(expected: Any,
         )
         return
 
-    _is_alien = type(expected) not in _known_types
+    _is_alien = type(expected) not in _known_types or type(actual) not in _known_types
 
-    # review this ...
     if type(expected) == type(actual) and _is_alien:
-        if expected == actual:
+        
+        # If it is known enum we have compare them.
+        if issubclass(expected.__class__, enum.Enum):
+            _diff_enum(expected, actual, path)
             return
-        else:
-            _raise_diff('%r != %r' % (expected, actual, ))
-            return
+        
+        if expected.__eq__.__code__.co_argcount == 2:
+        
+            if expected.__eq__(actual):
+                    return
+            else:
+                _raise_diff('%r != %r' % (expected, actual, ))
+                return
+    
 
     if _is_alien and not comperator:
         raise ComperatorWasNotProvided
 
-    if type(expected) not in _known_types:
+    if _is_alien:
         _diff_alien_primitive(expected, actual, path, comperator) # type: ignore[arg-type]
         return
     
@@ -250,10 +260,6 @@ def _must_equal(expected: Any,
     if isinstance(expected, dict):
         _diff_dict(expected, actual, path, comperator)
         return
-    
-    # if isinstance(expected, frozenset):
-    #     _diff_dict(set(expected), set(actual), path, comperator)
-    #     return
 
     assert_never(expected)
 
@@ -261,6 +267,12 @@ def _must_equal(expected: Any,
 # =========================================================
 # Primitive types
 # =========================================================
+
+
+def _diff_enum(expected: enum.Enum, actual: enum.Enum, path: str) -> None:
+    if expected.value != actual.value:
+        _raise_diff('%r != %r' % (expected, actual, ))
+        return
 
 
 def _diff_primitive(expected: Any, actual: Any, path: str) -> None:

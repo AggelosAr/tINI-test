@@ -1,9 +1,11 @@
 from typing import Optional
 
-from small_test.misc.exceptions import WillRaiseReceivedNotAnException
+from small_test.misc.exceptions import (ExceptionWasNotRaised,
+                                        WillRaiseReceivedNotAnException)
 
 _exception = Exception.__str__
 
+# Maybe add MaybeWillRaise
 
 class WillRaise(object):
 
@@ -30,4 +32,4 @@ class WillRaise(object):
             self.exc_traceback = exc_traceback
             return True
         
-        return False
+        raise ExceptionWasNotRaised

@@ -43,3 +43,9 @@ class ComperatorIsNotValid(Exception):
 
     def __init__(self, reason: str = '') -> None:
         super().__init__(reason)
+
+
+class ExceptionWasNotRaised(Exception):
+
+    def __init__(self, reason: str = '') -> None:
+        super().__init__(reason)
