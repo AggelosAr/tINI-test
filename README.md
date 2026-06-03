@@ -316,6 +316,10 @@ small_test -d tests -f test_math -t test_addition
 
 ---
 
+
+Comparing custom classes should try to autodiscover __eq__ and apply it althought 
+, better to be explicit and pass the comperator tho ...
+
 ## Framework Validation
 
 The framework is tested using its own test suite.

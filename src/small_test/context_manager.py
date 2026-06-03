@@ -5,7 +5,7 @@ from small_test.misc.exceptions import (ExceptionWasNotRaised,
 
 _exception = Exception.__str__
 
-# Maybe add MaybeWillRaise
+# TODO Maybe add MaybeWillRaise
 
 class WillRaise(object):
 
@@ -16,7 +16,8 @@ class WillRaise(object):
         except:
             raise WillRaiseReceivedNotAnException
 
-        self.exceptions = exceptions
+        # Normalize exceptions
+        self.exceptions = set(map(lambda l: l.__name__, exceptions))
         self.exception = None
         self.exc_type = None
         self.exc_traceback = None
@@ -26,7 +27,9 @@ class WillRaise(object):
 
     def __exit__(self, exc_type, exc_value, exc_traceback) -> Optional[bool]:
 
-        if exc_type in self.exceptions:
+        if exc_type.__name__ in self.exceptions:
+
+            
             self.exception = exc_value
             self.exc_type = exc_type
             self.exc_traceback = exc_traceback
