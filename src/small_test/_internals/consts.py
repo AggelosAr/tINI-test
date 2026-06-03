@@ -8,3 +8,17 @@ SEPERATOR_LENGTH = 120               # Seperator length
 SEPERATOR_SYMBOL = '='               # Seperator symbol
 SEPERATOR_NEGATIVE = "\033[7m"       # Seperator start
 SEPERATOR_CYAN = "\033[96m"          # Seperator color
+
+
+SKIP_DIRS = {
+        "__pycache__",
+        ".venv",
+        "venv",
+        "env",
+        "build",
+        "dist",
+        ".git",
+        ".pytest_cache",
+        ".mypy_cache",
+        "node_modules"
+    }

@@ -2,6 +2,8 @@ from os import getcwd, path, walk
 from pathlib import Path
 from typing import Optional
 
+from ._internals.consts import SKIP_DIRS
+
 from .misc.exceptions import CantFindRelativePathToRoot
 
 # TODO test edge cases of file paths with .. / etc ...
@@ -14,27 +16,17 @@ from .misc.exceptions import CantFindRelativePathToRoot
 
 class ModuleCollector:
 
-    SKIP_DIRS = {
-        "__pycache__",
-        ".venv",
-        "venv",
-        "env",
-        "build",
-        "dist",
-        ".git",
-        ".pytest_cache",
-        ".mypy_cache",
-        "node_modules"
-    }
+    
 
     def __init__(self,
                  search_dir: Optional[str] = None, 
                  search_file: Optional[str] = None,
                  exclude_dir: Optional[str] = None,) -> None:
         
+        # Check case that exclude_dir is trash not yet implemented
+        self.SKIP_DIRS = {**{l: None for l in SKIP_DIRS}, exclude_dir: None}
 
-        self.SKIP_DIRS.add(exclude_dir if exclude_dir else str())
-
+        print(self.SKIP_DIRS)
         self.root = Path(getcwd())
         if search_dir and search_dir != '.':
             # here we need to connect the 2 dirs
