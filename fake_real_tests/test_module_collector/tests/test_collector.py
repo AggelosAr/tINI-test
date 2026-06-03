@@ -1,3 +1,4 @@
+from small_test.must_equals import must_equal
 from src.small_test.context_manager import WillRaise
 from src.small_test.misc.exceptions import (CantFindRelativePathToRoot,
                                             TestNotFound)
@@ -8,6 +9,8 @@ from src.small_test.test_suite import Test
 # Recursion indeed stops early when searching for file. maybe add a test.
 # !
  
+# TODO update to test edge cases like . .. ./././. etc .....
+
 
 @Test.case
 def test_collector_collects_all() -> None:
@@ -15,19 +18,33 @@ def test_collector_collects_all() -> None:
     test_collector.walk_and_collect_test_files(root=test_collector.root)
     test_collector.normalize_collected_data()
 
+    # print('------------------------------------------------')
+    # print(dict(test_collector.test_modules.items()))
+    # print('------------------------------------------------')
 
-    correct_items = {'fake_real_tests.test_module_collector.tests': ['test_collector'], 
+    correct_items = {'fake_real_tests.test_must_equals.tests': ['test_must_equal_lists', 
+                                                                'test_must_equal_dicts', 
+                                                                'test_must_equal_works', 
+                                                                'test_must_equal_tuples', 
+                                                                'test_must_equal_strings', 
+                                                                'test_must_equal_sets', 
+                                                                'test_must_equal_ints', 
+                                                                'test_must_equal_bools', 
+                                                                'test_must_equals_misc', 
+                                                                'test_must_equal_floats'], 
+                     'fake_real_tests.test_module_collector.tests': ['test_collector'], 
                      'fake_real_tests.test_dir.tests': ['test_smth'], 
                      'fake_real_tests.this_tests_should_fail.tests': ['test_fails', 
                                                                       'test_cleanup_works_on_fail', 
                                                                       'test_broken_test'], 
                      'fake_real_tests.tests': ['test_decorator_works', 
                                                'test_will_raise', 
+                                               'test_internals_must_equal', 
                                                'test_db_setup_cleanup', 
                                                'test_setup', 
-                                               'test_cleanup'],
+                                               'test_cleanup'], 
                      'tests': []}
-    assert correct_items == dict(test_collector.test_modules.items())
+    must_equal(correct_items, dict(test_collector.test_modules.items()))
   
 
 
@@ -41,7 +58,7 @@ def test_collector_can_find_correct_dir_from_search_dir() -> None:
                      ['test_fails', 
                       'test_cleanup_works_on_fail', 
                       'test_broken_test']}
-    assert correct_items == dict(test_collector.test_modules.items())
+    must_equal(correct_items, dict(test_collector.test_modules.items()))
 
 
 
@@ -59,7 +76,7 @@ def test_collector_finds_correct_file_without_extension() -> None:
     test_collector.normalize_collected_data()
     
     correct_items = {'fake_real_tests.this_tests_should_fail.tests': ['test_fails']}
-    assert correct_items == dict(test_collector.test_modules.items())
+    must_equal(correct_items, dict(test_collector.test_modules.items()))
 
 
 
@@ -70,7 +87,7 @@ def test_collector_finds_correct_file_with_extension() -> None:
     test_collector.normalize_collected_data()
 
     correct_items = {'fake_real_tests.this_tests_should_fail.tests': ['test_fails']}
-    assert correct_items == dict(test_collector.test_modules.items())
+    must_equal(correct_items, dict(test_collector.test_modules.items()))
 
 
 
@@ -81,7 +98,7 @@ def test_collector_will_not_find_anything_if_nonexisting_file_is_requested() -> 
     test_collector.normalize_collected_data()
     
     correct_items: dict = {}
-    assert correct_items == dict(test_collector.test_modules.items())
+    must_equal(correct_items, dict(test_collector.test_modules.items()))
 
 
 
@@ -98,15 +115,14 @@ def test_test_module_will_collect_a_single_function() -> None:
 
     correct_item = 'test_decorator_works_with_parenthesis'
 
-    assert len(tests_container) == 1
-    assert len(tests_container['fake_real_tests.tests']) == 1
+    must_equal(True, tests_container[1] < 1)
 
-    module_tests = tests_container['fake_real_tests.tests']['test_decorator_works']
+    module_tests = tests_container[0]['fake_real_tests.tests']['test_decorator_works']
     gathered_tests = module_tests.decorated_tests
 
     
-    assert len(gathered_tests) == 1
-    assert correct_item == gathered_tests[0].func.__closure__[-1].cell_contents.__name__ # type: ignore[attr-defined]
+    must_equal(1, len(gathered_tests))
+    must_equal(correct_item, gathered_tests[0].func.__closure__[-1].cell_contents.__name__) # type: ignore[attr-defined]
 
 
 
@@ -116,10 +132,10 @@ def test_test_module_will_collect_this_function() -> None:
     t = 'test_test_module_will_collect_this_function'
     tests_container, _ = get_test_container(test_function=t)
 
-    assert len(tests_container['fake_real_tests.test_module_collector.tests']) == 1
+    must_equal(1, len(tests_container['fake_real_tests.test_module_collector.tests']))
 
     module_tests = tests_container['fake_real_tests.test_module_collector.tests']['test_collector']
     gathered_tests = module_tests.decorated_tests
 
-    assert len(gathered_tests) == 1
-    assert t == gathered_tests[0].func.__closure__[-1].cell_contents.__name__ # type: ignore[attr-defined]
+    must_equal(1, len(gathered_tests))
+    must_equal(t, gathered_tests[0].func.__closure__[-1].cell_contents.__name__) # type: ignore[attr-defined]
