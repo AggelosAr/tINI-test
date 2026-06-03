@@ -1,8 +1,8 @@
-from ._internals._internal_exceptions._exceptions import (
-    _FailStateWasNotFail, _LastOpNotExpected)
+from ._internals._internal_exceptions._exceptions import (_FailStateWasNotFail,
+                                                          _LastOpNotExpected)
 from .arg_parser import receive_args
-from .misc.exceptions import (CantFindRelativePathToRoot,
-                                        NotSupportedMode, TestNotFound)
+from .misc.exceptions import (CantFindRelativePathToRoot, NotSupportedMode,
+                              TestNotFound)
 from .runner import get_test_container, run_tests
 
 if __name__=='__main__':

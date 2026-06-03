@@ -5,9 +5,8 @@ from functools import lru_cache
 from typing import Any, Optional, assert_never
 
 from .misc.annotations import Comperator
-from .misc.exceptions import (ComperatorIsNotValid,
-                                        ComperatorWasNotProvided,
-                                        ExpectedWasDifferentFromActual)
+from .misc.exceptions import (ComperatorIsNotValid, ComperatorWasNotProvided,
+                              ExpectedWasDifferentFromActual)
 
 # TODO enums and aliens have bad diff messages
 

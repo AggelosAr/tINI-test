@@ -1,7 +1,7 @@
 from typing import Optional
 
 from .misc.exceptions import (ExceptionWasNotRaised,
-                                        WillRaiseReceivedNotAnException)
+                              WillRaiseReceivedNotAnException)
 
 _exceptions = (Exception, BaseException)
 

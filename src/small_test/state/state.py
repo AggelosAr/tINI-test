@@ -2,9 +2,8 @@ from functools import lru_cache
 from io import StringIO
 from typing import Iterator, Optional
 
-from .._internals.consts import (_RESET, SEPERATOR_CYAN,
-                                          SEPERATOR_LENGTH, SEPERATOR_NEGATIVE,
-                                          SEPERATOR_SYMBOL)
+from .._internals.consts import (_RESET, SEPERATOR_CYAN, SEPERATOR_LENGTH,
+                                 SEPERATOR_NEGATIVE, SEPERATOR_SYMBOL)
 from ..enums import CONFIG, TestStatus
 
 _x_f = ['']

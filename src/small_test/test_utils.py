@@ -4,8 +4,8 @@ from io import StringIO
 from traceback import format_exc, format_tb
 from typing import Any, Optional
 
-from ._internals._internal_exceptions._exceptions import (
-    _FailStateWasNotFail, _LastOpNotExpected)
+from ._internals._internal_exceptions._exceptions import (_FailStateWasNotFail,
+                                                          _LastOpNotExpected)
 from .enums import TestStatus
 from .misc.annotations import F_Callable, S_Callable, StackTrace
 from .misc.exceptions import ExpectedWasDifferentFromActual

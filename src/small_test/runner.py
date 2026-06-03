@@ -2,8 +2,7 @@ from time import perf_counter
 from typing import Optional
 
 from .enums import Mode
-from .misc.annotations import \
-    TimeTakenForTestDiscoveryAndSuiteInitialization
+from .misc.annotations import TimeTakenForTestDiscoveryAndSuiteInitialization
 from .misc.exceptions import TestNotFound
 from .module_collector import ModuleCollector
 from .test_suite import TestsContainer, TestSuite
