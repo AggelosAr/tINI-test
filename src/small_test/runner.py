@@ -15,15 +15,6 @@ def get_test_container(mode: Optional[str | Mode] = None,
                                                                      TimeTakenForTestDiscoveryAndSuiteInitialization]:
 
 
-    # mode = 'SORT'
-    # mode = 'SUPER_MINIMAL'
-
-    # search_dir = 'test_must_equals'
-    # search_file = 'test_must_equal_works' # custom compartor n diff problem of repr
-    # test_function = 'test_must_equal_type_case_different'
-    # search_file = 'test_must_equal_strings'
-
-
     test_collector = ModuleCollector(search_dir, search_file)
     test_collector.walk_and_collect_test_files(test_collector.root)
     test_collector.normalize_collected_data()
@@ -43,13 +34,9 @@ def get_test_container(mode: Optional[str | Mode] = None,
             if found_test:
                 break
             
-            #try:
             suite = TestSuite(module, test_file, mode)
             collected_tests = suite.gather_tests(func_name=test_function)
-            #except ImportError:
-            #    continue # if the python is broken this will fail in case the mode is set to seach for single files TODO
-            
-
+        
             if not collected_tests:
                 continue
 
