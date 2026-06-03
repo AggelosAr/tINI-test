@@ -27,9 +27,8 @@ class WillRaise(object):
 
     def __exit__(self, exc_type, exc_value, exc_traceback) -> Optional[bool]:
 
-        if exc_type.__name__ in self.exceptions:
+        if exc_type and exc_type.__name__ in self.exceptions:
 
-            
             self.exception = exc_value
             self.exc_type = exc_type
             self.exc_traceback = exc_traceback
