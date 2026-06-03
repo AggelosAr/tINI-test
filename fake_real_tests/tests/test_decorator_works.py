@@ -1,4 +1,4 @@
-from src.small_test.test_suite import Test
+from small_test.test_suite import Test
 
 
 @Test.case

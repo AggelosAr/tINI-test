@@ -1,10 +1,9 @@
+from small_test.context_manager import WillRaise
+from small_test.misc.exceptions import CantFindRelativePathToRoot, TestNotFound
+from small_test.module_collector import ModuleCollector
 from small_test.must_equals import must_equal
-from src.small_test.context_manager import WillRaise
-from src.small_test.misc.exceptions import (CantFindRelativePathToRoot,
-                                            TestNotFound)
-from src.small_test.module_collector import ModuleCollector
-from src.small_test.runner import get_test_container
-from src.small_test.test_suite import Test
+from small_test.runner import get_test_container
+from small_test.test_suite import Test
 
 # Recursion indeed stops early when searching for file. maybe add a test.
 # !

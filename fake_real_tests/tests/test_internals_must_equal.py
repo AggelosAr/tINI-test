@@ -1,11 +1,11 @@
-from src.small_test._internals._equals_engine import _must_equal
-from src.small_test._internals._internal_exceptions._comparison_exceptions import (
+from small_test._internals._equals_engine import _must_equal
+from small_test._internals._internal_exceptions._comparison_exceptions import (
     _BoolMismatchError, _DictionaryMismatchError, _DictionarySizeMismatchError,
     _FloatMismatchError, _IntegerMismatchError, _ListMismatchError,
     _ListSizeMismatchError, _SetMismatchError, _SetSizeMismatchError,
     _TupleMismatchError, _TupleSizeMismatchError, _TypeMismatchError)
-from src.small_test.context_manager import WillRaise
-from src.small_test.test_utils import Test
+from small_test.context_manager import WillRaise
+from small_test.test_utils import Test
 
 # Base tests that further test correct behaviour...
 

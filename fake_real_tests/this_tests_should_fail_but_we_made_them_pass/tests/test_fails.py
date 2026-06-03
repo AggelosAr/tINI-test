@@ -1,9 +1,9 @@
 from typing import assert_never
 
+from small_test.context_manager import WillRaise
 from small_test.misc.exceptions import ExpectedWasDifferentFromActual
-from src.small_test.context_manager import WillRaise
-from src.small_test.must_equals import must_equal
-from src.small_test.test_suite import Test
+from small_test.must_equals import must_equal
+from small_test.test_suite import Test
 
 
 @Test.case
