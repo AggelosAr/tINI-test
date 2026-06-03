@@ -1,5 +1,5 @@
 from src.small_test.context_manager import WillRaise
-from src.small_test.misc.exceptions import WillRaiseReceivedNotAnException
+from src.small_test.misc.exceptions import ExceptionWasNotRaised, WillRaiseReceivedNotAnException
 from src.small_test.test_suite import Test
 
 
@@ -34,7 +34,7 @@ def test_will_raise_doesnt_catch_wrong_exception() -> None:
         with WillRaise(TypeError) as context:
             1/0
     
-    with WillRaise(ZeroDivisionError) as context:
+    with WillRaise(ExceptionWasNotRaised) as context:
         _test_will_raise_doesnt_catch_wrong_exception()
 
 
@@ -46,7 +46,7 @@ def test_will_raise_will_not_catch_from_many_exceptions() -> None:
         with WillRaise(TypeError, ValueError) as context:
             1/0
 
-    with WillRaise(ZeroDivisionError) as context:
+    with WillRaise(ExceptionWasNotRaised) as context:
         _test_will_raise_will_not_catch_from_many_exceptions()
 
 
