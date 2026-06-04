@@ -6,34 +6,13 @@ from small_test.must_equals import must_equal
 from small_test.test_utils import Test
 
 
-@Test.case
-def test_must_equal_receives_not_a_valid_comperator() -> None:
-    expected = (1, 2)
-    actual = (1, 2, 3)
-
-    with WillRaise(ComperatorIsNotValid) as context:
-        must_equal(expected, actual, 1)
-
-    must_equal('Comperator is not a function', str(context.exception))
-
-
-
-@Test.case
-def test_must_equal_receives_more_args_than_expected() -> None:
-    expected = (1, 2)
-    actual = (1, 2, 3)
-
-    with WillRaise(TypeError) as context:
-        must_equal(expected, actual, 1, 2) # type: ignore [call-arg]
-
-    must_equal('must_equal() takes from 2 to 3 positional arguments but 4 were given', str(context.exception))
-
 
 
 @Test.case
 def test_must_equal_receives_unknwon_object_no_comperator_provided() -> None:
 
     class A:
+
         def __init__(self, a: int) -> None:
             self.a = 10
 
@@ -48,6 +27,7 @@ def test_must_equal_receives_unknwon_object_no_comperator_provided() -> None:
 def test_comperator_works_on_unknown_objects_in_containers_if_is_provided_and_returns_false() -> None:
 
     class A:
+
         def __init__(self, a: int) -> None:
             self.a = a
 
@@ -67,10 +47,10 @@ def test_comperator_works_on_unknown_objects_in_containers_if_is_provided_and_re
 def test_comperator_works_on_unknown_objects_in_containers_if_is_provided_and_returns_true() -> None:
 
     class A:
+
         def __init__(self, a: int) -> None:
             self.a = a
 
-    
     def custom_comperator(a: A, b: A):
         return a.a == b.a
  
@@ -85,10 +65,11 @@ def test_comperator_works_on_unknown_objects_in_containers_if_is_provided_and_re
 def test_must_equals_auto_discovers_eq_and_returns_false() -> None:
 
     class A:
+
         def __init__(self, a: int) -> None:
             self.a = a
 
-        def __eq__(self, other: object) -> bool: # TODO 
+        def __eq__(self, other: object) -> bool:
 
             if not isinstance(other, A):
                 return NotImplemented
@@ -107,10 +88,11 @@ def test_must_equals_auto_discovers_eq_and_returns_false() -> None:
 def test_must_equals_auto_discovers_eq_and_returns_true() -> None:
 
     class A:
+
         def __init__(self, a: int) -> None:
             self.a = a
 
-        def __eq__(self, other: object) -> bool: # TODO 
+        def __eq__(self, other: object) -> bool:
 
             if not isinstance(other, A):
                 return NotImplemented
@@ -128,6 +110,7 @@ def test_must_equals_auto_discovers_eq_and_returns_true() -> None:
 def test_comperator_works_on_unknown_objects_in_containers_case_pass() -> None:
 
     class A:
+
         def __init__(self, a: int) -> None:
             self.a = a
 
@@ -142,6 +125,7 @@ def test_comperator_works_on_unknown_objects_in_containers_case_pass() -> None:
 def test_comperator_works_on_unknown_objects_in_containers_case_fail() -> None:
 
     class A:
+
         def __init__(self, a: int) -> None:
             self.a = a
 

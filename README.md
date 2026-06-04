@@ -337,12 +337,6 @@ The framework is tested using its own test suite.
 * [ ] Calculate test coverage
 
 
-### Output Improvements
-
-* [ ] Add separators to MINIMAL stack traces
-* [ ] Add start separators in NORMAL and SORT modes
-
-
 ### Groups
 
 * [ ] Register tests into groups
@@ -357,6 +351,4 @@ The framework is tested using its own test suite.
 
 ### Misc
 
-* [ ] Make correctly failing tests pass.
-* [ ] test must equal on cleanup and breakup ? 
 * [ ] remove capturing of std out in case of MINIMAL modes etc or a flag ... currently everything is captured always

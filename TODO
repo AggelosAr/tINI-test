@@ -1,6 +1,7 @@
 
-# Add comperator for json     # truncate big diffs 
+#  # truncate big diffs 
 # Add single line diff on multiline diff ?  
+# show custom object diffs better
 
 
 
@@ -9,12 +10,8 @@
 
 # Test same test file on multiple dirs 
 # Test multiple same test function
-# if both directory and test file is given it runs the corretc one 
 
-you can run tests from any dir ?
-
-
-
+IF exception is not raised do we need to stop the test ?
 
 
 ADD SUPER SORT mode to sort All failures and show them last 
@@ -23,8 +20,6 @@ ADD SUPER SORT mode to sort All failures and show them last
 
 check comperator ops on a large weird function that has variable before return on equals
 
-
-UPDATE/FIX gather_tests and Test case
 
 
 compare actual function time vs test function time 

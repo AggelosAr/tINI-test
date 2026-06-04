@@ -202,7 +202,7 @@ def _must_equal(expected: Any,
         )
         return
 
-    _is_alien = type(expected) not in _known_types or type(actual) not in _known_types
+    _is_alien = type(expected) not in _known_types
 
     # If no comperator is proviced we will try to discover it.
     if not comperator and type(expected) == type(actual) and _is_alien:
@@ -221,7 +221,8 @@ def _must_equal(expected: Any,
             if expected.__eq__(actual):
                 return
             else:
-                _raise_diff('%r != %r' % (expected, actual, ))
+                # case of alien primitive or alien?
+                _diff_alien_primitive(expected, actual, path) # type: ignore[arg-type]
                 return
             
         raise ComperatorWasNotProvided
@@ -303,10 +304,19 @@ def _diff_str(expected: str, actual: str, path: str) -> None:
 def _diff_alien_primitive(expected: Any, 
                           actual: Any, 
                           path: str,
-                          comperator: Comperator) -> None:
-    
-    if comperator(expected, actual) is False:
-        _raise_diff('%s: %r != %r' % (path, expected, actual, ))
+                          comperator: Optional[Comperator]=None) -> None:
+
+    # TODO maybe use the str or repr if it is defined?
+    if not comperator or comperator(expected, actual) is False:
+
+        _raise_diff('%s: %s != %s' 
+                    % (path, 
+                       '<Object %s at %s>' 
+                       % (expected.__class__.__name__, 
+                          hex(id(expected)), ), 
+                       '<Object %s at %s>' 
+                       % (actual.__class__.__name__, 
+                          hex(id(actual)), ), ))
         return
 
 
