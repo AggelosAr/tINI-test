@@ -115,10 +115,10 @@ class TestSuite:
 
                 failed_tests.append(test_case.test_name)
                 stacktraces.append(test_case.fail_reasons)
-                minimal[idx] = ('%s . %s' % (Color.RED.value, _RESET, ))
+                minimal[idx] = ('%s • %s' % (Color.RED.value, _RESET, ))
 
             else:
-                minimal[idx] = ('%s . %s' % (Color.GREEN.value, _RESET, ))
+                minimal[idx] = ('%s • %s' % (Color.GREEN.value, _RESET, ))
 
             print('%s' % ''.join(minimal))
             
@@ -129,6 +129,10 @@ class TestSuite:
             return len(failed_tests)
         
         if self.mode == Mode.MINIMAL_NO_STACK:
+            print('\nErrors:')
+            # TODO here add the line number where the error occured.
+            for failed_test in failed_tests:
+                print('\t—› %s' % (failed_test, ))
             return len(failed_tests)
         
         if self.mode == Mode.SUPER_MINIMAL:
@@ -138,9 +142,9 @@ class TestSuite:
             
             print('TEST : %s' % (test, ))
             for trace in traces:
-                print('...')
+                print('XXX')
                 print(trace)
-                print('...')
+                print('XXX')
 
         return len(failed_tests)
 
@@ -170,9 +174,9 @@ class TestSuite:
 
         if self.mode != Mode.SUPER_MINIMAL:
             
-            print('Finished running tests for < %s >\n' % (self.file_name, ))
+            print('\nFinished running tests for < %s >\n' % (self.file_name, ))
 
-            print('Tests passed: [ %d / %d ] (%f) secs\n' 
+            print('Tests passed: [ %d / %d ] (%0.4f) secs\n' 
                 % (self.total_tests - errors, self.total_tests, time_taken, ))
 
             print('...\n')

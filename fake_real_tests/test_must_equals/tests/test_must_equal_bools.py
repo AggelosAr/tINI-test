@@ -18,6 +18,7 @@ def test_bool_false_false() -> None:
     expected = False
     actual = False
     must_equal(expected, actual)
+    1/0
 
 
 
@@ -25,6 +26,7 @@ def test_bool_false_false() -> None:
 def test_bool_true_false_fail() -> None:
     expected = True
     actual = False
+    1/0
 
     with WillRaise(ExpectedWasDifferentFromActual) as context:
         must_equal(expected, actual)
@@ -43,6 +45,7 @@ True != False
 def test_bool_false_true_fail() -> None:
     expected = False
     actual = True
+    1/0
 
     with WillRaise(ExpectedWasDifferentFromActual) as context:
         must_equal(expected, actual)
