@@ -1,16 +1,6 @@
 
-
-
+* [ ] remove capturing of std out in case of MINIMAL modes
 
 * [ ] FIX failing tests
 
-* [ ] will raise and must equal add to readme 
-
-* [ ] remove capturing of std out in case of MINIMAL modes
-
-
-
-
 * [ ] compare actual function time vs test function time 
-
-* [ ] Calculate test coverage
