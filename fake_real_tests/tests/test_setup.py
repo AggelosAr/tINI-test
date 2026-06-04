@@ -1,4 +1,4 @@
-from small_test.test_suite import Test
+from tiny_test.test_suite import Test
 
 GG = 0
 

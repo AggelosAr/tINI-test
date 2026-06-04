@@ -1,10 +1,10 @@
 import json
 import os
 
-from small_test.context_manager import WillRaise
-from small_test.misc.exceptions import ExpectedWasDifferentFromActual
-from small_test.must_equals import must_equal
-from small_test.test_utils import Test
+from tiny_test.context_manager import WillRaise
+from tiny_test.misc.exceptions import ExpectedWasDifferentFromActual
+from tiny_test.must_equals import must_equal
+from tiny_test.test_utils import Test
 
 # TODO add a case in heavy nest in containers on the big json
 

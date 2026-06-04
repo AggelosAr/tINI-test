@@ -1,7 +1,7 @@
 from typing import assert_never
 
-from small_test.context_manager import WillRaise
-from small_test.test_suite import Test
+from tiny_test.context_manager import WillRaise
+from tiny_test.test_suite import Test
 
 
 @Test.case
