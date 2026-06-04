@@ -96,7 +96,7 @@ class TestSuite:
         list(map(lambda l: l.box_test(), self.collector.values()))
 
     def sort_tests_based_on_source(self) -> None:
-        raise NotImplemented
+        raise NotImplementedError
     
     def show_test_results_non_minimal(self, start_timer: float) -> tuple[Errors, TimeTakenForModule]:
 
@@ -119,26 +119,57 @@ class TestSuite:
 
     def show_test_results_minimal(self, start_timer: float) -> tuple[Errors, TimeTakenForModule]:
 
-        minimal = list('[%s]' % (' '*self.total_tests, ))
+        # Cap the progress bar.
+        bucket_size = 20
+
+        e_symbol = ('%s   %s' % (Color.WHITE.value, _RESET, ))
+        s_symbol = ('%s • %s' % (Color.RED.value, _RESET, ))
+        f_symbol = ('%s • %s' % (Color.GREEN.value, _RESET, ))
+
+        previous_progress: list[list[str]] = []
+        progress = ['[']+[e_symbol for _ in range(bucket_size)]+[']']
+
         errors = 0
         failed_tests, stacktraces = [], []
 
-        for idx, test_case in enumerate(self.collector.values(), start=1):
-        
+
+        for idx, test_case in enumerate(self.collector.values()):
+            
+            bucket_idx = (idx)%bucket_size
+
             if test_case.is_fail:
 
                 failed_tests.append(test_case.test_name)
                 stacktraces.append(test_case.fail_reasons)
-                minimal[idx] = ('%s • %s' % (Color.RED.value, _RESET, ))
+
+                progress[bucket_idx+1] = s_symbol
 
             else:
-                minimal[idx] = ('%s • %s' % (Color.GREEN.value, _RESET, ))
+                progress[bucket_idx+1] = f_symbol
 
-            print('%s' % ''.join(minimal))
-            
-            if idx != self.total_tests:
+
+            print(''.join(progress))
+
+            if idx != self.total_tests-1:
+
                 print(_LINE_UP, end=_LINE_CLEAR)
+            
 
+            if bucket_idx+1==bucket_size:
+   
+                for _ in range(len(previous_progress)):
+
+                    print(_LINE_UP, end=_LINE_CLEAR)
+
+                previous_progress.append(progress)
+
+       
+                for _ in range(len(previous_progress)):
+                    print(''.join(previous_progress[_]))
+
+                progress = ['[']+[e_symbol for _ in range(bucket_size)]+[']']
+            
+             
         time_taken = perf_counter() - start_timer
         errors = len(failed_tests)
 

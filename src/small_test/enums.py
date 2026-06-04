@@ -12,6 +12,7 @@ class Color(Enum):
     YELLOW = '\033[93m'
     BLUE = '\033[94m'
     MAGENTA = '\033[95m'
+    WHITE = '\033[97m'
 
 
 class Mode(Enum):

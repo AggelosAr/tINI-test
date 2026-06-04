@@ -421,7 +421,7 @@ ITEM: <Object A at %s> != <Object A at %s>
 
 
 @Test.case
-def test_must_equal_different_objects() -> None:
+def test_must_equal_different_objects_bytes() -> None:
 
     expected = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
     actual = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01'

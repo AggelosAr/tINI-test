@@ -1,6 +1,6 @@
 
 [project]
-name = "small_test"
+name = "tINI-test"
 authors = [
   { name="Aggelos Arelakis", email="aggelosarelakis@gmail.com" },
 ]

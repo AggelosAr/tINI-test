@@ -1,17 +1,7 @@
 
 
-tINI-test
-
-
-
 # Test same test file on multiple dirs  
 # Test multiple same test function
-
-
-
-
-TODO what happens on minimal when END of line in terminal ?
-# hard code max len to DOTS and add new line 
 
 
 compare actual function time vs test function time 
