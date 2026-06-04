@@ -1,8 +1,4 @@
 
-#  # truncate big diffs 
-# Add single line diff on multiline diff ?  
-# show custom object diffs better
-
 
 tINI-test
 
@@ -13,19 +9,17 @@ tINI-test
 # Test same test file on multiple dirs  
 # Test multiple same test function
 
-IF exception is not raised do we need to stop the test ?
+IF exception is not raised do we need to stop the test ? YES
 
 
 ADD SUPER SORT mode to sort All failures and show them last 
 
 
 
-check comperator ops on a large weird function that has variable before return on equals
 
+TODO what happens on minimal when END of line in terminal ?
+# hard code max len to DOTS and add new line 
 
 
 compare actual function time vs test function time 
 
-
-TODO what happens on minimal when END of line in terminal ?
-# hard code max len to DOTS and add new line 

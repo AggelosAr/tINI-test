@@ -1,14 +1,10 @@
 import enum
 from difflib import unified_diff
-from dis import Bytecode, dis  # TODO
-from functools import lru_cache
 from typing import Any, Optional, assert_never
 
 from .misc.annotations import Comperator
 from .misc.exceptions import (ComperatorIsNotValid, ComperatorWasNotProvided,
                               ExpectedWasDifferentFromActual)
-
-# TODO enums and aliens have bad diff messages
 
 
 _known_types = set([type,
@@ -25,12 +21,6 @@ here = None
 
 _diff_threshold = 2**16
 
-# Review compare ops 
-_TRUE_LOAD = 'LOAD_CONST1(True)'           #
-_FALSE_LOAD = 'LOAD_CONST2(False)'         #
-_COMPARE_OP = '_COMPARE_OP72(==)'          #
-_COMPARE_OP_2 = 'COMPARE_OP2(==)'          #
-_RETURN = 'RETURN_VALUE'                   #
 
 # =========================================================
 # Public API
@@ -54,9 +44,6 @@ def must_equal(expected: Any,
     
     try:
 
-        if comperator:
-            _assert_comperator(comperator)
-
         _must_equal(expected=expected,
                     actual=actual, 
                     path='ITEM',
@@ -75,41 +62,6 @@ def must_equal(expected: Any,
 # =========================================================
 # Helpers
 # =========================================================
-
-
-@lru_cache(maxsize=None)
-def _assert_comperator(comperator: Comperator | Any) -> None:
-
-    if '__code__' not in dir(comperator):
-        raise ComperatorIsNotValid(reason='Comperator is not a function')
-    
-    if comperator.__code__.co_argcount != 2:
-        raise ComperatorIsNotValid(reason='Comperator must accept two items')
-    
-    # dis ->  With no argument, disassemble the last traceback. TODO XXX
-    data = Bytecode(comperator).dis().split('\n')
-    data = list(map(lambda l: l.replace(' ', ''), data))
-    data = list(filter(lambda l: l != '', data))
-
-    has_loads = False
-    has_loads_idx = -1
-
-    for idx, line in enumerate(data):
-        
-        if any([_TRUE_LOAD in line,
-                _FALSE_LOAD in line,
-                _COMPARE_OP in line,
-                _COMPARE_OP_2 in line]):
-            has_loads = True
-            has_loads_idx = idx
-            continue
-
-        if all([_RETURN in line,
-                has_loads,
-                idx-1 == has_loads_idx]):
-            return
-
-    raise ComperatorIsNotValid
 
 
 def _raise_diff(msg: str) -> None:
@@ -204,7 +156,7 @@ def _must_equal(expected: Any,
 
     _is_alien = type(expected) not in _known_types
 
-    # If no comperator is proviced we will try to discover it.
+    # If no comperator is provided we will try to discover it.
     if not comperator and type(expected) == type(actual) and _is_alien:
         
         # If it is known enum we just have to compare them.

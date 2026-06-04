@@ -1,0 +1,227 @@
+[
+  {
+    "_id": "6a217b72ec058e76d0d2b1c8",
+    "index": 0,
+    "guid": "97d76d20-75ae-4873-ab8c-592e3efa2e17",
+    "isActive": true,
+    "balance": "$1,866.47",
+    "picture": "http://placehold.it/32x32",
+    "age": 31,
+    "eyeColor": "brown",
+    "name": "Aimee Copeland",
+    "gender": "female",
+    "company": "MANGELICA",
+    "email": "aimeecopeland@mangelica.com",
+    "phone": "+1 (998) 415-2282",
+    "address": "202 Lincoln Avenue, Whitestone, Pennsylvania, 9927",
+    "about": "Amet sint anim aliquip voluptate duis esse culpa et consequat elit do. Aliqua mollit duis nostrud fugiat et cupidatat ad ullamco do velit culpa elit. Nostrud deserunt laborum sit laboris. Cupidatat proident aliqua excepteur ea ea amet eiusmod consectetur duis voluptate. Sit voluptate eu Lorem occaecat aliqua occaecat laboris ad ex adipisicing.\r\n",
+    "registered": "2024-05-26T01:04:05 -03:00",
+    "latitude": -65.540335,
+    "longitude": -97.455433,
+    "tags": [
+      "labore",
+      "eu",
+      "esse",
+      "laboris",
+      "sunt",
+      "sit",
+      "consectetur"
+    ],
+    "friends": [
+      {
+        "id": 0,
+        "name": "Tanisha Rosales"
+      },
+      {
+        "id": 1,
+        "name": "Carly Montgomery"
+      },
+      {
+        "id": 2,
+        "name": "Woods Dillard"
+      }
+    ],
+    "greeting": "Hello, Aimee Copeland! You have 3 unread messages.",
+    "favoriteFruit": "banana"
+  },
+  {
+    "_id": "6a217b72e1f716322b16ebf7",
+    "index": 1,
+    "guid": "4d4058af-5abc-45ae-93dc-8e3d7c24d4e1",
+    "isActive": false,
+    "balance": "$1,510.81",
+    "picture": "http://placehold.it/32x32",
+    "age": 28,
+    "eyeColor": "blue",
+    "name": "Pollard Gilbert",
+    "gender": "male",
+    "company": "ENJOLA",
+    "email": "pollardgilbert@enjola.com",
+    "phone": "+1 (824) 421-2965",
+    "address": "101 Fleet Street, Cashtown, Alaska, 5637",
+    "about": "Labore nisi aliqua amet irure nisi mollit tempor pariatur esse ad. Laborum mollit veniam minim nostrud quis ipsum cupidatat velit aliqua exercitation. Aliqua excepteur excepteur incididunt qui est dolore tempor enim in est commodo velit nisi.\r\n",
+    "registered": "2024-01-31T02:30:43 -02:00",
+    "latitude": 64.462235,
+    "longitude": -116.143841,
+    "tags": [
+      "proident",
+      "cupidatat",
+      "esse",
+      "sint",
+      "minim",
+      "ipsum",
+      "et"
+    ],
+    "friends": [
+      {
+        "id": 0,
+        "name": "James Garrett"
+      },
+      {
+        "id": 1,
+        "name": "Kara Taylor"
+      },
+      {
+        "id": 2,
+        "name": "Hopper Sharpe"
+      }
+    ],
+    "greeting": "Hello, Pollard Gilbert! You have 3 unread messages.",
+    "favoriteFruit": "apple"
+  },
+  {
+    "_id": "6a217b728c93df8f6bc97c68",
+    "index": 2,
+    "guid": "ecf0208f-9e63-47cc-a8a4-3115d25fb80e",
+    "isActive": true,
+    "balance": "$1,731.16",
+    "picture": "http://placehold.it/32x32",
+    "age": 27,
+    "eyeColor": "brown",
+    "name": "Tiffany Harris",
+    "gender": "female",
+    "company": "EXOPLODE",
+    "email": "tiffanyharris@exoplode.com",
+    "phone": "+1 (951) 447-2726",
+    "address": "138 Folsom Place, Glenshaw, Wyoming, 3266",
+    "about": "Eiusmod sint culpa aliqua tempor cupidatat tempor laboris nostrud labore incididunt amet est ea irure. Lorem amet nostrud adipisicing in occaecat labore dolor nulla dolore qui nisi et. Magna Lorem nostrud ex laborum cillum mollit velit sint sint magna adipisicing non. Proident Lorem cupidatat quis non adipisicing nulla amet.\r\n",
+    "registered": "2023-06-12T06:35:01 -03:00",
+    "latitude": -4.720201,
+    "longitude": 40.534923,
+    "tags": [
+      "mollit",
+      "quis",
+      "labore",
+      "minim",
+      "Lorem",
+      "aute",
+      "sint"
+    ],
+    "friends": [
+      {
+        "id": 0,
+        "name": "Catherine Willis"
+      },
+      {
+        "id": 1,
+        "name": "Lloyd Poole"
+      },
+      {
+        "id": 2,
+        "name": "Bernice Hess"
+      }
+    ],
+    "greeting": "Hello, Tiffany Harris! You have 8 unread messages.",
+    "favoriteFruit": "banana"
+  },
+  {
+    "_id": "6a217b72adcbf4ae433fd3f1",
+    "index": 3,
+    "guid": "11bc99db-d443-426d-8176-82abc2956a74",
+    "isActive": false,
+    "balance": "$1,109.73",
+    "picture": "http://placehold.it/32x32",
+    "age": 36,
+    "eyeColor": "green",
+    "name": "Schultz Fleming",
+    "gender": "male",
+    "company": "MAZUDA",
+    "email": "schultzfleming@mazuda.com",
+    "phone": "+1 (818) 583-2777",
+    "address": "599 Farragut Road, Dixie, Indiana, 9336",
+    "about": "Sit duis duis consequat consequat magna magna anim occaecat ullamco et. Nulla veniam voluptate ea voluptate et et excepteur elit cupidatat aliquip ipsum sunt ea. Nostrud ea nisi irure laborum quis culpa aute voluptate qui id in. Consequat commodo ipsum dolore aute irure nulla. In anim laborum exercitation sint eiusmod. Ullamco cupidatat nostrud aliquip duis ad fugiat dolor Lorem non exercitation laborum. Culpa ipsum culpa aliqua quis est occaecat velit pariatur ex cillum pariatur.\r\n",
+    "registered": "2023-02-18T07:45:12 -02:00",
+    "latitude": 40.267492,
+    "longitude": -82.647244,
+    "tags": [
+      "deserunt",
+      "occaecat",
+      "officia",
+      "exercitation",
+      "excepteur",
+      "quis",
+      "nostrud"
+    ],
+    "friends": [
+      {
+        "id": 0,
+        "name": "Zimmerman Francis"
+      },
+      {
+        "id": 1,
+        "name": "Sandoval Parks"
+      },
+      {
+        "id": 2,
+        "name": "Mccarthy Gay"
+      }
+    ],
+    "greeting": "Hello, Schultz Fleming! You have 1 unread messages.",
+    "favoriteFruit": "banana"
+  },
+  {
+    "_id": "6a217b723eddfbeb87f98af9",
+    "index": 4,
+    "guid": "b8304c49-242e-4d37-aa33-cf028f51ee51",
+    "isActive": false,
+    "balance": "$3,672.75",
+    "picture": "http://placehold.it/32x32",
+    "age": 20,
+    "eyeColor": "green",
+    "name": "Elisabeth Dodson",
+    "gender": "female",
+    "company": "ANDERSHUN",
+    "email": "elisabethdodson@andershun.com",
+    "phone": "+1 (801) 533-2894",
+    "address": "344 Decatur Street, Sexton, Puerto Rico, 2958",
+    "about": "Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint. Consectetur fugiat nostrud excepteur id aliquip laborum deserunt nisi laborum eu ut commodo laboris ad. Duis aliqua et labore ea. Ad qui magna consectetur amet enim consequat ullamco ea pariatur reprehenderit consectetur dolore est laboris. Consectetur aliqua consequat proident qui.\r\n",
+    "registered": "2016-06-26T12:59:37 -03:00",
+    "latitude": 33.983582,
+    "longitude": 123.251529,
+    "tags": [
+      "ad",
+      "mollit",
+      "dolore",
+      "occaecat",
+      "ex",
+      "culpa",
+      "ex"
+    ],
+    "friends": [
+      {
+        "id": 0,
+        "name": "Lorene Alston"
+      },
+      {
+        "id": 1,
+        "name": "Janice Irwin"
+      },
+      {
+        "id": 2,
+        "name": "Barrera Wagner"
+      }
+    ],
+    "greeting": "Hello, Elisabeth Dodson! You have 3 unread messages.",
+    "favoriteFruit": "banana"
+  }
+]
