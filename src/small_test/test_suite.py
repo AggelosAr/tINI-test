@@ -6,7 +6,8 @@ from typing import Callable, Optional, TypeAlias
 
 from ._internals.consts import _LINE_CLEAR, _LINE_UP, _RESET
 from .enums import Color, Mode
-from .misc.annotations import Errors, TestName, TestSuiteResults, TimeTakenForModule
+from .misc.annotations import (Errors, TestName, TestSuiteResults,
+                               TimeTakenForModule)
 from .misc.exceptions import NotSupportedMode
 from .test_utils import Test
 
@@ -131,11 +132,13 @@ class TestSuite:
 
         time_taken = perf_counter() - start_timer
         errors = len(failed_tests)
-        
-        self.show_test_summary(errors=errors, time_taken=time_taken)
 
         if self.mode == Mode.SUPER_MINIMAL:
             return errors, time_taken
+        
+        print('\nFinished running tests for < %s >\n' % (self.file_name, ))
+        print('Tests passed: [ %d / %d ] (%0.4f) secs\n' 
+            % (self.total_tests - errors, self.total_tests, time_taken, ))
         
         if not failed_tests:
             print('...\n')
@@ -165,15 +168,6 @@ class TestSuite:
     
         print('...\n')
         return errors, time_taken
-
-    def show_test_summary(self, errors: Errors, time_taken: TimeTakenForModule) -> None:
-
-        if self.mode == Mode.SUPER_MINIMAL:
-            return
-        
-        print('\nFinished running tests for < %s >\n' % (self.file_name, ))
-        print('Tests passed: [ %d / %d ] (%0.4f) secs\n' 
-            % (self.total_tests - errors, self.total_tests, time_taken, ))
 
     def run_tests(self) -> TestSuiteResults:
         
