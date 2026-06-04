@@ -24,3 +24,6 @@ ADD SUPER SORT mode to sort All failures and show them last
 
 
 check comperator ops on a large weird function that has variable before return on equals
+
+
+UPDATE gather_tests and Test case

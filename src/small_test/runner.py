@@ -34,6 +34,7 @@ def get_test_container(mode: Optional[str | Mode] = None,
             if found_test:
                 break
             
+            # TODO add failures
             suite = TestSuite(module, test_file, mode)
             collected_tests = suite.gather_tests(func_name=test_function)
         
@@ -61,36 +62,34 @@ def get_test_container(mode: Optional[str | Mode] = None,
 def run_tests(collection_time: TimeTakenForTestDiscoveryAndSuiteInitialization, 
               tests_container: TestsContainer) -> None:
     
+    print()
+    
     total_time = 0.0
     total_tests = 0
 
     total_successes = 0
-    total_failures = 0
+    total_errors = 0
 
     for _, test_files in tests_container.items():
         
         for _, suite in test_files.items():
 
-            module_test_duration, failures = suite.run_tests()
-
-            print('Run Tests in module in (%f) secs.' % (module_test_duration, ))
+            module_test_duration, errors = suite.run_tests()
 
             total_time += module_test_duration
             total_tests += suite.total_tests
 
-            total_successes += suite.total_tests - failures
-            total_failures += failures
+            total_successes += suite.total_tests - errors
+            total_errors += errors
 
 
-    # TODO add a box function here.
-    print('\n\n') 
-    print('------------------------------------------')
+    print('\n\n------------------------------------------')
 
     print('| Total Tests         : %d' % (total_tests, ))
 
     print('|')
     print('| Total successes     : %d' % (total_successes, ))
-    print('| Total failures      : %d' % (total_failures, ))
+    print('| Total errors        : %d' % (total_errors, ))
     print('|')
 
     print('| Collected Tests in  : (%0.4f) secs' % (collection_time, ))

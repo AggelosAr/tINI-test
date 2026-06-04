@@ -6,7 +6,7 @@ from typing import Callable, Optional, TypeAlias
 
 from ._internals.consts import _LINE_CLEAR, _LINE_UP, _RESET
 from .enums import Color, Mode
-from .misc.annotations import Failures, TestName, TestSuiteResults
+from .misc.annotations import Errors, TestName, TestSuiteResults
 from .misc.exceptions import NotSupportedMode
 from .test_utils import Test
 
@@ -66,17 +66,15 @@ class TestSuite:
             g_obj = getattr(self.module, obj)
             
             if not all([isinstance(g_obj, FunctionType), 
-                        # TODO remove this 
                         hasattr(g_obj, '_xyz_is_a_test_case_uwu')]):
                 continue 
             
-            test_name = str(g_obj.__closure__[-1].cell_contents.__name__)  # TODO xxx
+            test_name = str(g_obj.__closure__[-1].cell_contents.__name__)
             if func_name and test_name != func_name:
                 continue
             
             test_names.append(test_name)
 
-            # TODO fix this XXX
             test_obj = partial(g_obj, _Test____collector=self.collector)
             self.decorated_tests.append(test_obj)
 
@@ -92,31 +90,20 @@ class TestSuite:
     def box_tests(self) -> None:
         list(map(lambda l: l.box_test(), self.collector.values()))
     
+    def show_test_results_non_minimal(self) -> Errors:
 
-    def show_test_results_non_minimal(self) -> Failures:
-        print('Running tests for < %s >\n' % (self.file_name, ))
-
-        failed_tests = []
+        failed_tests = 0
 
         for idx, test_case in enumerate(self.collector.values(), start=1):
 
-            print("[ %s / %s ] TEST: < %s >" % (idx, self.total_tests, test_case.test_name))
-            print(str(test_case))
-            
-            if test_case.is_fail:
-                failed_tests.append(test_case.test_name)
-    
-        print('\nTests passed: [ %d / %d ]' 
-              % (self.total_tests - len(failed_tests), self.total_tests, ))
+            print("[ %s / %s ] TEST: < %s >\n%s" 
+                  % (idx, self.total_tests, test_case.test_name, str(test_case)))
+           
+            failed_tests += test_case.is_fail
 
-        print('\n'+2*'~~~~~~~~~~~~~~~~~~~~~~~\n')
-        print()
+        return failed_tests
 
-        return len(failed_tests)
-
-
-    def show_test_results_minimal(self) -> Failures:
-        print('Running tests for < %s >\n' % (self.file_name, ))
+    def show_test_results_minimal(self) -> Errors:
 
         minimal = list('[%s]' % (' '*self.total_tests, ))
         failed_tests = []
@@ -124,41 +111,36 @@ class TestSuite:
 
         for idx, test_case in enumerate(self.collector.values(), start=1):
         
-            match test_case.is_fail:
+            if test_case.is_fail:
 
-                case True:
-                    failed_tests.append(test_case.test_name)
-                    stacktraces.append(test_case.fail_reasons)
-                    minimal[idx] = ('%s . %s' 
-                                    % (Color.RED.value, _RESET, ))
+                failed_tests.append(test_case.test_name)
+                stacktraces.append(test_case.fail_reasons)
+                minimal[idx] = ('%s . %s' % (Color.RED.value, _RESET, ))
 
-                case False:
-                    minimal[idx] = ('%s . %s' 
-                                    % (Color.GREEN.value, _RESET, ))
+            else:
+                minimal[idx] = ('%s . %s' % (Color.GREEN.value, _RESET, ))
 
             print('%s' % ''.join(minimal))
             
             if idx != self.total_tests:
                 print(_LINE_UP, end=_LINE_CLEAR)
 
-        if failed_tests:
+        if not failed_tests:
+            return len(failed_tests)
+        
+        if self.mode == Mode.MINIMAL_NO_STACK:
+            return len(failed_tests)
+        
+        if self.mode == Mode.SUPER_MINIMAL:
+            return len(failed_tests)
+        
+        for test, traces in zip(failed_tests, stacktraces):
             
-            print('Failed tests: %s' % failed_tests)
-
-            if self.mode == Mode.SUPER_MINIMAL:
-                return len(failed_tests)
-            
-            if self.mode == Mode.MINIMAL_NO_STACK:
-                return len(failed_tests)
-            
-            for test, traces in zip(failed_tests, stacktraces):
-                
-                print('TEST : %s' % (test, ))
-                for trace in traces:
-                    print(trace)
-
-        print('\n'+2*'~~~~~~~~~~~~~~~~~~~~~~~\n')
-        print()
+            print('TEST : %s' % (test, ))
+            for trace in traces:
+                print('...')
+                print(trace)
+                print('...')
 
         return len(failed_tests)
 
@@ -166,24 +148,37 @@ class TestSuite:
         
         _start = perf_counter()
 
+        print('Running tests for < %s >\n' % (self.file_name, ))
+
         self.populate_tests()
         self.box_tests()
 
         if self.mode == Mode.SORT:
             self.sort_tests()
 
-        failures = 0
+        errors = 0
 
         match self.mode:
 
             case Mode.NORMAL | Mode.SORT:
-                failures += self.show_test_results_non_minimal()
+                errors += self.show_test_results_non_minimal()
 
             case Mode.MINIMAL | Mode.MINIMAL_NO_STACK | Mode.SUPER_MINIMAL:
-                failures += self.show_test_results_minimal()
-    
+                errors += self.show_test_results_minimal()
         
-        return (perf_counter() - _start, failures)
+        time_taken = perf_counter() - _start
+
+        if self.mode != Mode.SUPER_MINIMAL:
+            
+            print('Finished running tests for < %s >\n' % (self.file_name, ))
+
+            print('Tests passed: [ %d / %d ] (%f) secs\n' 
+                % (self.total_tests - errors, self.total_tests, time_taken, ))
+
+            print('...\n')
+
+        print()
+        return (time_taken, errors)
     
 # TODO move @annotations
 TestsContainer: TypeAlias = dict[str, dict[str, TestSuite]]
