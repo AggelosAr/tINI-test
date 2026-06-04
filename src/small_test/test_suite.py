@@ -103,9 +103,15 @@ class TestSuite:
         failed_tests = 0
 
         for idx, test_case in enumerate(self.collector.values(), start=1):
-
-            print("[ %s / %s ] TEST: < %s >\n%s" 
-                  % (idx, self.total_tests, test_case.test_name, str(test_case)))
+            
+            
+            print("[ %s / %s ]\n\tTEST\t—›  %s\n\t\t——› %s\n\n\n%s" 
+                  % (idx, 
+                     self.total_tests, 
+                     self.module_name,
+                     test_case.test_name, 
+                     str(test_case), ))
+        
 
             failed_tests += test_case.is_fail
 
