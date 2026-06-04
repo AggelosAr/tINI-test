@@ -2,6 +2,8 @@
 
 A lightweight Python test framework focused on simple test discovery and execution from the command line.
 The framework was tested using its own test suite.
+
+
 ## Usage
 
 ```bash
@@ -9,8 +11,8 @@ tini_test [VERBOSITY] [-d DIRECTORY] [-f FILE] [-t TEST]
 ```
 
 
-
 ---
+
 
 ## Verbosity Modes
 
@@ -47,13 +49,12 @@ Filters are applied from broadest to narrowest scope:
 1. Discover tests within `-d` (if provided)
 2. Restrict to `-f` (if provided)
 3. Restrict to `-t` (if provided)
-* If used alone, the entire project is searched.
+* If used alone, the entire project is scanned.
 
 
 ```bash
 python3 -m tini_test
 ```
-
 
 
 ### `-d DIRECTORY`
@@ -96,9 +97,7 @@ python3 -m tini_test -t function_name
 ```
 
 
-
-
-notes:
+Notes:
 If multiple functions with the same name are defined in different files only the first one spotted will run.
 
 ---
@@ -151,9 +150,9 @@ def test_math() -> None:
     with WillRaise(NameError, ZeroDivisionError):   
         1/0
 ```
-Notes: If one of the provided exceptions is not raised the test will fail and raise an `ExceptionWasNotRaised` exception.
+Notes: If one of the provided exceptions is not raised the test will fail and raise an `ExceptionWasNotRaised` error.
 
-### Compare variables
+### Comparisons
 
 ```python
 @Test.case
@@ -184,14 +183,13 @@ def test_ints_dont_match() -> None:
 
 Displays:
 
-* Test discovery information
-* Setup execution
-* Test execution
-* Cleanup execution
+* Captured IO in the correct order
+* Setup execution (if any)
+* Test execution (if any)
+* Cleanup execution (if any)
 * Full exception details
 * Stack traces
-
-If `print()` is called in any stage it will be displayed in order.
+* Test discovery information
 
 ---
 
@@ -207,18 +205,14 @@ Maybe further down the road we could implement a flag to sort globally.
 
 ### MINIMAL
 
-Minimal display where:
+Minimal display:
 
-* Failed tests are included ( names only )
+* Failed tests ( names only )
 * Associated stack traces
 * Final execution summary
 
 
-
-
 `MINIMAL_NO_STACK` is same as `MINIMAL`, except that no stack traces are shown.
-
-
 `SUPER_MINIMAL` is same as `MINIMAL_NO_STACK` but less verbose.
 
 ---
@@ -242,14 +236,21 @@ def test_must_equal_alien_object_with_eq() -> None:
 
 ---
 
-while the discovery implementation will find tests with the same names or sub dirs with same names or even actual tests cases with same names, it is heavily discouraged.
 
-Of course the above is somewhat cancelled because the algorithm tries to autocomplete the path as a result when searching for a sub directory that exists in multiple sub directories with the same name no guarantess are made all tests will be excecuted.
+## Notes
+
+
+While the discovery implementation will find tests with the same names or sub dirs with same names or even actual tests cases with same names, it is heavily discouraged.
+
+Of course the above is somewhat cancelled because the algorithm tries to autocomplete the path as a result when searching for a sub directory that exists in multiple sub directories with the same name, no guarantess are made all tests will be excecuted.
 
 
 ---
 
+
 ## Roadmap
+
 
 * [ ] Register tests into groups (group-level setup/cleanup)
 * [ ] Add global fail sort mode, not just per module.
+
