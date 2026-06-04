@@ -1,9 +1,9 @@
-from tiny_test.context_manager import WillRaise
-from tiny_test.misc.exceptions import (ComperatorIsNotValid,
+from tini_test.context_manager import WillRaise
+from tini_test.misc.exceptions import (ComperatorIsNotValid,
                                         ComperatorWasNotProvided,
                                         ExpectedWasDifferentFromActual)
-from tiny_test.must_equals import must_equal
-from tiny_test.test_utils import Test
+from tini_test.must_equals import must_equal
+from tini_test.test_utils import Test
 
 
 @Test.case

@@ -1,8 +1,8 @@
-from tiny_test.context_manager import WillRaise
-from tiny_test.misc.exceptions import (ComperatorWasNotProvided,
+from tini_test.context_manager import WillRaise
+from tini_test.misc.exceptions import (ComperatorWasNotProvided,
                                         ExpectedWasDifferentFromActual)
-from tiny_test.must_equals import must_equal
-from tiny_test.test_utils import Test
+from tini_test.must_equals import must_equal
+from tini_test.test_utils import Test
 
 # These are actual seperate cases ....
 

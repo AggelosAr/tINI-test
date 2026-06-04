@@ -21,7 +21,7 @@ license-files = ["LICEN[CS]E*"]
 
 
 [project.urls]
-Homepage = "https://github.com/AggelosAr/small-test"
+Homepage = "https://github.com/AggelosAr/tini_test"
 
 
 [build-system]
@@ -30,4 +30,6 @@ build-backend = "hatchling.build"
 
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/small_test"]
+packages = ["src/tini_test"]
+
+

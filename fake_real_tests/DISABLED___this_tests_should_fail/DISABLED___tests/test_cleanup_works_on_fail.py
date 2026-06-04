@@ -1,6 +1,6 @@
 from typing import assert_never
 
-from tiny_test.test_suite import Test
+from tini_test.test_suite import Test
 
 # If there is a cleanup provided 
 # We will attempt to run it in case the test fails

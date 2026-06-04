@@ -1,4 +1,4 @@
-from tiny_test.test_utils import Test
+from tini_test.test_utils import Test
 
 __GG = 0
 
