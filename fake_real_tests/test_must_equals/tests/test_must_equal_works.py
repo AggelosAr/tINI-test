@@ -1,7 +1,7 @@
 from tini_test.context_manager import WillRaise
 from tini_test.misc.exceptions import (ComperatorIsNotValid,
-                                        ComperatorWasNotProvided,
-                                        ExpectedWasDifferentFromActual)
+                                       ComperatorWasNotProvided,
+                                       ExpectedWasDifferentFromActual)
 from tini_test.must_equals import must_equal
 from tini_test.test_utils import Test
 

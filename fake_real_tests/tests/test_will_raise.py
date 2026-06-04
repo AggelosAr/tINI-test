@@ -1,6 +1,6 @@
 from tini_test.context_manager import WillRaise
 from tini_test.misc.exceptions import (ExceptionWasNotRaised,
-                                        WillRaiseReceivedNotAnException)
+                                       WillRaiseReceivedNotAnException)
 from tini_test.must_equals import must_equal
 from tini_test.test_suite import Test
 
