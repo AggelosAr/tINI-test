@@ -94,6 +94,9 @@ class TestSuite:
         
     def box_tests(self) -> None:
         list(map(lambda l: l.box_test(), self.collector.values()))
+
+    def sort_tests_based_on_source(self) -> None:
+        raise NotImplemented
     
     def show_test_results_non_minimal(self, start_timer: float) -> tuple[Errors, TimeTakenForModule]:
 

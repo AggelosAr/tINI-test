@@ -351,4 +351,5 @@ The framework is tested using its own test suite.
 
 ### Misc
 
+ADD SUPER SORT mode to sort All failures and show them last, not just sort failures on bottom per module.
 * [ ] remove capturing of std out in case of MINIMAL modes etc or a flag ... currently everything is captured always

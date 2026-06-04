@@ -204,10 +204,10 @@ ITEM: <Object A at %s> != <Object A at %s>
 
 
 def cosmic_entropy_engine(v, seed=42):
-    import math
-    import random
     import hashlib
     import itertools
+    import math
+    import random
     from collections import deque
     random.seed(seed)
 

@@ -6,7 +6,6 @@ from .misc.annotations import Comperator
 from .misc.exceptions import (ComperatorIsNotValid, ComperatorWasNotProvided,
                               ExpectedWasDifferentFromActual)
 
-
 _known_types = set([type,
                     bool,
                     int,
