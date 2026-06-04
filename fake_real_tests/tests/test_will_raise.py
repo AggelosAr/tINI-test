@@ -1,6 +1,7 @@
 from small_test.context_manager import WillRaise
 from small_test.misc.exceptions import (ExceptionWasNotRaised,
                                         WillRaiseReceivedNotAnException)
+from small_test.must_equals import must_equal
 from small_test.test_suite import Test
 
 
@@ -61,3 +62,27 @@ def test_will_raise_correclty_initializes() -> None:
 
     with WillRaise(WillRaiseReceivedNotAnException) as context:
         _test_will_raise_correclty_raises_exception()
+
+
+
+@Test.case()
+def test_will_raise_not_raised_exception_correctly_stops_the_test() -> None:
+
+    x = [6_000_000]
+
+    def assert_excecution_is_stopped_on_will_raise(y):
+
+        print('This will show. And since an exception is not raised, it errors.')
+
+        with WillRaise(TypeError) as context:
+            ...
+
+        print('This will never show.')
+        y[0] = 9_000_000
+
+
+    print('This will print since we catch the incoming exception.')
+    with WillRaise(ExceptionWasNotRaised) as context:
+        assert_excecution_is_stopped_on_will_raise(x)
+
+    must_equal([6_000_000], x)
