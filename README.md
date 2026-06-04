@@ -1,34 +1,36 @@
-# Small Test
+# tINI test
 
 A lightweight Python test framework focused on simple test discovery and execution from the command line.
 
 ## Usage
 
 ```bash
-small_test [VERBOSITY] [-d DIRECTORY] [-f FILE] [-t TEST]
+tini_test [VERBOSITY] [-d DIRECTORY] [-f FILE] [-t TEST]
 ```
 
 Search options may be combined in any way.
 
-Examples:
-
 ```bash
-small_test -d tests
-small_test -f test_math
-small_test -t test_addition
-
-small_test -d tests -t test_addition
-small_test -f test_math -t test_addition
-small_test -d tests -f test_math -t test_addition
+src/
+├── testing_async/
+│   ├── tests/
+│   │   ├── test_concurrency.py
+│   │   └── test_x.py
+├── testing_sync/
+│       └── testing_dir/
+│           └── tests/
+│               ├── test_concurrency.py
+│               └── test_y.py
 ```
 
-If no verbosity mode is specified, `NORMAL` is used.
+
+If no verbosity mode is specified, `NORMAL` is used. ???
 
 ---
 
 ## Verbosity Modes
 
-One verbosity mode may be specified:
+Verbosity mode may be specified:
 
 ```text
 -NORMAL
@@ -38,84 +40,26 @@ One verbosity mode may be specified:
 -SUPER_MINIMAL
 ```
 
-| Mode             | Description                                                                                        |
-| ---------------- | -------------------------------------------------------------------------------------------------- |
-| NORMAL           | Full execution flow, detailed output, and stack traces.                                            |
-| SORT             | Same as NORMAL, but results are sorted with failures shown last.                                   |
-| MINIMAL          | Only failed tests and their stack traces are displayed.                                            |
-| MINIMAL_NO_STACK | Only failed tests are displayed. Stack traces are suppressed.                                      |
-| SUPER_MINIMAL    | Displays only final summary statistics. No failures, stack traces, or execution details are shown. |
 
 ---
 
-## Search Options
 
-Search options act as filters.
 
-### `-d DIRECTORY`
 
-Limit test discovery to a specific directory.
+## Test Discovery
 
 The directory path is resolved relative to the current working directory.
 
-Example:
+A file is considered discoverable when:
 
-```bash
-small_test -d src/tests
-```
+* The file name begins with `test_`
+* The file has a `.py` extension
+* The file exists inside a directory named `tests`
 
-Notes:
+while the discovery implementation will find tests with the same names or sub dirs with same names or even actual tests cases with same names, it is heavily discouraged.
 
-* All discoverable tests under the directory are collected.
-* If multiple directories share the same name, only the first match is used.
+Of course the above is somewhat cancelled because the algorithm tries to autocomplete the path as a result when searching for a sub directory that exists in multiple sub directories with the same name no guarantess are made all tests will be excecuted.
 
----
-
-### `-f FILE`
-
-Limit execution to tests contained in a specific file.
-
-The file may be supplied with or without the `.py` extension.
-
-Example:
-
-```bash
-small_test -f test_concurrency
-```
-
-Notes:
-
-* All tests within the matching file are executed.
-* If multiple files share the same name, only the first match is used.
-
----
-
-### `-t TEST`
-
-Run a specific test function.
-
-Example:
-
-```bash
-small_test -t test_something
-```
-
-Example test:
-
-```python
-@small_test()
-def test_something():
-    ...
-```
-
-Notes:
-
-* If used alone, the entire project is searched.
-* If combined with `-d`, searching is limited to that directory.
-* If combined with `-f`, searching is limited to that file.
-* If multiple matching tests are discovered, only the first match is executed.
-
----
 
 ## Filter Combination Behavior
 
@@ -125,69 +69,101 @@ Filters are applied from broadest to narrowest scope:
 2. Restrict to `-f` (if provided)
 3. Restrict to `-t` (if provided)
 
-Examples:
+* If used alone, the entire project is searched.
 
-```bash
-small_test -d tests
-```
 
-Runs all discovered tests under `tests`.
-
-```bash
-small_test -f test_math
-```
-
-Runs all tests inside `test_math.py`.
-
-```bash
-small_test -d tests -f test_math
-```
-
-Runs all tests inside `test_math.py` located within `tests`.
-
-```bash
-small_test -d tests -f test_math -t test_addition
-```
-
-Runs only `test_addition` from `test_math.py` within `tests`.
-
----
 
 ## Default Behavior
 
 If no search option is supplied, all discoverable tests under the current directory are executed.
 
 ```bash
-small_test
+python3 -m tini_test
 ```
+
+
+
+### `-d DIRECTORY`
+
+Limit test discovery to a specific directory.
+
+```bash
+tini_test -d testing_dir
+```
+
+All tests in the `testing_dir` will run.
+
 
 ---
 
-## Test Discovery
+### `-f FILE`
 
-A file is considered discoverable when:
+Limit execution to tests contained in a specific file.
 
-* The file name begins with `test_`
-* The file has a `.py` extension
-* The file exists somewhere beneath a directory named `tests`
+The file may be supplied with or without the `.py` extension.
 
-Example:
 
-```text
-project/
-└── tests/
-    ├── test_math.py
-    └── test_concurrency.py
+
+```bash
+python3 -m tini_test -f test_concurrency
+python3 -m tini_test -f test_concurrency.py
 ```
 
+
+notes:
+If multiple files with same names exist in different directories all will run.
+
+
 ---
+
+### `-t TEST`
+
+Run a specific test function.
+
+
+```bash
+python3 -m tini_test -t function_name
+```
+
+notes:
+If multiple functions with the same name are defined in different files only the first one spotted will run.
+
+---
+
+
+
+
+```bash
+python3 -m tini_test -d test_math/tests
+or 
+python3 -m tini_test -d test_math/
+```
+
+Runs all tests inside `test_math/tests`.
+
+
+```bash
+python3 -m tini_test -d test_math -f test_concurrency
+```
+
+Runs all tests inside `test_concurrency.py` located within `test_math`.
+
+```bash
+python3 -m tini_test -d test_math -f test_concurrency -t test_addition
+```
+
+Runs only `test_addition` from `test_concurrency.py` within `test_math`.
+
+---
+
+
 
 ## Test Registration
 
 Tests are registered using the Small Test decorator.
 
 ```python
-@small_test()
+@tini_test()
 def test_example():
     ...
 ```
@@ -195,13 +171,13 @@ def test_example():
 The decorator accepts up to two optional callables:
 
 ```python
-@small_test(setup, cleanup)
+@tini_test(setup, cleanup)
 ```
 
 Example:
 
 ```python
-@small_test(
+@tini_test(
     lambda: create_database(),
     lambda: destroy_database()
 )
@@ -219,6 +195,8 @@ Executed after the test function completes.
 
 Cleanup execution is still attempted when setup or test execution fails.
 
+maybe further down the road this will be made optional by a flag 
+
 ---
 
 ## Output Modes
@@ -234,85 +212,46 @@ Displays:
 * Full exception details
 * Stack traces
 
-Output written with `print()` is displayed.
+If `print()` is called in any stage it will displayed in order.
 
 ---
 
 ### SORT
 
-Displays the same information as NORMAL.
+Works the same way as normal. But failures are sorted to the bottom.
 
-Results are sorted with failed tests displayed after successful tests.
+The sorting is only applied per module . 
 
-Output written with `print()` is displayed.
+Maybe further down the road we could implement a flag to sort globally.
 
 ---
 
 ### MINIMAL
 
-Displays:
+Minimal display where:
 
-* Failed tests only
+* Failed tests are included ( names only )
 * Associated stack traces
 
+* Final execution summary
 ---
 
 ### MINIMAL_NO_STACK
 
-Displays:
 
-* Failed tests only
-* No stack traces
+Same as minimal 
+
+Except that No stack traces are shown
+
 
 ---
 
 ### SUPER_MINIMAL
 
-Displays:
-
-* Final execution summary only
-
-No test output, stack traces, setup information, cleanup information, or failure details are shown.
-
+Same as MINIMAL_NO_STACK but less verbose.
 ---
 
-## Example Commands
 
-Run all tests:
-
-```bash
-small_test
-```
-
-Run all tests under a directory:
-
-```bash
-small_test -NORMAL -d tests
-```
-
-Run all tests in a file:
-
-```bash
-small_test -SORT -f test_concurrency
-```
-
-Run a single test:
-
-```bash
-small_test -MINIMAL -t test_addition
-```
-
-Run a specific test from a specific file:
-
-```bash
-small_test -f test_math -t test_addition
-```
-
-Run a specific test from a file within a directory:
-
-```bash
-small_test -d tests -f test_math -t test_addition
-```
 
 ---
 
@@ -320,9 +259,9 @@ small_test -d tests -f test_math -t test_addition
 Comparing custom classes should try to autodiscover __eq__ and apply it althought 
 , better to be explicit and pass the comperator tho ...
 
-Currently exactly 14 tests should fail if u run python3 -m  small_test on root dir to show how the output is shown on the screen.
-this_tests_should_fail are failling to show the format 
-this_tests_should_fail_are_passing are the same tests passing 
+
+
+
 
 ## Framework Validation
 
@@ -350,6 +289,8 @@ The framework is tested using its own test suite.
 
 
 ### Misc
+
+FIX failing tests
 
 ADD SUPER SORT mode to sort All failures and show them last, not just sort failures on bottom per module.
 * [ ] remove capturing of std out in case of MINIMAL modes etc or a flag ... currently everything is captured always

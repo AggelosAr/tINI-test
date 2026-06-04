@@ -72,6 +72,7 @@ class ModuleCollector:
 
         return None
 
+    # Fix recursion paths 
     def walk_and_collect_test_files(self, root: Path) -> None:
         """
         Walk the directory tree and collect Python modules that:
@@ -91,15 +92,14 @@ class ModuleCollector:
                 py_files = list(filter(lambda l: self.is_valid_test_file(l), files))
                 
                 self.test_modules[c_path] = py_files
-
+                 
                 if self.search_file in py_files:
                     return
+                
 
-            else:
-
-                for c_dir in dirs:
-                    
-                    self.walk_and_collect_test_files(Path(path.join(root, c_dir)))
+            for c_dir in dirs:
+                
+                self.walk_and_collect_test_files(Path(path.join(root, c_dir)))
 
     def normalize_file_names(self, names: list[str]) -> list[str]:
         return list(map(lambda l: l.replace('.py', ''), names))
