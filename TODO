@@ -1,14 +1,26 @@
 
-# Add comperator for json, bytes?  frozenset?
+# Add comperator for json     # truncate big diffs 
+# Add single line diff on multiline diff ?  
+
+
 
 # test functions are unordered across entire run, order the fails at the bottom 
 
-# Add single line diff on multiline diff ?  # truncate big diffs 
- 
-# format outputs on modes
 
 # Test same test file on multiple dirs 
 # Test multiple same test function
-
 # if both directory and test file is given it runs the corretc one 
 
+you can run tests from any dir ?
+
+
+
+# FIX MINIMAL OUTPUTS
+and seperators
+
+
+ADD SUPER SORT mode to sort All failures and show them last 
+
+
+
+check comperator ops on a large weird function that has variable before return on equals

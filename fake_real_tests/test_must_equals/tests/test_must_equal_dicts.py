@@ -9,6 +9,7 @@ def test_dict_equal() -> None:
     expected = {'a': 1, 'b': 2}
     actual = {'a': 1, 'b': 2}
     must_equal(expected, actual)
+    1/0
 
 
 @Test.case

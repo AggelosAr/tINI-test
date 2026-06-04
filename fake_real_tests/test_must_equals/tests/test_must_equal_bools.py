@@ -9,6 +9,7 @@ def test_bool_true_true() -> None:
     expected = True
     actual = True
     must_equal(expected, actual)
+    1/0
 
 
 

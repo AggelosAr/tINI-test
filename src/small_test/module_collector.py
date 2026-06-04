@@ -15,8 +15,6 @@ from .misc.exceptions import CantFindRelativePathToRoot
 
 class ModuleCollector:
 
-    
-
     def __init__(self,
                  search_dir: Optional[str] = None, 
                  search_file: Optional[str] = None,
@@ -25,7 +23,6 @@ class ModuleCollector:
         # Check case that exclude_dir is trash not yet implemented
         self.SKIP_DIRS = {**{l: None for l in SKIP_DIRS}, exclude_dir: None}
 
-        print(self.SKIP_DIRS)
         self.root = Path(getcwd())
         if search_dir and search_dir != '.':
             # here we need to connect the 2 dirs

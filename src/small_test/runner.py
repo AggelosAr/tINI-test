@@ -73,22 +73,27 @@ def run_tests(collection_time: TimeTakenForTestDiscoveryAndSuiteInitialization,
 
             module_test_duration, failures = suite.run_tests()
 
-            print('Run Tests in module %f' % (module_test_duration, ))
+            print('Run Tests in module in (%f) secs.' % (module_test_duration, ))
 
             total_time += module_test_duration
             total_tests += suite.total_tests
 
             total_successes += suite.total_tests - failures
             total_failures += failures
-            
-    print()
 
-    print('Total Tests         : %d' % (total_tests, ))
 
-    print('Total successes     : %d' % (total_successes, ))
-    print('Total failures      : %d' % (total_failures, ))
+    # TODO add a box function here.
+    print('\n\n') 
+    print('------------------------------------------')
 
-    print('Collected Tests in  : %f' % (collection_time, ))
-    print('Run Tests in        : %f' % (total_time, ))
+    print('| Total Tests         : %d' % (total_tests, ))
 
-    print()
+    print('|')
+    print('| Total successes     : %d' % (total_successes, ))
+    print('| Total failures      : %d' % (total_failures, ))
+    print('|')
+
+    print('| Collected Tests in  : (%0.4f) secs' % (collection_time, ))
+    print('| Run Tests in        : (%0.4f) secs' % (total_time, ))
+
+    print('------------------------------------------')
