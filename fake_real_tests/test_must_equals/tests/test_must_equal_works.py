@@ -42,6 +42,29 @@ def test_comperator_works_on_unknown_objects_in_containers_if_is_provided_and_re
 
 
 @Test.case
+def test_comperator_lambda() -> None:
+
+    class A:
+
+        def __init__(self, a: int) -> None:
+            self.a = a
+
+    comp_func = lambda a, b: a.a == b.a
+
+
+    with WillRaise(ExpectedWasDifferentFromActual):
+        must_equal([A(a=10)], [A(a=120)], comp_func)
+    
+    with WillRaise(ExpectedWasDifferentFromActual):
+        must_equal([A(a=10)], [A(a=120)], lambda a, b: a.a == b.a)
+
+    must_equal([A(a=10)], [A(a=10)], comp_func)
+
+    must_equal([A(a=10)], [A(a=10)], lambda a, b: a.a == b.a)
+
+
+
+@Test.case
 def test_comperator_works_on_unknown_objects_in_containers_if_is_provided_and_returns_true() -> None:
 
     class A:

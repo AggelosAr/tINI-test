@@ -225,8 +225,20 @@ Minimal display where:
 
 ### Misc
 
-Comparing custom classes should try to autodiscover __eq__ and apply it althought 
-, better to be explicit and pass the comperator tho ...
+When comparing custom objects the test quite will try to autocompare them but it is better to be explicit and pass them a callable that will apply the correct comparison.
+
+```python
+@Test.case
+def test_must_equal_alien_object_with_eq() -> None:
+
+    expected = A(11)
+    actual = A(21)
+
+    comp_func = lambda a, b: a.attr == b.attr
+
+    must_equal(expected, actual, comp_func)
+
+```
 
 ---
 
@@ -239,7 +251,5 @@ Of course the above is somewhat cancelled because the algorithm tries to autocom
 
 ## Roadmap
 
-* [ ] Register tests into groups
-* [ ] Support group-level setup executed once
-* [ ] Support group-level cleanup execution
+* [ ] Register tests into groups (group-level setup/cleanup)
 * [ ] Add global fail sort mode, not just per module.
