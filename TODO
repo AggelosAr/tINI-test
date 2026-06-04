@@ -4,11 +4,13 @@
 # show custom object diffs better
 
 
+tINI-test
+
 
 # test functions are unordered across entire run, order the fails at the bottom 
 
 
-# Test same test file on multiple dirs 
+# Test same test file on multiple dirs  
 # Test multiple same test function
 
 IF exception is not raised do we need to stop the test ?

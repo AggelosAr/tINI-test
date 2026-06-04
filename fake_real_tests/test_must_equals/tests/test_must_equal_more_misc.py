@@ -1,8 +1,8 @@
 from small_test.context_manager import WillRaise
-from small_test.misc.exceptions import ComperatorWasNotProvided, ExpectedWasDifferentFromActual
+from small_test.misc.exceptions import (ComperatorWasNotProvided,
+                                        ExpectedWasDifferentFromActual)
 from small_test.must_equals import must_equal
 from small_test.test_utils import Test
-
 
 # These are actual seperate cases ....
 

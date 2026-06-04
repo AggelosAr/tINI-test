@@ -6,8 +6,6 @@ from small_test.must_equals import must_equal
 from small_test.test_utils import Test
 
 
-
-
 @Test.case
 def test_must_equal_receives_unknwon_object_no_comperator_provided() -> None:
 
