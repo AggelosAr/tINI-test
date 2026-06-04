@@ -1,4 +1,4 @@
-from functools import partial
+from functools import cached_property, partial
 from importlib import import_module
 from time import perf_counter
 from types import FunctionType
@@ -6,7 +6,7 @@ from typing import Callable, Optional, TypeAlias
 
 from ._internals.consts import _LINE_CLEAR, _LINE_UP, _RESET
 from .enums import Color, Mode
-from .misc.annotations import Errors, TestName, TestSuiteResults
+from .misc.annotations import Errors, TestName, TestSuiteResults, TimeTakenForModule
 from .misc.exceptions import NotSupportedMode
 from .test_utils import Test
 
@@ -53,6 +53,10 @@ class TestSuite:
 
         self.file_name = self.module.__name__
 
+    @cached_property
+    def module_name(self) -> str:
+        return self.module.__name__
+    
     @property
     def total_tests(self) -> int:
         return len(self.collector.values())
@@ -90,7 +94,7 @@ class TestSuite:
     def box_tests(self) -> None:
         list(map(lambda l: l.box_test(), self.collector.values()))
     
-    def show_test_results_non_minimal(self) -> Errors:
+    def show_test_results_non_minimal(self, start_timer: float) -> tuple[Errors, TimeTakenForModule]:
 
         failed_tests = 0
 
@@ -98,16 +102,16 @@ class TestSuite:
 
             print("[ %s / %s ] TEST: < %s >\n%s" 
                   % (idx, self.total_tests, test_case.test_name, str(test_case)))
-           
+
             failed_tests += test_case.is_fail
 
-        return failed_tests
+        return failed_tests, perf_counter() - start_timer
 
-    def show_test_results_minimal(self) -> Errors:
+    def show_test_results_minimal(self, start_timer: float) -> tuple[Errors, TimeTakenForModule]:
 
         minimal = list('[%s]' % (' '*self.total_tests, ))
-        failed_tests = []
-        stacktraces = []
+        errors = 0
+        failed_tests, stacktraces = [], []
 
         for idx, test_case in enumerate(self.collector.values(), start=1):
         
@@ -125,32 +129,56 @@ class TestSuite:
             if idx != self.total_tests:
                 print(_LINE_UP, end=_LINE_CLEAR)
 
+        time_taken = perf_counter() - start_timer
+        errors = len(failed_tests)
+        
+        self.show_test_summary(errors=errors, time_taken=time_taken)
+
+        if self.mode == Mode.SUPER_MINIMAL:
+            return errors, time_taken
+        
         if not failed_tests:
-            return len(failed_tests)
+            print('...\n')
+            return errors, time_taken
         
         if self.mode == Mode.MINIMAL_NO_STACK:
+
             print('\nErrors:')
-            # TODO here add the line number where the error occured.
+
             for failed_test in failed_tests:
                 print('\t—› %s' % (failed_test, ))
-            return len(failed_tests)
-        
-        if self.mode == Mode.SUPER_MINIMAL:
-            return len(failed_tests)
-        
-        for test, traces in zip(failed_tests, stacktraces):
-            
-            print('TEST : %s' % (test, ))
-            for trace in traces:
-                print('XXX')
-                print(trace)
-                print('XXX')
 
-        return len(failed_tests)
+            print('...\n')
+            return errors, time_taken
+        
+        idx = 0
+        for test, traces in zip(failed_tests, stacktraces):
+            idx += 1
+            print('\nTEST\t—›  %s\n\t——› %s\n' % (self.module_name, test, ))
+
+            for trace in traces:
+
+                print(trace)
+
+                if idx != errors:
+                    print('%s ~~~ %s' % (Color.RED.value, _RESET, ))
+    
+        print('...\n')
+        return errors, time_taken
+
+    def show_test_summary(self, errors: Errors, time_taken: TimeTakenForModule) -> None:
+
+        if self.mode == Mode.SUPER_MINIMAL:
+            return
+        
+        print('\nFinished running tests for < %s >\n' % (self.file_name, ))
+        print('Tests passed: [ %d / %d ] (%0.4f) secs\n' 
+            % (self.total_tests - errors, self.total_tests, time_taken, ))
 
     def run_tests(self) -> TestSuiteResults:
         
         _start = perf_counter()
+        errors = 0
 
         print('Running tests for < %s >\n' % (self.file_name, ))
 
@@ -160,26 +188,15 @@ class TestSuite:
         if self.mode == Mode.SORT:
             self.sort_tests()
 
-        errors = 0
-
+        
         match self.mode:
 
             case Mode.NORMAL | Mode.SORT:
-                errors += self.show_test_results_non_minimal()
+                errors, time_taken = self.show_test_results_non_minimal(start_timer=_start)
 
             case Mode.MINIMAL | Mode.MINIMAL_NO_STACK | Mode.SUPER_MINIMAL:
-                errors += self.show_test_results_minimal()
+                errors, time_taken = self.show_test_results_minimal(start_timer=_start)
         
-        time_taken = perf_counter() - _start
-
-        if self.mode != Mode.SUPER_MINIMAL:
-            
-            print('\nFinished running tests for < %s >\n' % (self.file_name, ))
-
-            print('Tests passed: [ %d / %d ] (%0.4f) secs\n' 
-                % (self.total_tests - errors, self.total_tests, time_taken, ))
-
-            print('...\n')
 
         print()
         return (time_taken, errors)

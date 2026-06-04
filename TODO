@@ -15,8 +15,6 @@ you can run tests from any dir ?
 
 
 
-# FIX MINIMAL OUTPUTS
-and seperators
 
 
 ADD SUPER SORT mode to sort All failures and show them last 
@@ -26,7 +24,11 @@ ADD SUPER SORT mode to sort All failures and show them last
 check comperator ops on a large weird function that has variable before return on equals
 
 
-UPDATE gather_tests and Test case
+UPDATE/FIX gather_tests and Test case
 
 
-fun some gffunction and perf counter to compare the time of the test 
+compare actual function time vs test function time 
+
+
+TODO what happens on minimal when END of line in terminal ?
+# hard code max len to DOTS and add new line 
