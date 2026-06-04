@@ -107,43 +107,76 @@ If multiple functions with the same name are defined in different files only the
 
 ## Test Registration
 
-Tests are registered using the Small Test decorator.
-
 ```python
-@tini_test()
-def test_example():
+@Test.case
+def test_example() -> None:
+    ...
+
+@Test.case()
+def test_another_example() -> None:
     ...
 ```
 
-The decorator accepts up to two optional callables:
+The decorator accepts up to two optional callables.
+
 
 ```python
-@tini_test(setup, cleanup)
-```
-
-Example:
-
-```python
-@tini_test(
+@Test.case(
     lambda: create_database(),
     lambda: destroy_database()
 )
-def test_database():
+def test_database() -> None:
     ...
 ```
 
 ### Flow
 
-Setup is executed before the test function runs.
+- Setup is executed before the test function runs.
 
 
-Cleanup is executed after the test function completes.
+- Cleanup is executed after the test function completes.
 
-Cleanup execution is still attempted when setup or test execution fails.
+- Cleanup execution is still attempted when setup or test execution fails.
 
-maybe further down the road this will be made optional by a flag 
+- Maybe further down the road this will be made optional by a flag.
 
 ---
+
+### Catch exceptions
+
+```python
+@Test.case
+def test_math() -> None:
+
+    with WillRaise(NameError, ZeroDivisionError):   
+        1/0
+```
+Notes: If one of the provided exceptions is not raised the test will fail and raise an `ExceptionWasNotRaised` exception.
+
+### Compare variables
+
+```python
+@Test.case
+def test_list_values() -> None:
+
+    expected = [12345]
+    must_equal(expected, some_func())
+```
+
+### Combo
+
+```python
+@Test.case
+def test_ints_dont_match() -> None:
+    a = 10
+    b = 20
+
+    with WillRaise(_IntegerMismatchError) as context: 
+        must_equal(a, b)
+
+    must_equal('10 != 20', str(context.exception))
+
+```
 
 ## Output Modes
 

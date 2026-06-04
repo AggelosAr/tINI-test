@@ -2,12 +2,15 @@
 
 
 
-FIX failing tests
+* [ ] FIX failing tests
 
-compare actual function time vs test function time 
+* [ ] will raise and must equal add to readme 
 
+* [ ] remove capturing of std out in case of MINIMAL modes
+
+
+
+
+* [ ] compare actual function time vs test function time 
 
 * [ ] Calculate test coverage
-
-
-* [ ] remove capturing of std out in case of MINIMAL modes etc or a flag ... currently everything is captured always

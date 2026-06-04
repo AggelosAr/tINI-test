@@ -34,4 +34,5 @@ class WillRaise(object):
             self.exc_traceback = exc_traceback
             return True
         
+        # TODO maybe add a helpfull message on ExceptionWasNotRaised
         raise ExceptionWasNotRaised
