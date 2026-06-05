@@ -1,5 +1,5 @@
 from tini_test.context_manager import WillRaise
-from tini_test.misc.exceptions import (ComperatorWasNotProvided,
+from tini_test.misc.exceptions import (ComperatorIsNotValid, ComperatorWasNotProvided,
                                        ExpectedWasDifferentFromActual)
 from tini_test.must_equals import must_equal
 from tini_test.test_utils import Test
@@ -417,7 +417,45 @@ def test_must_equals_auto_discovers_truly_works_and_returns_false() -> None:
     must_equal('''
 ITEM: <Object A at %s> != <Object A at %s>
 ''' % (hex(id(obj1)), hex(id(obj2)), ), str(context.exception))
-    
+
+
+
+@Test.case
+def test_must_equals_validatates_comperator() -> None:
+
+    class A:
+
+        def __init__(self, a: int) -> None:
+            self.a = a
+
+    obj1 = A(a=10)
+    obj2 = A(a=10)
+
+    with WillRaise(ComperatorIsNotValid) as context:
+
+        must_equal(obj1, obj2, lambda :lambda a,b: a.a==b.a)
+
+    must_equal('Comperator must accept two items', str(context.exception))
+
+    # ------------------------------------------------------
+
+    class A:
+
+        def __init__(self, a: int) -> None:
+            self.a = a
+
+        def comp(self, other: object) -> bool:
+
+            if not isinstance(other, A):
+                return NotImplemented
+            
+            return self.a==other.a
+        
+    obj1 = A(a=10)
+    obj2 = A(a=10)
+
+    must_equal(obj1, obj2, A.comp)
+
 
 
 @Test.case
