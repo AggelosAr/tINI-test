@@ -5,13 +5,8 @@ from typing import Optional
 from ._internals.consts import SKIP_DIRS
 from .misc.exceptions import CantFindRelativePathToRoot
 
-# TODO test edge cases of file paths with .. / etc ...
 
 # TODO update arg parser to accept exclude dir 
-
-# what happens if dir of file is given but only function ? do we search? ...
-# review the search proccess , seems kinda stupid 
-
 
 class ModuleCollector:
 
@@ -105,7 +100,13 @@ class ModuleCollector:
         return list(map(lambda l: l.replace('.py', ''), names))
     
     def path_to_python_module(self, path_name: str) -> str:
-        return '.'.join(Path(path_name).parts).lstrip('.').lstrip('/').lstrip('.')
+        r = '.'.join(Path(path_name).parts)
+        r = r.strip()
+        while r and r[0] in {'.', '/', '\\'}:
+            r = r[1:]
+        while r and r[-1] in {'.', '/', '\\'}:
+            r = r[:-1]
+        return r
     
     def normalize_collected_data(self) -> None:
         # TODO do we need cd here ?

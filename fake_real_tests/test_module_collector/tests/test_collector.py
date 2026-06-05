@@ -199,3 +199,14 @@ def test_test_module_will_collect_this_function() -> None:
 
     must_equal(1, len(gathered_tests))
     must_equal(t, gathered_tests[0].func.__closure__[-1].cell_contents.__name__) # type: ignore[attr-defined]
+
+
+
+@Test.case
+def correctly_formatted_paths() -> None:
+
+    c = ModuleCollector()
+
+    must_equal('path1.path2.path3', 
+               c.path_to_python_module('./././.\\.\\.\\.\\path1/path2/path3...\\\\...///./././.\\.\\.\\'))
+

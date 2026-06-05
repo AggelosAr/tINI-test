@@ -43,6 +43,7 @@ def must_equal(expected: Any,
     try:
         if comperator:
             _assert_comperator(comperator)
+            
         _must_equal(expected=expected,
                     actual=actual, 
                     path='ITEM',
