@@ -6,10 +6,13 @@ from typing import Any, Optional
 
 from ._internals._internal_exceptions._exceptions import (_FailStateWasNotFail,
                                                           _LastOpNotExpected)
-from .enums import TestStatus
+from .enums import Mode, TestStatus
 from .misc.annotations import F_Callable, S_Callable, StackTrace
 from .misc.exceptions import ExpectedWasDifferentFromActual
 from .state.state import OperationState
+
+
+_minimals_discard = {Mode.MINIMAL_NO_STACK, Mode.SUPER_MINIMAL}
 
 
 class TestStep:
@@ -30,12 +33,14 @@ class TestStep:
         self.success_status = success_status
         self.fail_status = fail_status
 
-    def run_step(self):
+    def run_step(self, mode: Mode):
         
         if self.func is None:
             return OperationState(status=TestStatus.NO_OP)
 
         buffer = StringIO()
+
+        apply_filters = mode in _minimals_discard
 
         try:
             with redirect_stdout(buffer):
@@ -47,20 +52,20 @@ class TestStep:
 
             return OperationState(entry_status=self.entry_status,
                                   status=self.fail_status,
-                                  detail=str(e),
-                                  exception_trace=exception_trace,
-                                  redirected_output=buffer)
+                                  detail=str(e) if not apply_filters else '',
+                                  exception_trace=exception_trace if not apply_filters else '',
+                                  redirected_output=buffer if not apply_filters else '')
 
         except Exception as e:
             exception_trace = format_exc()
             return OperationState(entry_status=self.entry_status,
                                   status=self.fail_status,
-                                  redirected_output=buffer,
-                                  exception_trace=exception_trace)
+                                  redirected_output=buffer if not apply_filters else '',
+                                  exception_trace=exception_trace if not apply_filters else '')
         
         return OperationState(entry_status=self.entry_status,
                               status=self.success_status,
-                              redirected_output=buffer)
+                              redirected_output=buffer if not apply_filters else '')
 
 
 class Test:
@@ -160,11 +165,11 @@ class Test:
     def fail_reasons(self, reason: StackTrace) -> None:
         self._fail_reasons.append(reason)
 
-    def run_steps(self) -> None:
+    def run_steps(self, mode: Mode) -> None:
         
         while self.steps:
 
-            step_state = self.steps.pop().run_step()
+            step_state = self.steps.pop().run_step(mode)
             self.operation_states.append(step_state)
             
             if TestStatus.is_fail_cause(status=step_state.status):
@@ -225,9 +230,9 @@ class Test:
         end_state.exit_msg = OperationState.get_end_seperator()
         self.operation_states.append(end_state)
 
-    def box_test(self) -> list[OperationState]:
+    def box_test(self, mode: Mode) -> list[OperationState]:
 
-        self.run_steps()
+        self.run_steps(mode)
         self.run_for_cleanup_if_needed()
         self.attach_end_state()
         self.close_state()

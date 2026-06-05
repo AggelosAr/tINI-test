@@ -1,6 +1,4 @@
 
-* [ ] remove capturing of std out in case of MINIMAL modes
 
-* [ ] FIX failing tests
 
-* [ ] compare actual function time vs test function time 
+

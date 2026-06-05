@@ -93,7 +93,7 @@ class TestSuite:
                                      key=lambda kv: kv[1].is_fail))
         
     def box_tests(self) -> None:
-        list(map(lambda l: l.box_test(), self.collector.values()))
+        list(map(lambda l: l.box_test(self.mode), self.collector.values()))
 
     def sort_tests_based_on_source(self) -> None:
         raise NotImplementedError
@@ -120,7 +120,7 @@ class TestSuite:
     def show_test_results_minimal(self, start_timer: float) -> tuple[Errors, TimeTakenForModule]:
 
         # Cap the progress bar.
-        bucket_size = 20
+        bucket_size = 18
 
         e_symbol = ('%s   %s' % (Color.WHITE.value, _RESET, ))
         s_symbol = ('%s • %s' % (Color.RED.value, _RESET, ))
@@ -134,7 +134,8 @@ class TestSuite:
 
 
         for idx, test_case in enumerate(self.collector.values()):
-            
+            # import time
+            # time.sleep(0.3)
             bucket_idx = (idx)%bucket_size
 
             if test_case.is_fail:
