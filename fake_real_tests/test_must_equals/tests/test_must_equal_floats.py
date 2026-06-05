@@ -3,7 +3,7 @@ from tini_test.misc.exceptions import ExpectedWasDifferentFromActual
 from tini_test.must_equals import must_equal
 from tini_test.test_utils import Test
 
-# TODO add tests for big numbers!
+
 
 @Test.case
 def test_float_equal_simple() -> None:

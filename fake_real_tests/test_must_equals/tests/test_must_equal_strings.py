@@ -234,7 +234,6 @@ def test_dict_value_dont_match_case() -> None:
         must_equal(expected, actual)
 
 
-
     must_equal('''
 ITEM:
 string mismatch at index 0

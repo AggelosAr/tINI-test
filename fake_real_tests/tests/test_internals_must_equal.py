@@ -8,7 +8,7 @@ from tini_test.context_managers import WillRaise
 from tini_test.test_utils import Test
 
 
-x = 0
+x = 1
 ss = 1
 import time
 

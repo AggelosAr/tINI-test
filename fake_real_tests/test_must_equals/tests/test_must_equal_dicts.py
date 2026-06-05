@@ -11,6 +11,7 @@ def test_dict_equal() -> None:
     must_equal(expected, actual)
 
 
+
 @Test.case
 def test_dict_value_diff() -> None:
     expected = {'a': 1, 'b': 2}
@@ -22,6 +23,7 @@ def test_dict_value_diff() -> None:
     print('---------------------------------')
     print(str(context.exception))
     print('---------------------------------')
+
 
 
 @Test.case
@@ -48,6 +50,7 @@ def test_dict_extra_key() -> None:
     print('---------------------------------')
     print(str(context.exception))
     print('---------------------------------')
+
 
 
 @Test.case
@@ -77,11 +80,13 @@ def test_dict_nested_diff() -> None:
     print('---------------------------------')
 
 
+
 @Test.case
 def test_dict_mixed_values() -> None:
     expected = {'a': [1, 2]}
     actual = {'a': [1, 2]}
     must_equal(expected, actual)
+
 
 
 @Test.case
@@ -95,6 +100,7 @@ def test_dict_mixed_values_fail() -> None:
     print('---------------------------------')
     print(str(context.exception))
     print('---------------------------------')
+
 
 
 @Test.case

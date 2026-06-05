@@ -11,6 +11,7 @@ def test_tuple_equal_simple() -> None:
     must_equal(expected, actual)
 
 
+
 @Test.case
 def test_tuple_value_diff() -> None:
     expected = (1, 2, 3)
@@ -22,6 +23,7 @@ def test_tuple_value_diff() -> None:
     print('---------------------------------')
     print(str(context.exception))
     print('---------------------------------')
+
 
 
 @Test.case
@@ -37,6 +39,7 @@ def test_tuple_length_diff() -> None:
     print('---------------------------------')
 
 
+
 @Test.case
 def test_tuple_empty() -> None:
     expected = ()
@@ -44,11 +47,13 @@ def test_tuple_empty() -> None:
     must_equal(expected, actual)
 
 
+
 @Test.case
 def test_tuple_nested_equal() -> None:
     expected = (1, (2, 3))
     actual = (1, (2, 3))
     must_equal(expected, actual)
+
 
 
 @Test.case
@@ -62,6 +67,7 @@ def test_tuple_nested_diff() -> None:
     print('---------------------------------')
     print(str(context.exception))
     print('---------------------------------')
+
 
 
 @Test.case
@@ -84,11 +90,13 @@ def test_tuple_mixed_fail() -> None:
     print('---------------------------------')
 
 
+
 @Test.case
 def test_tuple_single() -> None:
     expected = (1,)
     actual = (1,)
     must_equal(expected, actual)
+
 
 
 @Test.case

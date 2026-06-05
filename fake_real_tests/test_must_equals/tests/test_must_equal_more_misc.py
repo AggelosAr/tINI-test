@@ -5,7 +5,9 @@ from tini_test.misc.exceptions import (ComperatorIsNotValid,
 from tini_test.must_equals import must_equal
 from tini_test.test_utils import Test
 
+
 # These are actual seperate cases ....
+
 
 @Test.case
 def test_must_equal_different_objects() -> None:
@@ -75,6 +77,7 @@ def test_must_equal_alien_object_different_order() -> None:
         must_equal(obj1, obj2)
 
     must_equal('Unknown type encountered and a comperator was not provided.', str(context.exception))
+
 
 
 @Test.case

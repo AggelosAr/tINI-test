@@ -11,6 +11,7 @@ def test_set_equal() -> None:
     must_equal(expected, actual)
 
 
+
 @Test.case
 def test_set_missing() -> None:
     expected = {1, 2, 3}

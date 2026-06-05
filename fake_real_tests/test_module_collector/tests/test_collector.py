@@ -224,4 +224,3 @@ def correctly_formatted_paths() -> None:
 
     must_equal('path1.path2.path3', 
                c.path_to_python_module('./././.\\.\\.\\.\\path1/path2/path3...\\\\...///./././.\\.\\.\\'))
-

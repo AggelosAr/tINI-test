@@ -11,6 +11,7 @@ def test_list_equal_simple() -> None:
     must_equal(expected, actual)
 
 
+
 @Test.case
 def test_list_value_diff() -> None:
     expected = [1, 2, 3]
@@ -22,6 +23,7 @@ def test_list_value_diff() -> None:
     print('---------------------------------')
     print(str(context.exception))
     print('---------------------------------')
+
 
 
 @Test.case
@@ -37,6 +39,7 @@ def test_list_length_diff_shorter() -> None:
     print('---------------------------------')
 
 
+
 @Test.case
 def test_list_length_diff_longer() -> None:
     expected = [1, 2]
@@ -50,6 +53,7 @@ def test_list_length_diff_longer() -> None:
     print('---------------------------------')
 
 
+
 @Test.case
 def test_list_empty() -> None:
     expected: list = []
@@ -57,11 +61,13 @@ def test_list_empty() -> None:
     must_equal(expected, actual)
 
 
+
 @Test.case
 def test_list_nested_equal() -> None:
     expected = [1, [2, 3]]
     actual = [1, [2, 3]]
     must_equal(expected, actual)
+
 
 
 @Test.case
@@ -77,11 +83,13 @@ def test_list_nested_diff() -> None:
     print('---------------------------------')
 
 
+
 @Test.case
 def test_list_mixed_types() -> None:
     expected = [1, 'a', 3.0]
     actual = [1, 'a', 3.0]
     must_equal(expected, actual)
+
 
 
 @Test.case
@@ -95,6 +103,7 @@ def test_list_mixed_types_fail() -> None:
     print('---------------------------------')
     print(str(context.exception))
     print('---------------------------------')
+
 
 
 @Test.case
