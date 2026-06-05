@@ -5,7 +5,6 @@ from typing import Optional
 from ._internals.consts import SKIP_DIRS
 from .misc.exceptions import CantFindRelativePathToRoot
 
-
 # TODO update arg parser to accept exclude dir 
 
 class ModuleCollector:

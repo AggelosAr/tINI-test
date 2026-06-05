@@ -18,19 +18,23 @@ def test_collector_collects_all() -> None:
     test_collector.walk_and_collect_test_files(root=test_collector.root)
     test_collector.normalize_collected_data()
 
-    # print('------------------------------------------------')
-    # print(dict(test_collector.test_modules.items()))
-    # print('------------------------------------------------')
+    print('------------------------------------------------')
+    print(dict(test_collector.test_modules.items()))
+    print('------------------------------------------------')
 
     correct_items = {'fake_real_tests.test_must_equals.tests': ['test_must_equal_lists', 
                                                                 'test_must_equal_dicts', 
+                                                                'test_must_equal_misc', 
+                                                                'test_must_equal_json', 
+                                                                'test_must_equal_bytes', 
                                                                 'test_must_equal_works', 
                                                                 'test_must_equal_tuples', 
                                                                 'test_must_equal_strings', 
                                                                 'test_must_equal_sets', 
                                                                 'test_must_equal_ints', 
                                                                 'test_must_equal_bools', 
-                                                                'test_must_equals_misc', 
+                                                                'test_must_equal_bigg_diffs', 
+                                                                'test_must_equal_more_misc', 
                                                                 'test_must_equal_floats'], 
                      'fake_real_tests.test_module_collector.tests': ['test_collector'], 
                      'fake_real_tests.test_dir.tests': ['test_smth'], 
@@ -43,7 +47,10 @@ def test_collector_collects_all() -> None:
                                                'test_internals_must_equal', 
                                                'test_db_setup_cleanup', 
                                                'test_setup', 
-                                               'test_cleanup']}
+                                               'test_cleanup'],
+                     'fake_real_tests.this_tests_should_fail_but_we_made_them_pass.tests.testing_discovery.testing_discovery.testing_discovery.tests': ['test_all'],
+                     'fake_real_tests.testing_discovery.testing_discovery.testing_discovery.tests': ['test_all'],
+                     'testing_discovery_more.testing_discovery.testing_discovery.testing_discovery.tests': ['test_all']}
     must_equal(correct_items, dict(test_collector.test_modules.items()))
 
 
@@ -57,13 +64,17 @@ def test_collector_collects_all_and_exclude_dir_works() -> None:
 
     correct_items = {'fake_real_tests.test_must_equals.tests': ['test_must_equal_lists', 
                                                                 'test_must_equal_dicts', 
+                                                                'test_must_equal_misc', 
+                                                                'test_must_equal_json', 
+                                                                'test_must_equal_bytes', 
                                                                 'test_must_equal_works', 
                                                                 'test_must_equal_tuples', 
                                                                 'test_must_equal_strings', 
                                                                 'test_must_equal_sets', 
                                                                 'test_must_equal_ints', 
                                                                 'test_must_equal_bools', 
-                                                                'test_must_equals_misc', 
+                                                                'test_must_equal_bigg_diffs', 
+                                                                'test_must_equal_more_misc', 
                                                                 'test_must_equal_floats'], 
                      'fake_real_tests.test_module_collector.tests': ['test_collector'], 
                      'fake_real_tests.test_dir.tests': ['test_smth'], 
@@ -72,7 +83,10 @@ def test_collector_collects_all_and_exclude_dir_works() -> None:
                                                'test_internals_must_equal', 
                                                'test_db_setup_cleanup', 
                                                'test_setup', 
-                                               'test_cleanup']}
+                                               'test_cleanup'],
+                     'fake_real_tests.testing_discovery.testing_discovery.testing_discovery.tests': ['test_all'],
+                     'testing_discovery_more.testing_discovery.testing_discovery.testing_discovery.tests': ['test_all']}
+    
     must_equal(correct_items, dict(test_collector.test_modules.items()))
 
 
@@ -86,7 +100,8 @@ def test_collector_can_find_correct_dir_from_search_dir() -> None:
     correct_items = {'fake_real_tests.this_tests_should_fail_but_we_made_them_pass.tests': 
                      ['test_fails', 
                       'test_cleanup_works_on_fail', 
-                      'test_broken_test']}
+                      'test_broken_test'],
+                      'fake_real_tests.this_tests_should_fail_but_we_made_them_pass.tests.testing_discovery.testing_discovery.testing_discovery.tests': ['test_all'],}
     must_equal(correct_items, dict(test_collector.test_modules.items()))
 
 

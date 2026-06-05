@@ -7,7 +7,9 @@ from .misc.annotations import ColorValue
 
 class Color(Enum):
 
-    RED = '\033[91m'        
+    RED = '\033[91m'     
+    #RED = "\x1b[103m"
+
     GREEN = '\033[92m'
     YELLOW = '\033[93m'
     BLUE = '\033[94m'

@@ -1,7 +1,9 @@
 import enum
+from collections import deque
 from difflib import unified_diff
-from typing import Any, Optional, assert_never
 from functools import lru_cache
+from typing import Any, Optional, assert_never
+
 from .misc.annotations import Comperator
 from .misc.exceptions import (ComperatorIsNotValid, ComperatorWasNotProvided,
                               ExpectedWasDifferentFromActual)
@@ -20,6 +22,12 @@ here = None
 
 _diff_threshold = 2**16
 
+_max_m_l_diffs = 3
+
+_max_line_context = 100
+
+_S = 1000
+
 # =========================================================
 # Public API
 # =========================================================
@@ -28,7 +36,7 @@ _diff_threshold = 2**16
 def must_equal(expected: Any, 
                actual: Any, 
                comperator: Optional[Comperator | Any] = None) -> None:
-    """
+    '''
     Assert that expected and actual are equal.
 
     Primitive values and built-in containers (str, list, tuple, set,
@@ -37,7 +45,7 @@ def must_equal(expected: Any,
     built-in comparison logic. The comperator must return
     ``True`` when the values should be considered equal and
     ``False`` otherwise.
-    """
+    '''
     # format the exception to stop at the user level.
     
     try:
@@ -75,6 +83,7 @@ def _assert_comperator(comperator: Comperator | Any) -> None:
     return
 
     from dis import Bytecode, dis  # TODO
+
     # Review compare ops 
     _TRUE_LOAD = 'LOAD_CONST1(True)'           #
     _FALSE_LOAD = 'LOAD_CONST2(False)'         #
@@ -122,7 +131,8 @@ def _unified_diff(expected: str, actual: str) -> str:
 
 
 def _multiline_diff(expected: str, actual: str) -> str:
-    return ''.join(
+
+    lines = list(
         unified_diff(
             expected.splitlines(keepends=True),
             actual.splitlines(keepends=True),
@@ -132,18 +142,92 @@ def _multiline_diff(expected: str, actual: str) -> str:
     )
 
 
-def _single_line_diff(expected: str, actual: str) -> str:
+    result = []
+    hunk_count = 0
 
+    _expected = []
+    _actual = deque()
+    
+
+    for idx in range(len(lines)):
+
+        line = lines[idx]
+        if line.startswith('@@'):
+            
+            hunk_count += 1
+
+            if hunk_count > _max_m_l_diffs:
+              
+                result.append(
+                    '\n... additional differences omitted (%s+ more) ...\n' 
+                    % (hunk_count - _max_m_l_diffs, )
+                )
+                break
+            
+            __x = '~~~~~~~~~~~~~~~~~~~~~~~~'
+            result.append('\n%s\n%s\n%s\n' % (__x, line, __x, ))
+         
+
+        elif line.startswith('-') and not line.startswith('--'):
+            
+
+            line = line[1:]
+
+            if _actual:
+                
+                if line != (_v := _actual.popleft()):
+
+                    r = _single_line_diff(line, _v)
+
+                    result.append('\n%s\n' % (r, ))
+
+            else:
+                
+                _expected.append(line)
+            
+          
+        elif line.startswith('+') and not line.startswith('++'):
+            
+
+            line = line[1:]
+
+            if _expected:
+             
+                if line != (_v := _expected.pop()):
+
+                    r = _single_line_diff(_v, line)
+            
+                    result.append('\n%s\n' % (r, ))
+
+            else:
+
+                _actual.append(line)
+
+        else:
+            if (l := len(line)) > _max_line_context:
+                # Truncate line here
+                line = ('%s[TRUNCATED<%s>chars]%s' 
+                        % (lines[idx][:_max_line_context//2], 
+                            '%d' % (t, )
+                            if (t := l - _max_line_context) <= _S
+                            else '%d+' % (min(_S, t), ), 
+                            lines[idx][-_max_line_context//2:], ))
+
+            result.append(line)
+            
+    return ''.join(result)
+
+
+def _single_line_diff(expected: str, actual: str) -> str:
+    
     for idx, (e, a) in enumerate(zip(expected, actual)):
         if e != a:
             break
     else:
         idx = min(len(expected), len(actual))
 
-    context = 30
-
-    start = max(0, idx - context)
-    end = idx + context
+    start = max(0, idx - _max_line_context)
+    end = idx + _max_line_context
 
     exp_snippet = expected[start:end]
     act_snippet = actual[start:end]
@@ -165,8 +249,10 @@ def _single_line_diff(expected: str, actual: str) -> str:
         'expected char: %s\n'
         'actual char:   %s\n'
         '\n'
-        'expected: %r\n'
-        'actual:   %r\n'
+        'expected: %r'
+        '\n'
+        'actual:   %r'
+        '\n'
         '          %s^'
     ) % (
         idx,

@@ -16,14 +16,24 @@ def test_multiline_string_diff() -> None:
     print(str(context.exception))
     print('---------------------------------')
     
-    must_equal('''
+    must_equal(r'''
 ITEM:
 --- expected
 +++ actual
+
+~~~~~~~~~~~~~~~~~~~~~~~~
 @@ -1,3 +1,3 @@
+
+~~~~~~~~~~~~~~~~~~~~~~~~
  hello
--world
-+there
+
+string mismatch at index 0
+expected char: 'w'
+actual char:   't'
+
+expected: 'world\n'
+actual:   'there\n'
+           ^
  foo
 ''', str(context.exception))
 
@@ -150,14 +160,24 @@ def test_multiline_string_diff_case() -> None:
     print(str(context.exception))
     print('---------------------------------')
 
-    must_equal('''
+    must_equal(r'''
 ITEM:
 --- expected
 +++ actual
+
+~~~~~~~~~~~~~~~~~~~~~~~~
 @@ -1,3 +1,3 @@
+
+~~~~~~~~~~~~~~~~~~~~~~~~
  hello
--world
-+there
+
+string mismatch at index 0
+expected char: 'w'
+actual char:   't'
+
+expected: 'world\n'
+actual:   'there\n'
+           ^
  foo
 ''', str(context.exception))
     
@@ -180,18 +200,25 @@ def test_multiline_string_diff_case_special() -> None:
     with WillRaise(ExpectedWasDifferentFromActual) as context:
         must_equal(expected, actual)
 
-    print('---------------------------------')
-    print(str(context.exception))
-    print('---------------------------------')
 
-    must_equal('''
+    must_equal(r'''
 ITEM:
 --- expected
 +++ actual
+
+~~~~~~~~~~~~~~~~~~~~~~~~
 @@ -1,3 +1,3 @@
+
+~~~~~~~~~~~~~~~~~~~~~~~~
  hello Again my little garden
--world was a small bee nest
-+world was a XXX bee next
+
+string mismatch at index 12
+expected char: 's'
+actual char:   'X'
+
+expected: 'world was a small bee nest\n'
+actual:   'world was a XXX bee next\n'
+                       ^
  in the other side
 ''', str(context.exception))
 
@@ -201,9 +228,12 @@ ITEM:
 def test_dict_value_dont_match_case() -> None:
     expected = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
     actual = 'RRRRRRRRRRRRRRRRRRRRRRRsadasdasdasd'
+   
 
     with WillRaise(ExpectedWasDifferentFromActual) as context:
         must_equal(expected, actual)
+
+
 
     must_equal('''
 ITEM:
@@ -211,8 +241,8 @@ string mismatch at index 0
 expected char: 'X'
 actual char:   'R'
 
-expected: 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
-actual:   'RRRRRRRRRRRRRRRRRRRRRRRsadasda'
+expected: 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+actual:   'RRRRRRRRRRRRRRRRRRRRRRRsadasdasdasd'
            ^
 ''', str(context.exception))
 

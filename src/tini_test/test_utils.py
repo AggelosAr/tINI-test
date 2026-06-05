@@ -11,7 +11,6 @@ from .misc.annotations import F_Callable, S_Callable, StackTrace
 from .misc.exceptions import ExpectedWasDifferentFromActual
 from .state.state import OperationState
 
-
 _minimals_discard = {Mode.MINIMAL_NO_STACK, Mode.SUPER_MINIMAL}
 
 
