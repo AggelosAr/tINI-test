@@ -107,39 +107,46 @@ def test_test_wont_break() -> None:
     
     print(e)
     print(str(e.exception))
+    must_equal('{{{}}}', str(e.exception))
 
     with WillRaise(CustomException) as e:
         raise CustomException(s2)
     
     print(e)
     print(str(e.exception))
+    must_equal(s2, str(e.exception))
     
     with WillRaise(CustomException) as e:
         raise CustomException(s3)
     
     print(e)
     print(str(e.exception))
+    must_equal('{', str(e.exception))
 
     with WillRaise(CustomException) as e:
         raise CustomException(s4)
     
     print(e)
     print(str(e.exception))
+    must_equal(s4, str(e.exception))
 
     with WillRaise(CustomException) as e:
         raise CustomException(s5)
     
     print(e)
     print(str(e.exception))
+    must_equal('%s%s%s%s', str(e.exception))
 
     with WillRaise(CustomException) as e:
         raise CustomException(s6)
     
     print(e)
     print(str(e.exception))
+    must_equal('%%s%%s%%s%%s', str(e.exception))
 
     with WillRaise(CustomException) as e:
         raise CustomException(s7)
     
     print(e)
     print(str(e.exception))
+    must_equal('%%%s%%%s%%s%%s', str(e.exception))
