@@ -253,3 +253,4 @@ Of course the above is somewhat cancelled because the algorithm tries to autocom
 * [ ] Register tests into groups (group-level setup/cleanup)
 * [ ] Add global fail sort mode, not just per module.
 * [ ] Calculate test coverage
+* [ ] Add flag for async excecution. Also port back the normal exc.
