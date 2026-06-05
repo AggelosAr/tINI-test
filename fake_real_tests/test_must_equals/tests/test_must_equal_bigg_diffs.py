@@ -1,7 +1,7 @@
 import json
 import os
 
-from tini_test.context_manager import WillRaise
+from tini_test.context_managers import WillRaise
 from tini_test.misc.exceptions import ExpectedWasDifferentFromActual
 from tini_test.must_equals import must_equal
 from tini_test.test_utils import Test

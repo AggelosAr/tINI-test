@@ -1,4 +1,4 @@
-from tini_test.context_manager import WillRaise
+from tini_test.context_managers import WillRaise
 from tini_test.misc.exceptions import (ComperatorIsNotValid,
                                        ComperatorWasNotProvided,
                                        ExpectedWasDifferentFromActual)

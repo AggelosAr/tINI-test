@@ -1,3 +1,4 @@
+import asyncio
 from time import perf_counter
 from typing import Optional
 
@@ -59,29 +60,37 @@ def get_test_container(mode: Optional[str | Mode] = None,
     return tests_container, perf_counter() - _start
 
 
-def run_tests(collection_time: TimeTakenForTestDiscoveryAndSuiteInitialization, 
-              tests_container: TestsContainer) -> None:
+async def arun_tests(collection_time: TimeTakenForTestDiscoveryAndSuiteInitialization, 
+                     tests_container: TestsContainer) -> None:
     
     print()
     
-    total_time = 0.0
-    total_tests = 0
-
-    total_successes = 0
-    total_errors = 0
-
+    _start = perf_counter()
+    
+    # Gather all suites from all modules
+    all_suites: list[TestSuite] = []
     for _, test_files in tests_container.items():
-        
         for _, suite in test_files.items():
+            all_suites.append(suite)
+    
+    # Run all suites concurrently # TODO what do we do with exceptions here ?
+    results = await asyncio.gather(
+        *[suite.arun_suite() for suite in all_suites],
+        return_exceptions=False
+    )
+    
+    # Aggregate results
+    total_time = perf_counter() - _start
+    
+    total_tests = 0
+    total_successes, total_errors = 0, 0
 
-            module_test_duration, errors = suite.run_tests()
 
-            total_time += module_test_duration
-            total_tests += suite.total_tests
-
-            total_successes += suite.total_tests - errors
-            total_errors += errors
-
+    for suite, errors in zip(all_suites, results):
+        total_tests += suite.total_tests
+        total_successes += suite.total_tests - errors
+        total_errors += errors
+     
 
     print('\n\n------------------------------------------')
 
@@ -96,3 +105,9 @@ def run_tests(collection_time: TimeTakenForTestDiscoveryAndSuiteInitialization,
     print('| Run Tests in        : (%0.4f) secs' % (total_time, ))
 
     print('------------------------------------------')
+
+
+def run_tests(collection_time: TimeTakenForTestDiscoveryAndSuiteInitialization, 
+              tests_container: TestsContainer) -> None:
+    
+    asyncio.run(arun_tests(collection_time, tests_container))

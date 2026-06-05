@@ -1,4 +1,4 @@
-from .context_manager import WillRaise
+from .context_managers import WillRaise
 from .misc.exceptions import ExpectedWasDifferentFromActual
 from .must_equals import must_equal
 from .test_utils import Test

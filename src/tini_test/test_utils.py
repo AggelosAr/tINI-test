@@ -1,8 +1,10 @@
-from contextlib import redirect_stdout
+import asyncio
 from functools import cached_property
 from io import StringIO
 from traceback import format_exc, format_tb
 from typing import Any, Optional
+
+from tini_test.context_managers import _thread_redirect_stdout
 
 from ._internals._internal_exceptions._exceptions import (_FailStateWasNotFail,
                                                           _LastOpNotExpected)
@@ -42,7 +44,8 @@ class TestStep:
         apply_filters = mode in _minimals_discard
 
         try:
-            with redirect_stdout(buffer):
+            # TODO add match on enum to discard output and exception traces in minimal modes
+            with _thread_redirect_stdout(buffer):
                 self.func(*self.args, **self.kwargs)
 
         except ExpectedWasDifferentFromActual as e:
@@ -176,7 +179,7 @@ class Test:
                 self.fail_reasons.append(step_state.exception_trace)
                 break
     
-    def run_for_cleanup_if_needed(self) -> None:
+    def run_for_cleanup_if_needed(self, mode: Mode) -> None:
         # TODO What happens if user stops the program?
         # If test fails and there is a cleanup 
         # Attempt to run it
@@ -201,7 +204,7 @@ class Test:
         cleanup_step.success_status=TestStatus.ATTEMPT_BREAK_DOWN_SUCCESS
         cleanup_step.fail_status=TestStatus.ATTEMPT_BREAK_DOWN_FAIL
         
-        cleanup_op = cleanup_step.run_step()
+        cleanup_op = cleanup_step.run_step(mode)
 
         # Put back the states in the correct order
         self.operation_states.append(failed_op)
@@ -229,16 +232,19 @@ class Test:
         end_state.exit_msg = OperationState.get_end_seperator()
         self.operation_states.append(end_state)
 
-    def box_test(self, mode: Mode) -> list[OperationState]:
+    def box_test(self, mode: Mode) -> None:
 
         self.run_steps(mode)
-        self.run_for_cleanup_if_needed()
+        self.run_for_cleanup_if_needed(mode)
         self.attach_end_state()
         self.close_state()
-        
-        #!
+
         if self._no_op:
+            from contextlib import redirect_stdout
+
             with redirect_stdout(StringIO()):
                 self._no_op.__call__()
 
-        return self.operation_states
+    async def abox_test(self, mode: Mode) -> None:
+        await asyncio.to_thread(self.box_test, mode)
+

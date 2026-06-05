@@ -27,5 +27,3 @@ TimeTakenForModule: TypeAlias = float
 
 SuiteSize: TypeAlias = int
 Errors: TypeAlias = int
-
-TestSuiteResults: TypeAlias = tuple[TimeTakenForModule, Errors]

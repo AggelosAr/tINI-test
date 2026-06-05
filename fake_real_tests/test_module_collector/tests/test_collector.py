@@ -1,9 +1,9 @@
-from tini_test.context_manager import WillRaise
+from tini_test.context_managers import WillRaise
 from tini_test.misc.exceptions import CantFindRelativePathToRoot, TestNotFound
 from tini_test.module_collector import ModuleCollector
 from tini_test.must_equals import must_equal
 from tini_test.runner import get_test_container
-from tini_test.test_suite import Test
+from tini_test.test_utils import Test
 
 # Recursion indeed stops early when searching for file. maybe add a test.
 # !

@@ -1,3 +1,4 @@
+import asyncio
 from functools import cached_property, partial
 from importlib import import_module
 from time import perf_counter
@@ -6,8 +7,7 @@ from typing import Callable, Optional, TypeAlias
 
 from ._internals.consts import _LINE_CLEAR, _LINE_UP, _RESET
 from .enums import Color, Mode
-from .misc.annotations import (Errors, TestName, TestSuiteResults,
-                               TimeTakenForModule)
+from .misc.annotations import Errors, TestName
 from .misc.exceptions import NotSupportedMode
 from .test_utils import Test
 
@@ -92,18 +92,18 @@ class TestSuite:
         self.collector = dict(sorted(self.collector.items(), 
                                      key=lambda kv: kv[1].is_fail))
         
-    def box_tests(self) -> None:
-        list(map(lambda l: l.box_test(self.mode), self.collector.values()))
+    async def abox_tests(self) -> None:
+        tasks = [test_case.abox_test(self.mode) for test_case in self.collector.values()]
+        await asyncio.gather(*tasks)
 
     def sort_tests_based_on_source(self) -> None:
         raise NotImplementedError
     
-    def show_test_results_non_minimal(self, start_timer: float) -> tuple[Errors, TimeTakenForModule]:
+    def show_test_results_non_minimal(self) -> Errors:
 
         failed_tests = 0
 
         for idx, test_case in enumerate(self.collector.values(), start=1):
-            
             
             print("[ %s / %s ]\n\tTEST\t—›  %s\n\t\t——› %s\n\n\n%s" 
                   % (idx, 
@@ -115,9 +115,11 @@ class TestSuite:
 
             failed_tests += test_case.is_fail
 
-        return failed_tests, perf_counter() - start_timer
+        return failed_tests
 
-    def show_test_results_minimal(self, start_timer: float) -> tuple[Errors, TimeTakenForModule]:
+    def show_test_results_minimal(self) -> Errors:
+
+        start_timer = perf_counter()
 
         # Cap the progress bar.
         bucket_size = 18
@@ -134,8 +136,7 @@ class TestSuite:
 
 
         for idx, test_case in enumerate(self.collector.values()):
-            # import time
-            # time.sleep(0.3)
+
             bucket_idx = (idx)%bucket_size
 
             if test_case.is_fail:
@@ -150,6 +151,7 @@ class TestSuite:
 
 
             print(''.join(progress))
+            # sys.stdout.flush()
 
             if idx != self.total_tests-1:
 
@@ -175,7 +177,7 @@ class TestSuite:
         errors = len(failed_tests)
 
         if self.mode == Mode.SUPER_MINIMAL:
-            return errors, time_taken
+            return errors
         
         print('\nFinished running tests for < %s >\n' % (self.file_name, ))
         print('Tests passed: [ %d / %d ] (%0.4f) secs\n' 
@@ -183,7 +185,7 @@ class TestSuite:
         
         if not failed_tests:
             print('...\n')
-            return errors, time_taken
+            return errors
         
         if self.mode == Mode.MINIMAL_NO_STACK:
 
@@ -193,7 +195,7 @@ class TestSuite:
                 print('\t—› %s' % (failed_test, ))
 
             print('...\n')
-            return errors, time_taken
+            return errors
         
         idx = 0
         for test, traces in zip(failed_tests, stacktraces):
@@ -208,17 +210,17 @@ class TestSuite:
                     print('%s ~~~ %s' % (Color.RED.value, _RESET, ))
     
         print('...\n')
-        return errors, time_taken
+        return errors
 
-    def run_tests(self) -> TestSuiteResults:
+    async def arun_suite(self) -> Errors:
         
-        _start = perf_counter()
         errors = 0
 
         print('Running tests for < %s >\n' % (self.file_name, ))
 
-        self.populate_tests()
-        self.box_tests()
+        self.populate_tests() # ! TODO assert that all tests are run after abox_tests
+
+        await self.abox_tests()
 
         if self.mode == Mode.SORT:
             self.sort_tests()
@@ -227,14 +229,16 @@ class TestSuite:
         match self.mode:
 
             case Mode.NORMAL | Mode.SORT:
-                errors, time_taken = self.show_test_results_non_minimal(start_timer=_start)
+                errors = self.show_test_results_non_minimal()
 
             case Mode.MINIMAL | Mode.MINIMAL_NO_STACK | Mode.SUPER_MINIMAL:
-                errors, time_taken = self.show_test_results_minimal(start_timer=_start)
+                
+                errors = self.show_test_results_minimal()
         
 
         print()
-        return (time_taken, errors)
+        return errors
+
     
 # TODO move @annotations
 TestsContainer: TypeAlias = dict[str, dict[str, TestSuite]]

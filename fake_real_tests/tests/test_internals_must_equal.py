@@ -4,8 +4,14 @@ from tini_test._internals._internal_exceptions._comparison_exceptions import (
     _FloatMismatchError, _IntegerMismatchError, _ListMismatchError,
     _ListSizeMismatchError, _SetMismatchError, _SetSizeMismatchError,
     _TupleMismatchError, _TupleSizeMismatchError, _TypeMismatchError)
-from tini_test.context_manager import WillRaise
+from tini_test.context_managers import WillRaise
 from tini_test.test_utils import Test
+
+
+x = 0
+ss = 1
+import time
+
 
 # Base tests that further test correct behaviour...
 
@@ -18,6 +24,9 @@ from tini_test.test_utils import Test
 def test_none_match() -> None:
     a = None
     b = None
+
+    if x:
+        time.sleep(ss)
 
     _must_equal(a, b)
 
@@ -32,6 +41,9 @@ def test_ints_match() -> None:
     a = 10
     b = 10
 
+    if x:
+        time.sleep(ss)
+
     _must_equal(a, b)
 
 
@@ -40,6 +52,9 @@ def test_ints_match() -> None:
 def test_ints_dont_match() -> None:
     a = 10
     b = 20
+
+    if x:
+        time.sleep(ss)
 
     with WillRaise(_IntegerMismatchError) as context: 
         _must_equal(a, b)
@@ -57,6 +72,9 @@ def test_floats_match() -> None:
     a = 3.14
     b = 3.14
 
+    if x:
+        time.sleep(ss)
+        
     _must_equal(a, b)
 
 

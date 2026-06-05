@@ -1,4 +1,4 @@
-from tini_test.context_manager import WillRaise
+from tini_test.context_managers import WillRaise
 from tini_test.misc.exceptions import (ExceptionWasNotRaised,
                                        WillRaiseReceivedNotAnException)
 from tini_test.must_equals import must_equal

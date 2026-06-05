@@ -1,6 +1,6 @@
 from typing import assert_never
 
-from tini_test.context_manager import WillRaise
+from tini_test.context_managers import WillRaise
 from tini_test.test_suite import Test
 
 
