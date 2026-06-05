@@ -4,7 +4,6 @@ from tini_test.must_equals import must_equal
 from tini_test.test_utils import Test
 
 
-
 @Test.case
 def test_int_equal_small() -> None:
     expected = 1

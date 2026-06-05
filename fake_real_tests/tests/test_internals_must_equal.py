@@ -7,11 +7,9 @@ from tini_test._internals._internal_exceptions._comparison_exceptions import (
 from tini_test.context_managers import WillRaise
 from tini_test.test_utils import Test
 
-
 x = 1
 ss = 1
 import time
-
 
 # Base tests that further test correct behaviour...
 

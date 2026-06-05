@@ -1,7 +1,7 @@
-from contextlib import contextmanager
-from io import StringIO
 import sys
 import threading
+from contextlib import contextmanager
+from io import StringIO
 from typing import Optional
 
 from .misc.exceptions import (ExceptionWasNotRaised,

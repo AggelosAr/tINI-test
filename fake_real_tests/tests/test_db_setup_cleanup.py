@@ -3,17 +3,17 @@
 Tests for async behavior with setup and cleanup decorators.
 Validates that setup/cleanup run correctly in concurrent async execution.
 """
-import time
 import threading
+import time
 from typing import Set
 
-from tini_test.test_utils import Test
-from tini_test.context_managers import WillRaise
-from tini_test.misc.exceptions import ExceptionWasNotRaised, ExpectedWasDifferentFromActual
-from tini_test._internals._internal_exceptions._comparison_exceptions import (
+from tini_test._internals._internal_exceptions._comparison_exceptions import \
     _IntegerMismatchError
-)
+from tini_test.context_managers import WillRaise
+from tini_test.misc.exceptions import (ExceptionWasNotRaised,
+                                       ExpectedWasDifferentFromActual)
 from tini_test.must_equals import must_equal
+from tini_test.test_utils import Test
 
 # Shared state for tracking setup/cleanup execution
 _state_lock = threading.Lock()
@@ -219,9 +219,9 @@ def test_isolation_third() -> None:
 ### SQLITE DATABASE TESTS (no external dependencies)
 #####################
 
+import os
 import sqlite3
 import tempfile
-import os
 
 # Thread-local storage for database connections
 _db_local = threading.local()

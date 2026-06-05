@@ -5,7 +5,6 @@ from tini_test.misc.exceptions import (ComperatorIsNotValid,
 from tini_test.must_equals import must_equal
 from tini_test.test_utils import Test
 
-
 # These are actual seperate cases ....
 
 
