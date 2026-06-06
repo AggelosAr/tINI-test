@@ -1,7 +1,8 @@
 from argparse import ArgumentParser
 from typing import Optional
 
-from tini_test.misc.annotations import DirectoryPath, FileName, TestFunctionName
+from tini_test.misc.annotations import (DirectoryPath, FileName,
+                                        TestFunctionName)
 
 from .enums import RunMode, Verbosity
 

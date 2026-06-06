@@ -9,6 +9,7 @@ SEPERATOR_SYMBOL = '='               # Seperator symbol
 SEPERATOR_NEGATIVE = "\033[7m"       # Seperator start
 SEPERATOR_CYAN = "\033[96m"          # Seperator color
 
+INVALID_PYTHON_MODULE_SYMBOLS = set(['.', '/', '\\'])
 
 SKIP_DIRS = {
         "__pycache__",

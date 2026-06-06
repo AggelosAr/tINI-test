@@ -9,9 +9,9 @@ from tini_test.module_collector import ModuleCollector
 
 from ._internals.consts import _LINE_CLEAR, _LINE_UP, _RESET
 from .enums import Color, Verbosity
-from .misc.annotations import DirectoryPath, Errors, FileName, TestFunctionName, TestName
+from .misc.annotations import (DirectoryPath, Errors, FileName,
+                               TestFunctionName, TestName)
 from .test_utils import Test
-
 
 
 class Tests:

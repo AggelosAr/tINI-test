@@ -6,7 +6,6 @@ from tini_test.must_equals import must_equal
 from tini_test.runner import initialize_test_suite
 from tini_test.test_utils import Test
 
-
 # TODO add test that searches for both file and dir
 
 

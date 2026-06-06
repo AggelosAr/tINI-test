@@ -1,10 +1,11 @@
 from os import getcwd, path, walk
 from pathlib import Path
-from typing import Generator, Iterator, Optional
+from typing import Iterator, Optional
 
-from tini_test.misc.annotations import DirectoryPath, MappedDirectoryToTestFiles, FileName
+from tini_test.misc.annotations import (DirectoryPath, FileName,
+                                        MappedDirectoryToTestFiles)
 
-from ._internals.consts import SKIP_DIRS
+from ._internals.consts import INVALID_PYTHON_MODULE_SYMBOLS, SKIP_DIRS
 from .misc.exceptions import CantFindRelativePathToRoot
 
 # TODO update arg parser to accept exclude dir 
@@ -112,9 +113,9 @@ class ModuleCollector:
     def path_to_python_module(self, path_name: str) -> str:
         r = '.'.join(Path(path_name).parts)
         r = r.strip()
-        while r and r[0] in {'.', '/', '\\'}:
+        while r and r[0] in INVALID_PYTHON_MODULE_SYMBOLS:
             r = r[1:]
-        while r and r[-1] in {'.', '/', '\\'}:
+        while r and r[-1] in INVALID_PYTHON_MODULE_SYMBOLS:
             r = r[:-1]
         return r
     

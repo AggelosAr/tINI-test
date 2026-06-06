@@ -6,7 +6,7 @@ from .enums import Verbosity
 from .misc.annotations import (DirectoryPath, FileName, TestFunctionName,
                                TimeTakenForTestDiscoveryAndSuiteInitialization)
 from .module_collector import ModuleCollector
-from .test_suite import TestSuite, TestsContainer, Tests
+from .test_suite import Tests, TestsContainer, TestSuite
 
 
 def initialize_test_suite(verbosity: Verbosity,
