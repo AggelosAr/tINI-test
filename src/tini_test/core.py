@@ -4,10 +4,9 @@ from time import perf_counter
 from typing import Optional
 
 from tini_test.enums import RunMode, Verbosity
-from tini_test.misc.annotations import (Errors, Failures, Successes, SuiteSize,
+from tini_test.misc.annotations import (Errors, Failures, FileName, Successes, SuiteSize,
                                         TestCollectionSize, TestFunctionName,
                                         TimeTakenForSuiteInitialization,
-                                        TimeTakenForTestCollection,
                                         TimeTakenForTestDiscovery,
                                         TimeTakenToRunSuite)
 from tini_test.misc.exceptions import TestNotFound
@@ -15,19 +14,6 @@ from tini_test.module_collector import ModuleCollector
 from tini_test.test import TestCollection
 
 # TODO create timed class
-
-
-# class TestGenerator:
-
-#     def __init__(self, container: dict[DirectoryPath, dict[FileName, Tests]])
-
-#         self.container = container
-
-#     def __iter__(self) -> Iterator[tuple[DirectoryPath, FileName]]:
-#         for _, test_files in self.container.items():
-#             for _, suite in test_files.items():
-#                 yield 
-
 
 
 class TestSuite:
@@ -50,7 +36,9 @@ class TestSuite:
         self._total_tests = 0
         self._successes = 0
         self._errors = 0
+
         self._failures = 0
+        self._failed_to_collect_test_files = []
 
         self.container = {}
 
@@ -106,7 +94,7 @@ class TestSuite:
         return self._failures
     
     @failures.setter
-    def failures(self, new_failures) -> None:
+    def failures(self, new_failures: Failures) -> None:
         self._failures += new_failures
 
     @property
@@ -117,25 +105,38 @@ class TestSuite:
     def suite_run_time(self, dt: TimeTakenToRunSuite) -> None:
         self._suite_run_time = dt - self._start
 
+    @property
+    def failed_to_collect_test_files(self) -> list[FileName]:
+        return self._failed_to_collect_test_files
+
+    @failed_to_collect_test_files.setter
+    def failed_to_collect_test_files(self, new_file: FileName) -> None:
+        self._failed_to_collect_test_files.append(new_file)
+
     def pprint_summary(self) -> None:
         print(self.get_summary())
 
     def get_summary(self) -> str:
         
-        return '\n'.join([
+        _r = [
         '\n'
         ' ------------------------------------------',
         '| Total registered tests  : %d' % (self.total_tests, ),
         '|',
         '| Total successes         : %d' % (self.successes, ),
         '| Total errors            : %d' % (self.errors, ),
-        '| Total failures          : %d' % (self.failures, ),
+        '| Test file load failures : %d' % (self.failures, ),
         '|',
         '| Discovered Tests in     : ( %0.4f ) secs' % (self.discovery_time, ),
         '| Initialized Suite in    : ( %0.4f ) secs' % (self.suite_init_time, ),
         '| Run Tests in            : ( %0.4f ) secs' % (self.suite_run_time, ),
         ' ------------------------------------------'
-        ])
+        '\n',
+        '\n',
+        'Test files failed to load: %s' % (self.failed_to_collect_test_files, )
+        ]
+
+        return '\n'.join(_r if self.failures else _r[:-2]) 
 
     def initialize_tests(self, _from: ModuleCollector) -> None:
         
@@ -143,13 +144,17 @@ class TestSuite:
 
         for module_path, test_file in _from:
             
-            # TODO do we need to try/catch here?
-            tests = TestCollection(verbosity=self.verbosity, 
-                                   module_path=module_path,
-                                   file=test_file)
+            try:
+                tests = TestCollection(verbosity=self.verbosity, 
+                                       module_path=module_path,
+                                       file=test_file)
+            except Exception:
+                self.failures = 1
+                self.failed_to_collect_test_files = test_file 
+                continue
             
             collected_tests = tests.gather_tests(func_name=self.test_function)
-
+           
             if not collected_tests:
                 continue
             
@@ -185,7 +190,6 @@ class TestSuite:
             self.failures = current_failures
 
     async def _arun_suite(self) -> None:
-        print()
         
         # Gather all suites from all modules
         all_test_collections: list[TestCollection] = []
