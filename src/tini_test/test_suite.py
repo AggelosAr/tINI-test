@@ -4,30 +4,33 @@ from importlib import import_module
 from types import FunctionType
 from typing import Callable, Optional, TypeAlias
 
+from tini_test.misc.exceptions import TestNotFound
+from tini_test.module_collector import ModuleCollector
+
 from ._internals.consts import _LINE_CLEAR, _LINE_UP, _RESET
 from .enums import Color, Verbosity
-from .misc.annotations import Errors, TestName
-from .misc.exceptions import NotSupportedVerbosity
+from .misc.annotations import DirectoryPath, Errors, FileName, TestFunctionName, TestName
 from .test_utils import Test
 
 
-class TestSuite:
+
+class Tests:
     
-    def __init__(self, 
-                 module: str,
-                 file: str,
-                 verbosity: Verbosity) -> None:
+    def __init__(self,
+                 verbosity: Verbosity,
+                 module_path: DirectoryPath,
+                 file: FileName) -> None:
         
         self.verbosity=verbosity
 
-        self.module = import_module('%s.%s' % (module, file, ))
+        self.module = import_module('%s.%s' % (module_path, file, ))
 
         self.decorated_tests: list[Callable] = []
 
         self.collector: dict[str, Test] = dict()
 
         self.file_name = self.module.__name__
-
+    
     @cached_property
     def module_name(self) -> str:
         return self.module.__name__
@@ -35,6 +38,9 @@ class TestSuite:
     @property
     def total_tests(self) -> int:
         return len(self.decorated_tests)
+
+    def get_summary_info(self):
+        ...
 
     def gather_tests(self, func_name: Optional[str] = None) -> list[TestName]:
 
@@ -215,7 +221,7 @@ class TestSuite:
 
         print('Running tests for < %s >\n' % (self.file_name, ))
 
-        self.populate_tests() # ! TODO assert that all tests are run after abox_tests
+        self.populate_tests()
 
         await self.abox_tests()
 
@@ -233,6 +239,68 @@ class TestSuite:
         print()
         return errors
 
-    
 # TODO move @annotations
-TestsContainer: TypeAlias = dict[str, dict[str, TestSuite]]
+TestsContainer: TypeAlias = dict[DirectoryPath, dict[FileName, Tests]]
+
+
+class TestSuite:
+    
+    def __init__(self,
+                 verbosity: Verbosity,
+                 collected_modules: ModuleCollector,
+                 test_function: Optional[TestFunctionName] = None
+                 ) -> None:
+        
+        self.verbosity = verbosity
+        self.collected_modules = collected_modules
+        self.test_function = test_function
+
+    def __str__(self) -> str:
+        raise NotImplementedError
+
+    @cached_property
+    def searching_single_test(self) -> bool:
+        return self.test_function is not None
+    
+    def get_tests_container(self) -> TestsContainer:
+
+        tests_container: TestsContainer = {}
+
+        for module_path, test_file in self.collected_modules:
+            
+            # TODO add try here.
+            # TODO add failures
+            tests = Tests(verbosity=self.verbosity, 
+                          module_path=module_path,
+                          file=test_file)
+
+            collected_tests = tests.gather_tests(func_name=self.test_function)
+
+            if not collected_tests:
+                continue
+            
+            if module_path not in tests_container:
+                tests_container[module_path] = {}
+
+            if self.searching_single_test:
+
+                if self.test_function in collected_tests:
+
+                    tests_container[module_path][test_file] = tests
+                    break
+            
+            tests_container[module_path][test_file] = tests
+
+            if not len(tests_container[module_path]):
+                del tests_container[module_path]
+
+        if self.searching_single_test and not tests_container:
+            raise TestNotFound
+
+        return tests_container
+    
+    def run_suite(self) -> Errors:
+        raise NotImplementedError
+    
+    async def arun_suite(self) -> Errors:
+        raise NotImplementedError

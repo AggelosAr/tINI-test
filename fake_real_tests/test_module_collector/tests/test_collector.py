@@ -3,13 +3,10 @@ from tini_test.enums import Verbosity
 from tini_test.misc.exceptions import CantFindRelativePathToRoot, TestNotFound
 from tini_test.module_collector import ModuleCollector
 from tini_test.must_equals import must_equal
-from tini_test.runner import get_test_container
+from tini_test.runner import initialize_test_suite
 from tini_test.test_utils import Test
 
-# Recursion indeed stops early when searching for file. maybe add a test.
-# !
- 
-# TODO update to test edge cases like . .. ./././. etc .....
+
 # TODO add test that searches for both file and dir
 
 
@@ -188,17 +185,17 @@ def test_collector_will_not_find_anything_if_nonexisting_file_is_requested() -> 
 @Test.case
 def test_test_module_will_not_collect_a_single_function_if_it_doesnt_exist() -> None:
     with WillRaise(TestNotFound):
-        _ = get_test_container(verbosity=Verbosity.MINIMAL,
-                               search_dir='.',
-                               test_function='file_that_is_not_here')
+        _ = initialize_test_suite(verbosity=Verbosity.MINIMAL,
+                                  search_dir='.',
+                                  test_function='file_that_is_not_here')
 
 
 
 @Test.case
 def test_test_module_will_collect_a_single_function() -> None:
-    tests_container = get_test_container(verbosity=Verbosity.MINIMAL,
-                                         search_dir='.',
-                                         test_function='test_decorator_works_with_parenthesis')
+    tests_container = initialize_test_suite(verbosity=Verbosity.MINIMAL,
+                                            search_dir='.',
+                                            test_function='test_decorator_works_with_parenthesis')
 
     correct_item = 'test_decorator_works_with_parenthesis'
 
@@ -217,10 +214,11 @@ def test_test_module_will_collect_a_single_function() -> None:
 def test_test_module_will_collect_this_function() -> None:
 
     t = 'test_test_module_will_collect_this_function'
-    tests_container, _ = get_test_container(verbosity=Verbosity.MINIMAL,
-                                            search_dir='.',
-                                            test_function=t)
+    tests_container, _ = initialize_test_suite(verbosity=Verbosity.MINIMAL,
+                                               search_dir='.',
+                                               test_function=t)
 
+    must_equal(1, len(tests_container))
     must_equal(1, len(tests_container['fake_real_tests.test_module_collector.tests']))
 
     module_tests = tests_container['fake_real_tests.test_module_collector.tests']['test_collector']

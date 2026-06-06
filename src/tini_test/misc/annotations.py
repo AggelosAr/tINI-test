@@ -1,9 +1,11 @@
 from typing import Any, Callable, TypeAlias
 
-
-Directory: TypeAlias = str
+DirectoryPath: TypeAlias = str
 FileName: TypeAlias = str
 TestFunctionName: TypeAlias = str
+
+
+MappedDirectoryToTestFiles: TypeAlias = dict[DirectoryPath, list[FileName]]
 
 
 # TODO update 

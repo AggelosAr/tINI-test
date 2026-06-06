@@ -1,20 +1,24 @@
 from os import getcwd, path, walk
 from pathlib import Path
-from typing import Optional
+from typing import Generator, Iterator, Optional
 
-from tini_test.misc.annotations import Directory, FileName
+from tini_test.misc.annotations import DirectoryPath, MappedDirectoryToTestFiles, FileName
 
 from ._internals.consts import SKIP_DIRS
 from .misc.exceptions import CantFindRelativePathToRoot
 
 # TODO update arg parser to accept exclude dir 
+# Recursion indeed stops early when searching for file. maybe add a test.
+# !
+# TODO update to test edge cases like . .. ./././. etc .....
+
 
 class ModuleCollector:
 
     def __init__(self,
-                 search_dir: Directory, 
+                 search_dir: DirectoryPath, 
                  file_name: Optional[FileName] = None,
-                 exclude_dir: Optional[Directory] = None,) -> None:
+                 exclude_dir: Optional[DirectoryPath] = None,) -> None:
         
         # Check case that exclude_dir is trash not yet implemented
         self.SKIP_DIRS = {**{l: None for l in SKIP_DIRS}, exclude_dir: None}
@@ -32,13 +36,18 @@ class ModuleCollector:
             else:
                 raise CantFindRelativePathToRoot
             
-        self.test_modules: dict[str, list[str]] = {}
+        self.test_modules: MappedDirectoryToTestFiles = {}
 
         self.file_name = file_name
         if self.file_name and not self.file_name.endswith('.py'):
             self.file_name = '%s.py' % (self.file_name, )
 
-    def is_valid_test_file(self, file_name: str) -> bool:
+    def __iter__(self) -> Iterator[tuple[DirectoryPath, FileName]]:
+        for module_dir, test_files in self.test_modules.items():
+            for test_file in test_files:
+                yield module_dir, test_file
+
+    def is_valid_test_file(self, file_name: FileName) -> bool:
         return all([
             file_name.startswith('test_'),
             file_name.endswith('.py')
@@ -97,7 +106,7 @@ class ModuleCollector:
                 
                 self.walk_and_collect_test_files(Path(path.join(root, c_dir)))
 
-    def normalize_file_names(self, names: list[str]) -> list[str]:
+    def normalize_file_names(self, names: list[FileName]) -> list[FileName]:
         return list(map(lambda l: l.replace('.py', ''), names))
     
     def path_to_python_module(self, path_name: str) -> str:

@@ -2,10 +2,10 @@ from enum import Enum
 from functools import lru_cache
 from typing import Mapping
 
-from tini_test.misc.exceptions import NotSupportedRunMode, NotSupportedVerbosity
+from tini_test.misc.exceptions import (NotSupportedRunMode,
+                                       NotSupportedVerbosity)
 
 from .misc.annotations import ColorValue
-
 
 
 class RunMode(Enum):

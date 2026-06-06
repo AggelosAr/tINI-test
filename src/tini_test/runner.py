@@ -3,59 +3,31 @@ from time import perf_counter
 from typing import Optional
 
 from .enums import Verbosity
-from .misc.annotations import Directory, FileName, TestFunctionName, TimeTakenForTestDiscoveryAndSuiteInitialization
-from .misc.exceptions import TestNotFound
+from .misc.annotations import (DirectoryPath, FileName, TestFunctionName,
+                               TimeTakenForTestDiscoveryAndSuiteInitialization)
 from .module_collector import ModuleCollector
-from .test_suite import TestsContainer, TestSuite
+from .test_suite import TestSuite, TestsContainer, Tests
 
 
-def get_test_container(verbosity: Verbosity,
-                       search_dir: Directory, 
-                       file_name: Optional[FileName] = None, 
-                       test_function: Optional[TestFunctionName] = None
-                       ) -> tuple[TestsContainer, 
-                                  TimeTakenForTestDiscoveryAndSuiteInitialization]:
+def initialize_test_suite(verbosity: Verbosity,
+                          search_dir: DirectoryPath, 
+                          file_name: Optional[FileName] = None, 
+                          test_function: Optional[TestFunctionName] = None
+                          ) -> tuple[TestsContainer, 
+                                     TimeTakenForTestDiscoveryAndSuiteInitialization]:
 
 
     test_collector = ModuleCollector(search_dir, file_name)
     test_collector.walk_and_collect_test_files(test_collector.root)
     test_collector.normalize_collected_data()
 
-    tests_container: TestsContainer = {}
-    found_test = False
 
     _start = perf_counter()
 
-    for module, test_files in test_collector.test_modules.items():
-        
-        if module not in tests_container:
-            tests_container[module] = {}
-
-        for test_file in test_files:
-            
-            if found_test:
-                break
-            
-            # TODO add failures
-            suite = TestSuite(module, test_file, verbosity)
-            collected_tests = suite.gather_tests(func_name=test_function)
-        
-            if not collected_tests:
-                continue
-
-            found_test |= test_function in collected_tests
-            
-            if test_function and not found_test:
-                continue
-            
-            tests_container[module][test_file] = suite
-            
-        if not len(tests_container[module]):
-            del tests_container[module]
-
-
-    if test_function and not found_test:
-        raise TestNotFound
+    test_suite = TestSuite(verbosity=verbosity,
+                           collected_modules=test_collector,
+                           test_function=test_function)
+    tests_container = test_suite.get_tests_container()
    
     
     return tests_container, perf_counter() - _start
@@ -88,20 +60,19 @@ def run_tests(collection_time: TimeTakenForTestDiscoveryAndSuiteInitialization,
             total_successes += suite.total_tests - errors
             total_errors += errors
 
+        print('\n\n------------------------------------------')
 
-    print('\n\n------------------------------------------')
+        print('| Total Tests         : %d' % (total_tests, ))
 
-    print('| Total Tests         : %d' % (total_tests, ))
+        print('|')
+        print('| Total successes     : %d' % (total_successes, ))
+        print('| Total errors        : %d' % (total_errors, ))
+        print('|')
 
-    print('|')
-    print('| Total successes     : %d' % (total_successes, ))
-    print('| Total errors        : %d' % (total_errors, ))
-    print('|')
+        print('| Collected Tests in  : (%0.4f) secs' % (collection_time, ))
+        print('| Run Tests in        : (%0.4f) secs' % (total_time, ))
 
-    print('| Collected Tests in  : (%0.4f) secs' % (collection_time, ))
-    print('| Run Tests in        : (%0.4f) secs' % (total_time, ))
-
-    print('------------------------------------------')
+        print('------------------------------------------')
 
 
 def arun_tests(collection_time: TimeTakenForTestDiscoveryAndSuiteInitialization, 
@@ -118,7 +89,7 @@ async def _arun_tests(collection_time: TimeTakenForTestDiscoveryAndSuiteInitiali
     _start = perf_counter()
     
     # Gather all suites from all modules
-    all_suites: list[TestSuite] = []
+    all_suites: list[Tests] = []
     for _, test_files in tests_container.items():
         for _, suite in test_files.items():
             all_suites.append(suite)
@@ -140,7 +111,6 @@ async def _arun_tests(collection_time: TimeTakenForTestDiscoveryAndSuiteInitiali
         total_tests += suite.total_tests
         total_successes += suite.total_tests - errors
         total_errors += errors
-     
 
     print('\n\n------------------------------------------')
 

@@ -2,14 +2,14 @@ from tini_test.enums import RunMode
 
 from .arg_parser import receive_args
 from .misc.exceptions import CantFindRelativePathToRoot, TestNotFound
-from .runner import arun_tests, get_test_container, run_tests
+from .runner import arun_tests, initialize_test_suite, run_tests
 
 if __name__=='__main__':
 
     run_mode, verbosity, search_dir, file_name, test_function = receive_args()
 
     try:
-        tests_container, time = get_test_container(verbosity,
+        tests_container, time = initialize_test_suite(verbosity,
                                                    search_dir,
                                                    file_name,
                                                    test_function)

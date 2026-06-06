@@ -1,14 +1,14 @@
 from argparse import ArgumentParser
 from typing import Optional
 
-from tini_test.misc.annotations import Directory, FileName, TestFunctionName
+from tini_test.misc.annotations import DirectoryPath, FileName, TestFunctionName
 
 from .enums import RunMode, Verbosity
 
 
 def receive_args() -> tuple[RunMode,
                             Verbosity,
-                            Directory,
+                            DirectoryPath,
                             Optional[FileName],
                             Optional[TestFunctionName]]:
     

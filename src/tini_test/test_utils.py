@@ -8,7 +8,7 @@ from tini_test.context_managers import _thread_redirect_stdout
 
 from ._internals._internal_exceptions._exceptions import (_FailStateWasNotFail,
                                                           _LastOpNotExpected)
-from .enums import Verbosity, TestStatus
+from .enums import TestStatus, Verbosity
 from .misc.annotations import F_Callable, S_Callable, StackTrace
 from .misc.exceptions import ExpectedWasDifferentFromActual
 from .state.state import OperationState
