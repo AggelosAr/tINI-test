@@ -9,10 +9,10 @@ if __name__=='__main__':
     run_mode, verbosity, search_dir, file_name, test_function = receive_args()
 
     try:
-        tests_container, time = initialize_test_suite(verbosity,
-                                                   search_dir,
-                                                   file_name,
-                                                   test_function)
+        tests_container, d_t, i_t = initialize_test_suite(verbosity,
+                                                      search_dir,
+                                                      file_name,
+                                                      test_function)
     except CantFindRelativePathToRoot:
         raise
     except TestNotFound:
@@ -20,8 +20,8 @@ if __name__=='__main__':
     else:
         match run_mode:
             case RunMode.SYNC:
-                run_tests(time, tests_container)
+                run_tests(d_t, i_t, tests_container)
             case RunMode.ASYNC:
-                arun_tests(time, tests_container)
+                arun_tests(d_t, i_t, tests_container)
     finally:
         ...

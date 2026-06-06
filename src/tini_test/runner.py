@@ -2,10 +2,12 @@ import asyncio
 from time import perf_counter
 from typing import Optional
 
+from tini_test.module_collector import ModuleCollector
+
 from .enums import Verbosity
 from .misc.annotations import (DirectoryPath, FileName, TestFunctionName,
-                               TimeTakenForTestDiscoveryAndSuiteInitialization)
-from .module_collector import ModuleCollector
+                               TimeTakenForSuiteInitialization,
+                               TimeTakenForTestDiscovery)
 from .test_suite import Tests, TestsContainer, TestSuite
 
 
@@ -14,12 +16,16 @@ def initialize_test_suite(verbosity: Verbosity,
                           file_name: Optional[FileName] = None, 
                           test_function: Optional[TestFunctionName] = None
                           ) -> tuple[TestsContainer, 
-                                     TimeTakenForTestDiscoveryAndSuiteInitialization]:
+                                     TimeTakenForTestDiscovery,
+                                     TimeTakenForSuiteInitialization]:
 
+    _start = perf_counter()
 
     test_collector = ModuleCollector(search_dir, file_name)
     test_collector.walk_and_collect_test_files(test_collector.root)
     test_collector.normalize_collected_data()
+
+    test_discovery_time = perf_counter() - _start
 
 
     _start = perf_counter()
@@ -28,12 +34,14 @@ def initialize_test_suite(verbosity: Verbosity,
                            collected_modules=test_collector,
                            test_function=test_function)
     tests_container = test_suite.get_tests_container()
-   
-    
-    return tests_container, perf_counter() - _start
+
+    suite_initialization_time = perf_counter() - _start
+
+    return tests_container, test_discovery_time, suite_initialization_time
 
 
-def run_tests(collection_time: TimeTakenForTestDiscoveryAndSuiteInitialization, 
+def run_tests(test_discovery_time: TimeTakenForTestDiscovery, 
+              suite_initialization_time: TimeTakenForSuiteInitialization,
               tests_container: TestsContainer) -> None:
     
     print()
@@ -62,26 +70,29 @@ def run_tests(collection_time: TimeTakenForTestDiscoveryAndSuiteInitialization,
 
         print('\n\n------------------------------------------')
 
-        print('| Total Tests         : %d' % (total_tests, ))
+        print('| Total Tests            : %d' % (total_tests, ))
 
         print('|')
-        print('| Total successes     : %d' % (total_successes, ))
-        print('| Total errors        : %d' % (total_errors, ))
+        print('| Total successes        : %d' % (total_successes, ))
+        print('| Total errors           : %d' % (total_errors, ))
         print('|')
 
-        print('| Collected Tests in  : (%0.4f) secs' % (collection_time, ))
-        print('| Run Tests in        : (%0.4f) secs' % (total_time, ))
+        print('| Collected Tests in     : ( %0.4f ) secs' % (test_discovery_time, ))
+        print('| Initialized Suite in   : ( %0.4f ) secs' % (suite_initialization_time, ))
+        print('| Run Tests in           : ( %0.4f ) secs' % (total_time, ))
 
         print('------------------------------------------')
 
 
-def arun_tests(collection_time: TimeTakenForTestDiscoveryAndSuiteInitialization, 
+def arun_tests(test_discovery_time: TimeTakenForTestDiscovery, 
+               suite_initialization_time: TimeTakenForSuiteInitialization,
                tests_container: TestsContainer) -> None:
     
-    asyncio.run(_arun_tests(collection_time, tests_container))
+    asyncio.run(_arun_tests(test_discovery_time, suite_initialization_time, tests_container))
 
 
-async def _arun_tests(collection_time: TimeTakenForTestDiscoveryAndSuiteInitialization, 
+async def _arun_tests(test_discovery_time: TimeTakenForTestDiscovery, 
+                      suite_initialization_time: TimeTakenForSuiteInitialization,
                       tests_container: TestsContainer) -> None:
     
     print()
@@ -114,14 +125,15 @@ async def _arun_tests(collection_time: TimeTakenForTestDiscoveryAndSuiteInitiali
 
     print('\n\n------------------------------------------')
 
-    print('| Total Tests         : %d' % (total_tests, ))
+    print('| Total Tests            : %d' % (total_tests, ))
 
     print('|')
-    print('| Total successes     : %d' % (total_successes, ))
-    print('| Total errors        : %d' % (total_errors, ))
+    print('| Total successes        : %d' % (total_successes, ))
+    print('| Total errors           : %d' % (total_errors, ))
     print('|')
 
-    print('| Collected Tests in  : (%0.4f) secs' % (collection_time, ))
-    print('| Run Tests in        : (%0.4f) secs' % (total_time, ))
+    print('| Collected Tests in     : ( %0.4f ) secs' % (test_discovery_time, ))
+    print('| Initialized Suite in   : ( %0.4f ) secs' % (suite_initialization_time, ))
+    print('| Run Tests in           : ( %0.4f ) secs' % (total_time, ))
 
     print('------------------------------------------')

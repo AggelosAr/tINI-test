@@ -10,7 +10,7 @@ from tini_test.module_collector import ModuleCollector
 from ._internals.consts import _LINE_CLEAR, _LINE_UP, _RESET
 from .enums import Color, Verbosity
 from .misc.annotations import (DirectoryPath, Errors, FileName,
-                               TestFunctionName, TestName)
+                               TestFunctionName)
 from .test_utils import Test
 
 
@@ -42,7 +42,7 @@ class Tests:
     def get_summary_info(self):
         ...
 
-    def gather_tests(self, func_name: Optional[str] = None) -> list[TestName]:
+    def gather_tests(self, func_name: Optional[TestFunctionName] = None) -> list[TestFunctionName]:
 
         test_names = []
 
@@ -53,7 +53,7 @@ class Tests:
             if not all([isinstance(g_obj, FunctionType), 
                         hasattr(g_obj, '_xyz_is_a_test_case_uwu')]):
                 continue 
-            
+            # TODO xxx
             test_name = str(g_obj.__closure__[-1].cell_contents.__name__)
             if func_name and test_name != func_name:
                 continue
@@ -268,12 +268,11 @@ class TestSuite:
 
         for module_path, test_file in self.collected_modules:
             
-            # TODO add try here.
-            # TODO add failures
+            # TODO do we need to try/catch here?
             tests = Tests(verbosity=self.verbosity, 
-                          module_path=module_path,
-                          file=test_file)
-
+                            module_path=module_path,
+                            file=test_file)
+           
             collected_tests = tests.gather_tests(func_name=self.test_function)
 
             if not collected_tests:

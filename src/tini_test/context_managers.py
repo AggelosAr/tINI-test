@@ -31,7 +31,7 @@ class WillRaise(object):
     def __enter__(self) -> 'WillRaise':
         return self
 
-    def __exit__(self, exc_type, exc_value, exc_traceback) -> Optional[bool]: # TODO this is not bool?
+    def __exit__(self, exc_type, exc_value, exc_traceback) -> Optional[bool]:
 
         if exc_type and exc_type.__name__ in self.exceptions:
 
