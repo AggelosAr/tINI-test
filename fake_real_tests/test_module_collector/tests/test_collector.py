@@ -1,12 +1,10 @@
 from tini_test.context_managers import WillRaise
-from tini_test.enums import Verbosity
+from tini_test.enums import RunMode, Verbosity
 from tini_test.initializer import initialize_test_suite
 from tini_test.misc.exceptions import CantFindRelativePathToRoot, TestNotFound
 from tini_test.module_collector import ModuleCollector
 from tini_test.must_equals import must_equal
 from tini_test.test_utils import Test
-
-# TODO add test that searches for both file and dir
 
 
 @Test.case
@@ -185,6 +183,7 @@ def test_collector_will_not_find_anything_if_nonexisting_file_is_requested() -> 
 def test_test_module_will_not_collect_a_single_function_if_it_doesnt_exist() -> None:
     with WillRaise(TestNotFound):
         _ = initialize_test_suite(verbosity=Verbosity.MINIMAL,
+                                  run_mode=RunMode.SYNC,
                                   search_dir='.',
                                   test_function='file_that_is_not_here')
 
@@ -192,18 +191,20 @@ def test_test_module_will_not_collect_a_single_function_if_it_doesnt_exist() -> 
 
 @Test.case
 def test_test_module_will_collect_a_single_function() -> None:
-    tests_container = initialize_test_suite(verbosity=Verbosity.MINIMAL,
-                                            search_dir='.',
-                                            test_function='test_decorator_works_with_parenthesis')
-
+    
     correct_item = 'test_decorator_works_with_parenthesis'
+    suite = initialize_test_suite(verbosity=Verbosity.MINIMAL,
+                                  run_mode=RunMode.SYNC,
+                                  search_dir='.',
+                                  test_function='test_decorator_works_with_parenthesis')
 
-    must_equal(True, tests_container[1] < 1)
+    tests_container = suite.container
 
-    module_tests = tests_container[0]['fake_real_tests.tests']['test_decorator_works']
+    must_equal(True, len(tests_container) == 1)
+
+    module_tests = tests_container['fake_real_tests.tests.test_decorator_works']
     gathered_tests = module_tests.decorated_tests
 
-    
     must_equal(1, len(gathered_tests))
     must_equal(correct_item, gathered_tests[0].func.__closure__[-1].cell_contents.__name__) # type: ignore[attr-defined]
 
@@ -213,15 +214,17 @@ def test_test_module_will_collect_a_single_function() -> None:
 def test_test_module_will_collect_this_function() -> None:
 
     t = 'test_test_module_will_collect_this_function'
-    tests_container, _ = initialize_test_suite(verbosity=Verbosity.MINIMAL,
-                                               search_dir='.',
-                                               test_function=t)
+    suite = initialize_test_suite(verbosity=Verbosity.MINIMAL,
+                                  run_mode=RunMode.SYNC,
+                                  search_dir='.',
+                                  test_function=t)
 
+    tests_container = suite.container
+    
     must_equal(1, len(tests_container))
-    must_equal(1, len(tests_container['fake_real_tests.test_module_collector.tests']))
+    must_equal(1, len(tests_container['fake_real_tests.test_module_collector.tests.test_collector']))
 
-    module_tests = tests_container['fake_real_tests.test_module_collector.tests']['test_collector']
-    gathered_tests = module_tests.decorated_tests
+    gathered_tests = tests_container['fake_real_tests.test_module_collector.tests.test_collector'].decorated_tests
 
     must_equal(1, len(gathered_tests))
     must_equal(t, gathered_tests[0].func.__closure__[-1].cell_contents.__name__) # type: ignore[attr-defined]

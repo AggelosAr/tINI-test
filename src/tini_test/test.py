@@ -28,6 +28,9 @@ class TestCollection:
 
         self.file_name = self.module.__name__
     
+    def __len__(self) -> TestCollectionSize:
+        return self.total_tests
+    
     @cached_property
     def module_name(self) -> str:
         return self.module.__name__

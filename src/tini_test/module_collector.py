@@ -12,7 +12,6 @@ from .misc.exceptions import CantFindRelativePathToRoot
 
 # Recursion indeed stops early when searching for file. maybe add a test.
 # !
-# TODO update to test edge cases like . .. ./././. etc .....
 
 
 class ModuleCollector:
@@ -139,7 +138,7 @@ class ModuleCollector:
         return r
     
     def normalize_collected_data(self) -> None:
-        # TODO do we need cd here ?
+
         cd = getcwd()
 
         updates = {}
