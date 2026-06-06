@@ -251,4 +251,3 @@ class Test:
 
     async def abox_test(self, _verbosity: Optional[Verbosity] = None) -> None:
         await asyncio.to_thread(self.box_test)
-

@@ -4,8 +4,9 @@ from time import perf_counter
 from typing import Optional
 
 from tini_test.enums import RunMode, Verbosity
-from tini_test.misc.annotations import (Errors, Failures, FileName, Successes, SuiteSize,
-                                        TestCollectionSize, TestFunctionName,
+from tini_test.misc.annotations import (Errors, Failures, FileName, Successes,
+                                        SuiteSize, TestCollectionSize,
+                                        TestFunctionName,
                                         TimeTakenForSuiteInitialization,
                                         TimeTakenForTestDiscovery,
                                         TimeTakenToRunSuite)
@@ -119,21 +120,21 @@ class TestSuite:
     def get_summary(self) -> str:
         
         _r = [
-        '\n'
-        ' ------------------------------------------',
-        '| Total registered tests  : %d' % (self.total_tests, ),
-        '|',
-        '| Total successes         : %d' % (self.successes, ),
-        '| Total errors            : %d' % (self.errors, ),
-        '| Test file load failures : %d' % (self.failures, ),
-        '|',
-        '| Discovered Tests in     : ( %0.4f ) secs' % (self.discovery_time, ),
-        '| Initialized Suite in    : ( %0.4f ) secs' % (self.suite_init_time, ),
-        '| Run Tests in            : ( %0.4f ) secs' % (self.suite_run_time, ),
-        ' ------------------------------------------'
-        '\n',
-        '\n',
-        'Test files failed to load: %s' % (self.failed_to_collect_test_files, )
+            '\n'
+                ' ------------------------------------------',
+                '| Total registered tests  : %d' % (self.total_tests, ),
+                '|',
+                '| Total successes         : %d' % (self.successes, ),
+                '| Total errors            : %d' % (self.errors, ),
+                '| Test file load failures : %d' % (self.failures, ),
+                '|',
+                '| Discovered Tests in     : ( %0.4f ) secs' % (self.discovery_time, ),
+                '| Initialized Suite in    : ( %0.4f ) secs' % (self.suite_init_time, ),
+                '| Run Tests in            : ( %0.4f ) secs' % (self.suite_run_time, ),
+                ' ------------------------------------------'
+                    '\n',
+                    '\n',
+                        'Test files failed to load: %s' % (self.failed_to_collect_test_files, )
         ]
 
         return '\n'.join(_r if self.failures else _r[:-2]) 

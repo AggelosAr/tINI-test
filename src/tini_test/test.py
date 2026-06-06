@@ -18,7 +18,7 @@ class TestCollection:
                  module_path: DirectoryPath,
                  file: FileName) -> None:
         
-        self.verbosity=verbosity
+        self.verbosity = verbosity
 
         self.module = import_module('%s.%s' % (module_path, file, ))
 

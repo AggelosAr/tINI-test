@@ -4,8 +4,10 @@ from .misc.exceptions import CantFindRelativePathToRoot, TestNotFound
 
 if __name__=='__main__':
 
+    args = receive_args()
+    
     try:
-        test_suite = initialize_test_suite(**receive_args())
+        test_suite = initialize_test_suite(**args)
          
     except CantFindRelativePathToRoot:
         raise

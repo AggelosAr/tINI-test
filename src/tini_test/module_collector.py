@@ -10,7 +10,6 @@ from tini_test.misc.annotations import (DirectoryPath, FileName,
 from ._internals.consts import INVALID_PYTHON_MODULE_SYMBOLS, SKIP_DIRS
 from .misc.exceptions import CantFindRelativePathToRoot
 
-# TODO update arg parser to accept exclude dir 
 # Recursion indeed stops early when searching for file. maybe add a test.
 # !
 # TODO update to test edge cases like . .. ./././. etc .....
@@ -23,7 +22,8 @@ class ModuleCollector:
                  file_name: Optional[FileName] = None,
                  exclude_dir: Optional[DirectoryPath] = None,) -> None:
         
-        #exclude_dir = 'this_tests_should_fail_but_we_made_them_pass'
+        self._exclude_dir = NotImplemented
+
         self._start = perf_counter()
         self._discovery_time = 0.0
 
@@ -63,7 +63,10 @@ class ModuleCollector:
     @discovery_time.setter
     def discovery_time(self, dt: TimeTakenForTestDiscovery) -> None:
         self._discovery_time = dt - self._start
-        
+    
+    def _parse_exclude_dir(self) -> None:
+        raise NotImplementedError
+    
     def is_valid_test_file(self, file_name: FileName) -> bool:
         return all([
             file_name.startswith('test_'),

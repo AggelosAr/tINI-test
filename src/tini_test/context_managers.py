@@ -11,7 +11,6 @@ _exceptions = (Exception, BaseException)
 
 _local_thread = threading.local() # Is this safe here? TODO
 
-# TODO Maybe add MaybeWillRaise
 
 class WillRaise(object):
 
@@ -42,6 +41,12 @@ class WillRaise(object):
         
         # TODO maybe add a helpfull message on ExceptionWasNotRaised
         raise ExceptionWasNotRaised
+
+
+class MaybeWillRaise(object):
+
+    def __init__(self):
+        raise NotImplementedError
 
 
 class _ThreadLocalStdout:

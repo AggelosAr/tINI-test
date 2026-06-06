@@ -7,30 +7,102 @@ The framework was tested using its own test suite.
 ## Usage
 
 ```bash
-tini_test [VERBOSITY] [-d DIRECTORY] [-f FILE] [-t TEST]
+python3 -m tini_test [VERBOSITY] [-d DIRECTORY] [-f FILE] [-t TEST]
 ```
-
 
 ---
 
+## Filter Combination Behavior
 
-## Verbosity Modes
+Filters are applied from broadest to narrowest scope:
 
-
-```text
--NORMAL
--SORT
--MINIMAL
--MINIMAL_NO_STACK
--SUPER_MINIMAL
-default is NORMAL
-```
-
-
----
+1. Discover tests within `-d` (if provided)
+2. Restrict to `-f` (if provided)
+3. Restrict to `-t` (if provided)
+* If used alone, the entire project is scanned.
 * Options may be combined in any way.
+
 ---
 
+## Test Registration
+
+```python
+@Test.case
+def test_cats() -> None:
+    ...
+
+@Test.case()
+def snakes() -> None:
+    ...
+```
+
+The decorator accepts up to two optional callables.
+
+
+```python
+@Test.case(
+    lambda: create_database(),
+    lambda: destroy_database()
+)
+def test_database() -> None:
+    ...
+```
+
+
+
+### Catch exceptions
+
+```python
+@Test.case
+def test_math() -> None:
+
+    with WillRaise(NameError, ZeroDivisionError):   
+        1/0
+```
+Notes: If one of the provided exceptions is not raised the test will fail and raise an `ExceptionWasNotRaised` error.
+
+### Comparisons
+
+```python
+@Test.case
+def test_list_values() -> None:
+
+    expected = [12345]
+    must_equal(expected, some_func())
+```
+
+### Combo
+
+```python
+@Test.case
+def test_ints_dont_match() -> None:
+    a = 10
+    b = 20
+
+    with WillRaise(_IntegerMismatchError) as context: 
+        must_equal(a, b)
+
+    must_equal('10 != 20', str(context.exception))
+
+```
+
+
+### Misc
+
+When comparing custom objects the test quite will try to autocompare them but it is better to be explicit and pass them a callable that will apply the correct comparison.
+
+```python
+@Test.case
+def test_must_equal_alien_object_with_eq() -> None:
+
+    expected = A(11)
+    actual = A(21)
+
+    comp_func = lambda a, b: a.attr == b.attr
+
+    must_equal(expected, actual, comp_func)
+
+```
 
 ## Test Discovery
 
@@ -42,20 +114,29 @@ A file is considered discoverable when:
 * The file exists inside a directory named `tests`
 
 
-## Filter Combination Behavior
-
-Filters are applied from broadest to narrowest scope:
-
-1. Discover tests within `-d` (if provided)
-2. Restrict to `-f` (if provided)
-3. Restrict to `-t` (if provided)
-* If used alone, the entire project is scanned.
 
 
+### Flow
+
+- Setup is executed before the test function runs.
+
+
+- Cleanup is executed after the test function completes.
+
+- Cleanup execution is still attempted when setup or test execution fails.
+
+- Maybe further down the road this will be made optional by a flag.
+
+---
+
+### Run modes
+Currently theere are two modes *_sync_* amd *_async_*.
+In _sync_ mode all tests run in sequential and in _async_ they run concurrently.
 ```bash
-python3 -m tini_test
+tini_test -r sync
 ```
 
+---
 
 ### `-d DIRECTORY`
 
@@ -104,80 +185,7 @@ If multiple functions with the same name are defined in different files only the
 
 
 
-## Test Registration
-
-```python
-@Test.case
-def test_example() -> None:
-    ...
-
-@Test.case()
-def test_another_example() -> None:
-    ...
-```
-
-The decorator accepts up to two optional callables.
-
-
-```python
-@Test.case(
-    lambda: create_database(),
-    lambda: destroy_database()
-)
-def test_database() -> None:
-    ...
-```
-
-### Flow
-
-- Setup is executed before the test function runs.
-
-
-- Cleanup is executed after the test function completes.
-
-- Cleanup execution is still attempted when setup or test execution fails.
-
-- Maybe further down the road this will be made optional by a flag.
-
----
-
-### Catch exceptions
-
-```python
-@Test.case
-def test_math() -> None:
-
-    with WillRaise(NameError, ZeroDivisionError):   
-        1/0
-```
-Notes: If one of the provided exceptions is not raised the test will fail and raise an `ExceptionWasNotRaised` error.
-
-### Comparisons
-
-```python
-@Test.case
-def test_list_values() -> None:
-
-    expected = [12345]
-    must_equal(expected, some_func())
-```
-
-### Combo
-
-```python
-@Test.case
-def test_ints_dont_match() -> None:
-    a = 10
-    b = 20
-
-    with WillRaise(_IntegerMismatchError) as context: 
-        must_equal(a, b)
-
-    must_equal('10 != 20', str(context.exception))
-
-```
-
-## Output Modes
+## Verbosity Modes
 
 ### NORMAL
 
@@ -217,25 +225,6 @@ Minimal display:
 
 ---
 
-### Misc
-
-When comparing custom objects the test quite will try to autocompare them but it is better to be explicit and pass them a callable that will apply the correct comparison.
-
-```python
-@Test.case
-def test_must_equal_alien_object_with_eq() -> None:
-
-    expected = A(11)
-    actual = A(21)
-
-    comp_func = lambda a, b: a.attr == b.attr
-
-    must_equal(expected, actual, comp_func)
-
-```
-
----
-
 
 ## Notes
 
@@ -253,4 +242,3 @@ Of course the above is somewhat cancelled because the algorithm tries to autocom
 * [ ] Register tests into groups (group-level setup/cleanup)
 * [ ] Add global fail sort mode, not just per module.
 * [ ] Calculate test coverage
-* [ ] Add flag for async excecution. Also port back the normal exc.

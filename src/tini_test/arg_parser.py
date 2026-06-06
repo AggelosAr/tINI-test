@@ -1,4 +1,4 @@
-from argparse import ArgumentParser
+from argparse import ArgumentParser, RawTextHelpFormatter
 from typing import NotRequired, TypedDict
 
 from tini_test.misc.annotations import (DirectoryPath, FileName,
@@ -18,7 +18,7 @@ class ArgsDict(TypedDict):
 def receive_args() -> ArgsDict:
 
     parser = ArgumentParser(
-        description='Small Test Framework'
+        description='Small Test Framework', formatter_class=RawTextHelpFormatter
     )
 
     # Verbosity options
@@ -26,14 +26,18 @@ def receive_args() -> ArgsDict:
                         '--verbosity',
                         type=Verbosity.arg_parser_type,
                         default=Verbosity.SORT,
-                        help=Verbosity.supported_modes_help_msg())
+                        help=(Verbosity.supported_modes_help_msg()
+                              +
+                              Verbosity.arg_parser_info()))
 
     # Run options
     parser.add_argument('-r',
                         '--run-mode',
                         type=RunMode.arg_parser_type,
                         default=RunMode.SYNC,
-                        help=RunMode.supported_modes_help_msg())
+                        help=(RunMode.supported_modes_help_msg()
+                              +
+                              RunMode.arg_parser_info()))
     
     # Search options
     parser.add_argument('-d',

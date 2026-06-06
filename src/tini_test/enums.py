@@ -16,7 +16,7 @@ class RunMode(Enum):
     @classmethod
     def supported_modes_help_msg(cls) -> str:
         modes = ', '.join(member.value for member in cls)
-        return 'Supported run modes are <%s>\n' % (modes, )
+        return 'Supported run modes are <%s>' % (modes, )
     
     @classmethod
     def arg_parser_type(cls, value: str) -> 'RunMode':
@@ -25,14 +25,28 @@ class RunMode(Enum):
                 return member
         raise NotSupportedRunMode(msg=cls.supported_modes_help_msg())
 
+    @classmethod
+    def arg_parser_info(cls) -> str:
+        return r'''
+-Case insesitive. 
+
+Sync
+----
+Run all tests in async mode.
+
+Async
+-----
+Run all tests in sync mode.
+               '''
+    
 
 class Verbosity(Enum):
     
-    SORT = 'SORT'
     NORMAL = 'NORMAL'
+    SORT = 'SORT'
     MINIMAL = 'MINIMAL'
-    SUPER_MINIMAL = 'SUPER_MINIMAL'
     MINIMAL_NO_STACK = 'MINIMAL_NO_STACK'
+    SUPER_MINIMAL = 'SUPER_MINIMAL'
 
     @classmethod
     def supported_modes_help_msg(cls) -> str:
@@ -46,6 +60,34 @@ class Verbosity(Enum):
                 return member
         raise NotSupportedVerbosity(msg=cls.supported_modes_help_msg())
 
+    @classmethod
+    def arg_parser_info(cls) -> str:
+        return r'''
+-Case insesitive.
+
+Normal
+------
+Full stack trace and print capture with nice borders. Also includes helpful details.
+
+Sort
+----
+Same as normal but the errors are sorted per module.
+
+minimal
+-------
+* Failed tests ( names only )
+* Associated stack traces
+* Final execution summary
+
+minimal_no_stack
+----------------
+Same as `MINIMAL`, except that no stack traces are shown.
+
+super_minimal
+-------------
+Same as `MINIMAL_NO_STACK` but less verbose.
+               '''
+    
 
 class Color(Enum):
 
