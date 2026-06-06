@@ -1,5 +1,11 @@
 from typing import Any, Callable, TypeAlias
 
+
+Directory: TypeAlias = str
+FileName: TypeAlias = str
+TestFunctionName: TypeAlias = str
+
+
 # TODO update 
 PartialObject: TypeAlias = Callable
 

@@ -2,7 +2,49 @@ from enum import Enum
 from functools import lru_cache
 from typing import Mapping
 
+from tini_test.misc.exceptions import NotSupportedRunMode, NotSupportedVerbosity
+
 from .misc.annotations import ColorValue
+
+
+
+class RunMode(Enum):
+    
+    SYNC = 'SYNC'
+    ASYNC = 'ASYNC'
+
+    @classmethod
+    def supported_modes_help_msg(cls) -> str:
+        modes = ', '.join(member.value for member in cls)
+        return 'Supported run modes are <%s>\n' % (modes, )
+    
+    @classmethod
+    def arg_parser_type(cls, value: str) -> 'RunMode':
+        for member in cls:
+            if member.value.lower() == value.lower():
+                return member
+        raise NotSupportedRunMode(msg=cls.supported_modes_help_msg())
+
+
+class Verbosity(Enum):
+    
+    SORT = 'SORT'
+    NORMAL = 'NORMAL'
+    MINIMAL = 'MINIMAL'
+    SUPER_MINIMAL = 'SUPER_MINIMAL'
+    MINIMAL_NO_STACK = 'MINIMAL_NO_STACK'
+
+    @classmethod
+    def supported_modes_help_msg(cls) -> str:
+        modes = ', '.join(member.value for member in cls)
+        return 'Supported verbosity modes are <%s>' % (modes, )
+    
+    @classmethod
+    def arg_parser_type(cls, value: str) -> 'Verbosity':
+        for member in cls:
+            if member.value.lower() == value.lower():
+                return member
+        raise NotSupportedVerbosity(msg=cls.supported_modes_help_msg())
 
 
 class Color(Enum):
@@ -15,20 +57,6 @@ class Color(Enum):
     BLUE = '\033[94m'
     MAGENTA = '\033[95m'
     WHITE = '\033[97m'
-
-
-class Mode(Enum):
-    
-    SORT = 'SORT'
-    NORMAL = 'NORMAL'
-    MINIMAL = 'MINIMAL'
-    SUPER_MINIMAL = 'SUPER_MINIMAL'
-    MINIMAL_NO_STACK = 'MINIMAL_NO_STACK'
-
-    @classmethod
-    def supported_modes(cls) -> str:
-        modes = ', '.join(member.value for member in cls)
-        return 'Supported modes are <%s>' % (modes, )
 
 
 class TestStatus(Enum):

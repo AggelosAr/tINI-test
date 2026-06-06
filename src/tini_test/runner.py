@@ -2,21 +2,22 @@ import asyncio
 from time import perf_counter
 from typing import Optional
 
-from .enums import Mode
-from .misc.annotations import TimeTakenForTestDiscoveryAndSuiteInitialization
+from .enums import Verbosity
+from .misc.annotations import Directory, FileName, TestFunctionName, TimeTakenForTestDiscoveryAndSuiteInitialization
 from .misc.exceptions import TestNotFound
 from .module_collector import ModuleCollector
 from .test_suite import TestsContainer, TestSuite
 
 
-def get_test_container(mode: Optional[str | Mode] = None,
-                       search_dir: Optional[str] = None, 
-                       search_file: Optional[str] = None, 
-                       test_function: Optional[str] = None) -> tuple[TestsContainer, 
-                                                                     TimeTakenForTestDiscoveryAndSuiteInitialization]:
+def get_test_container(verbosity: Verbosity,
+                       search_dir: Directory, 
+                       file_name: Optional[FileName] = None, 
+                       test_function: Optional[TestFunctionName] = None
+                       ) -> tuple[TestsContainer, 
+                                  TimeTakenForTestDiscoveryAndSuiteInitialization]:
 
 
-    test_collector = ModuleCollector(search_dir, search_file)
+    test_collector = ModuleCollector(search_dir, file_name)
     test_collector.walk_and_collect_test_files(test_collector.root)
     test_collector.normalize_collected_data()
 
@@ -36,7 +37,7 @@ def get_test_container(mode: Optional[str | Mode] = None,
                 break
             
             # TODO add failures
-            suite = TestSuite(module, test_file, mode)
+            suite = TestSuite(module, test_file, verbosity)
             collected_tests = suite.gather_tests(func_name=test_function)
         
             if not collected_tests:
@@ -60,8 +61,57 @@ def get_test_container(mode: Optional[str | Mode] = None,
     return tests_container, perf_counter() - _start
 
 
-async def arun_tests(collection_time: TimeTakenForTestDiscoveryAndSuiteInitialization, 
-                     tests_container: TestsContainer) -> None:
+def run_tests(collection_time: TimeTakenForTestDiscoveryAndSuiteInitialization, 
+              tests_container: TestsContainer) -> None:
+    
+    print()
+    
+    total_time = 0.0
+    total_tests = 0
+
+    total_successes = 0
+    total_errors = 0
+
+    for _, test_files in tests_container.items():
+        
+        for _, suite in test_files.items():
+            
+            _start = perf_counter()
+            
+            errors = suite.run_tests()
+
+            module_test_duration = perf_counter() - _start
+
+            total_time += module_test_duration
+            total_tests += suite.total_tests
+
+            total_successes += suite.total_tests - errors
+            total_errors += errors
+
+
+    print('\n\n------------------------------------------')
+
+    print('| Total Tests         : %d' % (total_tests, ))
+
+    print('|')
+    print('| Total successes     : %d' % (total_successes, ))
+    print('| Total errors        : %d' % (total_errors, ))
+    print('|')
+
+    print('| Collected Tests in  : (%0.4f) secs' % (collection_time, ))
+    print('| Run Tests in        : (%0.4f) secs' % (total_time, ))
+
+    print('------------------------------------------')
+
+
+def arun_tests(collection_time: TimeTakenForTestDiscoveryAndSuiteInitialization, 
+               tests_container: TestsContainer) -> None:
+    
+    asyncio.run(_arun_tests(collection_time, tests_container))
+
+
+async def _arun_tests(collection_time: TimeTakenForTestDiscoveryAndSuiteInitialization, 
+                      tests_container: TestsContainer) -> None:
     
     print()
     
@@ -105,9 +155,3 @@ async def arun_tests(collection_time: TimeTakenForTestDiscoveryAndSuiteInitializ
     print('| Run Tests in        : (%0.4f) secs' % (total_time, ))
 
     print('------------------------------------------')
-
-
-def run_tests(collection_time: TimeTakenForTestDiscoveryAndSuiteInitialization, 
-              tests_container: TestsContainer) -> None:
-    
-    asyncio.run(arun_tests(collection_time, tests_container))

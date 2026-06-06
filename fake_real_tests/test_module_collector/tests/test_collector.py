@@ -1,4 +1,5 @@
 from tini_test.context_managers import WillRaise
+from tini_test.enums import Verbosity
 from tini_test.misc.exceptions import CantFindRelativePathToRoot, TestNotFound
 from tini_test.module_collector import ModuleCollector
 from tini_test.must_equals import must_equal
@@ -14,7 +15,7 @@ from tini_test.test_utils import Test
 
 @Test.case
 def test_collector_collects_all() -> None:
-    test_collector = ModuleCollector()
+    test_collector = ModuleCollector(search_dir='.')
     test_collector.walk_and_collect_test_files(root=test_collector.root)
     test_collector.normalize_collected_data()
 
@@ -58,7 +59,8 @@ def test_collector_collects_all() -> None:
 
 @Test.case
 def test_collector_collects_all_and_exclude_dir_works() -> None:
-    test_collector = ModuleCollector(exclude_dir='this_tests_should_fail_but_we_made_them_pass')
+    test_collector = ModuleCollector(search_dir='.', 
+                                     exclude_dir='this_tests_should_fail_but_we_made_them_pass')
     test_collector.walk_and_collect_test_files(root=test_collector.root)
     test_collector.normalize_collected_data()
 
@@ -115,7 +117,8 @@ def test_collector_will_not_find_tests_from_wrong_search_dir() -> None:
 
 @Test.case
 def test_collector_finds_correct_file_without_extension() -> None:
-    test_collector = ModuleCollector(search_file='test_must_equal_bools')
+    test_collector = ModuleCollector(search_dir='.',
+                                     file_name='test_must_equal_bools')
     test_collector.walk_and_collect_test_files(root=test_collector.root)
     test_collector.normalize_collected_data()
     
@@ -127,7 +130,8 @@ def test_collector_finds_correct_file_without_extension() -> None:
 @Test.case
 def test_collector_finds_correct_file_with_extension() -> None:
 
-    test_collector = ModuleCollector(search_file='test_broken_test.py')
+    test_collector = ModuleCollector(search_dir='.',
+                                     file_name='test_broken_test.py')
     test_collector.walk_and_collect_test_files(root=test_collector.root)
     test_collector.normalize_collected_data()
 
@@ -136,7 +140,8 @@ def test_collector_finds_correct_file_with_extension() -> None:
 
         # -----------------------------------------------------------
 
-    test_collector = ModuleCollector(search_file='test_cleanup_works_on_fail.py')
+    test_collector = ModuleCollector(search_dir='.',
+                                     file_name='test_cleanup_works_on_fail.py')
     test_collector.walk_and_collect_test_files(root=test_collector.root)
     test_collector.normalize_collected_data()
 
@@ -145,7 +150,8 @@ def test_collector_finds_correct_file_with_extension() -> None:
     
         # -----------------------------------------------------------
 
-    test_collector = ModuleCollector(search_file='test_fails.py')
+    test_collector = ModuleCollector(search_dir='.',
+                                     file_name='test_fails.py')
     test_collector.walk_and_collect_test_files(root=test_collector.root)
     test_collector.normalize_collected_data()
 
@@ -157,7 +163,8 @@ def test_collector_finds_correct_file_with_extension() -> None:
 @Test.case
 def test_collector_finds_correct_file_with_extension_case() -> None:
 
-    test_collector = ModuleCollector(search_file='test_fails.py')
+    test_collector = ModuleCollector(search_dir='.',
+                                     file_name='test_fails.py')
     test_collector.walk_and_collect_test_files(root=test_collector.root)
     test_collector.normalize_collected_data()
 
@@ -168,7 +175,8 @@ def test_collector_finds_correct_file_with_extension_case() -> None:
 
 @Test.case
 def test_collector_will_not_find_anything_if_nonexisting_file_is_requested() -> None:
-    test_collector = ModuleCollector(search_file='file_that_is_not_here')
+    test_collector = ModuleCollector(search_dir='.',
+                                     file_name='file_that_is_not_here')
     test_collector.walk_and_collect_test_files(root=test_collector.root)
     test_collector.normalize_collected_data()
     
@@ -180,13 +188,17 @@ def test_collector_will_not_find_anything_if_nonexisting_file_is_requested() -> 
 @Test.case
 def test_test_module_will_not_collect_a_single_function_if_it_doesnt_exist() -> None:
     with WillRaise(TestNotFound):
-        _ = get_test_container(test_function='file_that_is_not_here')
+        _ = get_test_container(verbosity=Verbosity.MINIMAL,
+                               search_dir='.',
+                               test_function='file_that_is_not_here')
 
 
 
 @Test.case
 def test_test_module_will_collect_a_single_function() -> None:
-    tests_container = get_test_container(test_function='test_decorator_works_with_parenthesis')
+    tests_container = get_test_container(verbosity=Verbosity.MINIMAL,
+                                         search_dir='.',
+                                         test_function='test_decorator_works_with_parenthesis')
 
     correct_item = 'test_decorator_works_with_parenthesis'
 
@@ -205,7 +217,9 @@ def test_test_module_will_collect_a_single_function() -> None:
 def test_test_module_will_collect_this_function() -> None:
 
     t = 'test_test_module_will_collect_this_function'
-    tests_container, _ = get_test_container(test_function=t)
+    tests_container, _ = get_test_container(verbosity=Verbosity.MINIMAL,
+                                            search_dir='.',
+                                            test_function=t)
 
     must_equal(1, len(tests_container['fake_real_tests.test_module_collector.tests']))
 
@@ -220,7 +234,7 @@ def test_test_module_will_collect_this_function() -> None:
 @Test.case
 def correctly_formatted_paths() -> None:
 
-    c = ModuleCollector()
+    c = ModuleCollector(search_dir='.')
 
     must_equal('path1.path2.path3', 
                c.path_to_python_module('./././.\\.\\.\\.\\path1/path2/path3...\\\\...///./././.\\.\\.\\'))

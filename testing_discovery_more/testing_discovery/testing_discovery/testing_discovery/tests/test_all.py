@@ -5,4 +5,3 @@ from tini_test.test_suite import Test
 def hello_xxx_1() -> None:
 
     print('HELLO')
-

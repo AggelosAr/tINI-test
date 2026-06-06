@@ -1,14 +1,13 @@
 import asyncio
 from functools import cached_property, partial
 from importlib import import_module
-from time import perf_counter
 from types import FunctionType
 from typing import Callable, Optional, TypeAlias
 
 from ._internals.consts import _LINE_CLEAR, _LINE_UP, _RESET
-from .enums import Color, Mode
+from .enums import Color, Verbosity
 from .misc.annotations import Errors, TestName
-from .misc.exceptions import NotSupportedMode
+from .misc.exceptions import NotSupportedVerbosity
 from .test_utils import Test
 
 
@@ -17,34 +16,9 @@ class TestSuite:
     def __init__(self, 
                  module: str,
                  file: str,
-                 mode: Optional[Mode | str] = Mode.SORT) -> None:
+                 verbosity: Verbosity) -> None:
         
-        if mode is None:
-            mode = Mode.SORT
-
-        match mode:
-            case Mode.SORT:
-                self.mode = Mode.SORT
-            case Mode.SORT.value:
-                self.mode = Mode.SORT
-            case Mode.NORMAL:
-                self.mode = Mode.NORMAL
-            case Mode.NORMAL.value:
-                self.mode = Mode.NORMAL
-            case Mode.MINIMAL:
-                self.mode = Mode.MINIMAL
-            case Mode.MINIMAL.value:
-                self.mode = Mode.MINIMAL
-            case Mode.SUPER_MINIMAL:
-                self.mode = Mode.SUPER_MINIMAL
-            case Mode.SUPER_MINIMAL.value:
-                self.mode = Mode.SUPER_MINIMAL
-            case Mode.MINIMAL_NO_STACK:
-                self.mode = Mode.MINIMAL_NO_STACK
-            case Mode.MINIMAL_NO_STACK.value:
-                self.mode = Mode.MINIMAL_NO_STACK
-            case _:
-                raise NotSupportedMode(msg=Mode.supported_modes())
+        self.verbosity=verbosity
 
         self.module = import_module('%s.%s' % (module, file, ))
 
@@ -60,8 +34,8 @@ class TestSuite:
     
     @property
     def total_tests(self) -> int:
-        return len(self.collector.values())
-    
+        return len(self.decorated_tests)
+
     def gather_tests(self, func_name: Optional[str] = None) -> list[TestName]:
 
         test_names = []
@@ -80,20 +54,25 @@ class TestSuite:
             
             test_names.append(test_name)
 
-            test_obj = partial(g_obj, _Test____collector=self.collector)
+            test_obj = partial(g_obj, 
+                               _Test____collector=self.collector,
+                               _Test____verbosity=self.verbosity)
             self.decorated_tests.append(test_obj)
 
         return test_names
     
     def populate_tests(self) -> None:
-        list(map(lambda l: l(), self.decorated_tests))
+        list(map(lambda dec_test_case: dec_test_case(), self.decorated_tests))
 
     def sort_tests(self) -> None:
         self.collector = dict(sorted(self.collector.items(), 
                                      key=lambda kv: kv[1].is_fail))
-        
+    
+    def box_tests(self) -> None:
+        list(map(lambda test_case: test_case.box_test(self.verbosity), self.collector.values()))
+
     async def abox_tests(self) -> None:
-        tasks = [test_case.abox_test(self.mode) for test_case in self.collector.values()]
+        tasks = [test_case.abox_test(self.verbosity) for test_case in self.collector.values()]
         await asyncio.gather(*tasks)
 
     def sort_tests_based_on_source(self) -> None:
@@ -119,9 +98,7 @@ class TestSuite:
 
     def show_test_results_minimal(self) -> Errors:
 
-        start_timer = perf_counter()
-
-        # Cap the progress bar.
+        # Cap the progress bar. # TODO broken on async
         bucket_size = 18
 
         e_symbol = ('%s   %s' % (Color.WHITE.value, _RESET, ))
@@ -136,7 +113,7 @@ class TestSuite:
 
 
         for idx, test_case in enumerate(self.collector.values()):
-
+            
             bucket_idx = (idx)%bucket_size
 
             if test_case.is_fail:
@@ -172,22 +149,20 @@ class TestSuite:
 
                 progress = ['[']+[e_symbol for _ in range(bucket_size)]+[']']
             
-             
-        time_taken = perf_counter() - start_timer
         errors = len(failed_tests)
 
-        if self.mode == Mode.SUPER_MINIMAL:
+        if self.verbosity == Verbosity.SUPER_MINIMAL:
             return errors
         
         print('\nFinished running tests for < %s >\n' % (self.file_name, ))
-        print('Tests passed: [ %d / %d ] (%0.4f) secs\n' 
-            % (self.total_tests - errors, self.total_tests, time_taken, ))
+        print('Tests passed: [ %d / %d ]\n' 
+            % (self.total_tests - errors, self.total_tests, ))
         
         if not failed_tests:
             print('...\n')
             return errors
         
-        if self.mode == Mode.MINIMAL_NO_STACK:
+        if self.verbosity == Verbosity.MINIMAL_NO_STACK:
 
             print('\nErrors:')
 
@@ -212,6 +187,28 @@ class TestSuite:
         print('...\n')
         return errors
 
+    def run_tests(self) -> Errors:
+        
+        errors = 0
+
+        print('Running tests for < %s >\n' % (self.file_name, ))
+
+        self.populate_tests()
+        self.box_tests()
+
+        if self.verbosity == Verbosity.SORT:
+            self.sort_tests()
+
+        match self.verbosity:
+            case Verbosity.NORMAL | Verbosity.SORT:
+                errors = self.show_test_results_non_minimal()
+
+            case Verbosity.MINIMAL | Verbosity.MINIMAL_NO_STACK | Verbosity.SUPER_MINIMAL:
+                errors = self.show_test_results_minimal()
+        
+        print()
+        return errors
+    
     async def arun_suite(self) -> Errors:
         
         errors = 0
@@ -222,20 +219,17 @@ class TestSuite:
 
         await self.abox_tests()
 
-        if self.mode == Mode.SORT:
+        if self.verbosity == Verbosity.SORT:
             self.sort_tests()
 
-        
-        match self.mode:
-
-            case Mode.NORMAL | Mode.SORT:
+        match self.verbosity:
+            case Verbosity.NORMAL | Verbosity.SORT:
                 errors = self.show_test_results_non_minimal()
 
-            case Mode.MINIMAL | Mode.MINIMAL_NO_STACK | Mode.SUPER_MINIMAL:
+            case Verbosity.MINIMAL | Verbosity.MINIMAL_NO_STACK | Verbosity.SUPER_MINIMAL:
                 
                 errors = self.show_test_results_minimal()
         
-
         print()
         return errors
 

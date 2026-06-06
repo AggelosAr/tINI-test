@@ -2,6 +2,8 @@ from os import getcwd, path, walk
 from pathlib import Path
 from typing import Optional
 
+from tini_test.misc.annotations import Directory, FileName
+
 from ._internals.consts import SKIP_DIRS
 from .misc.exceptions import CantFindRelativePathToRoot
 
@@ -10,15 +12,15 @@ from .misc.exceptions import CantFindRelativePathToRoot
 class ModuleCollector:
 
     def __init__(self,
-                 search_dir: Optional[str] = None, 
-                 search_file: Optional[str] = None,
-                 exclude_dir: Optional[str] = None,) -> None:
+                 search_dir: Directory, 
+                 file_name: Optional[FileName] = None,
+                 exclude_dir: Optional[Directory] = None,) -> None:
         
         # Check case that exclude_dir is trash not yet implemented
         self.SKIP_DIRS = {**{l: None for l in SKIP_DIRS}, exclude_dir: None}
 
         self.root = Path(getcwd())
-        if search_dir and search_dir != '.':
+        if search_dir != '.':
             # here we need to connect the 2 dirs
             self.search_dir = search_dir
 
@@ -32,9 +34,9 @@ class ModuleCollector:
             
         self.test_modules: dict[str, list[str]] = {}
 
-        self.search_file = search_file
-        if self.search_file and not self.search_file.endswith('.py'):
-            self.search_file = '%s.py' % (self.search_file, )
+        self.file_name = file_name
+        if self.file_name and not self.file_name.endswith('.py'):
+            self.file_name = '%s.py' % (self.file_name, )
 
     def is_valid_test_file(self, file_name: str) -> bool:
         return all([
@@ -87,7 +89,7 @@ class ModuleCollector:
                 
                 self.test_modules[c_path] = py_files
                  
-                if self.search_file in py_files:
+                if self.file_name in py_files:
                     return
                 
 
@@ -118,7 +120,7 @@ class ModuleCollector:
             # Since how recursion works when searching the directory for a 
             # specific file we have to cleanup the collected modules 
             # in order to filter them out and only select the requested file.
-            if self.search_file and self.search_file not in self.test_modules[path_name]:
+            if self.file_name and self.file_name not in self.test_modules[path_name]:
                 continue
 
             common_prefix = path.commonprefix([cd, path_name])
@@ -128,8 +130,8 @@ class ModuleCollector:
             new_name = self.path_to_python_module(new_name)
 
             file_names = self.test_modules[path_name]
-            if self.search_file:
-                file_names = list(filter(lambda l: l == self.search_file, file_names))
+            if self.file_name:
+                file_names = list(filter(lambda l: l == self.file_name, file_names))
 
             normalized_file_names = self.normalize_file_names(file_names)
 

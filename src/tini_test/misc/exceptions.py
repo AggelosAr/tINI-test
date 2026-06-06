@@ -1,15 +1,21 @@
 
 
+class NotSupportedVerbosity(Exception):
+
+    def __init__(self, reason: str = ''):
+        super().__init__(reason)
+
+
+class NotSupportedRunMode(Exception):
+
+    def __init__(self, reason: str = '') -> None:
+        super().__init__(reason)
+
+
 class CantFindRelativePathToRoot(Exception):
 
     def __init__(self) -> None:
         super().__init__("Can't find the requested relative path to root.")
-
-
-class NotSupportedMode(Exception):
-
-    def __init__(self, msg):
-        super().__init__(msg)
 
 
 class TestNotFound(Exception):
