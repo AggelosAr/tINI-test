@@ -114,7 +114,7 @@ class TestSuite:
     def failed_to_collect_test_files(self, new_file: FileName) -> None:
         self._failed_to_collect_test_files.append(new_file)
 
-    def pprint_summary(self) -> None:
+    def pprint(self) -> None:
         print(self.get_summary())
 
     def get_summary(self) -> str:
@@ -169,7 +169,14 @@ class TestSuite:
                     break
             
             self.container[full_path] = tests
-
+            self.container[full_path+'1'] = tests
+            self.container[full_path+'2'] = tests
+            self.container[full_path+'3'] = tests
+            self.container[full_path+'4'] = tests
+            self.container[full_path+'5'] = tests
+            self.container[full_path+'6'] = tests
+            self.container[full_path+'7'] = tests
+            
         if self.searching_single_test and not self.container:
             raise TestNotFound
 
@@ -213,9 +220,6 @@ class TestSuite:
             self.successes = current_successes
             self.errors = current_errors
             self.failures = current_failures
-    
-    def arun_suite(self) -> None:
-        asyncio.run(self._arun_suite())
 
     def runner(self) -> None:
 
@@ -228,6 +232,6 @@ class TestSuite:
 
             case RunMode.ASYNC:
                 
-                self.arun_suite()
+                asyncio.run(self._arun_suite())
 
         self.suite_run_time = perf_counter()

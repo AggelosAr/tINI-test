@@ -5,7 +5,7 @@ from types import FunctionType
 from typing import Callable, Optional
 
 from ._internals.consts import _LINE_CLEAR, _LINE_UP, _RESET
-from .enums import Color, Verbosity
+from .enums import Color, RunMode, Verbosity
 from .misc.annotations import (DirectoryPath, Errors, FileName,
                                TestCollectionSize, TestFunctionName)
 from .test_utils import Test
@@ -192,50 +192,67 @@ class TestCollection:
     
         print('...\n')
         return errors
-
-    # TODO merge run tests
-    def run_tests(self) -> Errors:
-        
-        errors = 0
-
-        print('Running tests for < %s >\n' % (self.file_name, ))
-
-        self.populate_tests()
-        self.box_tests()
-
-        if self.verbosity == Verbosity.SORT:
-            self.sort_tests()
-
-        match self.verbosity:
-            case Verbosity.NORMAL | Verbosity.SORT:
-                errors = self.show_test_results_non_minimal()
-
-            case Verbosity.MINIMAL | Verbosity.MINIMAL_NO_STACK | Verbosity.SUPER_MINIMAL:
-                errors = self.show_test_results_minimal()
-        
-        print()
-        return errors
     
-    async def arun_tests(self) -> Errors:
-        
-        errors = 0
+    def _pprint(mode: RunMode) -> Errors:
 
-        print('Running tests for < %s >\n' % (self.file_name, ))
-
-        self.populate_tests()
-
-        await self.abox_tests()
-
-        if self.verbosity == Verbosity.SORT:
-            self.sort_tests()
-
-        match self.verbosity:
-            case Verbosity.NORMAL | Verbosity.SORT:
-                errors = self.show_test_results_non_minimal()
-
-            case Verbosity.MINIMAL | Verbosity.MINIMAL_NO_STACK | Verbosity.SUPER_MINIMAL:
+        def _wrapper(runner: Callable):
+            
+            def __wrapper(self: 'TestCollection', *args, **kwargs):
                 
-                errors = self.show_test_results_minimal()
+                
+                def setup() -> None:
+                    print('Running tests for < %s >\n' % (self.file_name, ))
+
+                    self.populate_tests()
+
+                def cleanup() -> Errors:
+                    if self.verbosity == Verbosity.SORT:
+                        self.sort_tests()
+
+                    match self.verbosity:
+                        case Verbosity.NORMAL | Verbosity.SORT:
+                            errors = self.show_test_results_non_minimal()
+
+                        case Verbosity.MINIMAL | Verbosity.MINIMAL_NO_STACK | Verbosity.SUPER_MINIMAL:
+                            errors = self.show_test_results_minimal()
+                    
+                    print()
+               
+                    return errors
+                
+
+                match mode:
+
+                    case RunMode.SYNC:
+                        def ____wrapper() -> Errors:
+                            setup()
+                            runner(self)
+                            return cleanup()
+                        
+                        ___wrapper = ____wrapper()
+
+
+                    case RunMode.ASYNC:
+                        
+                        async def ____wrapper() -> Errors:
+                            
+                            setup()
+                            await runner(self)
+                            return cleanup()
+
+                        ___wrapper = ____wrapper()
+                        
+                return ___wrapper
+            
+            return __wrapper
         
-        print()
-        return errors
+        return _wrapper
+
+    @_pprint(RunMode.SYNC)
+    def run_tests(self) -> Errors:
+        self.box_tests()
+        
+    @_pprint(RunMode.ASYNC)
+    async def arun_tests(self) -> Errors:
+        await self.abox_tests()
+       
