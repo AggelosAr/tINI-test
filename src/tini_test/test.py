@@ -2,19 +2,16 @@ import asyncio
 from functools import cached_property, partial
 from importlib import import_module
 from types import FunctionType
-from typing import Callable, Optional, TypeAlias
-
-from tini_test.misc.exceptions import TestNotFound
-from tini_test.module_collector import ModuleCollector
+from typing import Callable, Optional
 
 from ._internals.consts import _LINE_CLEAR, _LINE_UP, _RESET
 from .enums import Color, Verbosity
 from .misc.annotations import (DirectoryPath, Errors, FileName,
-                               TestFunctionName)
+                               TestCollectionSize, TestFunctionName)
 from .test_utils import Test
 
 
-class Tests:
+class TestCollection:
     
     def __init__(self,
                  verbosity: Verbosity,
@@ -36,7 +33,7 @@ class Tests:
         return self.module.__name__
     
     @property
-    def total_tests(self) -> int:
+    def total_tests(self) -> TestCollectionSize:
         return len(self.decorated_tests)
 
     def get_summary_info(self):
@@ -215,7 +212,7 @@ class Tests:
         print()
         return errors
     
-    async def arun_suite(self) -> Errors:
+    async def arun_tests(self) -> Errors:
         
         errors = 0
 
@@ -238,68 +235,3 @@ class Tests:
         
         print()
         return errors
-
-# TODO move @annotations
-TestsContainer: TypeAlias = dict[DirectoryPath, dict[FileName, Tests]]
-
-
-class TestSuite:
-    
-    def __init__(self,
-                 verbosity: Verbosity,
-                 collected_modules: ModuleCollector,
-                 test_function: Optional[TestFunctionName] = None
-                 ) -> None:
-        
-        self.verbosity = verbosity
-        self.collected_modules = collected_modules
-        self.test_function = test_function
-
-    def __str__(self) -> str:
-        raise NotImplementedError
-
-    @cached_property
-    def searching_single_test(self) -> bool:
-        return self.test_function is not None
-    
-    def get_tests_container(self) -> TestsContainer:
-
-        tests_container: TestsContainer = {}
-
-        for module_path, test_file in self.collected_modules:
-            
-            # TODO do we need to try/catch here?
-            tests = Tests(verbosity=self.verbosity, 
-                            module_path=module_path,
-                            file=test_file)
-           
-            collected_tests = tests.gather_tests(func_name=self.test_function)
-
-            if not collected_tests:
-                continue
-            
-            if module_path not in tests_container:
-                tests_container[module_path] = {}
-
-            if self.searching_single_test:
-
-                if self.test_function in collected_tests:
-
-                    tests_container[module_path][test_file] = tests
-                    break
-            
-            tests_container[module_path][test_file] = tests
-
-            if not len(tests_container[module_path]):
-                del tests_container[module_path]
-
-        if self.searching_single_test and not tests_container:
-            raise TestNotFound
-
-        return tests_container
-    
-    def run_suite(self) -> Errors:
-        raise NotImplementedError
-    
-    async def arun_suite(self) -> Errors:
-        raise NotImplementedError

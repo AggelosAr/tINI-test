@@ -1,7 +1,7 @@
 from typing import assert_never
 
 from tini_test.context_managers import WillRaise
-from tini_test.test_suite import Test
+from tini_test.test import Test
 
 GG = 2_999
 

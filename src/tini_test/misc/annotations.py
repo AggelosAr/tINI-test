@@ -1,6 +1,5 @@
 from typing import Any, Callable, TypeAlias
 
-
 ColorValue: TypeAlias = str
 
 DirectoryPath: TypeAlias = str
@@ -12,6 +11,11 @@ MappedDirectoryToTestFiles: TypeAlias = dict[DirectoryPath, list[FileName]]
 
 TimeTakenForTestDiscovery: TypeAlias = float
 TimeTakenForSuiteInitialization: TypeAlias = float
+
+TimeTakenForTestCollection: TypeAlias = float
+TimeTakenForTest: TypeAlias = float
+
+TimeTakenToRunSuite: TypeAlias = float
 
 
 PartialObject: TypeAlias = Callable # TODO update
@@ -26,4 +30,7 @@ Comperator: TypeAlias = Callable[..., Any] # Callable[[Any, Any], bool]
 
 
 SuiteSize: TypeAlias = int
+TestCollectionSize: TypeAlias = int
+Successes: TypeAlias = int
 Errors: TypeAlias = int
+Failures: TypeAlias = int

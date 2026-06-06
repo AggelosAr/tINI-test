@@ -3,7 +3,7 @@ from typing import assert_never
 from tini_test.context_managers import WillRaise
 from tini_test.misc.exceptions import ExpectedWasDifferentFromActual
 from tini_test.must_equals import must_equal
-from tini_test.test_suite import Test
+from tini_test.test import Test
 
 
 @Test.case

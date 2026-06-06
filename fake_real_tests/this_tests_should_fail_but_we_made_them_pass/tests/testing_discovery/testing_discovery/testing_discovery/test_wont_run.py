@@ -1,5 +1,5 @@
 
-from tini_test.test_suite import Test
+from tini_test.test import Test
 
 
 @Test.case

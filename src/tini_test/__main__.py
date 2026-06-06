@@ -1,27 +1,20 @@
-from tini_test.enums import RunMode
-
 from .arg_parser import receive_args
+from .initializer import initialize_test_suite
 from .misc.exceptions import CantFindRelativePathToRoot, TestNotFound
-from .runner import arun_tests, initialize_test_suite, run_tests
 
 if __name__=='__main__':
 
-    run_mode, verbosity, search_dir, file_name, test_function = receive_args()
-
     try:
-        tests_container, d_t, i_t = initialize_test_suite(verbosity,
-                                                      search_dir,
-                                                      file_name,
-                                                      test_function)
+        test_suite = initialize_test_suite(**receive_args())
+         
     except CantFindRelativePathToRoot:
         raise
+
     except TestNotFound:
         raise
+
     else:
-        match run_mode:
-            case RunMode.SYNC:
-                run_tests(d_t, i_t, tests_container)
-            case RunMode.ASYNC:
-                arun_tests(d_t, i_t, tests_container)
+        test_suite.runner()
+
     finally:
-        ...
+        test_suite.pprint_summary()

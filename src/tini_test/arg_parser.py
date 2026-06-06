@@ -1,5 +1,5 @@
 from argparse import ArgumentParser
-from typing import Optional
+from typing import NotRequired, TypedDict
 
 from tini_test.misc.annotations import (DirectoryPath, FileName,
                                         TestFunctionName)
@@ -7,12 +7,16 @@ from tini_test.misc.annotations import (DirectoryPath, FileName,
 from .enums import RunMode, Verbosity
 
 
-def receive_args() -> tuple[RunMode,
-                            Verbosity,
-                            DirectoryPath,
-                            Optional[FileName],
-                            Optional[TestFunctionName]]:
+class ArgsDict(TypedDict):
+    run_mode: RunMode
+    verbosity: Verbosity
+    search_dir: DirectoryPath
+    file_name: NotRequired[FileName | None]
+    test_function: NotRequired[TestFunctionName | None]
     
+
+def receive_args() -> ArgsDict:
+
     parser = ArgumentParser(
         description='Small Test Framework'
     )
@@ -47,8 +51,8 @@ def receive_args() -> tuple[RunMode,
 
     args = parser.parse_args()
 
-    return (args.run_mode,
-            args.verbosity,
-            args.directory,
-            args.file,
-            args.test)
+    return {'run_mode': args.run_mode,
+            'verbosity': args.verbosity,
+            'search_dir': args.directory,
+            'file_name': args.file,
+            'test_function': args.test}

@@ -1,9 +1,12 @@
+from functools import cached_property
 from os import getcwd, path, walk
 from pathlib import Path
+from time import perf_counter
 from typing import Iterator, Optional
 
 from tini_test.misc.annotations import (DirectoryPath, FileName,
-                                        MappedDirectoryToTestFiles)
+                                        MappedDirectoryToTestFiles,
+                                        TimeTakenForTestDiscovery)
 
 from ._internals.consts import INVALID_PYTHON_MODULE_SYMBOLS, SKIP_DIRS
 from .misc.exceptions import CantFindRelativePathToRoot
@@ -21,10 +24,16 @@ class ModuleCollector:
                  file_name: Optional[FileName] = None,
                  exclude_dir: Optional[DirectoryPath] = None,) -> None:
         
+        #exclude_dir = 'this_tests_should_fail_but_we_made_them_pass'
+        self._start = perf_counter()
         # Check case that exclude_dir is trash not yet implemented
         self.SKIP_DIRS = {**{l: None for l in SKIP_DIRS}, exclude_dir: None}
 
+        self.test_modules: MappedDirectoryToTestFiles = {}
+        self._discovery_time = 0.0
+
         self.root = Path(getcwd())
+
         if search_dir != '.':
             # here we need to connect the 2 dirs
             self.search_dir = search_dir
@@ -37,8 +46,6 @@ class ModuleCollector:
             else:
                 raise CantFindRelativePathToRoot
             
-        self.test_modules: MappedDirectoryToTestFiles = {}
-
         self.file_name = file_name
         if self.file_name and not self.file_name.endswith('.py'):
             self.file_name = '%s.py' % (self.file_name, )
@@ -48,6 +55,14 @@ class ModuleCollector:
             for test_file in test_files:
                 yield module_dir, test_file
 
+    @property
+    def discovery_time(self) -> TimeTakenForTestDiscovery:
+        return self._discovery_time
+
+    @discovery_time.setter
+    def discovery_time(self, dt: TimeTakenForTestDiscovery) -> None:
+        self._discovery_time = dt - self._start
+        
     def is_valid_test_file(self, file_name: FileName) -> bool:
         return all([
             file_name.startswith('test_'),
