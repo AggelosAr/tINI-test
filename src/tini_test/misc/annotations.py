@@ -10,9 +10,11 @@ MappedDirectoryToTestFiles: TypeAlias = dict[DirectoryPath, list[FileName]]
 
 
 TimeTakenForTestDiscovery: TypeAlias = float
-TimeTakenForSuiteInitialization: TypeAlias = float
 
+# These are the same thing
+TimeTakenForSuiteInitialization: TypeAlias = float
 TimeTakenForTestCollection: TypeAlias = float
+
 TimeTakenForTest: TypeAlias = float
 
 TimeTakenToRunSuite: TypeAlias = float

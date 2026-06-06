@@ -42,11 +42,9 @@ class TestSuite:
         self.verbosity = verbosity
         self.test_function = test_function
 
-        self._start = perf_counter()
-
         self._discovery_time = 0.0
+        self._start = perf_counter()
         self._init_time = 0.0
-        self._test_collection_time = 0.0
         self._suite_run_time = 0.0
 
         self._total_tests = 0
@@ -78,14 +76,6 @@ class TestSuite:
     @suite_init_time.setter
     def suite_init_time(self, dt: TimeTakenForSuiteInitialization) -> None:
         self._init_time = dt - self._start
-
-    @property
-    def test_collection_time(self) -> TimeTakenForTestCollection:
-        return self._test_collection_time
-
-    @test_collection_time.setter
-    def test_collection_time(self, dt: TimeTakenForTestCollection) -> None:
-        self._test_collection_time -= dt
 
     @property
     def total_tests(self) -> SuiteSize:
@@ -125,7 +115,7 @@ class TestSuite:
 
     @suite_run_time.setter
     def suite_run_time(self, dt: TimeTakenToRunSuite) -> None:
-        self._suite_run_time = -dt
+        self._suite_run_time = dt - self._start
 
     def pprint_summary(self) -> None:
         print(self.get_summary())
@@ -143,7 +133,6 @@ class TestSuite:
         '|',
         '| Discovered Tests in     : ( %0.4f ) secs' % (self.discovery_time, ),
         '| Initialized Suite in    : ( %0.4f ) secs' % (self.suite_init_time, ),
-        '| Collected Tests in      : ( %0.4f ) secs' % (self.test_collection_time, ),
         '| Run Tests in            : ( %0.4f ) secs' % (self.suite_run_time, ),
         ' ------------------------------------------'
         ])
@@ -151,7 +140,6 @@ class TestSuite:
     def initialize_tests(self, _from: ModuleCollector) -> None:
         
         self.discovery_time = _from.discovery_time
-        self.test_collection_time = perf_counter()
 
         for module_path, test_file in _from:
             
@@ -159,7 +147,7 @@ class TestSuite:
             tests = TestCollection(verbosity=self.verbosity, 
                                    module_path=module_path,
                                    file=test_file)
-           
+            
             collected_tests = tests.gather_tests(func_name=self.test_function)
 
             if not collected_tests:
@@ -176,18 +164,13 @@ class TestSuite:
             
             self.container[full_path] = tests
 
-
         if self.searching_single_test and not self.container:
             raise TestNotFound
-
-        self.test_collection_time = perf_counter()
 
     def run_suite(self) -> None:
         
         for _f_path, test_collection in self.container.items():
             
-            self.suite_run_time = perf_counter()
-
             current_errors = test_collection.run_tests()
         
             self.suite_run_time = perf_counter()
@@ -201,13 +184,8 @@ class TestSuite:
             self.errors = current_errors
             self.failures = current_failures
 
-            # self.pprint_summary()
-            # input()
-
     async def _arun_suite(self) -> None:
         print()
-    
-        self.suite_run_time = perf_counter()
         
         # Gather all suites from all modules
         all_test_collections: list[TestCollection] = []
@@ -219,8 +197,6 @@ class TestSuite:
             *[test_collection.arun_tests() for test_collection in all_test_collections],
             return_exceptions=False
         )
-        
-        self.suite_run_time = perf_counter()
 
         for test_collection, current_errors in zip(all_test_collections, results):
             
@@ -238,7 +214,7 @@ class TestSuite:
 
     def runner(self) -> None:
 
-        _start = perf_counter()
+        self._start = perf_counter()
 
         match self.run_mode:
 
@@ -246,6 +222,7 @@ class TestSuite:
                 self.run_suite()
 
             case RunMode.ASYNC:
+                
                 self.arun_suite()
 
-        self.suite_run_time = _start - perf_counter()
+        self.suite_run_time = perf_counter()

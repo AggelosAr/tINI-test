@@ -26,12 +26,14 @@ class ModuleCollector:
         
         #exclude_dir = 'this_tests_should_fail_but_we_made_them_pass'
         self._start = perf_counter()
+        self._discovery_time = 0.0
+
+
         # Check case that exclude_dir is trash not yet implemented
         self.SKIP_DIRS = {**{l: None for l in SKIP_DIRS}, exclude_dir: None}
 
         self.test_modules: MappedDirectoryToTestFiles = {}
-        self._discovery_time = 0.0
-
+        
         self.root = Path(getcwd())
 
         if search_dir != '.':
