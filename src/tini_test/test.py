@@ -104,7 +104,7 @@ class TestCollection:
 
     def show_test_results_minimal(self) -> Errors:
 
-        # Cap the progress bar. # TODO broken on async
+        # Cap the progress bar. # TODO broken on async?
         bucket_size = 18
 
         e_symbol = ('%s   %s' % (Color.WHITE.value, _RESET, ))
@@ -193,6 +193,7 @@ class TestCollection:
         print('...\n')
         return errors
 
+    # TODO merge run tests
     def run_tests(self) -> Errors:
         
         errors = 0
