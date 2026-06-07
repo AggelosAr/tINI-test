@@ -155,11 +155,6 @@ class TestSuite:
                 self.failed_to_collect_test_files = test_file 
                 continue
 
-            tests = TestCollection(verbosity=self.verbosity, 
-                                   module_path=module_path,
-                                   file=test_file)
-            
-
             collected_tests = tests.gather_tests(func_name=self.test_function)
            
             if not collected_tests:

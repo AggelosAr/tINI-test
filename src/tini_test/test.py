@@ -52,7 +52,13 @@ class TestCollection:
             if not isinstance(g_obj, FunctionType):
                 continue 
             
-            if not hex(id(g_obj)) in _TEST_REGISTRY:
+            if hex(id(g_obj)) not in _TEST_REGISTRY:
+                continue
+            
+            if g_obj.__closure__ is None:
+                continue
+
+            if not len(g_obj.__closure__):
                 continue
 
             test_name = str(g_obj.__closure__[-1].cell_contents.__name__)

@@ -17,6 +17,5 @@ if __name__=='__main__':
 
     else:
         test_suite.runner()
-
-    finally:
         test_suite.pprint()
+
