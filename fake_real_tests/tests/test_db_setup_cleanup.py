@@ -7,11 +7,7 @@ import threading
 import time
 from typing import Set
 
-from tini_test._internals._internal_exceptions._comparison_exceptions import \
-    _IntegerMismatchError
-from tini_test.context_managers import WillRaise
-from tini_test.misc.exceptions import (ExceptionWasNotRaised,
-                                       ExpectedWasDifferentFromActual)
+from tini_test.misc.exceptions import ExpectedWasDifferentFromActual
 from tini_test.must_equals import must_equal
 from tini_test.test_utils import Test
 

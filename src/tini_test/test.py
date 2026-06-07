@@ -90,13 +90,13 @@ class TestCollection:
 
         for idx, test_case in enumerate(self.collector.values(), start=1):
             
-            print("[ %s / %s ]\n\tTEST\t—›  %s\n\t\t——› %s\n\n\n%s" 
+            print(x:="[ %s / %s ]\n\tTEST\t—›  %s\n\t\t——› %s\n\n\n%s" 
                   % (idx, 
                      self.total_tests, 
                      self.module_name,
                      test_case.test_name, 
                      str(test_case), ))
-        
+
 
             failed_tests += test_case.is_fail
 
@@ -199,35 +199,13 @@ class TestCollection:
             
             def __wrapper(self: 'TestCollection', *args, **kwargs):
                 
-                
-                def setup() -> None:
-                    print('Running tests for < %s >\n' % (self.file_name, ))
-
-                    self.populate_tests()
-
-                def cleanup() -> Errors:
-                    if self.verbosity == Verbosity.SORT:
-                        self.sort_tests()
-
-                    match self.verbosity:
-                        case Verbosity.NORMAL | Verbosity.SORT:
-                            errors = self.show_test_results_non_minimal()
-
-                        case Verbosity.MINIMAL | Verbosity.MINIMAL_NO_STACK | Verbosity.SUPER_MINIMAL:
-                            errors = self.show_test_results_minimal()
-                    
-                    print()
-               
-                    return errors
-                
-
                 match mode:
 
                     case RunMode.SYNC:
                         def ____wrapper() -> Errors:
-                            setup()
+                            self.setup()
                             runner(self)
-                            return cleanup()
+                            return self.cleanup()
                         
                         ___wrapper = ____wrapper()
 
@@ -236,9 +214,9 @@ class TestCollection:
                         
                         async def ____wrapper() -> Errors:
                             
-                            setup()
+                            self.setup()
                             await runner(self)
-                            return cleanup()
+                            return self.cleanup()
 
                         ___wrapper = ____wrapper()
                         
@@ -248,6 +226,26 @@ class TestCollection:
         
         return _wrapper
 
+    def setup(self) -> None:
+        print('Running tests for < %s >\n' % (self.file_name, ))
+
+        self.populate_tests()
+
+    def cleanup(self) -> Errors:
+        if self.verbosity == Verbosity.SORT:
+            self.sort_tests()
+
+        match self.verbosity:
+            case Verbosity.NORMAL | Verbosity.SORT:
+                errors = self.show_test_results_non_minimal()
+
+            case Verbosity.MINIMAL | Verbosity.MINIMAL_NO_STACK | Verbosity.SUPER_MINIMAL:
+                errors = self.show_test_results_minimal()
+        
+        print()
+    
+        return errors
+    
     @_pprint(RunMode.SYNC)
     def run_tests(self) -> Errors:
         self.box_tests()

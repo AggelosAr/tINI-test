@@ -169,14 +169,7 @@ class TestSuite:
                     break
             
             self.container[full_path] = tests
-            self.container[full_path+'1'] = tests
-            self.container[full_path+'2'] = tests
-            self.container[full_path+'3'] = tests
-            self.container[full_path+'4'] = tests
-            self.container[full_path+'5'] = tests
-            self.container[full_path+'6'] = tests
-            self.container[full_path+'7'] = tests
-            
+
         if self.searching_single_test and not self.container:
             raise TestNotFound
 
