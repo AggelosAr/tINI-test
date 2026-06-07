@@ -8,6 +8,7 @@ TestFunctionName: TypeAlias = str
 
 MappedDirectoryToTestFiles: TypeAlias = dict[DirectoryPath, list[FileName]]
 
+FullPythonPath: TypeAlias = str
 
 TimeTakenForTestDiscovery: TypeAlias = float
 

@@ -4,6 +4,7 @@ from io import StringIO
 from traceback import format_exc, format_tb
 from typing import Any, Optional
 
+from tini_test._internals._registry import TEST_REGISTRY
 from tini_test.context_managers import _thread_redirect_stdout
 
 from ._internals._internal_exceptions._exceptions import (_FailStateWasNotFail,
@@ -14,6 +15,7 @@ from .misc.exceptions import ExpectedWasDifferentFromActual
 from .state.state import OperationState
 
 _minimals_discard = {Verbosity.MINIMAL_NO_STACK, Verbosity.SUPER_MINIMAL}
+
 
 
 class TestStep:
@@ -137,8 +139,8 @@ class Test:
 
                 ____collector[test_func.__name__] = test_case
                 
-            _wrapper._xyz_is_a_test_case_uwu = True # type: ignore[attr-defined]
-
+            TEST_REGISTRY.add(hex(id(_wrapper)))
+            
             return _wrapper
 
         if test_func is None:

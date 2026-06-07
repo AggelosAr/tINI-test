@@ -260,7 +260,7 @@ def _single_line_diff(expected: str, actual: str) -> str:
         act_char,
         exp_snippet,
         act_snippet,
-        ' ' * (idx - start + 1), # TODO if char is excaped +1 
+        ' ' * (idx - start + 1), # TODO if char is excaped +1 (maybe)
     )
 
 # =========================================================

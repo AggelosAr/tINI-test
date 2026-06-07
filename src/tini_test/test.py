@@ -4,6 +4,8 @@ from importlib import import_module
 from types import FunctionType
 from typing import Callable, Optional
 
+from tini_test._internals._registry import TEST_REGISTRY
+
 from ._internals.consts import _LINE_CLEAR, _LINE_UP, _RESET
 from .enums import Color, RunMode, Verbosity
 from .misc.annotations import (DirectoryPath, Errors, FileName,
@@ -24,7 +26,7 @@ class TestCollection:
 
         self.decorated_tests: list[Callable] = []
 
-        self.collector: dict[str, Test] = dict()
+        self.collector: dict[TestFunctionName, Test] = dict()
 
         self.file_name = self.module.__name__
     
@@ -51,8 +53,9 @@ class TestCollection:
             g_obj = getattr(self.module, obj)
             
             if not all([isinstance(g_obj, FunctionType), 
-                        hasattr(g_obj, '_xyz_is_a_test_case_uwu')]):
+                        hex(id(g_obj)) in TEST_REGISTRY]):
                 continue 
+
             # TODO xxx
             test_name = str(g_obj.__closure__[-1].cell_contents.__name__)
             if func_name and test_name != func_name:
@@ -215,7 +218,7 @@ class TestCollection:
                     case RunMode.ASYNC:
 
                         async def ____wrapper() -> Errors:
-                            
+
                             self.__setup()
                             await runner(self)
                             return self.__cleanup()

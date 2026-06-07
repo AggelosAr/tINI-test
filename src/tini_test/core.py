@@ -4,9 +4,9 @@ from time import perf_counter
 from typing import Optional
 
 from tini_test.enums import RunMode, Verbosity
-from tini_test.misc.annotations import (Errors, Failures, FileName, Successes,
-                                        SuiteSize, TestCollectionSize,
-                                        TestFunctionName,
+from tini_test.misc.annotations import (Errors, Failures, FileName,
+                                        FullPythonPath, Successes, SuiteSize,
+                                        TestCollectionSize, TestFunctionName,
                                         TimeTakenForSuiteInitialization,
                                         TimeTakenForTestDiscovery,
                                         TimeTakenToRunSuite)
@@ -15,6 +15,7 @@ from tini_test.module_collector import ModuleCollector
 from tini_test.test import TestCollection
 
 # TODO create timed class
+
 
 
 class TestSuite:
@@ -41,7 +42,7 @@ class TestSuite:
         self._failures = 0
         self._failed_to_collect_test_files = []
 
-        self.container = {}
+        self.container: dict[FullPythonPath, TestCollection] = {}
 
     def __str__(self) -> str:
         raise NotImplementedError
@@ -141,6 +142,7 @@ class TestSuite:
 
     def initialize_tests(self, _from: ModuleCollector) -> None:
         
+        print('START')
         self.discovery_time = _from.discovery_time
 
         for module_path, test_file in _from:
@@ -154,6 +156,11 @@ class TestSuite:
                 self.failed_to_collect_test_files = test_file 
                 continue
             
+            tests = TestCollection(verbosity=self.verbosity, 
+                                       module_path=module_path,
+                                       file=test_file)
+            
+
             collected_tests = tests.gather_tests(func_name=self.test_function)
            
             if not collected_tests:
