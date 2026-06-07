@@ -41,9 +41,6 @@ class TestCollection:
     def total_tests(self) -> TestCollectionSize:
         return len(self.decorated_tests)
 
-    def get_summary_info(self):
-        ...
-
     def gather_tests(self, func_name: Optional[TestFunctionName] = None) -> list[TestFunctionName]:
 
         test_names = []
@@ -52,11 +49,12 @@ class TestCollection:
 
             g_obj = getattr(self.module, obj)
             
-            if not all([isinstance(g_obj, FunctionType), 
-                        hex(id(g_obj)) in _TEST_REGISTRY]):
+            if not isinstance(g_obj, FunctionType):
                 continue 
+            
+            if not hex(id(g_obj)) in _TEST_REGISTRY:
+                continue
 
-            # TODO xxx
             test_name = str(g_obj.__closure__[-1].cell_contents.__name__)
             if func_name and test_name != func_name:
                 continue
