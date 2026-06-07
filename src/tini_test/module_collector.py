@@ -63,7 +63,7 @@ class ModuleCollector:
         self._discovery_time = dt - self._start
     
     def _parse_exclude_dir(self) -> None:
-        raise NotImplementedError
+        ...
     
     def is_valid_test_file(self, file_name: FileName) -> bool:
         return all([

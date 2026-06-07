@@ -41,9 +41,6 @@ class TestSuite:
 
         self.container: dict[FullPythonPath, TestCollection] = {}
 
-    def __str__(self) -> str:
-        raise NotImplementedError
-
     @cached_property
     def searching_single_test(self) -> bool:
         return self.test_function is not None

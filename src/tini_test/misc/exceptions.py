@@ -2,14 +2,14 @@
 
 class NotSupportedVerbosity(Exception):
 
-    def __init__(self, reason: str = ''):
-        super().__init__(reason)
+    def __init__(self, msg: str = ''):
+        super().__init__(msg)
 
 
 class NotSupportedRunMode(Exception):
 
-    def __init__(self, reason: str = '') -> None:
-        super().__init__(reason)
+    def __init__(self, msg: str = '') -> None:
+        super().__init__(msg)
 
 
 class CantFindRelativePathToRoot(Exception):

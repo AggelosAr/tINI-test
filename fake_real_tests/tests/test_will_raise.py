@@ -77,9 +77,6 @@ def test_will_raise_not_raised_exception_correctly_stops_the_test() -> None:
         with WillRaise(TypeError) as context:
             ...
 
-        print('This will never show.')
-        y[0] = 9_000_000
-
 
     print('This will print since we catch the incoming exception.')
     with WillRaise(ExceptionWasNotRaised) as context:

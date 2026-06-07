@@ -97,7 +97,7 @@ class TestCollection:
 
         for idx, test_case in enumerate(self.collector.values(), start=1):
             
-            print(x:="[ %s / %s ]\n\tTEST\t—›  %s\n\t\t——› %s\n\n\n%s" 
+            print("[ %s / %s ]\n\tTEST\t—›  %s\n\t\t——› %s\n\n\n%s" 
                   % (idx, 
                      self.total_tests, 
                      self.module_name,

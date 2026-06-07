@@ -113,9 +113,6 @@ class Test:
     def __str__(self) -> str:
         return '\n'.join(filter(lambda l: l != str(), map(str, self.operation_states)))
 
-    def __repr__(self) -> str:
-        raise NotImplementedError
-    
     @classmethod
     def case(cls,
              test_func: Optional[F_Callable] = None,

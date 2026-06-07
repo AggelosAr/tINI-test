@@ -44,9 +44,7 @@ class WillRaise(object):
 
 
 class MaybeWillRaise(object):
-
-    def __init__(self):
-        raise NotImplementedError
+    ...
 
 
 class _ThreadLocalStdout:

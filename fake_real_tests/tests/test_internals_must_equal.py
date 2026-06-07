@@ -2,8 +2,9 @@ from tini_test._internals._equals_engine import _must_equal
 from tini_test._internals._internal_exceptions._comparison_exceptions import (
     _BoolMismatchError, _DictionaryMismatchError, _DictionarySizeMismatchError,
     _FloatMismatchError, _IntegerMismatchError, _ListMismatchError,
-    _ListSizeMismatchError, _SetMismatchError, _SetSizeMismatchError,
-    _TupleMismatchError, _TupleSizeMismatchError, _TypeMismatchError)
+    _ListSizeMismatchError, _MustEqualReceivedNotKnownTypes, _SetMismatchError,
+    _SetSizeMismatchError, _StringMismatchError, _TupleMismatchError,
+    _TupleSizeMismatchError, _TypeMismatchError)
 from tini_test.context_managers import WillRaise
 from tini_test.test_utils import Test
 
@@ -27,6 +28,20 @@ def test_none_match() -> None:
         time.sleep(ss)
 
     _must_equal(a, b)
+
+
+#####################
+### STR
+#####################
+
+
+@Test.case
+def test_strs() -> None:
+    
+    _must_equal('zzzzzzzzzzzz', 'zzzzzzzzzzzz')
+
+    with WillRaise(_StringMismatchError) as context: 
+        _must_equal('uuuu', 'a')
 
 
 #####################
@@ -352,3 +367,16 @@ def test_none_vs_int() -> None:
 def test_none_vs_none() -> None:
 
     _must_equal(None, None)
+
+
+
+@Test.case
+def test_not_known() -> None:
+
+    class X:
+        def __init__(self):
+            pass
+
+    with WillRaise(_MustEqualReceivedNotKnownTypes) as context: 
+        _must_equal(X(), X())
+

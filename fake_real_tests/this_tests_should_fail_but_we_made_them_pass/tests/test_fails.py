@@ -12,7 +12,6 @@ def test_broken_test_case_one():
     with WillRaise(ZeroDivisionError):
         print('test_broken_test_case_one')
         1/0
-        assert_never()
 
 
 
@@ -20,7 +19,6 @@ def setup_breaks():
     with WillRaise(ZeroDivisionError):
         print('setup_breaks---->This should print and fail the test, but is was caught')
         1/0
-        print('setup_breaks---->This will never print :()')
         
 @Test.case(setup=lambda: setup_breaks())
 def test_setup_breaks():

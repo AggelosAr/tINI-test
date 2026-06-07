@@ -15,6 +15,34 @@ def test_must_equal_frozen_set_passes() -> None:
 
 
 @Test.case
+def test_must_equal_type_none_none_none_case() -> None:
+
+    s = None
+    t = None
+    
+    must_equal(s, t)
+
+
+
+@Test.case
+def test_must_equal_diffs_on_types_case() -> None:
+
+    s = 'a'
+    t = 1
+    
+    with WillRaise(ExpectedWasDifferentFromActual) as e:
+        must_equal(s, t)
+
+    print(str(e.exception))
+    must_equal('''
+ITEM: type mismatch
+expected: <class 'str'>
+actual:   <class 'int'>
+''', str(e.exception))
+
+
+
+@Test.case
 def test_must_equal_type_none_case() -> None:
 
     s = type(None)

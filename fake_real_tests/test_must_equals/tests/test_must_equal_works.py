@@ -91,9 +91,6 @@ def test_must_equals_auto_discovers_eq_and_returns_false() -> None:
 
         def __eq__(self, other: object) -> bool:
 
-            if not isinstance(other, A):
-                return NotImplemented
-            
             return self.a == other.a
  
     obj1 = [A(a=10)]
@@ -113,9 +110,6 @@ def test_must_equals_auto_discovers_eq_and_returns_true() -> None:
             self.a = a
 
         def __eq__(self, other: object) -> bool:
-
-            if not isinstance(other, A):
-                return NotImplemented
             
             return self.a == other.a
  

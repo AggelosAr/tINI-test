@@ -10,7 +10,6 @@ def test_broken_test_fails():
     with WillRaise(NameError):
         print('inside test_broken_test_fails')
         _GG
-        assert_never()
 
 
 

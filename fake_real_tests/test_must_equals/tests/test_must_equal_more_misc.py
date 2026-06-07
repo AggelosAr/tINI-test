@@ -88,10 +88,6 @@ def test_must_equal_alien_object_with_eq() -> None:
             self.a = a
 
         def __eq__(self, other: object) -> bool:
-
-            if not isinstance(other, A):
-                return NotImplemented
-            
             return self.a == other.a
         
     obj1 = A(11)
@@ -114,11 +110,7 @@ def test_must_equal_alien_object_with_eq_different_order() -> None:
         def __init__(self, a: int) -> None:
             self.a = a
 
-        def __eq__(self, other: object) -> bool:
-
-            if not isinstance(other, A):
-                return NotImplemented
-            
+        def __eq__(self, other: object) -> bool:     
             return self.a == other.a
         
     obj1 = A(21)
@@ -131,6 +123,25 @@ def test_must_equal_alien_object_with_eq_different_order() -> None:
 ITEM: <Object A at %s> != <Object A at %s>
 ''' % (hex(id(obj1)), hex(id(obj2)), ), str(context.exception))
 
+
+
+@Test.case
+def test_must_equal_alien_object_breaks_on_eq() -> None:
+
+    class A:
+
+        def __init__(self, a: int) -> None:
+            self.a = a
+
+        def __eq__(self, other: object) -> bool:     
+            return self.a == other.x
+        
+    obj1 = A(21)
+    obj2 = A(11)
+
+    with WillRaise(AttributeError) as context:
+        must_equal(obj1, obj2)
+    
 
 
 @Test.case
@@ -189,9 +200,6 @@ def test_must_equals_auto_discovers_eq_and_returns_false_format_case() -> None:
 
         def __eq__(self, other: object) -> bool:
 
-            if not isinstance(other, A):
-                return NotImplemented
-            
             return self.a == other.a
  
     obj1 = A(a=10)
@@ -384,9 +392,6 @@ def test_must_equals_auto_discovers_truly_works_and_returns_true() -> None:
 
         def __eq__(self, other: object) -> bool:
 
-            if not isinstance(other, A):
-                return NotImplemented
-
             return cosmic_entropy_engine(self.a==other.a)
  
     obj1 = A(a=10)
@@ -405,9 +410,6 @@ def test_must_equals_auto_discovers_truly_works_and_returns_false() -> None:
             self.a = a
 
         def __eq__(self, other: object) -> bool:
-
-            if not isinstance(other, A):
-                return NotImplemented
             
             return cosmic_entropy_engine(self.a==other.a)
  
@@ -448,9 +450,6 @@ def test_must_equals_validatates_comperator() -> None:
             self.a = a
 
         def comp(self, other: object) -> bool:
-
-            if not isinstance(other, A):
-                return NotImplemented
             
             return self.a==other.a
         
