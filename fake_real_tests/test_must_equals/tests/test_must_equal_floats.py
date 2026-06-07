@@ -39,7 +39,7 @@ def test_float_precision_equal() -> None:
     print('---------------------------------')
 
     must_equal('''
-0.30000000000000004 != 0.3
+ITEM: 0.30000000000000004 != 0.3
 ''', str(context.exception))
 
 

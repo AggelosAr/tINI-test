@@ -33,7 +33,7 @@ def test_bool_true_false_fail() -> None:
     print('---------------------------------')
 
     must_equal('''
-True != False
+ITEM: True != False
 ''', str(context.exception))
 
 
@@ -51,7 +51,7 @@ def test_bool_false_true_fail() -> None:
     print('---------------------------------')
 
     must_equal('''
-False != True
+ITEM: False != True
 ''', str(context.exception))
 
 

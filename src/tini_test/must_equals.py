@@ -343,12 +343,12 @@ def _must_equal(expected: Any,
 
 def _diff_enum(expected: enum.Enum, actual: enum.Enum, path: str) -> None:
     if expected.value != actual.value:
-        return _raise_diff('%r != %r' % (expected, actual, ))
+        return _raise_diff('%s: %r != %r' % (path, expected, actual, ))
 
 
 def _diff_primitive(expected: Any, actual: Any, path: str) -> None:
     if expected != actual:
-        return _raise_diff('%r != %r' % (expected, actual, ))
+        return _raise_diff('%s: %r != %r' % (path, expected, actual, ))
 
 
 def _diff_str(expected: str, actual: str, path: str) -> None:

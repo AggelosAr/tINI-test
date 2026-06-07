@@ -395,7 +395,7 @@ def test_single_line_diff_weird_case() -> None:
 @Test.case
 def xxxyyyzzz() -> None:
 
-    must_equal('''
+    must_equal(r'''
 ITEM:
 --- expected
 +++ actual
@@ -480,7 +480,7 @@ actual:   '    XXXOfficia in dolor excepteur ullamco sint.Officia in dolor excep
 
 ... additional differences omitted (1+ more) ...
 
-''', '''
+''', r'''
 ITEM:
 --- expected
 +++ actual

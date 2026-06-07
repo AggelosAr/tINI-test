@@ -62,7 +62,7 @@ def test_must_equal_type_case_different() -> None:
         must_equal(s, t)
 
     must_equal('''
-<class 'int'> != <class 'NoneType'>
+ITEM: <class 'int'> != <class 'NoneType'>
 ''', str(e.exception))
 
 
