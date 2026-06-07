@@ -142,7 +142,6 @@ class TestSuite:
 
     def initialize_tests(self, _from: ModuleCollector) -> None:
         
-        print('START')
         self.discovery_time = _from.discovery_time
 
         for module_path, test_file in _from:
@@ -155,10 +154,10 @@ class TestSuite:
                 self.failures = 1
                 self.failed_to_collect_test_files = test_file 
                 continue
-            
+
             tests = TestCollection(verbosity=self.verbosity, 
-                                       module_path=module_path,
-                                       file=test_file)
+                                   module_path=module_path,
+                                   file=test_file)
             
 
             collected_tests = tests.gather_tests(func_name=self.test_function)
