@@ -2,7 +2,6 @@ import subprocess
 
 from tini_test.enums import RunMode, Verbosity
 from tini_test.initializer import initialize_test_suite
-from tini_test.misc.annotations import DirectoryPath
 from tini_test.must_equals import must_equal
 from tini_test.test_utils import Test
 

@@ -89,7 +89,7 @@ class TestCollection:
         await asyncio.gather(*tasks)
 
     def sort_tests_based_on_source(self) -> None:
-        raise NotImplementedError
+        ...
     
     def show_test_results_non_minimal(self) -> Errors:
 

@@ -60,9 +60,3 @@ def test_setup_provided_key_r_l() -> None:
 @Test.case(setup, cleanup=cleanup)
 def test_setup_provided_key_p_k() -> None:
     ...
-
-
-
-# # @Test.case(lambda :1, 2)
-# # def test_setup_provided_key_breaks() -> None:
-# #     1/0
