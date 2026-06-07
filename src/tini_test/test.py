@@ -4,7 +4,7 @@ from importlib import import_module
 from types import FunctionType
 from typing import Callable, Optional
 
-from tini_test._internals._registry import TEST_REGISTRY
+from tini_test._internals._registry import _TEST_REGISTRY
 
 from ._internals.consts import _LINE_CLEAR, _LINE_UP, _RESET
 from .enums import Color, RunMode, Verbosity
@@ -53,7 +53,7 @@ class TestCollection:
             g_obj = getattr(self.module, obj)
             
             if not all([isinstance(g_obj, FunctionType), 
-                        hex(id(g_obj)) in TEST_REGISTRY]):
+                        hex(id(g_obj)) in _TEST_REGISTRY]):
                 continue 
 
             # TODO xxx

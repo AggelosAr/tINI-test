@@ -1,2 +1,2 @@
 
-TEST_REGISTRY = set()
+_TEST_REGISTRY = set()
