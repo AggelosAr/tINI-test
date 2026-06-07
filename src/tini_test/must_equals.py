@@ -123,7 +123,7 @@ def _raise_diff(msg: str) -> None:
 def _unified_diff(expected: str, actual: str) -> str:
     expected = str(expected)
     actual = str(actual)
-
+    # return _multiline_diff(expected, actual)
     if '\n' in expected or '\n' in actual:
         return _multiline_diff(expected, actual)
 
@@ -141,14 +141,12 @@ def _multiline_diff(expected: str, actual: str) -> str:
         )
     )
 
-
     result = []
     hunk_count = 0
 
     _expected = []
     _actual = deque()
     
-
     for idx in range(len(lines)):
 
         line = lines[idx]
@@ -170,7 +168,6 @@ def _multiline_diff(expected: str, actual: str) -> str:
 
         elif line.startswith('-') and not line.startswith('--'):
             
-
             line = line[1:]
 
             if _actual:
@@ -188,7 +185,6 @@ def _multiline_diff(expected: str, actual: str) -> str:
           
         elif line.startswith('+') and not line.startswith('++'):
             
-
             line = line[1:]
 
             if _expected:
@@ -325,7 +321,6 @@ def _must_equal(expected: Any,
     if isinstance(expected, str):
         return _diff_str(expected, actual, path)
         
-    
     if isinstance(expected, set):
         return _diff_set(expected, actual, path)
         
@@ -415,8 +410,8 @@ def _diff_tuple(expected: tuple[Any, ...],
 
     if len(expected) != len(actual):
         _raise_diff(
-            'tuple length mismatch\nexpected=%d actual=%d'
-            % (len(expected), len(actual), )
+            '%s: tuple length mismatch\nexpected=%d actual=%d'
+            % (path, len(expected), len(actual), )
         )
         return
 
@@ -431,8 +426,8 @@ def _diff_list(expected: list[Any],
 
     if len(expected) != len(actual):
         _raise_diff(
-            'list length mismatch\nexpected=%d actual=%d'
-            % (len(expected), len(actual), )
+            '%s: list length mismatch\nexpected=%d actual=%d'
+            % (path, len(expected), len(actual), )
         )
         return
 

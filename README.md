@@ -2,12 +2,12 @@
 
 A lightweight Python test framework focused on simple test discovery and execution from the command line.
 The framework was tested using its own test suite.
-
+pprint
 
 ## Usage
 
 ```bash
-python3 -m tini_test [VERBOSITY] [-d DIRECTORY] [-f FILE] [-t TEST]
+python3 -m tini_test [-r RUN MODE] [-v VERBOSITY] [-d DIRECTORY] [-f FILE] [-t TEST]
 ```
 
 ---
@@ -44,6 +44,10 @@ The decorator accepts up to two optional callables.
     lambda: create_database(),
     lambda: destroy_database()
 )
+def test_database() -> None:
+    ...
+
+@Test.case(setup, lambda: destr())
 def test_database() -> None:
     ...
 ```
@@ -89,7 +93,7 @@ def test_ints_dont_match() -> None:
 
 ### Misc
 
-When comparing custom objects the test quite will try to autocompare them but it is better to be explicit and pass them a callable that will apply the correct comparison.
+When comparing custom objects the test suite will try to autocompare them but it is better to be explicit and pass them a callable that will apply the correct comparison.
 
 ```python
 @Test.case
@@ -146,7 +150,7 @@ Limit test discovery to a specific directory.
 tini_test -d test_math
 ```
 
-All tests in the `test_math` will run.
+All tests in the `test_math` dir will run.
 
 
 ---
@@ -207,7 +211,7 @@ Works the same way as normal. But failures are sorted to the bottom.
 
 The sorting is only applied per module . 
 
-Maybe further down the road we could implement a flag to sort globally.
+*Maybe further down the road a flag to sort globally may be introduced.
 
 ---
 

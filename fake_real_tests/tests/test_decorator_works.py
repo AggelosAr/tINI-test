@@ -60,3 +60,8 @@ def test_setup_provided_key_r_l() -> None:
 @Test.case(setup, cleanup=cleanup)
 def test_setup_provided_key_p_k() -> None:
     ...
+
+
+@Test.case(setup, lambda: cleanup())
+def test_database_mix() -> None:
+    ...
