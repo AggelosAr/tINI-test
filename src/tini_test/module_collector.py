@@ -26,7 +26,6 @@ class ModuleCollector:
         self._start = perf_counter()
         self._discovery_time = 0.0
 
-
         # Check case that exclude_dir is trash not yet implemented
         self.SKIP_DIRS = {**{l: None for l in SKIP_DIRS}, exclude_dir: None}
 

@@ -7,6 +7,7 @@ import threading
 import time
 from typing import Set
 
+from tini_test.context_managers import WillRaise
 from tini_test.misc.exceptions import ExpectedWasDifferentFromActual
 from tini_test.must_equals import must_equal
 from tini_test.test_utils import Test
@@ -120,14 +121,13 @@ def test_setup_cleanup_with_multiple_sleeps() -> None:
 def test_cleanup_runs_on_failure() -> None:
     """Cleanup should run even when test has an exception."""
     # This test intentionally has logic that would raise if not caught
-    try:
+    
+    with WillRaise(ExpectedWasDifferentFromActual):
         a = 10
         b = 20
         must_equal(a, b)
-    except ExpectedWasDifferentFromActual:
         # Expected failure - cleanup should still run
-        pass
-
+      
 
 #####################
 ### ASYNC CONCURRENT EXECUTION
@@ -212,7 +212,7 @@ def test_isolation_third() -> None:
 
 
 #####################
-### SQLITE DATABASE TESTS (no external dependencies)
+### SQLITE DATABASE TESTS
 #####################
 
 import os

@@ -1,3 +1,13 @@
+# 1127 tests with source
+test_stress
+test_stress_copy
+test_stress_copy_1
+test_stress_copy_2
+test_stress_copy_3
+test_stress_copy_4
+test_stress_copy_5
+test_stress_copy_6
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

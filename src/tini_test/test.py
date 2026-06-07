@@ -1,5 +1,5 @@
 import asyncio
-from functools import cached_property, partial
+from functools import cached_property, lru_cache, partial
 from importlib import import_module
 from types import FunctionType
 from typing import Callable, Optional
@@ -193,8 +193,9 @@ class TestCollection:
         print('...\n')
         return errors
     
+    @lru_cache
     def _pprint(mode: RunMode) -> Errors:
-
+        
         def _wrapper(runner: Callable):
             
             def __wrapper(self: 'TestCollection', *args, **kwargs):
@@ -202,21 +203,22 @@ class TestCollection:
                 match mode:
 
                     case RunMode.SYNC:
+                        
                         def ____wrapper() -> Errors:
-                            self.setup()
+
+                            self.__setup()
                             runner(self)
-                            return self.cleanup()
+                            return self.__cleanup()
                         
                         ___wrapper = ____wrapper()
 
-
                     case RunMode.ASYNC:
-                        
+
                         async def ____wrapper() -> Errors:
                             
-                            self.setup()
+                            self.__setup()
                             await runner(self)
-                            return self.cleanup()
+                            return self.__cleanup()
 
                         ___wrapper = ____wrapper()
                         
@@ -226,12 +228,12 @@ class TestCollection:
         
         return _wrapper
 
-    def setup(self) -> None:
+    def __setup(self) -> None:
         print('Running tests for < %s >\n' % (self.file_name, ))
 
         self.populate_tests()
 
-    def cleanup(self) -> Errors:
+    def __cleanup(self) -> Errors:
         if self.verbosity == Verbosity.SORT:
             self.sort_tests()
 
