@@ -14,9 +14,6 @@ from tini_test.misc.exceptions import TestNotFound
 from tini_test.module_collector import ModuleCollector
 from tini_test.test import TestCollection
 
-# TODO create timed class
-
-
 
 class TestSuite:
     

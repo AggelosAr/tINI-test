@@ -17,7 +17,6 @@ from .state.state import OperationState
 _minimals_discard = {Verbosity.MINIMAL_NO_STACK, Verbosity.SUPER_MINIMAL}
 
 
-
 class TestStep:
 
     def __init__(self,
@@ -120,13 +119,14 @@ class Test:
     @classmethod
     def case(cls,
              test_func: Optional[F_Callable] = None,
-             *,
-             setup: Optional[S_Callable] = None, 
-             cleanup: Optional[S_Callable] = None,
-             _no_op: Optional[S_Callable] = None) -> F_Callable:
-        
+             /,
+             *args: Any,
+             setup: Optional[F_Callable] = None,
+             cleanup: Optional[F_Callable] = None,
+             _no_op: Optional[F_Callable] = None) -> F_Callable:
+
         def wrapper(test_func: F_Callable):
-            
+        
             def _wrapper(*args, ____collector, ____verbosity, **kwargs) -> Any:
 
                 test_case = Test(_no_op,
@@ -142,11 +142,25 @@ class Test:
             _TEST_REGISTRY.add(hex(id(_wrapper)))
             
             return _wrapper
-
-        if test_func is None:
-            return wrapper
-        else:
+        
+        if callable(test_func) and not args and setup is None and cleanup is None and _no_op is None:
+        
             return wrapper(test_func)
+
+        if test_func is not None:
+            args = (test_func, *args)
+
+        if len(args) > 0:
+            setup = args[0]
+
+        if len(args) > 1:
+            cleanup = args[1]
+        
+        if len(args) > 2:
+            _no_op = args[2]
+
+        return wrapper
+    
     
     @cached_property
     def is_fail(self) -> bool:
@@ -245,7 +259,7 @@ class Test:
         self.attach_end_state()
         self.close_state()
 
-        if self._no_op:
+        if self._no_op and callable(self._no_op):
             from contextlib import redirect_stdout
 
             with redirect_stdout(StringIO()):
