@@ -19,13 +19,13 @@ _executed_cleanups: Set[str] = set()
 _state_counters: dict = {}
 
 
-def _reset_state():
-    """Reset tracking state between test runs."""
-    global _executed_setups, _executed_cleanups, _state_counters
-    with _state_lock:
-        _executed_setups.clear()
-        _executed_cleanups.clear()
-        _state_counters.clear()
+# def _reset_state():
+#     """Reset tracking state between test runs."""
+#     global _executed_setups, _executed_cleanups, _state_counters
+#     with _state_lock:
+#         _executed_setups.clear()
+#         _executed_cleanups.clear()
+#         _state_counters.clear()
 
 
 def _track_setup(name: str):
@@ -48,10 +48,10 @@ def _get_setup_count(name: str) -> int:
         return _state_counters.get(f"{name}_setup_count", 0)
 
 
-def _get_cleanup_count(name: str) -> int:
-    """Get the number of times a cleanup was called."""
-    with _state_lock:
-        return _state_counters.get(f"{name}_cleanup_count", 0)
+# def _get_cleanup_count(name: str) -> int:
+#     """Get the number of times a cleanup was called."""
+#     with _state_lock:
+#         return _state_counters.get(f"{name}_cleanup_count", 0)
 
 
 #####################
@@ -566,3 +566,57 @@ def test_db_transaction_rollback() -> None:
     
     conn.close()
 
+
+
+# Enable these for coverage
+# @Test.case(
+#     setup=lambda: 1/0,
+#     cleanup=lambda: _cleanup_test_db("db_transaction")
+# )
+# def test_db_transaction_rollback_setup_fails() -> None:
+#     """Test database transaction and rollback behavior."""
+#     db_path = _get_db_path("db_transaction")
+#     conn = sqlite3.connect(db_path)
+#     cursor = conn.cursor()
+    
+#     # Insert initial data
+#     cursor.execute("INSERT INTO users (name, email, age) VALUES (?, ?, ?)",
+#                    ("Alice", "alice@example.com", 30))
+#     conn.commit()
+    
+#     # Start a transaction
+#     try:
+#         cursor.execute("INSERT INTO users (name, email, age) VALUES (?, ?, ?)",
+#                        ("Bob", "bob@example.com", 25))
+#         # Intentionally insert duplicate email to cause constraint violation
+#         cursor.execute("INSERT INTO users (name, email, age) VALUES (?, ?, ?)",
+#                        ("Charlie", "alice@example.com", 35))
+#         conn.commit()
+#     except sqlite3.IntegrityError:
+#         conn.rollback()
+    
+#     # Verify only first insert persisted (Bob should not be there if rollback works)
+#     cursor.execute("SELECT COUNT(*) FROM users")
+#     count = cursor.fetchone()[0]
+#     # Should be 1 (just Alice) if rollback worked
+#     must_equal(1, count)
+    
+#     conn.close()
+
+
+
+# @Test.case(
+#     setup=lambda: _create_test_db("db_transaction"),
+#     cleanup=lambda: _cleanup_test_db("db_transaction")
+# )
+# def test_db_transaction_rollback_main_fails() -> None:
+#     1/0
+
+
+
+# @Test.case(
+#     setup=lambda: _create_test_db("db_transaction"),
+#     cleanup=lambda: 1/0
+# )
+# def test_db_transaction_cleanup_fails() -> None:
+#     ...

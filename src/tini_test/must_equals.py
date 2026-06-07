@@ -290,8 +290,7 @@ def _must_equal(expected: Any,
         
         # If it is known enum we just have to compare them.
         if issubclass(expected.__class__, enum.Enum):
-            _diff_enum(expected, actual, path)
-            return
+            return _diff_enum(expected, actual, path)
         
         if '__eq__' in dir(expected):
             
@@ -303,51 +302,41 @@ def _must_equal(expected: Any,
                 return
             else:
                 # case of alien primitive or alien?
-                _diff_alien_primitive(expected, actual, path) # type: ignore[arg-type]
-                return
+                return _diff_alien_primitive(expected, actual, path) # type: ignore[arg-type]
             
         raise ComperatorWasNotProvided
     
 
     if _is_alien:
-        _diff_alien_primitive(expected, actual, path, comperator) # type: ignore[arg-type]
-        return
+        return _diff_alien_primitive(expected, actual, path, comperator) # type: ignore[arg-type]
     
     if isinstance(expected, type):
-        _diff_primitive(expected, actual, path)
-        return
+        return _diff_primitive(expected, actual, path)
     
     if isinstance(expected, bool):
-        _diff_primitive(expected, actual, path)
-        return
+        return _diff_primitive(expected, actual, path)
 
     if isinstance(expected, int):
-        _diff_primitive(expected, actual, path)
-        return
+        return _diff_primitive(expected, actual, path)
 
     if isinstance(expected, float):
-        _diff_primitive(expected, actual, path)
-        return
+        return _diff_primitive(expected, actual, path)
 
     if isinstance(expected, str):
-        _diff_str(expected, actual, path)
-        return
+        return _diff_str(expected, actual, path)
+        
     
     if isinstance(expected, set):
-        _diff_set(expected, actual, path)
-        return
-
+        return _diff_set(expected, actual, path)
+        
     if isinstance(expected, tuple):
-        _diff_tuple(expected, actual, path, comperator)
-        return
+        return _diff_tuple(expected, actual, path, comperator)
 
     if isinstance(expected, list):
-        _diff_list(expected, actual, path, comperator)
-        return
+        return _diff_list(expected, actual, path, comperator)
 
     if isinstance(expected, dict):
-        _diff_dict(expected, actual, path, comperator)
-        return
+        return _diff_dict(expected, actual, path, comperator)
 
     assert_never(expected)
 
@@ -359,14 +348,12 @@ def _must_equal(expected: Any,
 
 def _diff_enum(expected: enum.Enum, actual: enum.Enum, path: str) -> None:
     if expected.value != actual.value:
-        _raise_diff('%r != %r' % (expected, actual, ))
-        return
+        return _raise_diff('%r != %r' % (expected, actual, ))
 
 
 def _diff_primitive(expected: Any, actual: Any, path: str) -> None:
     if expected != actual:
-        _raise_diff('%r != %r' % (expected, actual, ))
-        return
+        return _raise_diff('%r != %r' % (expected, actual, ))
 
 
 def _diff_str(expected: str, actual: str, path: str) -> None:
@@ -374,12 +361,10 @@ def _diff_str(expected: str, actual: str, path: str) -> None:
         return
 
     if len(expected) > _diff_threshold or len(actual) > _diff_threshold:
-        _raise_diff('String mismatch')
-        return
+        return _raise_diff('String mismatch')
     
     diff = _unified_diff(expected, actual)
-    _raise_diff('%s:\n%s' % (path, diff, ))
-    return
+    return _raise_diff('%s:\n%s' % (path, diff, ))
 
 
 def _diff_alien_primitive(expected: Any, 
