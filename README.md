@@ -6,7 +6,7 @@ The framework was tested using its own test suite and has 100% coverage. It was 
 ## Installation
 
 ```bash
-pip install tini_test
+pip install tINI-test
 ```
 
 ## Usage
