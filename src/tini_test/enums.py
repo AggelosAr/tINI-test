@@ -30,7 +30,7 @@ class RunMode(Enum):
         return r'''
 -Case insesitive. 
 
-Sync
+Sync ( DEFAULT )
 ----
 Run all tests in async mode.
 
@@ -69,7 +69,7 @@ Normal
 ------
 Full stack trace and print capture with nice borders. Also includes helpful details.
 
-Sort
+Sort ( DEFAULT )
 ----
 Same as normal but the errors are sorted per module.
 

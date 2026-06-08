@@ -1,13 +1,12 @@
 # tINI test
 
 A lightweight Python test framework focused on simple test discovery and execution from the command line.
-The framework was tested using its own test suite.
-pprint
+The framework was tested using its own test suite and has 100% coverage. It was also stress tested on around 1K tests to test db connections on a temp sqlite3. It also allows pretty prints inside the tests while running.
 
 ## Usage
 
 ```bash
-python3 -m tini_test [-r RUN MODE] [-v VERBOSITY] [-d DIRECTORY] [-f FILE] [-t TEST]
+python3 -m tini_test [-r RUN MODE] [-v VERBOSITY] [-d DIRECTORY] [-f FILE] [-t TEST] [-h HELP]
 ```
 
 ---
@@ -110,7 +109,7 @@ def test_must_equal_alien_object_with_eq() -> None:
 
 ## Test Discovery
 
-The path is resolved relative to the current working directory.
+The requested path is resolved relative to the current working directory.
 
 A file is considered discoverable when:
 
@@ -134,7 +133,7 @@ A file is considered discoverable when:
 ---
 
 ### Run modes
-Currently theere are two modes *_sync_* amd *_async_*.
+Currently there are two modes *_sync_* amd *_async_*.
 In _sync_ mode all tests run in sequential and in _async_ they run concurrently.
 ```bash
 tini_test -r sync
@@ -166,8 +165,8 @@ python3 -m tini_test -f test_concurrency.py
 ```
 
 
-notes:
-If multiple files with same names exist in different directories all will run.
+Notes:
+If multiple files with same name exist in different directories all will run.
 
 
 ---
@@ -202,7 +201,7 @@ Displays:
 * Full exception details
 * Stack traces
 * Test discovery information
-
+* Final summary stats
 ---
 
 ### SORT
@@ -235,7 +234,7 @@ Minimal display:
 
 While the discovery implementation will find tests with the same names or sub dirs with same names or even actual tests cases with same names, it is heavily discouraged.
 
-Of course the above is somewhat cancelled because the algorithm tries to autocomplete the path as a result when searching for a sub directory that exists in multiple sub directories with the same name, no guarantess are made all tests will be excecuted.
+Of course the above is somewhat cancelled because the algorithm tries to autocomplete the path, as a result when searching for a sub directory that exists in multiple sub directories with the same name, no guarantees are made that all tests will be excecuted.
 
 
 ---
