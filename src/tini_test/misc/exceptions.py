@@ -36,7 +36,7 @@ class ExpectedWasDifferentFromActual(Exception):
         self.msg = msg
     
     def _get_detail(self) -> str:
-        return f'\n{self.msg}\n'
+        return f'\n{self.msg}\n[EOD]'
 
   
 class ComperatorWasNotProvided(Exception):

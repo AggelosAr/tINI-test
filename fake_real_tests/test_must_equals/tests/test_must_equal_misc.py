@@ -38,7 +38,7 @@ def test_must_equal_diffs_on_types_case() -> None:
 ITEM: type mismatch
 expected: <class 'str'>
 actual:   <class 'int'>
-''', str(e.exception))
+[EOD]''', str(e.exception))
 
 
 
@@ -63,7 +63,7 @@ def test_must_equal_type_case_different() -> None:
 
     must_equal('''
 ITEM: <class 'int'> != <class 'NoneType'>
-''', str(e.exception))
+[EOD]''', str(e.exception))
 
 
 
@@ -80,7 +80,7 @@ def test_must_equal_none_type() -> None:
 ITEM: type mismatch
 expected: <class 'NoneType'>
 actual:   <class 'type'>
-''', str(e.exception))
+[EOD]''', str(e.exception))
 
 
 
@@ -97,7 +97,7 @@ def test_must_equal_type_none() -> None:
 ITEM: type mismatch
 expected: <class 'type'>
 actual:   <class 'NoneType'>
-''', str(e.exception))
+[EOD]''', str(e.exception))
     
 
 

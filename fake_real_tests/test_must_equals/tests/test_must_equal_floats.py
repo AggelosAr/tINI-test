@@ -40,7 +40,7 @@ def test_float_precision_equal() -> None:
 
     must_equal('''
 ITEM: 0.30000000000000004 != 0.3
-''', str(context.exception))
+[EOD]''', str(context.exception))
 
 
 

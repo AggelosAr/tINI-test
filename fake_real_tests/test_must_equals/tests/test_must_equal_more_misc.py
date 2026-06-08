@@ -21,7 +21,7 @@ def test_must_equal_different_objects() -> None:
 ITEM: type mismatch
 expected: <class 'int'>
 actual:   <class 'str'>
-''', str(context.exception))
+[EOD]''', str(context.exception))
 
 
 
@@ -38,7 +38,7 @@ def test_must_equal_different_objects_different_order() -> None:
 ITEM: type mismatch
 expected: <class 'int'>
 actual:   <class 'str'>
-''', str(context.exception))
+[EOD]''', str(context.exception))
 
 
 
@@ -98,7 +98,7 @@ def test_must_equal_alien_object_with_eq() -> None:
 
     must_equal('''
 ITEM: <Object A at %s> != <Object A at %s>
-''' % (hex(id(obj1)), hex(id(obj2)), ), str(context.exception))
+[EOD]''' % (hex(id(obj1)), hex(id(obj2)), ), str(context.exception))
 
 
 
@@ -121,7 +121,7 @@ def test_must_equal_alien_object_with_eq_different_order() -> None:
 
     must_equal('''
 ITEM: <Object A at %s> != <Object A at %s>
-''' % (hex(id(obj1)), hex(id(obj2)), ), str(context.exception))
+[EOD]''' % (hex(id(obj1)), hex(id(obj2)), ), str(context.exception))
 
 
 
@@ -163,7 +163,7 @@ def test_must_equal_alien_object_with_cumtom_comp() -> None:
 
     must_equal('''
 ITEM: <Object A at %s> != <Object A at %s>
-''' % (hex(id(obj1)), hex(id(obj2)), ), str(context.exception))
+[EOD]''' % (hex(id(obj1)), hex(id(obj2)), ), str(context.exception))
 
 
 
@@ -186,7 +186,7 @@ def test_must_equal_alien_object_with_cumtom_comp_different_order() -> None:
 
     must_equal('''
 ITEM: <Object A at %s> != <Object A at %s>
-''' % (hex(id(obj1)), hex(id(obj2)), ), str(context.exception))
+[EOD]''' % (hex(id(obj1)), hex(id(obj2)), ), str(context.exception))
 
 
 
@@ -210,7 +210,7 @@ def test_must_equals_auto_discovers_eq_and_returns_false_format_case() -> None:
 
     must_equal('''
 ITEM: <Object A at %s> != <Object A at %s>
-''' % (hex(id(obj1)), hex(id(obj2)), ), str(context.exception))
+[EOD]''' % (hex(id(obj1)), hex(id(obj2)), ), str(context.exception))
 
 
 
@@ -421,7 +421,7 @@ def test_must_equals_auto_discovers_truly_works_and_returns_false() -> None:
 
     must_equal('''
 ITEM: <Object A at %s> != <Object A at %s>
-''' % (hex(id(obj1)), hex(id(obj2)), ), str(context.exception))
+[EOD]''' % (hex(id(obj1)), hex(id(obj2)), ), str(context.exception))
 
 
 
@@ -471,4 +471,4 @@ def test_must_equal_different_objects_bytes() -> None:
 
     must_equal('''
 ITEM: <Object bytes at %s> != <Object bytes at %s>
-''' % (hex(id(expected)), hex(id(actual)), ), str(context.exception))
+[EOD]''' % (hex(id(expected)), hex(id(actual)), ), str(context.exception))

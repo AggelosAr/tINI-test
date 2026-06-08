@@ -1,4 +1,3 @@
-
 from tini_test.test import Test
 
 

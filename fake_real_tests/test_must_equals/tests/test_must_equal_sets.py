@@ -28,7 +28,7 @@ def test_set_missing() -> None:
 ITEM: set mismatch
 missing: {3}
 extra: set()
-''', str(context.exception))
+[EOD]''', str(context.exception))
     
 
 
@@ -48,7 +48,7 @@ def test_set_extra() -> None:
 ITEM: set mismatch
 missing: set()
 extra: {3}
-''', str(context.exception))
+[EOD]''', str(context.exception))
     
 
 
@@ -68,7 +68,7 @@ def test_set_value_diff() -> None:
 ITEM: set mismatch
 missing: {2}
 extra: {9}
-''', str(context.exception))
+[EOD]''', str(context.exception))
     
 
 
@@ -104,7 +104,7 @@ def test_set_single_fail() -> None:
 ITEM: set mismatch
 missing: {1}
 extra: {2}
-''', str(context.exception))
+[EOD]''', str(context.exception))
 
 
 
@@ -132,7 +132,7 @@ def test_set_large_fail() -> None:
 ITEM: set mismatch
 missing: {49}
 extra: set()
-''', str(context.exception))
+[EOD]''', str(context.exception))
 
 
 

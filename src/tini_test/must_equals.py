@@ -24,7 +24,9 @@ _diff_threshold = 2**16
 
 _max_m_l_diffs = 3
 
-_max_line_context = 100
+_max_multi_single_diffs = 2
+
+_max_line_context = 70
 
 _S = 1000
 
@@ -140,19 +142,28 @@ def _multiline_diff(expected: str, actual: str) -> str:
             tofile='actual',
         )
     )
-
+    #return ''.join(lines)
     result = []
     hunk_count = 0
 
-    _expected = []
+    _expected = deque()
     _actual = deque()
     
+    current_multi_single_line_diffs = 0
+
     for idx in range(len(lines)):
 
         line = lines[idx]
+
+        if current_multi_single_line_diffs > _max_multi_single_diffs:
+            if not line.startswith('@@'):
+                continue
+
         if line.startswith('@@'):
             
             hunk_count += 1
+
+            current_multi_single_line_diffs = 0
 
             if hunk_count > _max_m_l_diffs:
               
@@ -173,7 +184,8 @@ def _multiline_diff(expected: str, actual: str) -> str:
             if _actual:
                 
                 if line != (_v := _actual.popleft()):
-
+                    
+                    current_multi_single_line_diffs += 1
                     r = _single_line_diff(line, _v)
 
                     result.append('\n%s\n' % (r, ))
@@ -189,8 +201,9 @@ def _multiline_diff(expected: str, actual: str) -> str:
 
             if _expected:
              
-                if line != (_v := _expected.pop()):
-
+                if line != (_v := _expected.popleft()):
+                    
+                    current_multi_single_line_diffs += 1
                     r = _single_line_diff(_v, line)
             
                     result.append('\n%s\n' % (r, ))
@@ -222,8 +235,8 @@ def _single_line_diff(expected: str, actual: str) -> str:
     else:
         idx = min(len(expected), len(actual))
 
-    start = max(0, idx - _max_line_context)
-    end = idx + _max_line_context
+    start = max(0, idx - _max_line_context//2)
+    end = idx + _max_line_context//2
 
     exp_snippet = expected[start:end]
     act_snippet = actual[start:end]
@@ -356,7 +369,7 @@ def _diff_str(expected: str, actual: str, path: str) -> None:
         return
 
     if len(expected) > _diff_threshold or len(actual) > _diff_threshold:
-        return _raise_diff('String mismatch')
+        return _raise_diff('Very big string. String mismatch')
     
     diff = _unified_diff(expected, actual)
     return _raise_diff('%s:\n%s' % (path, diff, ))

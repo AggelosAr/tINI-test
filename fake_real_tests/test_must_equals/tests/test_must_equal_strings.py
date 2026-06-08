@@ -35,7 +35,7 @@ expected: 'world\n'
 actual:   'there\n'
            ^
  foo
-''', str(context.exception))
+[EOD]''', str(context.exception))
 
 
 
@@ -60,7 +60,7 @@ actual char:   't'
 expected: 'hello world'
 actual:   'hello there'
                  ^
-''', str(context.exception))
+[EOD]''', str(context.exception))
     
 
 
@@ -85,7 +85,7 @@ actual char:   'g'
 expected: 'abcdef'
 actual:   'abcdeg'
                 ^
-''', str(context.exception))
+[EOD]''', str(context.exception))
     
 
 
@@ -110,7 +110,7 @@ actual char:   <end-of-string>
 expected: 'abcdef'
 actual:   'abc'
               ^
-''', str(context.exception))
+[EOD]''', str(context.exception))
     
 
 
@@ -135,7 +135,7 @@ actual char:   'd'
 expected: 'abc'
 actual:   'abcdef'
               ^
-''', str(context.exception))
+[EOD]''', str(context.exception))
     
 
 
@@ -179,7 +179,7 @@ expected: 'world\n'
 actual:   'there\n'
            ^
  foo
-''', str(context.exception))
+[EOD]''', str(context.exception))
     
 
 
@@ -220,7 +220,7 @@ expected: 'world was a small bee nest\n'
 actual:   'world was a XXX bee next\n'
                        ^
  in the other side
-''', str(context.exception))
+[EOD]''', str(context.exception))
 
 
 
@@ -229,21 +229,20 @@ def test_dict_value_dont_match_case() -> None:
     expected = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
     actual = 'RRRRRRRRRRRRRRRRRRRRRRRsadasdasdasd'
    
-
     with WillRaise(ExpectedWasDifferentFromActual) as context:
         must_equal(expected, actual)
 
 
-    must_equal('''
+    must_equal(r'''
 ITEM:
 string mismatch at index 0
 expected char: 'X'
 actual char:   'R'
 
-expected: 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+expected: 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
 actual:   'RRRRRRRRRRRRRRRRRRRRRRRsadasdasdasd'
            ^
-''', str(context.exception))
+[EOD]''', str(context.exception))
 
 
 
@@ -312,6 +311,6 @@ def test_str_very_long() -> None:
     print('---------------------------------')
 
     must_equal('''
-String mismatch
-''', str(context.exception))
+Very big string. String mismatch
+[EOD]''', str(context.exception))
   

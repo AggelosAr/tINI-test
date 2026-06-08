@@ -34,7 +34,7 @@ def test_bool_true_false_fail() -> None:
 
     must_equal('''
 ITEM: True != False
-''', str(context.exception))
+[EOD]''', str(context.exception))
 
 
 
@@ -52,7 +52,7 @@ def test_bool_false_true_fail() -> None:
 
     must_equal('''
 ITEM: False != True
-''', str(context.exception))
+[EOD]''', str(context.exception))
 
 
 @Test.case
@@ -85,7 +85,7 @@ def test_bool_truthy_int_fail() -> None:
 ITEM: type mismatch
 expected: <class 'bool'>
 actual:   <class 'int'>
-''', str(context.exception))
+[EOD]''', str(context.exception))
 
 
 
@@ -105,5 +105,5 @@ def test_bool_false_vs_zero_fail() -> None:
 ITEM: type mismatch
 expected: <class 'bool'>
 actual:   <class 'int'>
-''', str(context.exception))
+[EOD]''', str(context.exception))
     
