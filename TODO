@@ -5,16 +5,9 @@ if user press contl c . we must return him something . < add log >?
 dont always import asyncio if you dont have to 
 
 
-run coverage (97% if we enable fails)
-
-
-
 FIX this `bug`
 @Test.case(lambda :1, 2)
 def test_setup_provided_key_breaks() -> None:
     1/0
 
 *** EXCEPTION DURING TEST *** shows before Break down
-
-
-# TODO path on must equals may grow large ...
