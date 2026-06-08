@@ -1,7 +1,6 @@
 from tini_test.test_utils import Test
 
 
-
 @Test.case
 def passes_good_bad() -> None:
     ...

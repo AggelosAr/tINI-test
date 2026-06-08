@@ -1,14 +1,14 @@
-from contextlib import redirect_stdout
 import io
 import os
 import subprocess
 import sys
 import tempfile
 import threading
+from contextlib import redirect_stdout
 from time import perf_counter
 
 from tini_test.__main__ import _tini_test
-from tini_test.context_managers import _ThreadLocalStdout, WillRaise
+from tini_test.context_managers import WillRaise, _ThreadLocalStdout
 from tini_test.core import TestSuite
 from tini_test.enums import RunMode, Verbosity
 from tini_test.initializer import initialize_test_suite

@@ -1,6 +1,5 @@
 from tini_test.test import Test
 
-
 GG = 2_999
 
 def __cleanup():

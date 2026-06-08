@@ -1,6 +1,7 @@
 from tini_test.context_managers import WillRaise
 from tini_test.enums import RunMode, Verbosity
-from tini_test.misc.exceptions import (ComperatorIsNotValid, ComperatorWasNotProvided,
+from tini_test.misc.exceptions import (ComperatorIsNotValid,
+                                       ComperatorWasNotProvided,
                                        ExpectedWasDifferentFromActual)
 from tini_test.must_equals import must_equal
 from tini_test.test_utils import Test
