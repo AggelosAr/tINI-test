@@ -2,7 +2,7 @@
 ![Coverage](coverage.svg)
 
 A lightweight Python test framework focused on simple test discovery and execution from the command line.
-The framework was tested using its own test suite and has 100% coverage. It was also stress tested on around 1K tests to test db connections on a temp sqlite3. It also allows pretty prints inside the tests while running.
+The framework was tested using its own test suite. It was also stress tested on around 1K tests to test db connections on a temp sqlite3. It also allows pretty prints inside the tests while running.
 
 ## Installation
 
