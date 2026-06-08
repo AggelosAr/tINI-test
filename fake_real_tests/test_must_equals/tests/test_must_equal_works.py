@@ -1,8 +1,68 @@
 from tini_test.context_managers import WillRaise
-from tini_test.misc.exceptions import (ComperatorWasNotProvided,
+from tini_test.enums import RunMode, Verbosity
+from tini_test.misc.exceptions import (ComperatorIsNotValid, ComperatorWasNotProvided,
                                        ExpectedWasDifferentFromActual)
 from tini_test.must_equals import must_equal
 from tini_test.test_utils import Test
+
+
+@Test.case
+def test_enums() -> None:
+
+    must_equal(RunMode.SYNC, RunMode.SYNC)
+
+    with WillRaise(ExpectedWasDifferentFromActual) as context:
+        must_equal(RunMode.SYNC, RunMode.ASYNC)
+
+    must_equal('''
+ITEM: <RunMode.SYNC: 'SYNC'> != <RunMode.ASYNC: 'ASYNC'>
+[EOD]''', str(context.exception))
+    
+
+
+@Test.case
+def test_verbosity() -> None:
+
+    must_equal(Verbosity.MINIMAL, Verbosity.MINIMAL)
+
+    must_equal(Verbosity.MINIMAL, Verbosity.arg_parser_type('mInImAl'))
+
+    with WillRaise(ExpectedWasDifferentFromActual) as context:
+        must_equal(Verbosity.MINIMAL, Verbosity.NORMAL)
+
+    must_equal('''
+ITEM: <Verbosity.MINIMAL: 'MINIMAL'> != <Verbosity.NORMAL: 'NORMAL'>
+[EOD]''', str(context.exception))
+
+
+
+@Test.case
+def test_must_equal_receives_a_bad_function_on_custom_object() -> None:
+
+    class A:
+
+        def __init__(self, a: int) -> None:
+            self.a = 10
+
+    with WillRaise(ComperatorIsNotValid) as context:
+        must_equal(A(10), A(20), lambda: 1)
+
+    must_equal('Comperator must accept two items', str(context.exception))
+
+
+@Test.case
+def test_must_equal_receives_not_a_function_on_custom_object() -> None:
+
+    class A:
+
+        def __init__(self, a: int) -> None:
+            self.a = 10
+
+    with WillRaise(ComperatorIsNotValid) as context:
+        must_equal(A(10), A(20), object)
+
+    must_equal('Comperator is not a function', str(context.exception))
+
 
 
 @Test.case

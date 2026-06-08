@@ -287,7 +287,7 @@ def test_big_multi_line_string_diff_case_and_omitted_diffs() -> None:
     Officia in dolor excepteur ullamco sint.
     CCCAd qui magna consectetur amet enim consequat ullamco ea pariatur reprehenderit consectetur dolore est laboris. 
     Consectetur aliqua consequat proident qui'''
-
+    
     with WillRaise(ExpectedWasDifferentFromActual) as context:
         must_equal(expected, actual)
    

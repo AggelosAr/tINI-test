@@ -149,9 +149,9 @@ class TestCollection:
             
 
             if bucket_idx+1==bucket_size:
-   
-                for _ in range(len(previous_progress)):
 
+                for _ in range(len(previous_progress)):
+                   
                     print(_LINE_UP, end=_LINE_CLEAR)
 
                 previous_progress.append(progress)

@@ -1,11 +1,4 @@
-from typing import assert_never
-
 from tini_test.test import Test
-
-# If there is a cleanup provided 
-# We will attempt to run it in case the test fails
-
-# this tests should fail BUT _no_op should not fail
 
 
 GG = 2_999
@@ -33,7 +26,6 @@ def _setup():
     global _GG
     print('_setup called val-> %d' % (_GG, ))
     1/0
-    _GG = 0
 
 def _cleanup():
     global _GG
@@ -50,7 +42,7 @@ def _no_op():
            cleanup=lambda: _cleanup(), 
            _no_op=lambda: _no_op())
 def test_cleanup_works_even_if_setup_fails():
-    assert_never()
+    ...
 
 
 
@@ -59,7 +51,6 @@ def _setupX():
     global _GGX
     print('_setupX called val-> %d' % (_GGX, ))
     1/0
-    _GGX = 0
 
 def _cleanupX():
     global _GGX
@@ -76,4 +67,4 @@ def _no_opX():
            cleanup=lambda: _cleanupX(), 
            _no_op=lambda: _no_opX())
 def test_cleanup_works_even_if_setup_fails_and_then_breaks():
-    assert_never()
+    ...

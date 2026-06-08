@@ -44,9 +44,6 @@ class OperationState:
 
     def __str__(self) -> str:
         return '\n'.join(self.get_boxed_information())
-                            
-    def __repr__(self) -> str:
-        raise NotImplementedError
 
     @classmethod
     @lru_cache
@@ -173,6 +170,3 @@ class OperationState:
 
             case TestStatus.NO_OP:
                 return ['']
-            
-            case _:
-                return [''] # TODO update 

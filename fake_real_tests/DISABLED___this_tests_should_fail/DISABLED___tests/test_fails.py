@@ -10,7 +10,6 @@ from tini_test.test import Test
 def test_broken_test_case_one():
     print('test_broken_test_case_one')
     1/0
-    assert_never()
 
 
 
@@ -18,7 +17,6 @@ def test_broken_test_case_one():
 def test_broken_test_case_two():
     print('test_broken_test_case_two')
     ok
-    assert_never()
 
 
 
@@ -28,8 +26,7 @@ def setup_breaks():
 
 @Test.case(setup=lambda: setup_breaks())
 def test_setup_breaks():
-    print('test_setup_breaks---->This should never print')
-    assert_never()
+    ...
 
 
 
@@ -50,8 +47,7 @@ def _cleanup_breaks():
 @Test.case(setup=lambda: setup_breaks(), 
            cleanup=lambda: _cleanup_breaks())
 def test_cleanup_breaks_test_and_break_down_wont_run():
-    print('---->This should never print')
-    assert_never()
+    ...
 
 
 
@@ -63,8 +59,6 @@ def test_will_raise_fails_to_catch_exception() -> None:
     with WillRaise(ZeroDivisionError) as context: 
         _must_equal(a, b)
 
-    assert_never
-
 
 
 @Test.case
@@ -75,10 +69,3 @@ def test_must_equal_receives_unknwon_object_failure() -> None:
             self.a = a
 
     must_equal(A(10), A(20))
-
-
-
-# @Test.case
-# def test_sorting_works():
-#     print('~~~~~~~~~~~~~~~~~~~~~~~~~')
-#     ...

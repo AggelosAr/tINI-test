@@ -1,13 +1,12 @@
-from .arg_parser import receive_args
+from .arg_parser import ArgsDict, receive_args
 from .initializer import initialize_test_suite
 from .misc.exceptions import CantFindRelativePathToRoot, TestNotFound
 
-if __name__=='__main__':
 
-    args = receive_args()
+def _tini_test(kwargs: ArgsDict):
     
     try:
-        test_suite = initialize_test_suite(**args)
+        test_suite = initialize_test_suite(**kwargs)
          
     except CantFindRelativePathToRoot:
         raise
@@ -19,3 +18,7 @@ if __name__=='__main__':
         test_suite.runner()
         test_suite.pprint()
 
+
+if __name__=='__main__':
+    _tini_test(receive_args())
+    

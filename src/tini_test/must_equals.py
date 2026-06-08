@@ -2,7 +2,7 @@ import enum
 from collections import deque
 from difflib import unified_diff
 from functools import lru_cache
-from typing import Any, Optional, assert_never
+from typing import Any, Optional
 
 from .misc.annotations import Comperator
 from .misc.exceptions import (ComperatorIsNotValid, ComperatorWasNotProvided,
@@ -142,6 +142,10 @@ def _multiline_diff(expected: str, actual: str) -> str:
             tofile='actual',
         )
     )
+
+    first_clock = True
+    
+    _did_something = 0
     #return ''.join(lines)
     result = []
     hunk_count = 0
@@ -161,7 +165,15 @@ def _multiline_diff(expected: str, actual: str) -> str:
 
         if line.startswith('@@'):
             
+            if _did_something < 2 and not first_clock:
+                result.append('\n***Maybe you forgot a new line somewhere?')
+            
+
+            first_clock = False 
+
             hunk_count += 1
+
+            _did_something = 0
 
             current_multi_single_line_diffs = 0
 
@@ -178,7 +190,9 @@ def _multiline_diff(expected: str, actual: str) -> str:
          
 
         elif line.startswith('-') and not line.startswith('--'):
-            
+
+            _did_something += 1
+
             line = line[1:]
 
             if _actual:
@@ -197,6 +211,8 @@ def _multiline_diff(expected: str, actual: str) -> str:
           
         elif line.startswith('+') and not line.startswith('++'):
             
+            _did_something += 1
+
             line = line[1:]
 
             if _expected:
@@ -223,7 +239,10 @@ def _multiline_diff(expected: str, actual: str) -> str:
                             lines[idx][-_max_line_context//2:], ))
 
             result.append(line)
-            
+
+    if _did_something < 2 and first_clock:
+        result += '\n***Maybe you forgot a new line somewhere?'
+        
     return ''.join(result)
 
 
@@ -286,11 +305,10 @@ def _must_equal(expected: Any,
         return
 
     if type(expected) != type(actual):
-        _raise_diff(
+        return _raise_diff(
             '%s: type mismatch\nexpected: %s\nactual:   %s'
             % (path, type(expected), type(actual), )
-        )
-        return
+        ) 
 
     _is_alien = type(expected) not in _known_types
 
@@ -303,15 +321,16 @@ def _must_equal(expected: Any,
         
         if '__eq__' in dir(expected):
             
-            # Determine is __eq__ is implemented on that class.
-            if expected.__eq__(actual) is NotImplemented:
-                raise ComperatorWasNotProvided
+            if callable(expected.__eq__):
+                # Determine is __eq__ is implemented on that class.
+                if expected.__eq__(actual) is NotImplemented:
+                    raise ComperatorWasNotProvided
 
-            if expected.__eq__(actual):
-                return
-            else:
-                # case of alien primitive or alien?
-                return _diff_alien_primitive(expected, actual, path) # type: ignore[arg-type]
+                if expected.__eq__(actual):
+                    return
+                else:
+                    # case of alien primitive or alien?
+                    return _diff_alien_primitive(expected, actual, path) # type: ignore[arg-type]
             
         raise ComperatorWasNotProvided
     
@@ -345,8 +364,6 @@ def _must_equal(expected: Any,
 
     if isinstance(expected, dict):
         return _diff_dict(expected, actual, path, comperator)
-
-    assert_never(expected)
 
 
 # =========================================================
@@ -383,15 +400,14 @@ def _diff_alien_primitive(expected: Any,
     # TODO maybe use the str or repr if it is defined?
     if not comperator or comperator(expected, actual) is False:
 
-        _raise_diff('%s: %s != %s' 
-                    % (path, 
-                       '<Object %s at %s>' 
-                       % (expected.__class__.__name__, 
-                          hex(id(expected)), ), 
-                       '<Object %s at %s>' 
-                       % (actual.__class__.__name__, 
-                          hex(id(actual)), ), ))
-        return
+        return _raise_diff('%s: %s != %s' 
+                           % (path, 
+                           '<Object %s at %s>' 
+                           % (expected.__class__.__name__, 
+                               hex(id(expected)), ), 
+                           '<Object %s at %s>' 
+                           % (actual.__class__.__name__, 
+                               hex(id(actual)), ), ))
 
 
 # =========================================================
@@ -409,11 +425,10 @@ def _diff_set(expected: set[Any],
     missing = expected - actual
     extra = actual - expected
 
-    _raise_diff(
+    return _raise_diff(
         '%s: set mismatch\nmissing: %r\nextra: %r'
-        % (path, missing, extra, )
+         % (path, missing, extra, )
     )
-    return
 
 
 def _diff_tuple(expected: tuple[Any, ...], 
@@ -422,11 +437,10 @@ def _diff_tuple(expected: tuple[Any, ...],
                 comperator: Optional[Comperator]) -> None:
 
     if len(expected) != len(actual):
-        _raise_diff(
+        return _raise_diff(
             '%s: tuple length mismatch\nexpected=%d actual=%d'
-            % (path, len(expected), len(actual), )
+             % (path, len(expected), len(actual), )
         )
-        return
 
     for i, (e, a) in enumerate(zip(expected, actual)):
         _must_equal(e, a, '%s[%d]' % (path, i, ), comperator)
@@ -438,11 +452,10 @@ def _diff_list(expected: list[Any],
                comperator: Optional[Comperator]) -> None:
 
     if len(expected) != len(actual):
-        _raise_diff(
+        return _raise_diff(
             '%s: list length mismatch\nexpected=%d actual=%d'
-            % (path, len(expected), len(actual), )
+             % (path, len(expected), len(actual), )
         )
-        return
 
     for i, (e, a) in enumerate(zip(expected, actual)):
         _must_equal(e, a, '%s[%d]' % (path, i, ), comperator)
@@ -457,11 +470,10 @@ def _diff_dict(expected: dict[Any, Any],
         missing = expected.keys() - actual.keys()
         extra = actual.keys() - expected.keys()
 
-        _raise_diff(
+        return _raise_diff(
             '%s: dict key mismatch\nmissing: %r\nextra: %r'
-            % (path, missing, extra, )
+             % (path, missing, extra, )
         )
-        return
 
     for key in expected:
         _must_equal(expected[key], actual[key], '%s[%r]' % (path, key, ), comperator)

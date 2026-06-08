@@ -7,8 +7,6 @@ from typing import Any, Optional
 from tini_test._internals._registry import _TEST_REGISTRY
 from tini_test.context_managers import _thread_redirect_stdout
 
-from ._internals._internal_exceptions._exceptions import (_FailStateWasNotFail,
-                                                          _LastOpNotExpected)
 from .enums import TestStatus, Verbosity
 from .misc.annotations import F_Callable, S_Callable, StackTrace
 from .misc.exceptions import ExpectedWasDifferentFromActual
@@ -173,7 +171,6 @@ class Test:
 
     @fail_state.setter
     def fail_state(self, new_state: TestStatus) -> None:
-        assert TestStatus.is_fail_cause(new_state), _FailStateWasNotFail
         self._fail_state = new_state
 
     @property
@@ -215,8 +212,6 @@ class Test:
                 # Modify the failed_op status for visual purposes
                 failed_op.status = TestStatus.NO_OP
                 cleanup_step.entry_status=TestStatus.ATTEMPT_BREAK_DOWN_ENTRY_FROM_FAIL
-            case _:
-                raise _LastOpNotExpected
             
         cleanup_step.success_status=TestStatus.ATTEMPT_BREAK_DOWN_SUCCESS
         cleanup_step.fail_status=TestStatus.ATTEMPT_BREAK_DOWN_FAIL

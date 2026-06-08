@@ -7,7 +7,6 @@ from tini_test.test import Test
 def test_broken_test_fails():
     print('inside test_broken_test_fails')
     _GG
-    assert_never()
 
 
 

@@ -268,25 +268,25 @@ def _cleanup_test_db(test_name: str):
     if os.path.exists(db_path):
         print(f"   📁 DB Path: {db_path}")
         # Try to query final state before deletion
-        try:
-            conn = sqlite3.connect(db_path)
-            cursor = conn.cursor()
-            cursor.execute("SELECT COUNT(*) FROM users")
-            count = cursor.fetchone()[0]
-            print(f"   📊 Final record count: {count} rows")
-            
-            # Show the actual data
-            cursor.execute("SELECT id, name, email, age FROM users")
-            rows = cursor.fetchall()
-            if rows:
-                print(f"   📋 Final data in database:")
-                for row in rows:
-                    print(f"      ID={row[0]}, Name={row[1]}, Email={row[2]}, Age={row[3]}")
-            else:
-                print(f"   📋 Database is empty")
-            conn.close()
-        except Exception as e:
-            print(f"   ⚠️  Could not query database: {e}")
+        # try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM users")
+        count = cursor.fetchone()[0]
+        print(f"   📊 Final record count: {count} rows")
+        
+        # Show the actual data
+        cursor.execute("SELECT id, name, email, age FROM users")
+        rows = cursor.fetchall()
+        if rows:
+            print(f"   📋 Final data in database:")
+            for row in rows:
+                print(f"      ID={row[0]}, Name={row[1]}, Email={row[2]}, Age={row[3]}")
+        else:
+            print(f"   📋 Database is empty")
+        conn.close()
+        # except Exception as e:
+        #     print(f"   ⚠️  Could not query database: {e}")
         
         print(f"   🗑️  Deleting database file")
         os.remove(db_path)
@@ -294,12 +294,12 @@ def _cleanup_test_db(test_name: str):
         print(f"   ℹ️  Database file does not exist: {db_path}")
     
     # Also clean up any connection stored in thread local
-    if hasattr(_db_local, 'connection'):
-        try:
-            _db_local.connection.close()
-        except:
-            pass
-        del _db_local.connection
+    # if hasattr(_db_local, 'connection'):
+    #     try:
+    #         _db_local.connection.close()
+    #     except:
+    #         pass
+    #     del _db_local.connection
     print(f"   ✅ Cleanup complete")
 
 
@@ -554,7 +554,6 @@ def test_db_transaction_rollback() -> None:
         # Intentionally insert duplicate email to cause constraint violation
         cursor.execute("INSERT INTO users (name, email, age) VALUES (?, ?, ?)",
                        ("Charlie", "alice@example.com", 35))
-        conn.commit()
     except sqlite3.IntegrityError:
         conn.rollback()
     
@@ -565,58 +564,3 @@ def test_db_transaction_rollback() -> None:
     must_equal(1, count)
     
     conn.close()
-
-
-
-# Enable these for coverage
-# @Test.case(
-#     setup=lambda: 1/0,
-#     cleanup=lambda: _cleanup_test_db("db_transaction")
-# )
-# def test_db_transaction_rollback_setup_fails() -> None:
-#     """Test database transaction and rollback behavior."""
-#     db_path = _get_db_path("db_transaction")
-#     conn = sqlite3.connect(db_path)
-#     cursor = conn.cursor()
-    
-#     # Insert initial data
-#     cursor.execute("INSERT INTO users (name, email, age) VALUES (?, ?, ?)",
-#                    ("Alice", "alice@example.com", 30))
-#     conn.commit()
-    
-#     # Start a transaction
-#     try:
-#         cursor.execute("INSERT INTO users (name, email, age) VALUES (?, ?, ?)",
-#                        ("Bob", "bob@example.com", 25))
-#         # Intentionally insert duplicate email to cause constraint violation
-#         cursor.execute("INSERT INTO users (name, email, age) VALUES (?, ?, ?)",
-#                        ("Charlie", "alice@example.com", 35))
-#         conn.commit()
-#     except sqlite3.IntegrityError:
-#         conn.rollback()
-    
-#     # Verify only first insert persisted (Bob should not be there if rollback works)
-#     cursor.execute("SELECT COUNT(*) FROM users")
-#     count = cursor.fetchone()[0]
-#     # Should be 1 (just Alice) if rollback worked
-#     must_equal(1, count)
-    
-#     conn.close()
-
-
-
-# @Test.case(
-#     setup=lambda: _create_test_db("db_transaction"),
-#     cleanup=lambda: _cleanup_test_db("db_transaction")
-# )
-# def test_db_transaction_rollback_main_fails() -> None:
-#     1/0
-
-
-
-# @Test.case(
-#     setup=lambda: _create_test_db("db_transaction"),
-#     cleanup=lambda: 1/0
-# )
-# def test_db_transaction_cleanup_fails() -> None:
-#     ...
