@@ -1,3 +1,6 @@
+![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/AggelosAr/9f0a75f4e7d7a1fb8ef58c41edbad054/raw/covbadge.json)
+
+
 # tINI test
 
 A lightweight Python test framework focused on simple test discovery and execution from the command line.
