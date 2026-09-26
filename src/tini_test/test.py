@@ -6,11 +6,11 @@ from typing import Callable, Optional
 
 from tini_test._internals._registry import _TEST_REGISTRY
 
-from ._internals.consts import _LINE_CLEAR, _LINE_UP, _RESET
-from .enums import Color, RunMode, Verbosity
-from .misc.annotations import (DirectoryPath, Errors, FileName,
+from tini_test._internals.consts import _LINE_CLEAR, _LINE_UP, _RESET
+from tini_test.enums import Color, RunMode, Verbosity
+from tini_test.misc.annotations import (DirectoryPath, Errors, FileName,
                                TestCollectionSize, TestFunctionName)
-from .test_utils import Test
+from tini_test.test_utils import Test
 
 
 class TestCollection:

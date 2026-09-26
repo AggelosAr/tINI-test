@@ -152,7 +152,7 @@ def test_must_equals_auto_discovers_eq_and_returns_false() -> None:
 
         def __eq__(self, other: object) -> bool:
 
-            return self.a == other.a
+            return self.a == other.a                    # type: ignore[attr-defined]
  
     obj1 = [A(a=10)]
     obj2 = [A(a=20)]
@@ -172,7 +172,7 @@ def test_must_equals_auto_discovers_eq_and_returns_true() -> None:
 
         def __eq__(self, other: object) -> bool:
             
-            return self.a == other.a
+            return self.a == other.a                    # type: ignore[attr-defined]
  
     obj1 = [A(a=10)]
     obj2 = [A(a=10)]
@@ -190,7 +190,7 @@ def test_comperator_works_on_unknown_objects_in_containers_case_pass() -> None:
             self.a = a
 
         def __eq__(self, obj):
-            return self.a == obj.a
+            return self.a == obj.a                    # type: ignore[attr-defined]
     
     must_equal([A(10)], [A(10)], comperator=A.__eq__)
 
@@ -205,7 +205,7 @@ def test_comperator_works_on_unknown_objects_in_containers_case_fail() -> None:
             self.a = a
 
         def __eq__(self, obj):
-            return self.a == obj.a
+            return self.a == obj.a                    # type: ignore[attr-defined]
     
     with WillRaise(ExpectedWasDifferentFromActual):
         must_equal([A(10)], [A(20)], comperator=A.__eq__)

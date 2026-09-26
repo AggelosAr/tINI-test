@@ -307,7 +307,7 @@ def test_thread_local_stdout_fallback_after_cleanup():
 
 
 
-# TODO update test
+# TODO update test 
 @Test.case
 def test_thread_local_stdout_isatty():
     default_buffer = io.StringIO()

@@ -4,8 +4,8 @@ from typing import Optional
 from tini_test.core import TestSuite
 from tini_test.module_collector import ModuleCollector
 
-from .enums import RunMode, Verbosity
-from .misc.annotations import DirectoryPath, FileName, TestFunctionName
+from tini_test.enums import RunMode, Verbosity
+from tini_test.misc.annotations import DirectoryPath, FileName, TestFunctionName
 
 
 def initialize_test_suite(run_mode: RunMode,

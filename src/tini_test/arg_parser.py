@@ -4,7 +4,7 @@ from typing import NotRequired, TypedDict
 from tini_test.misc.annotations import (DirectoryPath, FileName,
                                         TestFunctionName)
 
-from .enums import RunMode, Verbosity
+from tini_test.enums import RunMode, Verbosity
 
 
 class ArgsDict(TypedDict):

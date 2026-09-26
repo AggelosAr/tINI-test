@@ -88,7 +88,7 @@ def test_must_equal_alien_object_with_eq() -> None:
             self.a = a
 
         def __eq__(self, other: object) -> bool:
-            return self.a == other.a
+            return self.a == other.a                        # type: ignore[attr-defined]
         
     obj1 = A(11)
     obj2 = A(21)
@@ -111,7 +111,7 @@ def test_must_equal_alien_object_with_eq_different_order() -> None:
             self.a = a
 
         def __eq__(self, other: object) -> bool:     
-            return self.a == other.a
+            return self.a == other.a                    # type: ignore[attr-defined]
         
     obj1 = A(21)
     obj2 = A(11)
@@ -134,7 +134,7 @@ def test_must_equal_alien_object_breaks_on_eq() -> None:
             self.a = a
 
         def __eq__(self, other: object) -> bool:     
-            return self.a == other.x
+            return self.a == other.x                        # type: ignore[attr-defined]
         
     obj1 = A(21)
     obj2 = A(11)
@@ -200,7 +200,7 @@ def test_must_equals_auto_discovers_eq_and_returns_false_format_case() -> None:
 
         def __eq__(self, other: object) -> bool:
 
-            return self.a == other.a
+            return self.a == other.a                    # type: ignore[attr-defined]
  
     obj1 = A(a=10)
     obj2 = A(a=20)
@@ -392,7 +392,7 @@ def test_must_equals_auto_discovers_truly_works_and_returns_true() -> None:
 
         def __eq__(self, other: object) -> bool:
 
-            return cosmic_entropy_engine(self.a==other.a)
+            return cosmic_entropy_engine(self.a==other.a)                    # type: ignore[attr-defined]
  
     obj1 = A(a=10)
     obj2 = A(a=10)
@@ -411,7 +411,7 @@ def test_must_equals_auto_discovers_truly_works_and_returns_false() -> None:
 
         def __eq__(self, other: object) -> bool:
             
-            return cosmic_entropy_engine(self.a==other.a)
+            return cosmic_entropy_engine(self.a==other.a)                    # type: ignore[attr-defined]
  
     obj1 = A(a=10)
     obj2 = A(a=20)
@@ -444,19 +444,19 @@ def test_must_equals_validatates_comperator() -> None:
 
     # ------------------------------------------------------
 
-    class A:
+    class A:                                          # type: ignore[no-redef]
 
         def __init__(self, a: int) -> None:
             self.a = a
 
         def comp(self, other: object) -> bool:
             
-            return self.a==other.a
+            return self.a==other.a                    # type: ignore[attr-defined]
         
     obj1 = A(a=10)
     obj2 = A(a=10)
 
-    must_equal(obj1, obj2, A.comp)
+    must_equal(obj1, obj2, A.comp)                    # type: ignore[attr-defined]
 
 
 

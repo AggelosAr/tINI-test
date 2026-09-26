@@ -135,8 +135,8 @@ def test_cleanup_runs_on_failure() -> None:
 
 
 @Test.case(
-    setup=lambda: (time.sleep(0.05), _track_setup("async_1")),
-    cleanup=lambda: (time.sleep(0.05), _track_cleanup("async_1"))
+    setup=lambda: (time.sleep(0.05), _track_setup("async_1")),      # type: ignore[func-returns-value]
+    cleanup=lambda: (time.sleep(0.05), _track_cleanup("async_1"))   # type: ignore[func-returns-value]
 )
 def test_async_concurrent_1() -> None:
     """First test in concurrent group with setup/cleanup sleeps."""
@@ -145,8 +145,8 @@ def test_async_concurrent_1() -> None:
 
 
 @Test.case(
-    setup=lambda: (time.sleep(0.05), _track_setup("async_2")),
-    cleanup=lambda: (time.sleep(0.05), _track_cleanup("async_2"))
+    setup=lambda: (time.sleep(0.05), _track_setup("async_2")),      # type: ignore[func-returns-value]
+    cleanup=lambda: (time.sleep(0.05), _track_cleanup("async_2"))   # type: ignore[func-returns-value]
 )
 def test_async_concurrent_2() -> None:
     """Second test in concurrent group with setup/cleanup sleeps."""
@@ -155,8 +155,8 @@ def test_async_concurrent_2() -> None:
 
 
 @Test.case(
-    setup=lambda: (time.sleep(0.05), _track_setup("async_3")),
-    cleanup=lambda: (time.sleep(0.05), _track_cleanup("async_3"))
+    setup=lambda: (time.sleep(0.05), _track_setup("async_3")),      # type: ignore[func-returns-value]
+    cleanup=lambda: (time.sleep(0.05), _track_cleanup("async_3"))   # type: ignore[func-returns-value]
 )
 def test_async_concurrent_3() -> None:
     """Third test in concurrent group with setup/cleanup sleeps."""
@@ -179,8 +179,8 @@ def test_stdout_in_setup_cleanup() -> None:
 
 
 @Test.case(
-    setup=lambda: (time.sleep(0.01), print("SETUP WITH SLEEP")),
-    cleanup=lambda: (time.sleep(0.01), print("CLEANUP WITH SLEEP"))
+    setup=lambda: (time.sleep(0.01), print("SETUP WITH SLEEP")),      # type: ignore[func-returns-value]
+    cleanup=lambda: (time.sleep(0.01), print("CLEANUP WITH SLEEP"))   # type: ignore[func-returns-value]
 )
 def test_stdout_with_sleep_in_setup_cleanup() -> None:
     """Test that stdout is captured correctly even with sleeps in setup/cleanup."""
