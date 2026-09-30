@@ -55,3 +55,21 @@ class ExceptionWasNotRaised(Exception):
 
     def __init__(self, reason: str = '') -> None:
         super().__init__(reason)
+
+
+class MockDefinitionError(Exception):
+
+    def __init__(self, reason: str = '') -> None:
+        super().__init__(reason)
+
+
+class MockCallDefinitionError(Exception):
+
+    def __init__(self, reason: str = '') -> None:
+        super().__init__(reason)
+
+
+class MockMissingFunctionError(Exception):
+
+    def __init__(self, reason: str = '') -> None:
+        super().__init__(reason)

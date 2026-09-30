@@ -140,6 +140,11 @@ class TestStatus(Enum):
         return status in cls.fail_operations()
 
 
+class MockMode(Enum):
+    PATCH_CALL = 'PATCH_CALL'
+    PATCH_RETURN = 'PATCH_RETURN'
+    
+
 CONFIG: Mapping[TestStatus, ColorValue] = {
     TestStatus.SUCCESS: Color.GREEN.value,
     TestStatus.FAIL: Color.RED.value,

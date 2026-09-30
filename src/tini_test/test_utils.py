@@ -2,14 +2,16 @@ import asyncio
 from functools import cached_property
 from io import StringIO
 from traceback import format_exc, format_tb
-from typing import Any, Optional
+from typing import Any, Callable, Mapping, Optional
 
-from tini_test._internals._registry import _TEST_REGISTRY
+from tini_test._internals._registry import _CONN, _TEST_REGISTRY
 from tini_test.context_managers import _thread_redirect_stdout
 
 from .enums import TestStatus, Verbosity
-from .misc.annotations import F_Callable, S_Callable, StackTrace
+from .misc.annotations import (F_Callable, MockWrappedObject, S_Callable,
+                               StackTrace, TestWrappedObject)
 from .misc.exceptions import ExpectedWasDifferentFromActual
+from .mock import MockDefinition
 from .state.state import OperationState
 
 _minimals_discard = {Verbosity.MINIMAL_NO_STACK, Verbosity.SUPER_MINIMAL}
@@ -22,12 +24,15 @@ class TestStep:
                  success_status: TestStatus,
                  fail_status: TestStatus,
                  entry_status: Optional[TestStatus] = TestStatus.NO_OP,
-                 args: Optional[tuple] = (),
-                 kwargs: Optional[dict[str, Any]] = {}) -> None:
+                 args: Optional[tuple] = None,
+                 kwargs: Optional[Mapping[str, Any]] = None,
+                 mocks: Optional[list[MockDefinition]] = None) -> None:
 
         self.func = func
-        self.args = args
-        self.kwargs = kwargs
+        self.args = args or ()
+        self.kwargs = kwargs or {}
+
+        self.mocks = mocks or []
 
         self.entry_status = entry_status
         self.success_status = success_status
@@ -45,7 +50,11 @@ class TestStep:
         try:
             # TODO add match on enum to discard output and exception traces in minimal modes
             with _thread_redirect_stdout(buffer):
+
+                # TODO add a context manager here!
+                list(map(lambda mock: mock.patch(), self.mocks))
                 self.func(*self.args, **self.kwargs)
+                list(map(lambda mock: mock.restore(), self.mocks))
 
         except ExpectedWasDifferentFromActual as e:
             
@@ -75,11 +84,12 @@ class Test:
                  args,
                  /,
                  verbosity: Verbosity,
-                 test: F_Callable, 
+                 test: F_Callable,
                  test_args: tuple,
                  test_kwargs: dict[str, Any],
                  setup: Optional[S_Callable] = None, 
-                 cleanup: Optional[S_Callable] = None) -> None:
+                 cleanup: Optional[S_Callable] = None,
+                 mocks: Optional[list[MockDefinition]] = None) -> None:
 
         self.verbosity = verbosity
 
@@ -87,20 +97,25 @@ class Test:
 
         self._no_op = args
 
+        self.mocks = mocks or []
+
         self._fail_state = TestStatus.NO_OP
         self._fail_reasons: list[StackTrace] = []
 
         self.steps = [
             TestStep(func=cleanup,
+                     mocks=mocks,
                      entry_status=TestStatus.BREAK_DOWN_ENTRY,
                      success_status=TestStatus.BREAK_DOWN_SUCCESS,
                      fail_status=TestStatus.BREAK_DOWN_FAIL),
             TestStep(func=test,
                      args=test_args,
                      kwargs=test_kwargs,
+                     mocks=mocks,
                      success_status=TestStatus.NO_OP,
                      fail_status=TestStatus.FAIL),
             TestStep(func=setup,
+                     mocks=mocks,
                      entry_status=TestStatus.SET_UP_ENTRY,
                      success_status=TestStatus.SET_UP_SUCCESS,
                      fail_status=TestStatus.SET_UP_FAIL)
@@ -113,34 +128,54 @@ class Test:
 
     @classmethod
     def case(cls,
-             test_func: Optional[F_Callable] = None,
+             test_func: None 
+                        | Callable 
+                        | MockWrappedObject
+                        | TestWrappedObject = None,
              /,
-             *args: Any,
-             setup: Optional[F_Callable] = None,
-             cleanup: Optional[F_Callable] = None,
-             _no_op: Optional[F_Callable] = None) -> F_Callable:
-
-        def wrapper(test_func: F_Callable):
+             *args   : Any,
+             setup   : Optional[F_Callable] = None,
+             cleanup : Optional[F_Callable] = None,
+             _no_op  : Optional[F_Callable] = None) -> F_Callable:
         
-            def _wrapper(*args, ____collector, ____verbosity, **kwargs) -> Any:
+        
+        def wrapper(test_func: F_Callable):
+     
 
+            def _wrapper(*args         : Any,
+                         ____test_func : Optional[F_Callable] = test_func,
+                         ____collector : dict[str, Test], 
+                         ____verbosity : Verbosity,
+                         ____mocks     : list[MockDefinition] = [],
+                         **kwargs      : Any) -> Any:
+
+              
                 test_case = Test(_no_op,
-                                 test=test_func,
+                                 test=____test_func,
                                  test_args=args,
                                  test_kwargs=kwargs,
                                  setup=setup,
                                  cleanup=cleanup,
-                                 verbosity=____verbosity)
+                                 verbosity=____verbosity,
+                                 mocks=____mocks)
 
-                ____collector[test_func.__name__] = test_case
-                
-            _TEST_REGISTRY.add(hex(id(_wrapper)))
-            
+                ____collector[____test_func.__name__ or test_func.__name__] = test_case
+                return _wrapper
+
+
+            assert hex(id(_wrapper)) not in _TEST_REGISTRY
+            assert hex(id(_wrapper)) not in _CONN
+
+            _TEST_REGISTRY[hex(id(_wrapper))] = _wrapper
+            _CONN[hex(id(_wrapper))] = hex(id(test_func))
+
             return _wrapper
-        
+
+
         if callable(test_func) and not args and setup is None and cleanup is None and _no_op is None:
+            r = wrapper(test_func)
         
-            return wrapper(test_func)
+            return r
 
         if test_func is not None:
             args = (test_func, *args)
@@ -155,7 +190,6 @@ class Test:
             _no_op = args[2]
 
         return wrapper
-    
     
     @cached_property
     def is_fail(self) -> bool:

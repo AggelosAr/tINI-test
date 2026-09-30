@@ -140,15 +140,20 @@ class TestSuite:
 
         for module_path, test_file in _from:
             
-            try:
-                tests = TestCollection(verbosity=self.verbosity, 
-                                       module_path=module_path,
-                                       file=test_file)
-            except Exception:
-                self.failures = 1
-                self.failed_to_collect_test_files = test_file 
-                continue
+            #try:
+            tests = TestCollection(verbosity=self.verbosity, 
+                                    module_path=module_path,
+                                    file=test_file)
+            # except Exception as e:
+            #     self.failures = 1
+            #     self.failed_to_collect_test_files = test_file
+            #     print('Failed to collect test file: ', test_file)
+            #     print('Exception: ', e)
 
+            #     continue
+            # TODO add print to show Test files failed to load: reasons
+            # aND add test 
+            
             collected_tests = tests.gather_tests(func_name=self.test_function)
            
             if not collected_tests:

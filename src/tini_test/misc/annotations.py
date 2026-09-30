@@ -1,4 +1,4 @@
-from typing import Any, Callable, TypeAlias
+from typing import Any, Callable, TypeAlias, TypeVar
 
 ColorValue: TypeAlias = str
 
@@ -37,3 +37,12 @@ TestCollectionSize: TypeAlias = int
 Successes: TypeAlias = int
 Errors: TypeAlias = int
 Failures: TypeAlias = int
+
+MockWrappedObject: TypeAlias = Callable[..., Any] #############!
+TestWrappedObject: TypeAlias = Callable[..., Any] #############!
+
+MockedFunction: TypeAlias = Callable[..., Any]
+
+HexStr = TypeVar('HexStr')
+TestId: TypeAlias = HexStr
+MockId: TypeAlias = HexStr
