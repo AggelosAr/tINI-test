@@ -10,9 +10,13 @@ from tini_test._internals._registry import (_CONN, _MOCK_REGISTRY,
 from tini_test._internals.consts import _LINE_CLEAR, _LINE_UP, _RESET
 from tini_test.enums import Color, RunMode, Verbosity
 from tini_test.misc.annotations import (DirectoryPath, Errors, FileName,
-                                        MockId, TestCollectionSize,
-                                        TestFunctionName, TestId,
-                                        TestWrappedObject)
+                                        MockId, MockWrappedObject,
+                                        TestCollectionSize, TestFunctionName,
+                                        TestId, TestWrappedObject,
+                                        _ReverseWrapConnections)
+from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
+                                       MockWasUsedOnWithoutTestDecorator,
+                                       TestDecoratorUsedMoreThanOnce)
 from tini_test.mock import MockDefinition
 from tini_test.test_utils import Test
 
@@ -41,94 +45,110 @@ class TestCollection:
     def module_name(self) -> str:
         return self.module.__name__
     
+    @cached_property
+    def bi_connections(self) -> _ReverseWrapConnections:
+        return self.reverse_wrap_connections()
+    
     @property
     def total_tests(self) -> TestCollectionSize:
         return len(self.decorated_tests)
 
-    def parse_wraps(self,
-                    _obj_id: MockId | TestId, 
-                    conn: dict[MockId | TestId, set[MockId | TestId]]
-                    ) -> tuple[TestFunctionName, TestWrappedObject]:
+    def reverse_wrap_connections(self) -> _ReverseWrapConnections:
+        bi_con: _ReverseWrapConnections = {}
+        for k, v in _CONN.items():
 
+            if k not in bi_con:
+                bi_con[k] = set()
+            bi_con[k].add(v)
+
+            if v not in bi_con:
+                bi_con[v] = set()
+            bi_con[v].add(k)
+
+        return bi_con
+
+    
+    def parse_wraps(self, _obj_id: MockId | TestId) -> tuple[TestFunctionName, TestWrappedObject]:
+
+        conn = self.bi_connections
+
+        unique_mocks: set[str] = set()
 
         mocks: list[MockDefinition] = []
-        test_wrap: TestWrappedObject = None
-        test_func: Optional[FunctionType] = None
+        test_wrap: TestWrappedObject
+        test_func: Optional[FunctionType
+                            |TestWrappedObject
+                            |MockWrappedObject] = None
         
         registered_tests = 0
+        found_mocks = 0
 
-        q = deque([_obj_id])
         visited = set()
-
-        iterations = 0
+        q = deque([_obj_id])
+        
         while q:
 
-            if registered_tests > 1:
-                raise RuntimeError('Multiple test functions found for object ID %s' % (_obj_id, ))
-
+            # XXX 1
+            
             current_id = q.popleft()
             
             if current_id in visited:
                 continue
 
-            iterations += 1
-
             visited.add(current_id)
 
             if current_id in _TEST_REGISTRY:
-                
+
                 test_wrap = _TEST_REGISTRY[current_id]
                 registered_tests += 1
 
 
-            elif current_id in _MOCK_REGISTRY:
+            if current_id in _MOCK_REGISTRY:
 
+                found_mocks += 1
                 mock_wrap = _MOCK_REGISTRY[current_id]
 
+                [_test_func, *_definition] = mock_wrap()
 
-                [_test_func, *definition] = mock_wrap()
-
-            
+                # TODO remove magic strings.
                 if (
-                    hex(id(_test_func)) in conn # TODO are we sure?
+                    hex(id(_test_func)) in conn
                     and 'Mock.mock' not in repr(_test_func)
                     and 'Test.test' not in repr(_test_func)
                 ):
                     test_func = _test_func
-                else:
-                    # print('FOUND TEST FUNCTION BUT IGNORING...\n')
-                    ...
 
+                if _definition:
 
-                if definition:
-                    mocks.append(*definition)
+                    definition, *_ = _definition
+                
+                    if definition.mock.__name__ in unique_mocks:
+                        # TODO provide the test name as well. and the line no.
+                        # Kinda difficult .
+                        # Or raise the exception from inside the wrapper.
+                        raise DuplicateMockRegisteredOnTest(mock_function=definition.mock.__name__)
+                    unique_mocks.add(definition.mock.__name__)
+                    mocks.append(definition)
 
-            else:
-                ...
-                # print('\t[WARNING] SKIPPING SINCE NOT FOUND IN TEST OR MOCK REGISTRY')
-            # Obj may be single wrapped or nested e.g. _wrapped
-
+                
 
             if _next := conn.get(current_id):
                 q.extend(_next)
-            # print('\n\n-------------------\n\n')
 
-        # !! If the test was not mocked we don't have to do anything special
-        if iterations < 3: # TODO FIX 
-            return str(test_wrap.__closure__[-1].cell_contents.__name__), test_wrap
-        # TODO also case no test found for the object ID
-        # Move this error to Exceptions 
-        # What do we do in this case ?
-        # We collect the rest of the tests or we stop and inform ?
-        # **Best solution is to add type annotate the Test in some way to inform the user he has made a mistake?
-         # **is this even possible?
+        # TODO do we skip file? or collect remaining valid test?
+        # XXX 2
         if registered_tests == 0:
-            raise RuntimeError('No test functions found for object ID %s' % (_obj_id, ))
-
-
+            raise MockWasUsedOnWithoutTestDecorator(test_func=test_func)
+        
+        # !! If the test was not mocked we don't have to do anything special
+        # Since there is the possibility that the test has been decorated with an empty mock.
+        if not mocks and not found_mocks:
+            return str(test_wrap.__closure__[-1].cell_contents.__name__), test_wrap
+        
         # Attach the correct test function to the test wrap
         _registered_test = test_wrap.__closure__[-1].cell_contents
 
+        # TODO remove magic strings.
         if 'Mock.mock' in repr(_registered_test) or 'Test.test' in repr(_registered_test):
 
             # There is the case where the last closure is the actual test pre-condition.
@@ -147,7 +167,6 @@ class TestCollection:
             # We need to see if the test is already attached
             if _registered_test == test_func.__closure__[-1].cell_contents:
                 test_name = _registered_test.__name__
-
                 ...
             else:
 
@@ -159,23 +178,15 @@ class TestCollection:
         test_wrap = partial(test_wrap, 
                             _Test____mocks=mocks)
 
+        # TODO do we skip file? or collect remaining valid test?
+        # XXX 1
+        if registered_tests > 1:
+            raise TestDecoratorUsedMoreThanOnce(test_name=test_name)
+        
         return test_name, test_wrap
 
-    
+
     def gather_tests(self, func_name: Optional[TestFunctionName] = None) -> list[TestFunctionName]:
-
-        bi_con: dict[MockId | TestId, set[MockId | TestId]] = {}
-        # TODO ...
-        for k, v in _CONN.items():
-
-            if k not in bi_con:
-                bi_con[k] = set()
-            bi_con[k].add(v)
-
-            if v not in bi_con:
-                bi_con[v] = set()
-            bi_con[v].add(k)
-
 
         test_names = []
 
@@ -191,31 +202,29 @@ class TestCollection:
             if not ((_id in _MOCK_REGISTRY) ^ (_id in _TEST_REGISTRY)):
                 continue
 
-            test_name, t_obj = self.parse_wraps(_obj_id=_id, conn=bi_con)
+            test_name, t_obj = self.parse_wraps(_obj_id=_id)
 
             if func_name and test_name != func_name:
                 continue
-            
-            test_names.append(test_name)
             
             test_obj = partial(t_obj,
                                _Test____collector=self.collector,
                                _Test____verbosity=self.verbosity)
             
+            test_names.append(test_name)
             self.decorated_tests.append(test_obj)
-
-
+            
         return test_names
     
     def populate_tests(self) -> None:
-        list(map(lambda dec_test_case: dec_test_case(), self.decorated_tests))
+        deque(map(lambda dec_test_case: dec_test_case(), self.decorated_tests))
 
     def sort_tests(self) -> None:
         self.collector = dict(sorted(self.collector.items(), 
                                      key=lambda kv: kv[1].is_fail))
     
     def box_tests(self) -> None:
-        list(map(lambda test_case: test_case.box_test(self.verbosity), self.collector.values()))
+        deque(map(lambda test_case: test_case.box_test(self.verbosity), self.collector.values()))
 
     async def abox_tests(self) -> None:
         tasks = [test_case.abox_test(self.verbosity) for test_case in self.collector.values()]
@@ -334,7 +343,7 @@ class TestCollection:
         return errors
     
     @lru_cache
-    def _pprint(mode: RunMode) -> Errors:
+    def _pprint(mode: RunMode): # <<< !
         
         def _wrapper(runner: Callable):
             
@@ -389,10 +398,10 @@ class TestCollection:
         return errors
     
     @_pprint(RunMode.SYNC)
-    def run_tests(self) -> None:
+    def run_tests(self) -> Errors:
         self.box_tests()
         
     @_pprint(RunMode.ASYNC)
-    async def arun_tests(self) -> None:
+    async def arun_tests(self) -> Errors:
         await self.abox_tests()
        

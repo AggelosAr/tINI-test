@@ -147,7 +147,7 @@ def test_suite_run_solved_failing_tests_for_coverage() -> None:
     must_equal(21, test_suite.total_tests)
     must_equal(2, test_suite.successes)
     must_equal(19, test_suite.errors)
-    must_equal(1, test_suite.failures)
+    must_equal(1, test_suite.file_load_failures)
 
     must_equal(True, "Test files failed to load: ['test_fails_to_collect']" in test_suite.get_summary())
 
@@ -170,7 +170,7 @@ def test_suite_run_solved_failing_tests_for_coverage() -> None:
     must_equal(21, test_suite.total_tests)
     must_equal(2, test_suite.successes)
     must_equal(19, test_suite.errors)
-    must_equal(1, test_suite.failures)
+    must_equal(1, test_suite.file_load_failures)
 
     must_equal(True, "Test files failed to load: ['test_fails_to_collect']" in test_suite.get_summary())
 
@@ -197,7 +197,7 @@ def test_suite_run_solved_failing_tests_for_coverage() -> None:
     must_equal(21+12, test_suite.total_tests)
     must_equal(2+12, test_suite.successes)
     must_equal(19, test_suite.errors)
-    must_equal(1, test_suite.failures)
+    must_equal(1, test_suite.file_load_failures)
 
     must_equal(True, "Test files failed to load: ['test_fails_to_collect']" in test_suite.get_summary())
 

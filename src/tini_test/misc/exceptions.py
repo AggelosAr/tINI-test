@@ -1,3 +1,4 @@
+from types import FunctionType
 
 
 class NotSupportedVerbosity(Exception):
@@ -20,8 +21,8 @@ class CantFindRelativePathToRoot(Exception):
 
 class TestNotFound(Exception):
 
-    def __init__(self) -> None:
-        super().__init__('Test function was not found.')
+    def __init__(self, extra_msg: str = '') -> None:
+        super().__init__('Test function was not found.\n\t%s' % (extra_msg, ))
 
 
 class WillRaiseReceivedNotAnException(Exception):
@@ -72,4 +73,30 @@ class MockCallDefinitionError(Exception):
 class MockMissingFunctionError(Exception):
 
     def __init__(self, reason: str = '') -> None:
+        reason = 'Mock function is missing.'
+        super().__init__(reason)
+
+
+class DuplicateMockRegisteredOnTest(Exception):
+
+    def __init__(self, mock_function: str = '', test_name: str = '') -> None:
+        reason = 'Duplicate mock function < %s > registered on test < %s >' % (mock_function, test_name)
+        super().__init__(reason)
+
+
+class TestDecoratorUsedMoreThanOnce(Exception):
+
+    def __init__(self, test_name: str = '') -> None:
+        reason = 'Test decorator used more than once on test < %s >' % (test_name, )
+        super().__init__(reason)
+
+
+class MockWasUsedOnWithoutTestDecorator(Exception):
+
+    def __init__(self, test_func: FunctionType | None = None) -> None:
+        if not test_func:
+            test_name = '<unknown>'
+        else:
+            test_name = test_func.__name__
+        reason = 'Missing test decorator for function decorated with mock function < %s >' % (test_name, )
         super().__init__(reason)

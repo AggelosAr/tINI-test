@@ -1,6 +1,6 @@
 from functools import lru_cache
 from io import StringIO
-from typing import Iterator, Optional
+from typing import Iterable, Optional
 
 from .._internals.consts import (_RESET, SEPERATOR_CYAN, SEPERATOR_LENGTH,
                                  SEPERATOR_NEGATIVE, SEPERATOR_SYMBOL)
@@ -20,10 +20,10 @@ class OperationState:
         
         if not entry_status:
             entry_status = TestStatus.NO_OP
-        
+
         if not redirected_output:
             redirected_output = StringIO('')
-
+            
         if not detail:
             detail = ''
 
@@ -63,7 +63,7 @@ class OperationState:
         self._entry_msg = new_msg
 
     @property
-    def _a_entry_msg(self) -> Iterator[str]:
+    def _a_entry_msg(self) -> Iterable[str]:
         return map(self.align_message, self.entry_msg)
     
     @property
@@ -75,14 +75,14 @@ class OperationState:
         self._exit_msg = new_msg
     
     @property
-    def _a_exit_msg(self) -> Iterator[str]:
+    def _a_exit_msg(self) -> Iterable[str]:
         return map(self.align_message, self.exit_msg)
     
     def align_message(self, el: str) -> str:
         return '%s%s' % ((SEPERATOR_LENGTH // 2 - (len(el) // 2)) * str(' '), el, )
 
     # TODO maybe align messages relative to each other also, maybe @test
-    def get_boxed_information(self) -> Iterator[str]:
+    def get_boxed_information(self) -> Iterable[str]:
 
         box = [self._a_entry_msg,
                [self.redirected_output.getvalue()], 

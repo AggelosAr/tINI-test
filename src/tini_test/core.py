@@ -1,10 +1,12 @@
 import asyncio
+import traceback
 from functools import cached_property
 from time import perf_counter
 from typing import Optional
 
 from tini_test.enums import RunMode, Verbosity
-from tini_test.misc.annotations import (Errors, Failures, FileName,
+from tini_test.misc.annotations import (Errors, FileFailReason,
+                                        FileLoadFailures, FileName,
                                         FullPythonPath, Successes, SuiteSize,
                                         TestCollectionSize, TestFunctionName,
                                         TimeTakenForSuiteInitialization,
@@ -36,8 +38,8 @@ class TestSuite:
         self._successes = 0
         self._errors = 0
 
-        self._failures = 0
-        self._failed_to_collect_test_files = []
+        self._file_load_failures = 0
+        self._failed_to_collect_test_files: dict[FileName, FileFailReason] = {}
 
         self.container: dict[FullPythonPath, TestCollection] = {}
 
@@ -86,12 +88,12 @@ class TestSuite:
         self._errors += new_errors
 
     @property
-    def failures(self) -> Failures:
-        return self._failures
+    def file_load_failures(self) -> FileLoadFailures:
+        return self._file_load_failures
     
-    @failures.setter
-    def failures(self, new_failures: Failures) -> None:
-        self._failures += new_failures
+    @file_load_failures.setter
+    def file_load_failures(self, new_failures: FileLoadFailures) -> None:
+        self._file_load_failures += new_failures
 
     @property
     def suite_run_time(self) -> TimeTakenToRunSuite:
@@ -102,18 +104,30 @@ class TestSuite:
         self._suite_run_time = dt - self._start
 
     @property
-    def failed_to_collect_test_files(self) -> list[FileName]:
+    def failed_to_collect_test_files_reasons(self) -> dict[FileName, FileFailReason]:
         return self._failed_to_collect_test_files
 
-    @failed_to_collect_test_files.setter
-    def failed_to_collect_test_files(self, new_file: FileName) -> None:
-        self._failed_to_collect_test_files.append(new_file)
+    @failed_to_collect_test_files_reasons.setter
+    def failed_to_collect_test_files_reasons(self, new_file: FileName, reason: FileFailReason) -> None:
+        self._failed_to_collect_test_files[new_file] = reason
 
+    def format_file_failure_traceback(self, tb: str) -> str:
+        # Crop all lines ivolving importlib
+        lines = tb.splitlines()
+        i = 0
+        for i in range(len(lines) - 1, -1, -1):
+            if 'importlib' in lines[i]:
+                if i < len(lines) - 1:
+                    i += 1
+                break
+
+        return '\n'.join(lines[i:])
+    
     def pprint(self) -> None:
         print(self.get_summary())
 
     def get_summary(self) -> str:
-        
+        # TODO @verbocity normals add error sources e.g. what files they occured in?
         _r = [
             '\n'
                 ' ------------------------------------------',
@@ -121,41 +135,59 @@ class TestSuite:
                 '|',
                 '| Total successes         : %d' % (self.successes, ),
                 '| Total errors            : %d' % (self.errors, ),
-                '| Test file load failures : %d' % (self.failures, ),
+                '| Test file load failures : %d' % (self.file_load_failures, ),
                 '|',
                 '| Discovered Tests in     : ( %0.4f ) secs' % (self.discovery_time, ),
                 '| Initialized Suite in    : ( %0.4f ) secs' % (self.suite_init_time, ),
                 '| Run Tests in            : ( %0.4f ) secs' % (self.suite_run_time, ),
-                ' ------------------------------------------'
+                ' ------------------------------------------', # <
                     '\n',
                     '\n',
-                        'Test files failed to load: %s' % (self.failed_to_collect_test_files, )
+                        'Test files failed to load (%d):\n\n%s'
+                            % (
+                                # TODO move to a separate method for better readability!
+                                len(self.failed_to_collect_test_files_reasons),
+                                ('\n\n%s\n%s\n\n' % ('~'*30, '~'*30, )).join(
+                                    '\t\t(%d). File: %s\n\n\t\t\tReason: %s' 
+                                        % 
+                                        (idx, file, reason, )
+                                        for idx, (file, reason) in 
+                                        enumerate(self.failed_to_collect_test_files_reasons.items(),
+                                                  start=1)
+                                ),
+                            ),
         ]
 
-        return '\n'.join(_r if self.failures else _r[:-2]) 
+        return '\n'.join(_r if self.file_load_failures else _r[:-2]) 
 
     def initialize_tests(self, _from: ModuleCollector) -> None:
         
         self.discovery_time = _from.discovery_time
 
+        # Used to give fail reason while searching for a single test file
+        single_test_file = None
+
         for module_path, test_file in _from:
             
-            #try:
-            tests = TestCollection(verbosity=self.verbosity, 
-                                    module_path=module_path,
-                                    file=test_file)
-            # except Exception as e:
-            #     self.failures = 1
-            #     self.failed_to_collect_test_files = test_file
-            #     print('Failed to collect test file: ', test_file)
-            #     print('Exception: ', e)
+            try:
 
-            #     continue
-            # TODO add print to show Test files failed to load: reasons
-            # aND add test 
-            
-            collected_tests = tests.gather_tests(func_name=self.test_function)
-           
+                tests = TestCollection(verbosity=self.verbosity, 
+                                       module_path=module_path,
+                                       file=test_file)
+
+                # Since some checks are done while gathering the tests.
+                # Like multiple test decorators passed on 1 test.
+                # Or errors relevant to the Mock definitions
+                # We will wrap the gather_tests in this block.
+                collected_tests = tests.gather_tests(func_name=self.test_function)
+
+            except Exception as e:
+                self.file_load_failures = 1
+                tb = self.format_file_failure_traceback(traceback.format_exc())
+                self.failed_to_collect_test_files_reasons[test_file] = '%s\n%s' % (str(e), tb, )
+                single_test_file = test_file
+                continue
+               
             if not collected_tests:
                 continue
             
@@ -171,24 +203,35 @@ class TestSuite:
             self.container[full_path] = tests
 
         if self.searching_single_test and not self.container:
-            raise TestNotFound
+            # TODO while searching for a single test, provide more context in the fail reason.
+            # Currently the get_summary is skipped.
+            # Because the test may be found but it has an error
+            # Also there is a case there is a failure in another file 
+            # while collecting, as a result we also show the other failures
+            # Is this possible to improve the fail reason further? (probably)
+            fail_reason = ''
+            if single_test_file:
+                fail_reason = self.failed_to_collect_test_files_reasons[single_test_file]
+
+            raise TestNotFound(extra_msg=fail_reason)
 
     def run_suite(self) -> None:
         
         for _f_path, test_collection in self.container.items():
             
             current_errors = test_collection.run_tests()
+            assert isinstance(current_errors, int)
         
             self.suite_run_time = perf_counter()
 
             current_tests = test_collection.total_tests
             current_successes = current_tests - current_errors
-            current_failures = current_tests - current_successes - current_errors
+            current_file_load_failures = current_tests - current_successes - current_errors
 
             self.total_tests = current_tests
             self.successes = current_successes
             self.errors = current_errors
-            self.failures = current_failures
+            self.file_load_failures = current_file_load_failures
 
     async def _arun_suite(self) -> None:
         
@@ -197,22 +240,24 @@ class TestSuite:
         for _f_path, test_collection in self.container.items():
             all_test_collections.append(test_collection)
         
-        # Run all suites concurrently # TODO what do we do with exceptions here ?
+        # Run all suites concurrently
         results = await asyncio.gather(
             *[test_collection.arun_tests() for test_collection in all_test_collections],
-            return_exceptions=False
+            return_exceptions=True
         )
 
         for test_collection, current_errors in zip(all_test_collections, results):
+
+            assert isinstance(current_errors, int)
             
             current_tests = test_collection.total_tests
             current_successes = current_tests - current_errors
-            current_failures = current_tests - current_successes - current_errors
+            current_file_load_failures = current_tests - current_successes - current_errors
 
             self.total_tests = current_tests
             self.successes = current_successes
             self.errors = current_errors
-            self.failures = current_failures
+            self.file_load_failures = current_file_load_failures
 
     def runner(self) -> None:
 

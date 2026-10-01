@@ -150,8 +150,8 @@ def _multiline_diff(expected: str, actual: str) -> str:
     result = []
     hunk_count = 0
 
-    _expected = deque()
-    _actual = deque()
+    _expected: deque[str] = deque()
+    _actual: deque[str] = deque()
     
     current_multi_single_line_diffs = 0
 

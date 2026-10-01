@@ -5,10 +5,8 @@ from tini_test.must_equals import must_equal
 from tini_test.test_utils import Test
 
 
-
 @Test.case
 @Mock.mock
-@Mock.mock()
 @Mock.mock(add_args_function, args=(1,))
 def test_order_works_0():
     must_equal(1, add_args_function(100))

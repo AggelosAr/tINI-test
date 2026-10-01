@@ -230,3 +230,15 @@ __marimo__/
 .streamlit/secrets.toml
 framehook/
 temp/
+
+312venv/
+profile.html
+
+
+generate_tests.py
+
+# test_mock_calling_100.py
+test_mock_calling_225.py
+test_mock_calling_400.py
+test_mock_calling_625.py
+test_mock_calling_900.py

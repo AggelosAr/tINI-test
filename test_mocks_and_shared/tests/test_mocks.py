@@ -1,6 +1,3 @@
-# from typing import Optional
-# from tini_test.context_managers import WillRaise
-# from tini_test.must_equals import must_equal
 from test_mocks_and_shared.tests.test_imports import add_args_function, f1, f2
 from tini_test.context_managers import WillRaise
 from tini_test.misc.exceptions import ExpectedWasDifferentFromActual
@@ -8,43 +5,12 @@ from tini_test.mock import Mock
 from tini_test.must_equals import must_equal
 from tini_test.test import Test
 
-        # Mock objects hold the definitions if any.
-        # 1 Mock object may hold the test function as well.
-        # Test may hold definition ?
-
-
-
-# TODO add a counter for potential missing function . # TODO make a script to find all @Test.case and validate the runner.
-
-# Async .... mocks what happens?
-
-# Add a test with imported function and a heavy imported and a proxied one
-
-# TEST Edge case multiple mocks with the same function .e.g. create another Exception
-# TEST test with 0 or 2 Test decorators .e.g. create another Exception
-
-
-# TODO test validations
-# 1. args and kwargs validation vs returns
-# 2. missing mock function
-# # TODO add test for arbitrary return values ???
-# 3. None types
-
-# # TODO add test for passing wrong arguments and keyword arguments to the mock
-# e.g. we also need to validate the arguments against the function signature. Additionaly
-# And add a new exception.
-# # and add new custom exception 
-# # TypeError: k() got an unexpected keyword argument 'b'
-# # TypeError: k() takes 1 positional argument but 2 were given
-# # TypeError: f1() got multiple values for argument 'a'
-
-# TODO remove print statements from these tests and add a global counter to validate all test bodies run
-
 
 @Mock.mock
 @Test.case
 def test_mock_decorator_order_M_T():
     print('works')
+
 
 
 @Test.case
@@ -79,14 +45,13 @@ def test_mock_decorator_order_T_M_pass_parentheses():
 
 @Mock.mock()
 @Mock.mock
-@Mock.mock(add_args_function, returns=1)
 @Mock.mock
 @Mock.mock()
 @Test.case(f1, f2)
 @Mock.mock
 @Mock.mock()
 @Mock.mock
-@Mock.mock(add_args_function, args=(1,))
+@Mock.mock(add_args_function, args=((),))
 @Mock.mock
 def test_mock_decorator_orders_and_skips():
     with WillRaise(ZeroDivisionError):
@@ -101,6 +66,7 @@ def test_mock_decorator_orders_and_skips():
 def test_mock_will_not_call_function_on_single_nested_calls():
     must_equal(1_000, add_args_function(1, k_val_1=1, k_val_2=1))
     print('works')
+
 
 
 @Mock.mock(add_args_function, returns=[1_000])

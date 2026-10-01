@@ -1,4 +1,5 @@
 import asyncio
+from collections import deque
 from functools import cached_property
 from io import StringIO
 from traceback import format_exc, format_tb
@@ -52,31 +53,35 @@ class TestStep:
             with _thread_redirect_stdout(buffer):
 
                 # TODO add a context manager here!
-                list(map(lambda mock: mock.patch(), self.mocks))
+                deque(map(lambda mock: mock.patch(), self.mocks), maxlen=0)
                 self.func(*self.args, **self.kwargs)
-                list(map(lambda mock: mock.restore(), self.mocks))
+                deque(map(lambda mock: mock.restore(), self.mocks), maxlen=0)
 
         except ExpectedWasDifferentFromActual as e:
-            
-            exception_trace = '\n'.join(format_tb(e.__traceback__))
 
+            deque(map(lambda mock: mock.restore(), self.mocks), maxlen=0)
+
+            exception_trace = '\n'.join(format_tb(e.__traceback__))
             return OperationState(entry_status=self.entry_status,
                                   status=self.fail_status,
                                   detail=str(e) if not apply_filters else '',
                                   exception_trace=exception_trace if not apply_filters else '',
-                                  redirected_output=buffer if not apply_filters else '')
+                                  redirected_output=buffer if not apply_filters else StringIO(''))
 
         except Exception as e:
+
+            deque(map(lambda mock: mock.restore(), self.mocks), maxlen=0)
+
             exception_trace = format_exc()
             return OperationState(entry_status=self.entry_status,
                                   status=self.fail_status,
-                                  redirected_output=buffer if not apply_filters else '',
+                                  redirected_output=buffer if not apply_filters else StringIO(''),
                                   exception_trace=exception_trace if not apply_filters else '')
         
         return OperationState(entry_status=self.entry_status,
                               status=self.success_status,
-                              redirected_output=buffer if not apply_filters else '')
-
+                              redirected_output=buffer if not apply_filters else StringIO(''))
+        
 
 class Test:
 
@@ -149,7 +154,8 @@ class Test:
                          ____mocks     : list[MockDefinition] = [],
                          **kwargs      : Any) -> Any:
 
-              
+                assert ____test_func
+                
                 test_case = Test(_no_op,
                                  test=____test_func,
                                  test_args=args,
