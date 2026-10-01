@@ -55,3 +55,14 @@ TestId: TypeAlias = HexStr
 MockId: TypeAlias = HexStr
 
 _ReverseWrapConnections: TypeAlias = dict[MockId | TestId, set[MockId | TestId]]
+
+
+_MockDefinition = TypeVar('_MockDefinition')
+
+MockDefinitionWrapperHolder: TypeAlias = tuple[F_Callable 
+                                               | MockWrappedObject 
+                                               | TestWrappedObject, 
+                                               _MockDefinition] | tuple[F_Callable
+                                                                        | MockWrappedObject 
+                                                                        | TestWrappedObject, ]
+

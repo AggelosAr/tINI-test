@@ -5,7 +5,6 @@ from io import StringIO
 from traceback import format_exc, format_tb
 from typing import Any, Callable, Mapping, Optional
 
-from tini_test._internals._registry import _CONN, _TEST_REGISTRY
 from tini_test.context_managers import _thread_redirect_stdout
 
 from .enums import TestStatus, Verbosity
@@ -81,7 +80,7 @@ class TestStep:
         return OperationState(entry_status=self.entry_status,
                               status=self.success_status,
                               redirected_output=buffer if not apply_filters else StringIO(''))
-        
+
 
 class Test:
 
@@ -168,12 +167,14 @@ class Test:
                 ____collector[____test_func.__name__ or test_func.__name__] = test_case
                 return _wrapper
 
+            _test_reg = test_func.__globals__.get('_TEST_REGISTRY')
+            _conn_reg = test_func.__globals__.get('_CONN_REGISTRY')
 
-            assert hex(id(_wrapper)) not in _TEST_REGISTRY
-            assert hex(id(_wrapper)) not in _CONN
+            assert hex(id(_wrapper)) not in _test_reg
+            assert hex(id(_wrapper)) not in _conn_reg
 
-            _TEST_REGISTRY[hex(id(_wrapper))] = _wrapper
-            _CONN[hex(id(_wrapper))] = hex(id(test_func))
+            _test_reg[hex(id(_wrapper))] = _wrapper
+            _conn_reg[hex(id(_wrapper))] = hex(id(test_func))
 
             return _wrapper
 

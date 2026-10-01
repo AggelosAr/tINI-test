@@ -1,18 +1,21 @@
 import asyncio
+import importlib.util
+import sys
 from collections import deque
 from functools import cached_property, lru_cache, partial
 from importlib import import_module
+from os import path
+from pathlib import Path
 from types import FunctionType
 from typing import Callable, Optional
 
-from tini_test._internals._registry import (_CONN, _MOCK_REGISTRY,
-                                            _TEST_REGISTRY)
 from tini_test._internals.consts import _LINE_CLEAR, _LINE_UP, _RESET
 from tini_test.enums import Color, RunMode, Verbosity
 from tini_test.misc.annotations import (DirectoryPath, Errors, FileName,
-                                        MockId, MockWrappedObject,
-                                        TestCollectionSize, TestFunctionName,
-                                        TestId, TestWrappedObject,
+                                        MockDefinitionWrapperHolder, MockId,
+                                        MockWrappedObject, TestCollectionSize,
+                                        TestFunctionName, TestId,
+                                        TestWrappedObject,
                                         _ReverseWrapConnections)
 from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
                                        MockWasUsedOnWithoutTestDecorator,
@@ -29,14 +32,39 @@ class TestCollection:
                  file: FileName) -> None:
         
         self.verbosity = verbosity
-        
-        self.module = import_module('%s.%s' % (module_path, file, ))
+        # class importlib.util.LazyLoader(loader) Maybe we want to lazily load the module to improve performance.
+        # self.module = import_module('%s.%s' % (module_path, file, ))
 
+        self._TEST_REGISTRY: dict[TestId, TestWrappedObject] = {}
+        self._MOCK_REGISTRY: dict[MockId, Callable[..., MockDefinitionWrapperHolder]] = {}
+        self._CONN_REGISTRY: dict[TestId | MockId, MockId | TestId] = {}
+
+        context ={
+            '_TEST_REGISTRY': self._TEST_REGISTRY,
+            '_MOCK_REGISTRY': self._MOCK_REGISTRY,
+            '_CONN_REGISTRY': self._CONN_REGISTRY
+        }
+      
+       
+        self.module = self.import_with_context('%s.%s' % (module_path, file, ), context)
+
+        
         self.decorated_tests: list[Callable] = []
 
         self.collector: dict[TestFunctionName, Test] = dict()
 
         self.file_name = self.module.__name__
+
+    def import_with_context(self, module_name, context):
+
+        spec = importlib.util.find_spec(module_name)
+        module = importlib.util.module_from_spec(spec)
+
+        module.__dict__.update(context)
+
+        spec.loader.exec_module(module)
+
+        return module
     
     def __len__(self) -> TestCollectionSize:
         return self.total_tests
@@ -46,16 +74,16 @@ class TestCollection:
         return self.module.__name__
     
     @cached_property
-    def bi_connections(self) -> _ReverseWrapConnections:
-        return self.reverse_wrap_connections()
+    def bi_CONN_REGISTRYections(self) -> _ReverseWrapConnections:
+        return self.reverse_wrap_CONN_REGISTRYections()
     
     @property
     def total_tests(self) -> TestCollectionSize:
         return len(self.decorated_tests)
 
-    def reverse_wrap_connections(self) -> _ReverseWrapConnections:
+    def reverse_wrap_CONN_REGISTRYections(self) -> _ReverseWrapConnections:
         bi_con: _ReverseWrapConnections = {}
-        for k, v in _CONN.items():
+        for k, v in self._CONN_REGISTRY.items():
 
             if k not in bi_con:
                 bi_con[k] = set()
@@ -70,7 +98,7 @@ class TestCollection:
     
     def parse_wraps(self, _obj_id: MockId | TestId) -> tuple[TestFunctionName, TestWrappedObject]:
 
-        conn = self.bi_connections
+        conn = self.bi_CONN_REGISTRYections
 
         unique_mocks: set[str] = set()
 
@@ -97,16 +125,16 @@ class TestCollection:
 
             visited.add(current_id)
 
-            if current_id in _TEST_REGISTRY:
+            if current_id in self._TEST_REGISTRY:
 
-                test_wrap = _TEST_REGISTRY[current_id]
+                test_wrap = self._TEST_REGISTRY[current_id]
                 registered_tests += 1
 
 
-            if current_id in _MOCK_REGISTRY:
+            if current_id in self._MOCK_REGISTRY:
 
                 found_mocks += 1
-                mock_wrap = _MOCK_REGISTRY[current_id]
+                mock_wrap = self._MOCK_REGISTRY[current_id]
 
                 [_test_func, *_definition] = mock_wrap()
 
@@ -153,7 +181,7 @@ class TestCollection:
 
             # There is the case where the last closure is the actual test pre-condition.
             # In that case we must also attach it.
-            if hex(id(_registered_test)) in _MOCK_REGISTRY:
+            if hex(id(_registered_test)) in self._MOCK_REGISTRY:
                 test_wrap = partial(test_wrap,  
                                     _Test____test_func=test_func)
                 test_name = test_func.__name__
@@ -189,7 +217,7 @@ class TestCollection:
     def gather_tests(self, func_name: Optional[TestFunctionName] = None) -> list[TestFunctionName]:
 
         test_names = []
-
+        
         for obj in dir(self.module):
 
             g_obj = getattr(self.module, obj)
@@ -199,7 +227,7 @@ class TestCollection:
 
             _id = hex(id(g_obj))
             
-            if not ((_id in _MOCK_REGISTRY) ^ (_id in _TEST_REGISTRY)):
+            if not ((_id in self._MOCK_REGISTRY) ^ (_id in self._TEST_REGISTRY)):
                 continue
 
             test_name, t_obj = self.parse_wraps(_obj_id=_id)

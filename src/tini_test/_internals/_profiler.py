@@ -15,7 +15,7 @@ def profiler(is_profiling: bool = False):
 
             if is_profiling:
                 profiler.stop()
-                with open("profile.html", "w") as f:
+                with open('profile.html', 'w') as f:
                     f.write(profiler.output_html())
 
             return result

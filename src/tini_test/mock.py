@@ -2,13 +2,11 @@ import inspect
 import secrets
 import textwrap
 from collections import deque
-from datetime import datetime
 from typing import Any, Callable, Generator, Optional
 
-from tini_test._internals._registry import (_CONN, _MOCK_REGISTRY,
-                                            MockDefinitionWrapperHolder)
 from tini_test.enums import MockMode
-from tini_test.misc.annotations import (MockedFunction, MockWrappedObject,
+from tini_test.misc.annotations import (MockDefinitionWrapperHolder,
+                                        MockedFunction, MockWrappedObject,
                                         TestWrappedObject)
 from tini_test.misc.exceptions import (MockCallDefinitionError,
                                        MockDefinitionError,
@@ -248,6 +246,7 @@ class MockDefinition:
 
         # Also we need to update the _proxy_a globals with mocks globals
         # TODO is this efficient???
+        # TODO collisions?
         _proxy_a.__globals__.update(self.mock.__globals__)
 
 
@@ -314,11 +313,14 @@ class Mock:
             if (func is None or not MockDefinition.arg_exists(mock)) and not is_empty:
                 raise MockMissingFunctionError()
 
-            assert hex(id(_wrapper)) not in _MOCK_REGISTRY
-            assert hex(id(_wrapper)) not in _CONN
+            _mock_reg = _test_func.__globals__.get('_MOCK_REGISTRY')
+            _conn_reg = _test_func.__globals__.get('_CONN_REGISTRY')
 
-            _MOCK_REGISTRY[hex(id(_wrapper))] = _wrapper
-            _CONN[hex(id(_wrapper))] = hex(id(func))
+            assert hex(id(_wrapper)) not in _mock_reg
+            assert hex(id(_wrapper)) not in _conn_reg
+
+            _mock_reg[hex(id(_wrapper))] = _wrapper
+            _conn_reg[hex(id(_wrapper))] = hex(id(func))
 
             return _wrapper
 

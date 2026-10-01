@@ -3,7 +3,7 @@ from .arg_parser import ArgsDict, receive_args
 from .initializer import initialize_test_suite
 from .misc.exceptions import CantFindRelativePathToRoot, TestNotFound
 
-_PROFILING = True
+_PROFILING = False
 
 @profiler(_PROFILING)
 def _tini_test(kwargs: ArgsDict):

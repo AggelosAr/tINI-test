@@ -168,7 +168,7 @@ class TestSuite:
         single_test_file = None
 
         for module_path, test_file in _from:
-            
+
             try:
 
                 tests = TestCollection(verbosity=self.verbosity, 
@@ -218,7 +218,7 @@ class TestSuite:
     def run_suite(self) -> None:
         
         for _f_path, test_collection in self.container.items():
-            
+
             current_errors = test_collection.run_tests()
             assert isinstance(current_errors, int)
         
