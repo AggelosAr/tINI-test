@@ -70,4 +70,11 @@ MockDefinitionWrapperHolder: TypeAlias = tuple[F_Callable
 class ProxyItem(NamedTuple):
     proxy: Callable[..., None]
     name: str
-    
+
+
+T_REG: TypeAlias = dict[TestId, TestWrappedObject]
+M_REG: TypeAlias = dict[MockId, Callable[..., MockDefinitionWrapperHolder]]
+C_REG: TypeAlias = dict[TestId | MockId, MockId | TestId]
+
+
+GlobalRegistry: TypeAlias = dict[str, Any]

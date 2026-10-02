@@ -1,18 +1,17 @@
 import asyncio
 import importlib.util
-import secrets
 from collections import deque
 from functools import cached_property, lru_cache, partial
 from types import FunctionType, ModuleType
-from typing import Callable, Generator, Optional
+from typing import Callable, Optional
 
 from tini_test._internals.consts import _LINE_CLEAR, _LINE_UP, _RESET
 from tini_test.enums import Color, RunMode, Verbosity
-from tini_test.misc.annotations import (DirectoryPath, Errors, FileName,
-                                        MockDefinitionWrapperHolder, MockId,
-                                        MockWrappedObject, ProxyItem,
-                                        TestCollectionSize, TestFunctionName,
-                                        TestId, TestWrappedObject,
+from tini_test.misc.annotations import (C_REG, M_REG, T_REG, DirectoryPath,
+                                        Errors, FileName, MockId,
+                                        MockWrappedObject, TestCollectionSize,
+                                        TestFunctionName, TestId,
+                                        TestWrappedObject,
                                         _ReverseWrapConnections)
 from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
                                        MockWasUsedOnWithoutTestDecorator,
@@ -32,15 +31,14 @@ class TestCollection:
         # class importlib.util.LazyLoader(loader) Maybe we want to lazily load the module to improve performance.
         # self.module = import_module('%s.%s' % (module_path, file, ))
 
-        self._TEST_REGISTRY: dict[TestId, TestWrappedObject] = {}
-        self._MOCK_REGISTRY: dict[MockId, Callable[..., MockDefinitionWrapperHolder]] = {}
-        self._CONN_REGISTRY: dict[TestId | MockId, MockId | TestId] = {}
+        self._TEST_REGISTRY: T_REG = {}
+        self._MOCK_REGISTRY: M_REG = {}
+        self._CONN_REGISTRY: C_REG = {}
 
         context = {
             '_TEST_REGISTRY': self._TEST_REGISTRY,
             '_MOCK_REGISTRY': self._MOCK_REGISTRY,
             '_CONN_REGISTRY': self._CONN_REGISTRY,
-            '_proxy_generator': self._proxy_generator(),
         }
       
         self.module = self.import_with_context('%s.%s' % (module_path, file, ), context)
@@ -237,16 +235,6 @@ class TestCollection:
             self.decorated_tests.append(test_obj)
             
         return test_names
-    
-    def _proxy_generator(self) -> Generator[ProxyItem, None, None]:
-        i = 1
-        while True:
-            def _proxy(*args, **kwargs): ...
-
-            _proxy.__name__ = '_proxy_%s_%d' % (secrets.token_hex(10), i, )
-
-            yield ProxyItem(_proxy, _proxy.__name__)
-            i += 1
 
     def populate_tests(self) -> None:
         deque(map(lambda dec_test_case: dec_test_case(), self.decorated_tests))

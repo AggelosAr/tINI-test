@@ -5,6 +5,7 @@ from io import StringIO
 from traceback import format_exc, format_tb
 from typing import Any, Callable, Mapping, Optional
 
+from tini_test._internals._registry import attach_state
 from tini_test.context_managers import _thread_redirect_stdout
 
 from .enums import TestStatus, Verbosity
@@ -166,16 +167,15 @@ class Test:
 
                 ____collector[____test_func.__name__ or test_func.__name__] = test_case
                 return _wrapper
-
-            _test_reg = test_func.__globals__.get('_TEST_REGISTRY')
-            _conn_reg = test_func.__globals__.get('_CONN_REGISTRY')
+            
+            _test_reg, _conn_reg = attach_state(test_func.__globals__, _wrapper.__globals__, mode='test')
 
             assert hex(id(_wrapper)) not in _test_reg
             assert hex(id(_wrapper)) not in _conn_reg
 
             _test_reg[hex(id(_wrapper))] = _wrapper
             _conn_reg[hex(id(_wrapper))] = hex(id(test_func))
-
+                      
             return _wrapper
 
 

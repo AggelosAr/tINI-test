@@ -2,8 +2,9 @@ import inspect
 import secrets
 import textwrap
 from collections import deque
-from typing import Any, Callable, Generator, Optional
+from typing import Any, Callable, Optional
 
+from tini_test._internals._registry import attach_state
 from tini_test.enums import MockMode
 from tini_test.misc.annotations import (MockDefinitionWrapperHolder,
                                         MockedFunction, MockWrappedObject,
@@ -124,11 +125,9 @@ class MockDefinition:
     def __init__(self,
                  mock: MockedFunction,
                  *,
-                 body: MockCall | MockReturn,
-                 proxy_generator: Generator[ProxyItem, None, None]) -> None:
+                 body: MockCall | MockReturn) -> None:
         
-        self._proxy_pool: list[ProxyItem] = []
-        self._g_proxy_pool: set[str] = set()
+        self._proxy_pool: set[str] = set()
 
         self._mock_backup_store = lambda: None
         self._mock_backup_store.__code__ = mock.__code__
@@ -137,15 +136,6 @@ class MockDefinition:
 
         self.body = body
         self.mode = body.mode
-
-        match self.mode:
-            case MockMode.PATCH_RETURN:
-                self._proxy_pool.append(next(proxy_generator))
-            case MockMode.PATCH_CALL:
-                self._proxy_pool.append(next(proxy_generator))
-                self._proxy_pool.append(next(proxy_generator))
-
-        
 
     def __str__(self) -> str:
         return 'MockDefinition(%s, %s)' % (self.mock, self.body, )
@@ -189,6 +179,13 @@ class MockDefinition:
         
         raise MockDefinitionError('Mock should accept either a return value or arguments, but not both.')
 
+    def _proxy_generator(self) -> ProxyItem:
+    
+            def _proxy(*args, **kwargs): ...
+    
+            _proxy.__name__ = '_proxy_%s' % (secrets.token_hex(10), )
+    
+            return ProxyItem(_proxy, _proxy.__name__)
     def patch(self) -> None:
 
         match self.mode:
@@ -201,8 +198,8 @@ class MockDefinition:
 
     def restore(self) -> None:
         self.mock.__code__ = self._mock_backup_store.__code__
-        deque(map(lambda x: self.mock.__globals__.pop(x, None), self._g_proxy_pool), maxlen=0)
-        self._g_proxy_pool.clear()
+        deque(map(lambda x: self.mock.__globals__.pop(x, None), self._proxy_pool), maxlen=0)
+        self._proxy_pool.clear()
 
     def _compile_mock(self, source: str) -> None:
         self.mock.__code__ = compile(textwrap.dedent(source), 
@@ -210,8 +207,11 @@ class MockDefinition:
                                      'exec').co_consts[0]
 
     def _patch_returns(self) -> None:
-        _, _proxy_name = self._proxy_pool.pop()
-        self._g_proxy_pool.add(_proxy_name)
+
+        _, _proxy_name = self._proxy_generator()
+        
+        self._proxy_pool.add(_proxy_name)
+
         new_spec = ('def _%s(*args, **kwargs): return %s' 
                     % 
                         (
@@ -223,11 +223,11 @@ class MockDefinition:
     
     def _patch_call(self) -> None:
 
-        _proxy_a, _proxy_a_name = self._proxy_pool.pop()
-        _, _proxy_b_name = self._proxy_pool.pop()
+        _proxy_a, _proxy_a_name = self._proxy_generator()
+        _, _proxy_b_name = self._proxy_generator()
 
-        self._g_proxy_pool.add(_proxy_a_name)
-        self._g_proxy_pool.add(_proxy_b_name)
+        self._proxy_pool.add(_proxy_a_name)
+        self._proxy_pool.add(_proxy_b_name)
 
         _proxy_a.__code__ = self.mock.__code__
 
@@ -291,21 +291,18 @@ class Mock:
 
             def _wrapper(*args, **kwargs) -> MockDefinitionWrapperHolder[MockDefinition]:
 
-                _func = func or _test_func
+                _func = (func or _test_func)
                 
                 if mock_body:
-                    _proxy_generator = _test_func.__globals__.get('_proxy_generator')
-                    return (_func, MockDefinition(mock, 
-                                                  body=mock_body,
-                                                  proxy_generator=_proxy_generator), )
+                    
+                    return (_func, MockDefinition(mock, body=mock_body), )
 
                 return (_func, )
 
             if (func is None or not MockDefinition.arg_exists(mock)) and not is_empty:
                 raise MockMissingFunctionError()
 
-            _mock_reg = _test_func.__globals__.get('_MOCK_REGISTRY')
-            _conn_reg = _test_func.__globals__.get('_CONN_REGISTRY')
+            _mock_reg, _conn_reg = attach_state(func.__globals__, _wrapper.__globals__, mode='mock')
 
             assert hex(id(_wrapper)) not in _mock_reg
             assert hex(id(_wrapper)) not in _conn_reg
