@@ -1,13 +1,12 @@
 import asyncio
 import importlib.util
-import sys
+
 from collections import deque
 from functools import cached_property, lru_cache, partial
-from importlib import import_module
-from os import path
-from pathlib import Path
-from types import FunctionType
-from typing import Callable, Optional
+
+import secrets
+from types import FunctionType, ModuleType
+from typing import Callable, Generator, Optional
 
 from tini_test._internals.consts import _LINE_CLEAR, _LINE_UP, _RESET
 from tini_test.enums import Color, RunMode, Verbosity
@@ -39,32 +38,20 @@ class TestCollection:
         self._MOCK_REGISTRY: dict[MockId, Callable[..., MockDefinitionWrapperHolder]] = {}
         self._CONN_REGISTRY: dict[TestId | MockId, MockId | TestId] = {}
 
-        context ={
+        context = {
             '_TEST_REGISTRY': self._TEST_REGISTRY,
             '_MOCK_REGISTRY': self._MOCK_REGISTRY,
-            '_CONN_REGISTRY': self._CONN_REGISTRY
+            '_CONN_REGISTRY': self._CONN_REGISTRY,
+            '_proxy_generator': self._proxy_generator(),
         }
       
-       
         self.module = self.import_with_context('%s.%s' % (module_path, file, ), context)
-
         
         self.decorated_tests: list[Callable] = []
 
         self.collector: dict[TestFunctionName, Test] = dict()
 
         self.file_name = self.module.__name__
-
-    def import_with_context(self, module_name, context):
-
-        spec = importlib.util.find_spec(module_name)
-        module = importlib.util.module_from_spec(spec)
-
-        module.__dict__.update(context)
-
-        spec.loader.exec_module(module)
-
-        return module
     
     def __len__(self) -> TestCollectionSize:
         return self.total_tests
@@ -74,15 +61,27 @@ class TestCollection:
         return self.module.__name__
     
     @cached_property
-    def bi_CONN_REGISTRYections(self) -> _ReverseWrapConnections:
-        return self.reverse_wrap_CONN_REGISTRYections()
+    def bi_con(self) -> _ReverseWrapConnections:
+        return self.reverse_connections()
     
     @property
     def total_tests(self) -> TestCollectionSize:
         return len(self.decorated_tests)
 
-    def reverse_wrap_CONN_REGISTRYections(self) -> _ReverseWrapConnections:
+    def import_with_context(self, module_name: str, context: dict) -> ModuleType:
+    
+        spec = importlib.util.find_spec(module_name)
+        module = importlib.util.module_from_spec(spec)
+
+        module.__dict__.update(context)
+
+        spec.loader.exec_module(module)
+
+        return module
+    
+    def reverse_connections(self) -> _ReverseWrapConnections:
         bi_con: _ReverseWrapConnections = {}
+
         for k, v in self._CONN_REGISTRY.items():
 
             if k not in bi_con:
@@ -97,8 +96,6 @@ class TestCollection:
 
     
     def parse_wraps(self, _obj_id: MockId | TestId) -> tuple[TestFunctionName, TestWrappedObject]:
-
-        conn = self.bi_CONN_REGISTRYections
 
         unique_mocks: set[str] = set()
 
@@ -140,7 +137,7 @@ class TestCollection:
 
                 # TODO remove magic strings.
                 if (
-                    hex(id(_test_func)) in conn
+                    hex(id(_test_func)) in self.bi_con
                     and 'Mock.mock' not in repr(_test_func)
                     and 'Test.test' not in repr(_test_func)
                 ):
@@ -159,8 +156,7 @@ class TestCollection:
                     mocks.append(definition)
 
                 
-
-            if _next := conn.get(current_id):
+            if _next := self.bi_con.get(current_id):
                 q.extend(_next)
 
         # TODO do we skip file? or collect remaining valid test?
@@ -244,6 +240,16 @@ class TestCollection:
             
         return test_names
     
+    def _proxy_generator(self) -> Generator[tuple[Callable, str], None, None]:
+        i = 1
+        while True:
+            def _proxy(*args, **kwargs): ...
+
+            _proxy.__name__ = '_proxy_%s_%d' % (secrets.token_hex(10), i, )
+
+            yield _proxy, _proxy.__name__
+            i += 1
+
     def populate_tests(self) -> None:
         deque(map(lambda dec_test_case: dec_test_case(), self.decorated_tests))
 

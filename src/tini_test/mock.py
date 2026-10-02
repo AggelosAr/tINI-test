@@ -18,27 +18,6 @@ class MockNone:
     pass
 
 
-def _proxy_name_generator() -> Generator[str, None, None]:
-    while True:
-        yield secrets.token_hex(10)
-
-
-def _proxy_generator() -> Generator[tuple[Callable, str], None, None]:
-    i = 1
-    while True:
-        def _proxy(*args, **kwargs): ...
-
-        _proxy.__name__ = '_proxy_%s_%d' % (next(name_generator), i, )
-
-        yield _proxy, _proxy.__name__
-        i += 1
-
-# TODO these should not be globals
-# They should be per module. As well as registers.
-name_generator = _proxy_name_generator()
-proxy_generator = _proxy_generator()
-
-
 class MockCall:
 
     mode = MockMode.PATCH_CALL
@@ -145,7 +124,8 @@ class MockDefinition:
     def __init__(self,
                  mock: MockedFunction,
                  *,
-                 body: MockCall | MockReturn) -> None:
+                 body: MockCall | MockReturn,
+                 proxy_generator: Generator[tuple[Any, str], None, None]) -> None:
         
         self._proxy_pool: set[str] = set()
 
@@ -156,6 +136,8 @@ class MockDefinition:
 
         self.body = body
         self.mode = body.mode
+
+        self.proxy_generator = proxy_generator
 
     def __str__(self) -> str:
         return 'MockDefinition(%s, %s)' % (self.mock, self.body, )
@@ -209,7 +191,6 @@ class MockDefinition:
             case MockMode.PATCH_CALL:
                 self._patch_call()
 
-    # TODO HOW DO WE TEST ON ASYNC?
     def restore(self) -> None:
         self.mock.__code__ = self._mock_backup_store.__code__
         deque(map(lambda x: self.mock.__globals__.pop(x, None), self._proxy_pool), maxlen=0)
@@ -221,7 +202,7 @@ class MockDefinition:
                                      'exec').co_consts[0]
 
     def _patch_returns(self) -> None:
-        _, _proxy_name = next(proxy_generator)
+        _, _proxy_name = next(self.proxy_generator)
         self._proxy_pool.add(_proxy_name)
         new_spec = ('def _%s(*args, **kwargs): return %s' 
                     % 
@@ -234,8 +215,8 @@ class MockDefinition:
     
     def _patch_call(self) -> None:
 
-        _proxy_a, _proxy_a_name = next(proxy_generator)
-        _, _proxy_b_name = next(proxy_generator)
+        _proxy_a, _proxy_a_name = next(self.proxy_generator)
+        _, _proxy_b_name = next(self.proxy_generator)
 
         self._proxy_pool.add(_proxy_a_name)
         self._proxy_pool.add(_proxy_b_name)
@@ -305,8 +286,10 @@ class Mock:
                 _func = func or _test_func
                 
                 if mock_body:
-                    
-                    return (_func, MockDefinition(mock, body=mock_body), )
+                    _proxy_generator = _test_func.__globals__.get('_proxy_generator')
+                    return (_func, MockDefinition(mock, 
+                                                  body=mock_body,
+                                                  proxy_generator=_proxy_generator), )
 
                 return (_func, )
 
