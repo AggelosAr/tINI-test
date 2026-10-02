@@ -1,10 +1,8 @@
 import asyncio
 import importlib.util
-
+import secrets
 from collections import deque
 from functools import cached_property, lru_cache, partial
-
-import secrets
 from types import FunctionType, ModuleType
 from typing import Callable, Generator, Optional
 
@@ -12,9 +10,9 @@ from tini_test._internals.consts import _LINE_CLEAR, _LINE_UP, _RESET
 from tini_test.enums import Color, RunMode, Verbosity
 from tini_test.misc.annotations import (DirectoryPath, Errors, FileName,
                                         MockDefinitionWrapperHolder, MockId,
-                                        MockWrappedObject, TestCollectionSize,
-                                        TestFunctionName, TestId,
-                                        TestWrappedObject,
+                                        MockWrappedObject, ProxyItem,
+                                        TestCollectionSize, TestFunctionName,
+                                        TestId, TestWrappedObject,
                                         _ReverseWrapConnections)
 from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
                                        MockWasUsedOnWithoutTestDecorator,
@@ -240,14 +238,14 @@ class TestCollection:
             
         return test_names
     
-    def _proxy_generator(self) -> Generator[tuple[Callable, str], None, None]:
+    def _proxy_generator(self) -> Generator[ProxyItem, None, None]:
         i = 1
         while True:
             def _proxy(*args, **kwargs): ...
 
             _proxy.__name__ = '_proxy_%s_%d' % (secrets.token_hex(10), i, )
 
-            yield _proxy, _proxy.__name__
+            yield ProxyItem(_proxy, _proxy.__name__)
             i += 1
 
     def populate_tests(self) -> None:

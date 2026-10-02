@@ -7,7 +7,7 @@ from typing import Any, Callable, Generator, Optional
 from tini_test.enums import MockMode
 from tini_test.misc.annotations import (MockDefinitionWrapperHolder,
                                         MockedFunction, MockWrappedObject,
-                                        TestWrappedObject)
+                                        ProxyItem, TestWrappedObject)
 from tini_test.misc.exceptions import (MockCallDefinitionError,
                                        MockDefinitionError,
                                        MockMissingFunctionError)
@@ -125,9 +125,10 @@ class MockDefinition:
                  mock: MockedFunction,
                  *,
                  body: MockCall | MockReturn,
-                 proxy_generator: Generator[tuple[Any, str], None, None]) -> None:
+                 proxy_generator: Generator[ProxyItem, None, None]) -> None:
         
-        self._proxy_pool: set[str] = set()
+        self._proxy_pool: list[ProxyItem] = []
+        self._g_proxy_pool: set[str] = set()
 
         self._mock_backup_store = lambda: None
         self._mock_backup_store.__code__ = mock.__code__
@@ -137,7 +138,14 @@ class MockDefinition:
         self.body = body
         self.mode = body.mode
 
-        self.proxy_generator = proxy_generator
+        match self.mode:
+            case MockMode.PATCH_RETURN:
+                self._proxy_pool.append(next(proxy_generator))
+            case MockMode.PATCH_CALL:
+                self._proxy_pool.append(next(proxy_generator))
+                self._proxy_pool.append(next(proxy_generator))
+
+        
 
     def __str__(self) -> str:
         return 'MockDefinition(%s, %s)' % (self.mock, self.body, )
@@ -193,8 +201,8 @@ class MockDefinition:
 
     def restore(self) -> None:
         self.mock.__code__ = self._mock_backup_store.__code__
-        deque(map(lambda x: self.mock.__globals__.pop(x, None), self._proxy_pool), maxlen=0)
-        self._proxy_pool.clear()
+        deque(map(lambda x: self.mock.__globals__.pop(x, None), self._g_proxy_pool), maxlen=0)
+        self._g_proxy_pool.clear()
 
     def _compile_mock(self, source: str) -> None:
         self.mock.__code__ = compile(textwrap.dedent(source), 
@@ -202,8 +210,8 @@ class MockDefinition:
                                      'exec').co_consts[0]
 
     def _patch_returns(self) -> None:
-        _, _proxy_name = next(self.proxy_generator)
-        self._proxy_pool.add(_proxy_name)
+        _, _proxy_name = self._proxy_pool.pop()
+        self._g_proxy_pool.add(_proxy_name)
         new_spec = ('def _%s(*args, **kwargs): return %s' 
                     % 
                         (
@@ -215,11 +223,11 @@ class MockDefinition:
     
     def _patch_call(self) -> None:
 
-        _proxy_a, _proxy_a_name = next(self.proxy_generator)
-        _, _proxy_b_name = next(self.proxy_generator)
+        _proxy_a, _proxy_a_name = self._proxy_pool.pop()
+        _, _proxy_b_name = self._proxy_pool.pop()
 
-        self._proxy_pool.add(_proxy_a_name)
-        self._proxy_pool.add(_proxy_b_name)
+        self._g_proxy_pool.add(_proxy_a_name)
+        self._g_proxy_pool.add(_proxy_b_name)
 
         _proxy_a.__code__ = self.mock.__code__
 

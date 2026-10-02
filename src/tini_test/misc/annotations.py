@@ -1,4 +1,4 @@
-from typing import Any, Callable, TypeAlias, TypeVar
+from typing import Any, Callable, NamedTuple, TypeAlias, TypeVar
 
 ColorValue: TypeAlias = str
 
@@ -66,3 +66,8 @@ MockDefinitionWrapperHolder: TypeAlias = tuple[F_Callable
                                                                         | MockWrappedObject 
                                                                         | TestWrappedObject, ]
 
+
+class ProxyItem(NamedTuple):
+    proxy: Callable[..., None]
+    name: str
+    

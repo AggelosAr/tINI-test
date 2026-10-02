@@ -202,6 +202,7 @@ class TestSuite:
             
             self.container[full_path] = tests
 
+
         if self.searching_single_test and not self.container:
             # TODO while searching for a single test, provide more context in the fail reason.
             # Currently the get_summary is skipped.
@@ -224,6 +225,7 @@ class TestSuite:
         
             self.suite_run_time = perf_counter()
 
+            # Dedup sync/async
             current_tests = test_collection.total_tests
             current_successes = current_tests - current_errors
             current_file_load_failures = current_tests - current_successes - current_errors
