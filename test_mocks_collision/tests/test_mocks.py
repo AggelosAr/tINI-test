@@ -1,22 +1,9 @@
-from test_mocks_and_shared.tests.test_imports import add_args_function, f1, f2
+from test_mocks.tests.test_imports import add_args_function, f1, f2
 from tini_test.context_managers import WillRaise
 from tini_test.misc.exceptions import ExpectedWasDifferentFromActual
 from tini_test.mock import Mock
 from tini_test.must_equals import must_equal
 from tini_test.test import Test
-
-# def add_args_function(*args, k_val_1: int = 0, k_val_2: int = 0) -> int:
-#     return sum(args) + k_val_1 + k_val_2
-
-
-
-# def f1():
-#     print('f1 called')
-
-
-
-# def f2():
-#     print('f2 called')
 
 
 @Mock.mock

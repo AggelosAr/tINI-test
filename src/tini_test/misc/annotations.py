@@ -50,6 +50,7 @@ TestWrappedObject: TypeAlias = Callable[..., F_Callable] #############!
 
 MockedFunction: TypeAlias = Callable[..., Any]
 
+
 HexStr = TypeVar('HexStr')
 TestId: TypeAlias = HexStr
 MockId: TypeAlias = HexStr
@@ -78,3 +79,6 @@ C_REG: TypeAlias = dict[TestId | MockId, MockId | TestId]
 
 
 GlobalRegistry: TypeAlias = dict[str, Any]
+
+
+FunctionName: TypeAlias = str

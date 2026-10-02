@@ -236,6 +236,15 @@ class TestSuite:
             self.file_load_failures = current_file_load_failures
 
     async def _arun_suite(self) -> None:
+
+        # We need to put a lock on the tests.
+        # We need to find all Mocks.
+        # If any mock exists in any test . 
+        # Or if any test will call the mocked function 
+        # We need to run those tests sequentially, since we are modifying the mocked functions.
+        # A more optimal solution is to put the tests in a q. 
+        # Or something like when a dependency for 1 test finished the next tests can start running asap.
+     
         
         # Gather all suites from all modules
         all_test_collections: list[TestCollection] = []
