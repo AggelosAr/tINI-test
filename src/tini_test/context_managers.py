@@ -100,10 +100,13 @@ def _thread_redirect_stdout(stream: StringIO):
 
 @contextmanager
 def patch_mocks(mocks: list[MockDefinition]):
-    if mocks:
-        with _lock:
-            try:
-                deque(map(lambda mock: mock.patch(), mocks), maxlen=0)
-                yield
-            finally:
-                deque(map(lambda mock: mock.restore(), mocks), maxlen=0)
+    if not mocks:
+        yield
+        return
+    
+    with _lock:
+        try:
+            deque(map(lambda mock: mock.patch(), mocks), maxlen=0)
+            yield
+        finally:
+            deque(map(lambda mock: mock.restore(), mocks), maxlen=0)
