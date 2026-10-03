@@ -1,8 +1,8 @@
 # tINI test
 ![Coverage](coverage.svg)
 
-A lightweight Python test framework focused on simple test discovery and execution from the command line.
-The framework was tested using its own test suite. It was also stress tested on around 1K tests to test db connections on a temp sqlite3. It also allows pretty prints inside the tests while running.
+A lightweight Python test framework (hand-crafted) focused on simple test discovery and execution from the command line with **zero dependencies**.
+The framework was developed and tested using its' own test suite. It was also stress tested and profiled on around 10K tests to test db connections on a temp sqlite3 and management of globals. It also allows pretty prints inside the tests while running and the print verbocity modes should provide plenty of options.
 
 ## Installation
 
@@ -41,6 +41,9 @@ def test_cats() -> None:
 def snakes() -> None:
     ...
 ```
+
+#### NOTES:
+> Multiple Test decorators on the same test will invalidate the file being tested.
 
 The decorator accepts up to two optional callables.
 
@@ -113,6 +116,91 @@ def test_must_equal_alien_object_with_eq() -> None:
     must_equal(expected, actual, comp_func)
 
 ```
+
+### Adding Mocks
+
+The mocking machine accepts the function to be mocked as the first argument and up to 2 keyword arguments.
+Either the `returns` or a combination of `args` and `kwargs`. _Args_ must be a tuple of anything and _Kwargs_ a dict of anything.
+Mocking a function call or return is as easy as:
+
+
+```python
+from tini_test.mock import Mock
+from tini_test.must_equals import must_equal
+from tini_test.test_utils import Test
+
+
+def f1(x, a, b):
+    return x + a + b
+
+def f2(x, c, d):
+    return x + c + d
+
+def f3(x, f, g):
+    return x + f + g
+
+
+@Mock.mock(f1, args=(1,), kwargs={'a': 8, 'b': 5})
+@Mock.mock(f2, args=(9,), kwargs={'c': 2, 'd': 7})
+@Mock.mock(f3, args=(4,), kwargs={'f': 6, 'g': 3})
+@Test.case
+def test_multiple_mocks_with_args():
+    must_equal(1 + 8 + 5, f1('?', a='?', b='?'))
+    must_equal(9 + 2 + 7, f2('?', c='?', d='?'))
+    must_equal(4 + 6 + 3, f3('?', f='?', g='?'))
+
+    must_equal(1 + 8 + 5 + 9 + 2 + 7 + 4 + 6 + 3, 
+               f1('?', a='?', b='?') + 
+               f2('?', c='?', d='?') + 
+               f3('?', f='?', g='?'))
+```
+
+The only requirement is that all functions to be mocked are unique and imported ( else syntax error ). Also it is not possible to mock both call and return values at the same time since that would defeat the whole point of mocking I assume (@roadmap).
+
+Here is another example. Passing arbitrary objects to the mock handler.
+
+```python
+c_r = lambda: 999
+c_x = lambda: 1000
+
+def func_g():
+    return c_x
+
+@Mock.mock(func_g, returns=c_r)
+@Test.case()
+def test_mock_callable_in_returns():
+    print('Functions! WuW')
+    must_equal(c_r, func_g())
+    result = func_g()()
+    must_equal(999, result)
+
+
+```
+
+Here is a more complex example. The function call of func_e during the test will be proxied to the Mock as a result it will receive as args the lambda and the 1 and as kwargs the function g. Also the the top and bottom Mock decorators are ignored.
+
+```python
+
+def func_e(arg1: Callable, arg2, k_val_1: Optional[Callable]=None, k_val_2=None):
+    return (arg1() or 0) + arg2 + (k_val_1() if k_val_1 else 0) + (k_val_2 or 0)
+
+def func_f():
+    return 100
+
+
+@Mock.mock
+@Mock.mock(func_e, args=(lambda: 999, 1), kwargs={'k_val_1': lambda: func_f, 'k_val_2': None})
+@Test.case
+@Mock.mock()
+def test_mock_anon_callable_none_in_args_kwargs():
+    print('Perfect!')
+    must_equal(999 + 1 + 100, func_e(func_f, 1, k_val_1=func_f, k_val_2=100))
+
+```
+
+#### NOTES:
+> Since the mock has a side effect of changing the live code object of the function, the ASYNC mode of running tests with a Mock is *Locked* e.g. an actual lock was put in place to stop global leakage to tests requesting the mocked function the time it was being mocked. In an attempt to mitigate this issue the fast solution I came up with was to simply lock it. An attempt, was also made, of parsing the _AST_ but it was hastely abandoned. @ROADMAP.
+
 
 ## Test Discovery
 
@@ -249,6 +337,8 @@ Of course the above is somewhat cancelled because the algorithm tries to autocom
 
 ## Roadmap
 
-* [ ] Register tests into groups (group-level setup/cleanup)
+* [ ] Add test context/shared vars.
+* [ ] Add side effects to Mocks.
+* [ ] Add exclude dir arg.
+* [ ] Register tests into groups (group-level setup/cleanup).
 * [ ] Add global fail sort mode, not just per module.
-* [ ] Add exclude dir arg

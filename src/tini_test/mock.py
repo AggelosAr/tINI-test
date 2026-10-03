@@ -242,12 +242,6 @@ class Mock:
              args    : Optional[tuple[Any]] = MockNone,
              kwargs  : Optional[dict[Any, Any]] = MockNone):
         
-        # if func and '_CONN_REGISTRY' not in func.__globals__:
-        #     return cls
-        # if func:
-        #     ...
-        # print('IM ISNIDE THE FILE', func.__globals__['__name__'])
-        
         is_empty = (
             returns == MockNone
             and args == MockNone
