@@ -65,13 +65,13 @@ class TestCollection:
         return len(self.decorated_tests)
 
     def import_with_context(self, module_name: str, context: dict) -> ModuleType:
-    
+
         spec = importlib.util.find_spec(module_name)
         module = importlib.util.module_from_spec(spec)
 
         module.__dict__.update(context)
 
-        spec.loader.exec_module(module)
+        spec.loader.exec_module(module)        
 
         return module
     
@@ -209,8 +209,9 @@ class TestCollection:
     def gather_tests(self, func_name: Optional[TestFunctionName] = None) -> list[TestFunctionName]:
 
         test_names = []
-        
+
         for obj in dir(self.module):
+
 
             g_obj = getattr(self.module, obj)
            

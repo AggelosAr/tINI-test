@@ -191,6 +191,7 @@ class TestSuite:
                 # We will wrap the gather_tests in this block.
                 collected_tests = tests.gather_tests(func_name=self.test_function)
 
+
             except Exception as e:
                 self.file_load_failures = 1
                 tb = self.format_file_failure_traceback(traceback.format_exc())
@@ -235,7 +236,6 @@ class TestSuite:
         
             self.suite_run_time = perf_counter()
 
-            # Dedup sync/async
             self.update_summary_stats(total_tests=test_collection.total_tests, new_errors=current_errors)
 
     async def _arun_suite(self) -> None:

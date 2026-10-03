@@ -77,6 +77,14 @@ class MockMissingFunctionError(Exception):
         super().__init__(reason)
 
 
+class CantMockFucntionWithoutArgsKwargsOrReturns(Exception):
+
+    # Disabled ... 
+    
+    def __init__(self) -> None:
+        super().__init__('Cannot mock a function without providing args/kwargs or a return value.')
+
+
 class DuplicateMockRegisteredOnTest(Exception):
 
     def __init__(self, mock_function: str = '', test_name: str = '') -> None:

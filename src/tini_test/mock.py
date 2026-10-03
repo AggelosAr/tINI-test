@@ -9,9 +9,9 @@ from tini_test.enums import MockMode
 from tini_test.misc.annotations import (MockDefinitionWrapperHolder,
                                         MockedFunction, MockWrappedObject,
                                         ProxyItem, TestWrappedObject)
-from tini_test.misc.exceptions import (MockCallDefinitionError,
-                                       MockDefinitionError,
-                                       MockMissingFunctionError)
+from tini_test.misc.exceptions import (
+    CantMockFucntionWithoutArgsKwargsOrReturns, MockCallDefinitionError,
+    MockDefinitionError, MockMissingFunctionError)
 
 
 class MockNone:
@@ -85,7 +85,9 @@ class MockDefinition:
                  mock: MockedFunction,
                  *,
                  body: MockCall | MockReturn) -> None:
-        
+
+        if mock and (not MockDefinition.arg_exists(body)):
+            raise CantMockFucntionWithoutArgsKwargsOrReturns()
         self._proxy_pool: set[str] = set()
 
         self._mock_backup_store = lambda: None
@@ -242,7 +244,12 @@ class Mock:
              args    : Optional[tuple[Any]] = MockNone,
              kwargs  : Optional[dict[Any, Any]] = MockNone):
         
-    
+        # if func and '_CONN_REGISTRY' not in func.__globals__:
+        #     return cls
+        # if func:
+        #     ...
+        # print('IM ISNIDE THE FILE', func.__globals__['__name__'])
+        
         is_empty = (
             returns == MockNone
             and args == MockNone
@@ -270,9 +277,12 @@ class Mock:
 
             if (func is None or not MockDefinition.arg_exists(mock)) and not is_empty:
                 raise MockMissingFunctionError()
-
+            
             _mock_reg, _conn_reg = attach_state(func.__globals__, _wrapper.__globals__, mode='mock')
 
+            if _conn_reg is None:
+                return wrapper
+            
             assert hex(id(_wrapper)) not in _mock_reg
             assert hex(id(_wrapper)) not in _conn_reg
 

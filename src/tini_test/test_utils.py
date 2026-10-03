@@ -143,7 +143,6 @@ class Test:
              cleanup : Optional[F_Callable] = None,
              _no_op  : Optional[F_Callable] = None) -> F_Callable:
         
-        
         def wrapper(test_func: F_Callable):
      
 
@@ -170,6 +169,9 @@ class Test:
             
             _test_reg, _conn_reg = attach_state(test_func.__globals__, _wrapper.__globals__, mode='test')
 
+            if _conn_reg is None:
+                return _wrapper
+            
             assert hex(id(_wrapper)) not in _test_reg
             assert hex(id(_wrapper)) not in _conn_reg
 
