@@ -214,8 +214,6 @@ class MockDefinition:
                     % 
                         (
                             _proxy_name,
-                            _proxy_locals__args_name,
-                                                        _proxy_locals__kwargs_name,
                             _proxy_x_name, 
                             _proxy_locals__args_name,
                             _proxy_locals__kwargs_name,
