@@ -1,6 +1,6 @@
 
 
-def profiler(is_profiling: bool = False):
+def profiler(is_profiling: bool = False): # pragma: no cover
 
     def wraper(func):
 

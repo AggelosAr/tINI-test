@@ -226,30 +226,6 @@ class Test:
     def fail_reasons(self, reason: StackTrace) -> None:
         self._fail_reasons.append(reason)
 
-    def analyze_function_calls(self, func: Callable) -> list[FunctionName]:
-        # Includes only the main function calls
-        return []
-    
-    def get_all_function_calls(self) -> set[FunctionName]:
-        # Includes mock calls, main function calls, and calls during setup and cleanup
-        all_calls = set()
-
-        mock_calls = set([mock.mock.__name__ for mock in self.mocks])
-        all_calls.update(mock_calls)
-
-        if setup_func := self.steps[-1].func:
-            setup_calls = self.analyze_function_calls(setup_func)
-            all_calls.update(setup_calls)
-
-        normal_calls = self.analyze_function_calls(self.test)
-        all_calls.update(normal_calls)
-
-        if cleanup_func := self.steps[0].func:
-            cleanup_calls = self.analyze_function_calls(cleanup_func)
-            all_calls.update(cleanup_calls)
-
-        return all_calls
-
     def run_steps(self, _verbosity: Optional[Verbosity] = None) -> None:
         
         while self.steps:
