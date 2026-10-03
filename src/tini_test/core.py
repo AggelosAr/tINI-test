@@ -122,7 +122,17 @@ class TestSuite:
                 break
 
         return '\n'.join(lines[i:])
-    
+
+    def update_summary_stats(self, total_tests: TestCollectionSize, new_errors: Errors) -> None:
+        current_tests = total_tests
+        current_successes = current_tests - new_errors
+        current_file_load_failures = current_tests - current_successes - new_errors
+
+        self.total_tests = current_tests
+        self.successes = current_successes
+        self.errors = new_errors
+        self.file_load_failures = current_file_load_failures
+
     def pprint(self) -> None:
         print(self.get_summary())
 
@@ -226,14 +236,7 @@ class TestSuite:
             self.suite_run_time = perf_counter()
 
             # Dedup sync/async
-            current_tests = test_collection.total_tests
-            current_successes = current_tests - current_errors
-            current_file_load_failures = current_tests - current_successes - current_errors
-
-            self.total_tests = current_tests
-            self.successes = current_successes
-            self.errors = current_errors
-            self.file_load_failures = current_file_load_failures
+            self.update_summary_stats(total_tests=test_collection.total_tests, new_errors=current_errors)
 
     async def _arun_suite(self) -> None:
 
@@ -261,14 +264,7 @@ class TestSuite:
 
             assert isinstance(current_errors, int)
             
-            current_tests = test_collection.total_tests
-            current_successes = current_tests - current_errors
-            current_file_load_failures = current_tests - current_successes - current_errors
-
-            self.total_tests = current_tests
-            self.successes = current_successes
-            self.errors = current_errors
-            self.file_load_failures = current_file_load_failures
+            self.update_summary_stats(total_tests=test_collection.total_tests, new_errors=current_errors)
 
     def runner(self) -> None:
 

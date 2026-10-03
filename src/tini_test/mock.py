@@ -205,6 +205,7 @@ class MockDefinition:
         self.mock.__code__ = compile(textwrap.dedent(source), 
                                      '<string>', 
                                      'exec').co_consts[0]
+        print('COMPILED MOCK IS : ', self.mock)
 
     def _patch_returns(self) -> None:
 
@@ -223,6 +224,8 @@ class MockDefinition:
     
     def _patch_call(self) -> None:
 
+        print('MOCK IS : ', self.mock)
+
         _proxy_a, _proxy_a_name = self._proxy_generator()
         _, _proxy_b_name = self._proxy_generator()
 
@@ -239,10 +242,11 @@ class MockDefinition:
         _proxy_a.__globals__.update(self.mock.__globals__)
 
 
+        
         spec = inspect.getfullargspec(self.mock)
         sig = inspect.signature(self.mock)
 
-        new_spec = ('def _%s(*args, **kwargs): return %s(%s)' 
+        new_spec = ('def _%s(*args, **kwargs): print("Calling mock..."); return %s(%s)' 
                     % 
                         (
                             _proxy_b_name,
@@ -270,8 +274,8 @@ class Mock:
              /,
              mock    : Optional[Any] = MockNone,
              returns : Optional[Any] = MockNone,
-             args    : Optional[Any] = MockNone,
-             kwargs  : Optional[Any] = MockNone):
+             args    : Optional[tuple[Any]] = MockNone,
+             kwargs  : Optional[dict[Any, Any]] = MockNone):
         
     
         is_empty = (
