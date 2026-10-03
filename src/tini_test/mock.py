@@ -86,8 +86,6 @@ class MockDefinition:
                  *,
                  body: MockCall | MockReturn) -> None:
 
-        if mock and (not MockDefinition.arg_exists(body)):
-            raise CantMockFucntionWithoutArgsKwargsOrReturns()
         self._proxy_pool: set[str] = set()
 
         self._mock_backup_store = lambda: None
