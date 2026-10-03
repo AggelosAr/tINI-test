@@ -12,7 +12,7 @@ from .enums import TestStatus, Verbosity
 from .misc.annotations import (F_Callable, FunctionName, MockWrappedObject,
                                S_Callable, StackTrace, TestWrappedObject)
 from .misc.exceptions import ExpectedWasDifferentFromActual
-from .mock import MockDefinition
+from .mock import Mock, MockDefinition
 from .state.state import OperationState
 
 _minimals_discard = {Verbosity.MINIMAL_NO_STACK, Verbosity.SUPER_MINIMAL}
@@ -133,6 +133,8 @@ class Test:
     def __str__(self) -> str:
         return '\n'.join(filter(lambda l: l != str(), map(str, self.operation_states)))
 
+    # TODO does this accept Any in test_func?
+
     @classmethod
     def case(cls,
              test_func: None 
@@ -144,7 +146,7 @@ class Test:
              setup   : Optional[F_Callable] = None,
              cleanup : Optional[F_Callable] = None,
              _no_op  : Optional[F_Callable] = None) -> F_Callable:
-        
+
         def wrapper(test_func: F_Callable):
      
 
@@ -184,9 +186,8 @@ class Test:
 
 
         if callable(test_func) and not args and setup is None and cleanup is None and _no_op is None:
-            r = wrapper(test_func)
         
-            return r
+            return wrapper(test_func)
 
         if test_func is not None:
             args = (test_func, *args)

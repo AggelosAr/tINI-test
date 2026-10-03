@@ -1,4 +1,4 @@
-from test_mocks.tests.test_imports import add_args_function, f1, f2
+from test_about_mocks.test_mocks.tests.test_imports import add_args_function, f1, f2
 from tini_test.context_managers import WillRaise
 from tini_test.misc.exceptions import ExpectedWasDifferentFromActual
 from tini_test.mock import Mock
@@ -39,8 +39,6 @@ def test_mock_decorator_order_T_M_pass_parentheses():
         must_equal(1, 1)
         print('works')
         1/0
-
-
 
 
 

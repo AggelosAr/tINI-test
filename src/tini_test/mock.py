@@ -10,7 +10,7 @@ from tini_test.misc.annotations import (MockDefinitionWrapperHolder,
                                         MockedFunction, MockWrappedObject,
                                         ProxyItem, TestWrappedObject)
 from tini_test.misc.exceptions import (
-    CantMockFucntionWithoutArgsKwargsOrReturns, MockCallDefinitionError,
+    MockCallDefinitionError,
     MockDefinitionError, MockMissingFunctionError)
 
 

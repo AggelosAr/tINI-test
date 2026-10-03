@@ -1,5 +1,5 @@
 
-from test_mocks.tests.test_imports import add_args_function
+from test_about_mocks.test_mocks.tests.test_imports import add_args_function
 from tini_test.mock import Mock
 from tini_test.must_equals import must_equal
 from tini_test.test_utils import Test
@@ -19,6 +19,7 @@ def test_order_works_0():
 @Mock.mock(add_args_function, args=(1,))
 @Mock.mock()
 def test_order_works_1():
+   
     must_equal(1, add_args_function(100))
     print('works')
 

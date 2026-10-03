@@ -159,6 +159,9 @@ class TestCollection:
         # XXX 2
         if registered_tests == 0:
             raise MockWasUsedOnWithoutTestDecorator(test_func=test_func)
+        # XXX 1
+        if registered_tests > 1:
+            raise TestDecoratorUsedMoreThanOnce(test_name=test_func)
         
         # !! If the test was not mocked we don't have to do anything special
         # Since there is the possibility that the test has been decorated with an empty mock.
@@ -197,11 +200,6 @@ class TestCollection:
         # Also attach the mocks
         test_wrap = partial(test_wrap, 
                             _Test____mocks=mocks)
-
-        # TODO do we skip file? or collect remaining valid test?
-        # XXX 1
-        if registered_tests > 1:
-            raise TestDecoratorUsedMoreThanOnce(test_name=test_name)
         
         return test_name, test_wrap
 
