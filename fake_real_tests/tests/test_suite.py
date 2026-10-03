@@ -149,7 +149,15 @@ def test_suite_run_solved_failing_tests_for_coverage() -> None:
     must_equal(19, test_suite.errors)
     must_equal(1, test_suite.file_load_failures)
 
-    must_equal(True, "Test files failed to load: ['test_fails_to_collect']" in test_suite.get_summary())
+    
+    lines = set(map(lambda l: l.strip(), list(dict.fromkeys(test_suite.get_summary().splitlines()))))
+    conditions = [
+        'Test files failed to load (1):',
+        '(1). File: test_fails_to_collect',
+        'Reason: division by zero'
+        ]
+    for condition in conditions:
+        must_equal(True, condition in lines)
 
             #   -------------------------------------------------------
             # -------------------------------------------------------
@@ -172,7 +180,14 @@ def test_suite_run_solved_failing_tests_for_coverage() -> None:
     must_equal(19, test_suite.errors)
     must_equal(1, test_suite.file_load_failures)
 
-    must_equal(True, "Test files failed to load: ['test_fails_to_collect']" in test_suite.get_summary())
+    lines = set(map(lambda l: l.strip(), list(dict.fromkeys(test_suite.get_summary().splitlines()))))
+    conditions = [
+        'Test files failed to load (1):',
+        '(1). File: test_fails_to_collect',
+        'Reason: division by zero'
+        ]
+    for condition in conditions:
+        must_equal(True, condition in lines)
 
             #   -------------------------------------------------------
             # -------------------------------------------------------
@@ -199,8 +214,14 @@ def test_suite_run_solved_failing_tests_for_coverage() -> None:
     must_equal(19, test_suite.errors)
     must_equal(1, test_suite.file_load_failures)
 
-    must_equal(True, "Test files failed to load: ['test_fails_to_collect']" in test_suite.get_summary())
-
+    lines = set(map(lambda l: l.strip(), list(dict.fromkeys(test_suite.get_summary().splitlines()))))
+    conditions = [
+        'Test files failed to load (1):',
+        '(1). File: test_fails_to_collect',
+        'Reason: division by zero'
+        ]
+    for condition in conditions:
+        must_equal(True, condition in lines)
 
 
 

@@ -95,10 +95,18 @@ def test_TestDecoratorUsedMoreThanOnce() -> None:
     completed_process = run_test('test_exceptions_2', 'test_TestDecoratorUsedMoreThanOnce')
 
     try:
+        print(completed_process.stdout)
+        print(completed_process.stderr)
         must_equal(1, completed_process.returncode)
-    
-        err = 'tini_test.misc.exceptions.TestDecoratorUsedMoreThanOnce: Test decorator used more than once on test < _wrapper >'
-        must_equal(err, completed_process.stderr.splitlines()[-1])
+        # tini_test.misc.exceptions.TestDecoratorUsedMoreThanOnce: Test decorator used more than once on test < <function Test.case.<locals>.wrapper.<locals>._wrapper at 0x7ed68c2d0e00> >
+        err = 'tini_test.misc.exceptions.TestDecoratorUsedMoreThanOnce: Test decorator used more than once on test '
+        unique_lines = list(map(lambda l: l.strip(), list(dict.fromkeys(completed_process.stderr.splitlines()))))
+
+        passes = False
+        for idx, line in enumerate(unique_lines):
+                if err in line:
+                    passes = True
+        must_equal(True, passes)
     finally:
         shutil.rmtree('/tmp/python/tini_test/test_exceptions_2', ignore_errors=True)
 

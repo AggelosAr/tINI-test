@@ -13,9 +13,9 @@ def test_collector_collects_all() -> None:
     test_collector.walk_and_collect_test_files(root=test_collector.root)
     test_collector.normalize_collected_data()
 
-    print('------------------------------------------------')
-    print(dict(test_collector.test_modules.items()))
-    print('------------------------------------------------')
+    # print('------------------------------------------------')
+    # print(dict(test_collector.test_modules.items()))
+    # print('------------------------------------------------')
 
     correct_items = {'fake_real_tests.test_must_equals.tests': ['test_must_equal_lists', 
                                                                   'test_must_equal_dicts',
@@ -48,7 +48,14 @@ def test_collector_collects_all() -> None:
                                                               'test_suite'],
                      'fake_real_tests.this_tests_should_fail_but_we_made_them_pass.tests.testing_discovery.testing_discovery.testing_discovery.tests': ['test_all'],
                      'fake_real_tests.testing_discovery.testing_discovery.testing_discovery.tests': ['test_all'],
-                     'testing_discovery_more.testing_discovery.testing_discovery.testing_discovery.tests': ['test_all']}
+                     'testing_discovery_more.testing_discovery.testing_discovery.testing_discovery.tests': ['test_all'],
+                     'test_about_mocks.test_mocks_collision.tests': ['test_stress_returns_1000', 'test_ordering_of_mock_with_test', 'test_mocks', 'test_mock_calling_100'],
+                     'test_about_mocks.test_mocks_collision.tests.test_also_collisions_on_call_import.tests': ['test_mock_calling_900', 'test_mock_calling_625'],
+                     'test_about_mocks.test_global_collisions.tests': ['test_c', 'test_b', 'test_a'],
+                     'test_about_mocks.test_mocks.tests': ['test_ordering_of_mock_with_test_128', 'test_ordering_of_mock_with_test', 'test_callables', 'test_none_types', 'test_mock_call_BASE', 'test_imports', 'test_mocks'],
+                     'test_about_mocks.test_mock_definitions_exceptions_and_more.tests': ['test_exceptions']}
+
+    
     must_equal(correct_items, dict(test_collector.test_modules.items()))
 
 
@@ -87,8 +94,13 @@ def test_collector_collects_all_and_exclude_dir_works() -> None:
                                                             'test_cleanup',
                                                               'test_suite'],
                      'fake_real_tests.testing_discovery.testing_discovery.testing_discovery.tests': ['test_all'],
-                     'testing_discovery_more.testing_discovery.testing_discovery.testing_discovery.tests': ['test_all']}
-    
+                     'testing_discovery_more.testing_discovery.testing_discovery.testing_discovery.tests': ['test_all'],
+                     'test_about_mocks.test_mocks_collision.tests': ['test_stress_returns_1000', 'test_ordering_of_mock_with_test', 'test_mocks', 'test_mock_calling_100'],
+                     'test_about_mocks.test_mocks_collision.tests.test_also_collisions_on_call_import.tests': ['test_mock_calling_900', 'test_mock_calling_625'],
+                     'test_about_mocks.test_global_collisions.tests': ['test_c', 'test_b', 'test_a'],
+                     'test_about_mocks.test_mocks.tests': ['test_ordering_of_mock_with_test_128', 'test_ordering_of_mock_with_test', 'test_callables', 'test_none_types', 'test_mock_call_BASE', 'test_imports', 'test_mocks'],
+                     'test_about_mocks.test_mock_definitions_exceptions_and_more.tests': ['test_exceptions']}
+
     must_equal(correct_items, dict(test_collector.test_modules.items()))
 
 
