@@ -6,7 +6,7 @@ from traceback import format_exc, format_tb
 from typing import Any, Callable, Mapping, Optional
 
 from tini_test._internals._registry import attach_state
-from tini_test.context_managers import _thread_redirect_stdout
+from tini_test.context_managers import _thread_redirect_stdout, patch_mocks
 
 from .enums import TestStatus, Verbosity
 from .misc.annotations import (F_Callable, FunctionName, MockWrappedObject,
@@ -16,6 +16,8 @@ from .mock import MockDefinition
 from .state.state import OperationState
 
 _minimals_discard = {Verbosity.MINIMAL_NO_STACK, Verbosity.SUPER_MINIMAL}
+
+
 
 
 class TestStep:
@@ -49,16 +51,15 @@ class TestStep:
         apply_filters = verbosity in _minimals_discard
 
         try:
-            # TODO add match on enum to discard output and exception traces in minimal modes
+            
             with _thread_redirect_stdout(buffer):
 
-                # TODO add a context manager here!
-                deque(map(lambda mock: mock.patch(), self.mocks), maxlen=0)
-                self.func(*self.args, **self.kwargs)
-                deque(map(lambda mock: mock.restore(), self.mocks), maxlen=0)
+                with patch_mocks(self.mocks):
+                    self.func(*self.args, **self.kwargs)
 
         except ExpectedWasDifferentFromActual as e:
 
+            # Is this redundant due to patch_mocks context manager?
             deque(map(lambda mock: mock.restore(), self.mocks), maxlen=0)
 
             exception_trace = '\n'.join(format_tb(e.__traceback__))
@@ -70,6 +71,7 @@ class TestStep:
 
         except Exception as e:
 
+            # Is this redundant due to patch_mocks context manager?
             deque(map(lambda mock: mock.restore(), self.mocks), maxlen=0)
 
             exception_trace = format_exc()

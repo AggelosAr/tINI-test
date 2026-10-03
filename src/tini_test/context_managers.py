@@ -1,8 +1,12 @@
+from collections import deque
 import sys
 import threading
 from contextlib import contextmanager
 from io import StringIO
 from typing import Optional
+from threading import Lock
+
+from tini_test.mock import MockDefinition
 
 from .misc.exceptions import (ExceptionWasNotRaised,
                               WillRaiseReceivedNotAnException)
@@ -10,6 +14,8 @@ from .misc.exceptions import (ExceptionWasNotRaised,
 _exceptions = (Exception, BaseException)
 
 _local_thread = threading.local() # Is this safe here? TODO
+
+_lock = Lock()
 
 
 class WillRaise(object):
@@ -76,8 +82,10 @@ class _ThreadLocalStdout:
 sys.stdout = _ThreadLocalStdout(sys.stdout)
 
 
+
 @contextmanager
 def _thread_redirect_stdout(stream: StringIO):
+    # TODO add match on enum to discard output and exception traces in minimal modes ( which ones? )
     previous = getattr(_local_thread, 'stream', None)
     _local_thread.stream = stream
     try:
@@ -87,3 +95,15 @@ def _thread_redirect_stdout(stream: StringIO):
             del _local_thread.stream
         else:
             _local_thread.stream = previous
+
+
+
+@contextmanager
+def patch_mocks(mocks: list[MockDefinition]):
+    if mocks:
+        with _lock:
+            try:
+                deque(map(lambda mock: mock.patch(), mocks), maxlen=0)
+                yield
+            finally:
+                deque(map(lambda mock: mock.restore(), mocks), maxlen=0)
