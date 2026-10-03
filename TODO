@@ -16,3 +16,11 @@
 
 # Async .... mocks what happens?
 # TEST KEYWORD ARGS TODO for mock e.g. func as arg or KEYWORD
+
+
+# Proxies
+# TODO collisions on global namespace for globals?
+# TODO efficient global management for proxy items?
+
+
+# TODO at least one is required. Fix type on MockCall

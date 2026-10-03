@@ -14,7 +14,6 @@ from tini_test.misc.exceptions import (MockCallDefinitionError,
                                        MockMissingFunctionError)
 
 
-# TODO Not correct? @NoneTypes
 class MockNone:
     pass
 
@@ -23,7 +22,6 @@ class MockCall:
 
     mode = MockMode.PATCH_CALL
 
-    # TODO at least one is required. Fix type
     def __init__(self, args: Optional[tuple] = None, kwargs: Optional[dict] = None) -> None:
         self.args = args or ()
         self.kwargs = kwargs or {}
@@ -46,65 +44,6 @@ class MockCall:
         if not isinstance(kwargs, dict):
             raise MockCallDefinitionError('Keyword arguments should be of type dict.')
 
-    def unpack_args(self, extra: tuple) -> str:
-        args_str = ', '.join(
-            '%s'
-            %
-                (
-                    v,
-                )
-                for v in (*self.args, *extra)
-        )
-        return args_str
-
-    def unpack_kwargs(self, extra: dict) -> str:
-        kwargs_str = ', '.join(
-            '%s=%s'
-            %
-                (
-                    k, v,
-                )
-                for k, v in {**self.kwargs, **extra}.items()
-        )
-        return kwargs_str
-
-    def unpack_body(self, spec: inspect.FullArgSpec, sig: inspect.Signature) -> str:
-        # XXX This is izi if we pay attention to what we are doing.
-        # The user provided args and or kwargs.
-        # We only need to see if there are defaults that are missing
-        # for each case. 
-        # Edge case. *args and **kwargs in the function signature. I think we are covered here. *** TEST TODO
-
-        # **args exists = fullargspec.varargs=<NAME> or None?? do we need it ? i dont think so since we are padding anyway 
-        # We may need to padd the ARGS with defaults.
-        kwarg_defaults = {
-            name: param.default
-            for name, param in sig.parameters.items()
-            if param.default is not inspect.Parameter.empty
-        }
-
-        extra_args = ()
-        args = spec.args or []
-        defaults = spec.defaults or ()
-
-        if len(self.args) < len(args) and defaults:
-            extra_args = defaults[len(args) - len(self.args):]
-
-        # Then we need to pad kwargs as well with defauls.
-        # izi pizi
-       
-        # **kwargs exists = fullargspec.varkw=<NAME> or None do we need it ? i dont think so since we are padding anyway 
-        extra_kwargs = {}
-
-        for k in kwarg_defaults:
-            if k not in self.kwargs:
-                extra_kwargs[k] = kwarg_defaults[k]
-
-        args_str = self.unpack_args(extra_args)
-        kwargs_str = self.unpack_kwargs({**extra_kwargs})
-
-        return ', '.join(filter(None, [args_str, kwargs_str]))
-
 
 class MockReturn:
 
@@ -115,9 +54,6 @@ class MockReturn:
 
     def __str__(self) -> str:
         return 'MockReturn(%s)' % (self.return_value, )
-
-    def unpack_body(self, spec: Optional[Any] = None) -> Any:
-        return self.return_value
 
 
 class MockDefinition:
@@ -186,6 +122,7 @@ class MockDefinition:
             _proxy.__name__ = '_proxy_%s' % (secrets.token_hex(10), )
     
             return ProxyItem(_proxy, _proxy.__name__)
+
     def patch(self) -> None:
 
         match self.mode:
@@ -205,56 +142,56 @@ class MockDefinition:
         self.mock.__code__ = compile(textwrap.dedent(source), 
                                      '<string>', 
                                      'exec').co_consts[0]
-        print('COMPILED MOCK IS : ', self.mock)
 
     def _patch_returns(self) -> None:
 
         _, _proxy_name = self._proxy_generator()
+        _, _proxy_return_name = self._proxy_generator()
         
         self._proxy_pool.add(_proxy_name)
+        self._proxy_pool.add(_proxy_return_name)
 
-        new_spec = ('def _%s(*args, **kwargs): return %s' 
+        self.mock.__globals__[_proxy_return_name] = self.body.return_value
+
+        new_spec = ('def _%s(*args, **kwargs): return globals()["%s"]' 
                     % 
                         (
                             _proxy_name,
-                            self.body.unpack_body(), 
+                            _proxy_return_name, 
                         )
                     )
         self._compile_mock(new_spec)
     
     def _patch_call(self) -> None:
 
-        print('MOCK IS : ', self.mock)
+        _, _proxy_name = self._proxy_generator()
+        _proxy_x, _proxy_x_name = self._proxy_generator()
+        _, _proxy_locals__args_name = self._proxy_generator()
+        _, _proxy_locals__kwargs_name = self._proxy_generator()
 
-        _proxy_a, _proxy_a_name = self._proxy_generator()
-        _, _proxy_b_name = self._proxy_generator()
+        self._proxy_pool.add(_proxy_name)
+        self._proxy_pool.add(_proxy_x_name)
+        self._proxy_pool.add(_proxy_locals__args_name)
+        self._proxy_pool.add(_proxy_locals__kwargs_name)
 
-        self._proxy_pool.add(_proxy_a_name)
-        self._proxy_pool.add(_proxy_b_name)
+        _proxy_x.__code__ = self.mock.__code__
 
-        _proxy_a.__code__ = self.mock.__code__
+        self.mock.__globals__[_proxy_x_name] = _proxy_x
+        self.mock.__globals__[_proxy_locals__args_name] = self.body.args
+        self.mock.__globals__[_proxy_locals__kwargs_name] = self.body.kwargs
 
-        self.mock.__globals__[_proxy_a_name] = _proxy_a
-
-        # Also we need to update the _proxy_a globals with mocks globals
-        # TODO is this efficient???
-        # TODO collisions?
-        _proxy_a.__globals__.update(self.mock.__globals__)
-
-
+        _proxy_x.__globals__.update(self.mock.__globals__)
         
-        spec = inspect.getfullargspec(self.mock)
-        sig = inspect.signature(self.mock)
-
-        new_spec = ('def _%s(*args, **kwargs): print("Calling mock..."); return %s(%s)' 
+        new_spec = ('def _%s(*args, **kwargs): return %s(*globals()["%s"], **globals()["%s"])' 
                     % 
                         (
-                            _proxy_b_name,
-                            _proxy_a_name, 
-                            self.body.unpack_body(spec=spec, sig=sig), 
+                            _proxy_name,
+                            _proxy_x_name, 
+                            _proxy_locals__args_name,
+                            _proxy_locals__kwargs_name,
+
                         )
                     )
-
         self._compile_mock(new_spec)
 
 

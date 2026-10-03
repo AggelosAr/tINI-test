@@ -5,7 +5,6 @@ from tini_test.must_equals import must_equal
 from tini_test.test_utils import Test
 
 
-
 @Test.case
 @Mock.mock
 @Mock.mock(add_args_function, args=(1,))

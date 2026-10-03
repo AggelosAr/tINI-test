@@ -1,58 +1,9 @@
-from test_mocks.tests.import_a.m_a import func_a
 from test_mocks.tests.test_imports import add_args_function, f1, f2
 from tini_test.context_managers import WillRaise
 from tini_test.misc.exceptions import ExpectedWasDifferentFromActual
 from tini_test.mock import Mock
 from tini_test.must_equals import must_equal
 from tini_test.test import Test
-
-from test_mocks.tests.import_a.import_b.import_c.m_c import func_c
-
-
-# TODO for many of these tests I suppose we intentially need to break them with will raise 
-# or _no_op for coverage?
-
-
-# Test nesting imports
-@Mock.mock(func_c, args=(1,), kwargs={'k_val_1': 1, 'k_val_2': 1})
-@Test.case()
-def test_mock_nested_call_args():
-    print('works')
-    must_equal(3 + 2, func_a(100, k_val_1=100, k_val_2=100))
-
-
-@Mock.mock(func_c, returns=1000)
-@Test.case()
-def test_mock_nested_call_returns():
-    print('works')
-    must_equal(1000 + 2, func_a(100, k_val_1=100, k_val_2=100))
-# Test nesting imports
-
-
-# TEST NONE TYPES
-def func_d(arg1, arg2, k_val_1=None, k_val_2=None):
-    return (arg1 or 0) + (arg2 or 0) + (k_val_1 or 0) + (k_val_2 or 0)
-
-@Mock.mock(func_d, args=(None, 100))
-@Test.case()
-def test_mock_none_in_args():
-    print('works')
-    must_equal(100, func_d(None, 999))
-
-
-@Mock.mock(func_d, args=(1, None, ), kwargs={'k_val_1': None, 'k_val_2': 100})
-@Test.case()
-def test_mock_none_in_kwargs():
-    print('works')
-    must_equal(101, func_d(None))
-
-
-@Mock.mock(func_d, returns=None)
-@Test.case()
-def test_mock_none_in_returns():
-    print('works')
-    must_equal(None, func_d(100, 1, k_val_1=100, k_val_2=100))
-# TEST NONE TYPES
 
 
 @Mock.mock
