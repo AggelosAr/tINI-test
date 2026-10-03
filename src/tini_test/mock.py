@@ -9,9 +9,9 @@ from tini_test.enums import MockMode
 from tini_test.misc.annotations import (MockDefinitionWrapperHolder,
                                         MockedFunction, MockWrappedObject,
                                         ProxyItem, TestWrappedObject)
-from tini_test.misc.exceptions import (
-    MockCallDefinitionError,
-    MockDefinitionError, MockMissingFunctionError)
+from tini_test.misc.exceptions import (MockCallDefinitionError,
+                                       MockDefinitionError,
+                                       MockMissingFunctionError)
 
 
 class MockNone:

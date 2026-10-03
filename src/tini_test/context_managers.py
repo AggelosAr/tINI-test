@@ -1,10 +1,10 @@
-from collections import deque
 import sys
 import threading
+from collections import deque
 from contextlib import contextmanager
 from io import StringIO
-from typing import Optional
 from threading import Lock
+from typing import Optional
 
 from tini_test.mock import MockDefinition
 

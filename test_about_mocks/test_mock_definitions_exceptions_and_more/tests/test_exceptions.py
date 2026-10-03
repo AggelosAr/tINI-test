@@ -1,11 +1,11 @@
-from tini_test.must_equals import must_equal
-from tini_test.test_utils import Test
-import tempfile
 import os
 import shutil
 import subprocess
+import tempfile
 from typing import Optional
 
+from tini_test.must_equals import must_equal
+from tini_test.test_utils import Test
 
 # TODO fix missing test names
 

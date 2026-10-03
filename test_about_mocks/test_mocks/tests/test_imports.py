@@ -1,4 +1,5 @@
-from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import func_c
+from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import \
+    func_c
 from test_about_mocks.test_mocks.tests.import_a.m_a import func_a
 from tini_test.mock import Mock
 from tini_test.must_equals import must_equal
