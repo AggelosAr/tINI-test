@@ -44,7 +44,30 @@ class MockCall:
         if not isinstance(kwargs, dict):
             raise MockCallDefinitionError('Keyword arguments should be of type dict.')
 
+    def get_default_kwargs(self, spec: inspect.FullArgSpec, sig: inspect.Signature) -> dict:
+     
+        kwarg_defaults = {
+            name: param.default
+            for name, param in sig.parameters.items()
+            if param.default is not inspect.Parameter.empty
+        }
 
+        extra_args = ()
+        args = spec.args or []
+        defaults = spec.defaults or ()
+
+        if len(self.args) < len(args) and defaults:
+            extra_args = defaults[len(args) - len(self.args):]
+
+        extra_kwargs = {}
+
+        for k in kwarg_defaults:
+            if k not in self.kwargs:
+                extra_kwargs[k] = kwarg_defaults[k]
+
+        return extra_kwargs
+
+    
 class MockReturn:
 
     mode = MockMode.PATCH_RETURN
@@ -178,7 +201,12 @@ class MockDefinition:
 
         self.mock.__globals__[_proxy_x_name] = _proxy_x
         self.mock.__globals__[_proxy_locals__args_name] = self.body.args
-        self.mock.__globals__[_proxy_locals__kwargs_name] = self.body.kwargs
+
+        spec = inspect.getfullargspec(self.mock)
+        sig = inspect.signature(self.mock)
+        default_kwargs = self.body.get_default_kwargs(spec, sig)
+
+        self.mock.__globals__[_proxy_locals__kwargs_name] = {**self.body.kwargs, **default_kwargs}
 
         _proxy_x.__globals__.update(self.mock.__globals__)
         
@@ -186,6 +214,8 @@ class MockDefinition:
                     % 
                         (
                             _proxy_name,
+                            _proxy_locals__args_name,
+                                                        _proxy_locals__kwargs_name,
                             _proxy_x_name, 
                             _proxy_locals__args_name,
                             _proxy_locals__kwargs_name,
