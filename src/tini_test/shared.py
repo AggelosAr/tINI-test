@@ -9,6 +9,9 @@ from tini_test.misc.annotations import (MockDefinitionWrappedHolder,
 from tini_test.misc.exceptions import (SharedAcceptedInvalidArguments,
                                        SharedOnlyAcceptsArguments)
 
+# Fast solution
+SHAREDS = {}
+
 
 class _NotInitialized:
     object
@@ -24,11 +27,6 @@ class Cell:
     def __init__(self, value: Optional[Any] = _NotInitialized) -> None:
         self.value = value
 
-    # def __getattribute__(self, _: Any) -> _NotInitialized | Any:
-
-    #     value = object.__getattribute__(self, 'value')
-    #     return object.__getattribute__(self, value)
-
 
 class SharedVar:
 
@@ -36,14 +34,18 @@ class SharedVar:
         instance = super().__new__(cls)
         return instance
     
-    def __init__(self, _var: str) -> None:
+    def __init__(self, _var: str, _initializing: Optional[bool] = False) -> None:
         self.stored_key = _var
+        self._initialized = True
         setattr(self, _var, Cell())
 
     def __getattr__(self, _: Any) -> Cell:
         raise RuntimeError
 
     def __getattribute__(self, _: Any) -> _NotInitialized | Any:
+        if self._initialized:
+            return SHAREDS[hex(id(self))]
+        
         stored_key = object.__getattribute__(self, 'stored_key')
         return object.__getattribute__(self, stored_key)
     
@@ -61,6 +63,9 @@ class SharedVar:
         for _type in args_types:
             if not issubclass(_type, SharedVar):
                 raise SharedAcceptedInvalidArguments(args_types)
+
+        for item in args:
+            SHAREDS[hex(id(item))] = item
 
         return args
 
@@ -113,10 +118,7 @@ class Shared:
 
             def _wrapper(*args, **kwargs) -> SharedDefinitionHolder[tuple[SharedVar]]:
 
-                if _vars:
-                    return (func, _vars, )
-                
-                return (func, )
+                return (func, ) if not _vars else (func, _vars, )
 
 
             _shared_reg, _conn_reg = attach_state(func.__globals__, _wrapper.__globals__, mode='shared')
@@ -132,16 +134,16 @@ class Shared:
             
             return _wrapper
 
-        if callable(func):
-            if not args:
-                return wrapper(func)
+        if callable(func) and not args:
+            return wrapper(func)
 
-            _vars = SharedVar.validate(*args)
+        if func is not None:
+            SharedVar.validate(_vars := (func, *args))
 
         return wrapper
 
 
-NotInitialized = SharedVar('value')
+NotInitialized = SharedVar('value', _initializing=True)
 
 class MetaSharedVar:
 
@@ -151,6 +153,6 @@ class MetaSharedVar:
     @classmethod
     def creator(cls, key: str) -> Generator[SharedVar, None, None]:
         while True:
-            yield SharedVar(key)
+            yield SharedVar(key, _initializing=True)
 
 var = MetaSharedVar()

@@ -180,8 +180,7 @@ class TestCollection:
                                                           test_func=test_func.__name__)
                         unique_shared_vars.add(_shared_var.__name__)
 
-                    shared_vars.extend(*_shared_vars)
-
+                    shared_vars.extend(_shared_vars)
 
 
             if _next := self.bi_con.get(current_id):
