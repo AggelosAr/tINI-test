@@ -1,6 +1,7 @@
 from typing import Literal
 
-from tini_test.misc.annotations import T_REG, M_REG, S_REG, C_REG, GlobalRegistry
+from tini_test.misc.annotations import (C_REG, M_REG, S_REG, T_REG,
+                                        GlobalRegistry)
 
 
 # is this cov/cont?
