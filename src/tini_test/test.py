@@ -254,7 +254,9 @@ class TestCollection:
 
             _id = hex(id(g_obj))
             
-            if not ((_id in self._MOCK_REGISTRY) ^ (_id in self._TEST_REGISTRY)):
+            if not ((_id in self._TEST_REGISTRY) 
+                    ^ (_id in self._MOCK_REGISTRY) 
+                    ^ (_id in self._SHARED_REGISTRY)):
                 continue
 
             test_name, t_obj = self.parse_wraps(_obj_id=_id)
