@@ -57,9 +57,9 @@ MockedFunction: TypeAlias = Callable[..., Any]
 
 
 # -------------- DECORATED OBJECTS --------------
-TestWrappedObject: TypeAlias = Callable[..., F_Callable] #############!
-MockWrappedObject: TypeAlias = Callable[..., Any] #############!
-SharedWrappedObject: TypeAlias = Callable[..., Any] #############!
+TestWrappedObject   : TypeAlias = Callable[..., F_Callable] #############!
+MockWrappedObject   : TypeAlias = Callable[..., Any] #############!
+SharedWrappedObject : TypeAlias = Callable[..., Any] #############!
 # -------------- DECORATED OBJECTS --------------
 
 
