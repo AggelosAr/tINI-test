@@ -178,8 +178,8 @@ class Test:
 
             def _wrapper(*args           : Any,
                          ____test_func   : Optional[RealTest] = test_func,
-                         ____mocks       : list[MockDefinition],
-                         ____shared_vars : list[SharedVar],
+                         ____mocks       : Optional[list[MockDefinition]] = None,
+                         ____shared_vars : Optional[list[SharedVar]] = None,
                          ____collector   : dict[str, Test], 
                          ____verbosity   : Verbosity,
                          **kwargs        : Any) -> TestWrappedHolder:
@@ -193,8 +193,8 @@ class Test:
                                  test_kwargs=kwargs,
                                  setup=setup,
                                  cleanup=cleanup,
-                                 mocks=____mocks,
-                                 shared_vars=____shared_vars)
+                                 mocks=____mocks or [],
+                                 shared_vars=____shared_vars or [])
 
                 ____collector[____test_func.__name__ or test_func.__name__] = test_case
                 return _wrapper
