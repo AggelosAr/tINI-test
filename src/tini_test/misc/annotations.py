@@ -117,18 +117,20 @@ TestId   : TypeAlias = HexStr
 MockId   : TypeAlias = HexStr
 SharedId : TypeAlias = HexStr
 
+RegisteredIds: TypeAlias = TestId | MockId | SharedId
+
 T_REG: TypeAlias = dict[TestId, TestWrappedObject]
 M_REG: TypeAlias = dict[MockId, Callable[..., MockDefinitionWrappedHolder]]
 S_REG: TypeAlias = dict[SharedId, SharedWrappedObject]
-C_REG: TypeAlias = dict[TestId | MockId, MockId | TestId]
+
+C_REG: TypeAlias = dict[RegisteredIds, RegisteredIds]
 
 
 GlobalRegistry: TypeAlias = dict[str, Any]
+
+_ReverseWrapConnections: TypeAlias = dict[RegisteredIds, set[RegisteredIds]]
 # -------------- REGISTERS --------------
 
-
-
-_ReverseWrapConnections: TypeAlias = dict[MockId | TestId, set[MockId | TestId]]
 
 
 class ProxyItem(NamedTuple):
