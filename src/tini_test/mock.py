@@ -228,6 +228,7 @@ class MockDefinition:
 
 # TODO add validation for func
 # TODO implement mock as /*
+# assert MockNone again...
 class Mock:
     """
     Args and Kwargs for the mock definition.
@@ -252,8 +253,8 @@ class Mock:
              mock    : Optional[Any]            = MockNone,
              *,
              returns : Optional[Any]            = MockNone,
-             args    : Optional[tuple[Any]]     = (MockNone, ),
-             kwargs  : Optional[dict[Any, Any]] = {'_': MockNone}
+             args    : Optional[tuple[Any]]     = MockNone,
+             kwargs  : Optional[dict[Any, Any]] = MockNone
 
              ) ->  Callable[..., 
                             Callable[..., 
@@ -261,8 +262,8 @@ class Mock:
         
         is_empty = (
             returns    == MockNone
-            and args   == (MockNone, )
-            and kwargs == {'_': MockNone}
+            and args   == MockNone
+            and kwargs == MockNone
         )
         mock_body = None
         _test_func = None
