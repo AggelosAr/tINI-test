@@ -6,13 +6,40 @@ from tini_test.misc.annotations import (MockDefinitionWrappedHolder,
                                         SharedDefinitionHolder,
                                         SharedWrappedObject, TestWrappedHolder,
                                         TestWrappedObject)
-from tini_test.misc.exceptions import SharedOnlyAcceptsArguments
+from tini_test.misc.exceptions import SharedAcceptedInvalidArguments, SharedOnlyAcceptsArguments
+
+
+class NotInitialized:
+    object
 
 
 class SharedVar:
 
-    def __init__(self, name: str):
-        self.name = name
+    def __new__(cls, name: str) -> 'SharedVar':
+        instance = super().__new__(cls)
+        instance.name = NotInitialized
+        return instance
+    
+    def __init__(self, *args, **kwargs) -> None:
+        raise NotImplementedError
+
+    def __getattr__(cls, key: str) -> 'SharedVar':
+        return cls.__new__(cls, name=key)
+
+    @staticmethod
+    def is_not_initialized(value: Any) -> bool:
+        return value is NotInitialized
+
+    def validate(args: Any) -> tuple['SharedVar']:
+        if not isinstance(args, tuple):
+            raise SharedOnlyAcceptsArguments(args)
+        
+        args_types = tuple(type(arg) for arg in args)
+        for _type in args_types:
+            if not issubclass(_type, SharedVar):
+                raise SharedAcceptedInvalidArguments(args_types)
+
+        return args
 
 
 
@@ -28,23 +55,23 @@ class Shared:
     @classmethod
     def shared(cls,
                func: None
-                   | RealTest 
+                     | RealTest 
 
-                   | TestWrappedObject
-                   | MockWrappedObject
-                   | SharedWrappedObject
+                     | TestWrappedObject
+                     | MockWrappedObject
+                     | SharedWrappedObject
 
-                   | TestWrappedHolder
-                   | MockDefinitionWrappedHolder
-                   | SharedDefinitionHolder = None,
+                     | TestWrappedHolder
+                     | MockDefinitionWrappedHolder
+                     | SharedDefinitionHolder = None,
                 
-               *args: Optional[tuple[Any]]
+               *args: Optional[tuple[Any | SharedVar]], 
 
                ) ->  Callable[..., 
                               Callable[..., 
                                        SharedDefinitionHolder[SharedVar]]]:
         
-        _vars = args
+        _vars = None
 
         def wrapper(func) ->  Callable[..., 
                                        SharedDefinitionHolder[SharedVar]]:
@@ -71,6 +98,13 @@ class Shared:
             return _wrapper
 
         if callable(func):
-            return wrapper(func)
+            if not args:
+                return wrapper(func)
+
+            _vars = SharedVar.validate(*args)
 
         return wrapper
+
+
+NotInitialized = SharedVar.is_not_initialized
+var = SharedVar
