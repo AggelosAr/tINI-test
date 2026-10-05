@@ -1,11 +1,11 @@
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Generator, Optional
 
 from tini_test._internals._registry import attach_state
 from tini_test.misc.annotations import (MockDefinitionWrappedHolder,
                                         MockWrappedObject, RealTest,
                                         SharedDefinitionHolder,
-                                        SharedWrappedObject, TestWrappedHolder,
-                                        TestWrappedObject)
+                                        SharedWrappedObject, TestCallables,
+                                        TestWrappedHolder, TestWrappedObject)
 from tini_test.misc.exceptions import (SharedAcceptedInvalidArguments,
                                        SharedOnlyAcceptsArguments)
 
@@ -16,22 +16,19 @@ class NotInitialized:
 
 class SharedVar:
 
-    def __new__(cls, name: str) -> 'SharedVar':
+    def __new__(cls, *args, **kwargs) -> 'SharedVar':
         instance = super().__new__(cls)
-        instance.name = NotInitialized
         return instance
     
-    def __init__(self, *args, **kwargs) -> None:
-        raise NotImplementedError
+    def __init__(self, key: str) -> None:
+        setattr(self, key, NotInitialized)
 
+    @classmethod
     def __getattr__(cls, key: str) -> 'SharedVar':
-        return cls.__new__(cls, name=key)
+        return cls.__new__(cls, key=key)
 
-    @staticmethod
-    def is_not_initialized(value: Any) -> bool:
-        return value is NotInitialized
-
-    def validate(args: Any) -> tuple['SharedVar']:
+    @classmethod
+    def validate(cls, args: Any) -> tuple['SharedVar']:
         if not isinstance(args, tuple):
             raise SharedOnlyAcceptsArguments(args)
         
@@ -41,6 +38,22 @@ class SharedVar:
                 raise SharedAcceptedInvalidArguments(args_types)
 
         return args
+
+    @staticmethod # TODO fix
+    def is_not_initialized(value: Any) -> bool:
+        return value is NotInitialized
+
+    @staticmethod
+    def enable(scopes: list[TestCallables], _var: list['SharedVar']) -> None:
+        scope.update({var.key: var for var in _var})
+
+    @staticmethod
+    def get(value: 'SharedVar') -> str:
+        return value.key
+
+    @staticmethod
+    def update(scope, _var: 'SharedVar') -> None:
+        scope[_var.key] = _var
 
 
 
@@ -108,4 +121,15 @@ class Shared:
 
 
 NotInitialized = SharedVar.is_not_initialized
-var = SharedVar
+
+class MetaSharedVar:
+
+    def __getattr__(self, key: str) -> SharedVar:
+        return next(MetaSharedVar.creator(key))
+
+    @classmethod
+    def creator(cls, key: str) -> Generator[SharedVar, None, None]:
+        while True:
+            yield SharedVar(key)
+
+var = MetaSharedVar()

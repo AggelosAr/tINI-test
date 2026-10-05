@@ -58,6 +58,8 @@ SetupCallable: TypeAlias = Callable[..., Any]
 CleanupCallable: TypeAlias = Callable[..., Any]
 _NoOp: TypeAlias = Callable[..., Any]
 
+# TODO Fix this type.
+TestCallables: TypeAlias = SetupCallable | SetupCallable | CleanupCallable | _NoOp
 
 MockedFunction: TypeAlias = Callable[..., Any]
 
