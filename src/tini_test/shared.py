@@ -10,8 +10,24 @@ from tini_test.misc.exceptions import (SharedAcceptedInvalidArguments,
                                        SharedOnlyAcceptsArguments)
 
 
-class NotInitialized:
+class _NotInitialized:
     object
+
+    @staticmethod # TODO
+    def is_not_initialized(_var: Any) -> bool:
+        return type(_var) is not type or not issubclass(_var, _NotInitialized)
+
+
+class Cell:
+    __slots__ = ('value', )
+
+    def __init__(self, value: Optional[Any] = _NotInitialized) -> None:
+        self.value = value
+
+    # def __getattribute__(self, _: Any) -> _NotInitialized | Any:
+
+    #     value = object.__getattribute__(self, 'value')
+    #     return object.__getattribute__(self, value)
 
 
 class SharedVar:
@@ -20,12 +36,21 @@ class SharedVar:
         instance = super().__new__(cls)
         return instance
     
-    def __init__(self, key: str) -> None:
-        setattr(self, key, NotInitialized)
+    def __init__(self, _var: str) -> None:
+        self.stored_key = _var
+        setattr(self, _var, Cell(_var))
 
-    @classmethod
-    def __getattr__(cls, key: str) -> 'SharedVar':
-        return cls.__new__(cls, key=key)
+    def __getattr__(self, _: Any) -> Cell:
+        raise RuntimeError
+
+    def __getattribute__(self, _: Any) -> _NotInitialized | Any:
+        stored_key = object.__getattribute__(self, 'stored_key')
+        return object.__getattribute__(self, stored_key)
+    
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, SharedVar):
+            return False
+        return self._var.value == other._var.value
 
     @classmethod
     def validate(cls, args: Any) -> tuple['SharedVar']:
@@ -38,10 +63,6 @@ class SharedVar:
                 raise SharedAcceptedInvalidArguments(args_types)
 
         return args
-
-    @staticmethod # TODO fix
-    def is_not_initialized(value: Any) -> bool:
-        return value is NotInitialized
 
     @staticmethod
     def enable(scopes: list[TestCallables], _var: list['SharedVar']) -> None:
@@ -120,7 +141,7 @@ class Shared:
         return wrapper
 
 
-NotInitialized = SharedVar.is_not_initialized
+NotInitialized = SharedVar('value')
 
 class MetaSharedVar:
 

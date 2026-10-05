@@ -295,6 +295,7 @@ def _single_line_diff(expected: str, actual: str) -> str:
 # Core dispatcher
 # =========================================================
 
+# TODO if comperator is provided, maybe add a flag to enforce it . instead of type(expected) != type(actual)
 
 def _must_equal(expected: Any, 
                 actual: Any, 

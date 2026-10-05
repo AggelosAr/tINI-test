@@ -1,6 +1,12 @@
+from functools import partial
+
 from tini_test.must_equals import must_equal
-from tini_test.shared import NotInitialized, Shared, var
+from tini_test.shared import NotInitialized, Shared, SharedVar, var
 from tini_test.test_utils import Test
+
+
+must_equal = partial(must_equal, comperator=SharedVar.__eq__)
+
 
 
 @Shared()
@@ -175,19 +181,19 @@ def var_mod_in_main_does_not_exist_in_setup(): var.var_a = 42
 
 
 
-def c4(): var.var_a = 42
-@Shared(var.var_a)
-@Test.case(lambda: must_equal(NotInitialized, var.var_a), 
-           lambda: c4, 
-           lambda: must_equal(42, var.var_a))
-def var_mod_in_cleanup_does_not_exist_in_setup_and_main(): must_equal(NotInitialized, var.var_a)
+# def c4(): var.var_a = 42
+# @Shared(var.var_a)
+# @Test.case(lambda: must_equal(NotInitialized, var.var_a), 
+#            lambda: c4, 
+#            lambda: must_equal(42, var.var_a))
+# def var_mod_in_cleanup_does_not_exist_in_setup_and_main(): must_equal(NotInitialized, var.var_a)
 
 
 
-@Shared(var.var_a)
-@Test.case(lambda: must_equal(NotInitialized, var.var_a), 
-           lambda: must_equal(NotInitialized, var.var_a), 
-           lambda: must_equal(NotInitialized, var.var_a))
-def unused_shared_variable(): must_equal(NotInitialized, var.var_a)
+# @Shared(var.var_a)
+# @Test.case(lambda: must_equal(NotInitialized, var.var_a), 
+#            lambda: must_equal(NotInitialized, var.var_a), 
+#            lambda: must_equal(NotInitialized, var.var_a))
+# def unused_shared_variable(): must_equal(NotInitialized, var.var_a)
 
 

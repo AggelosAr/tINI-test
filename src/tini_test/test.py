@@ -248,7 +248,7 @@ class TestCollection:
 
 
             g_obj = getattr(self.module, obj)
-           
+
             if not isinstance(g_obj, FunctionType):
                 continue 
 
