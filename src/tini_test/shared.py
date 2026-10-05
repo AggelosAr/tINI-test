@@ -1,7 +1,4 @@
-
-
-
-from typing import Callable
+from typing import Any, Callable, Optional
 
 from tini_test.misc.annotations import MockWrappedObject, TestWrappedObject
 from tini_test.misc.exceptions import SharedOnlyAcceptsArguments
@@ -11,11 +8,12 @@ from tini_test.misc.exceptions import SharedOnlyAcceptsArguments
 
 class Shared:
 
-    def __new__(cls, *args, **kwargs):
-        if not kwargs:
+    def __new__(cls, *args: tuple[Any], **kwargs: Any):
+
+        if kwargs:
             raise SharedOnlyAcceptsArguments
-        
-        return Shared.shared(*args, **kwargs)
+
+        return Shared.shared(*args)
 
     @classmethod
     def shared(cls,
@@ -23,7 +21,8 @@ class Shared:
                      | Callable
                      | MockWrappedObject 
                      | TestWrappedObject = None,
-               *args: tuple[]):
+                
+               *args: Optional[tuple[Any]]):
         
 
         def wrapper(func):
@@ -38,5 +37,7 @@ class Shared:
 
             return _wrapper
 
+        if callable(func):
+            return wrapper(func)
 
         return wrapper
