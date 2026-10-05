@@ -14,6 +14,14 @@ MappedDirectoryToTestFiles: TypeAlias = dict[DirectoryPath, list[FileName]]
 FullPythonPath: TypeAlias = str
 
 
+FunctionName: TypeAlias = str
+
+StackTrace: TypeAlias = str
+DiffMessage: TypeAlias = str
+
+Comperator: TypeAlias = Callable[..., Any] # Callable[[Any, Any], bool]
+
+
 
 # -------------- TIMERS --------------
 TimeTakenForTestDiscovery: TypeAlias = float
@@ -24,7 +32,6 @@ TimeTakenForTest: TypeAlias = float
 
 TimeTakenToRunSuite: TypeAlias = float
 # -------------- TIMERS -----------------
-
 
 
 # -------------- SUMMARY STATS --------------
@@ -45,29 +52,16 @@ PartialObject: TypeAlias = Callable # TODO update
 F_Callable: TypeAlias = Callable[..., Any] #!!!!!!!!!!
 S_Callable: TypeAlias = Callable[..., Any] # Callable[[], Callable[..., Any]]
 
-
-StackTrace: TypeAlias = str
-DiffMessage: TypeAlias = str
-
-Comperator: TypeAlias = Callable[..., Any] # Callable[[Any, Any], bool]
-
-
-
-
-
-TestWrappedObject: TypeAlias = Callable[..., F_Callable] #############!
-MockWrappedObject: TypeAlias = Callable[..., Any] #############!
-SharedWrappedObject: TypeAlias = Callable #############!
-
-
 MockedFunction: TypeAlias = Callable[..., Any]
 
 
-HexStr = TypeVar('HexStr')
-TestId: TypeAlias = HexStr
-MockId: TypeAlias = HexStr
 
-_ReverseWrapConnections: TypeAlias = dict[MockId | TestId, set[MockId | TestId]]
+# -------------- DECORATED OBJECTS --------------
+TestWrappedObject: TypeAlias = Callable[..., F_Callable] #############!
+MockWrappedObject: TypeAlias = Callable[..., Any] #############!
+SharedWrappedObject: TypeAlias = Callable[..., Any] #############!
+# -------------- DECORATED OBJECTS --------------
+
 
 
 _MockDefinition = TypeVar('_MockDefinition')
@@ -80,17 +74,30 @@ MockDefinitionWrapperHolder: TypeAlias = tuple[F_Callable
                                                                         | TestWrappedObject, ]
 
 
-class ProxyItem(NamedTuple):
-    proxy: Callable[..., None]
-    name: str
 
+
+# -------------- REGISTERS --------------
+HexStr = TypeVar('HexStr')
+
+TestId   : TypeAlias = HexStr
+MockId   : TypeAlias = HexStr
+SharedId : TypeAlias = HexStr
 
 T_REG: TypeAlias = dict[TestId, TestWrappedObject]
 M_REG: TypeAlias = dict[MockId, Callable[..., MockDefinitionWrapperHolder]]
+S_REG: TypeAlias = dict[SharedId, SharedWrappedObject]
 C_REG: TypeAlias = dict[TestId | MockId, MockId | TestId]
 
 
 GlobalRegistry: TypeAlias = dict[str, Any]
+# -------------- REGISTERS --------------
 
 
-FunctionName: TypeAlias = str
+
+_ReverseWrapConnections: TypeAlias = dict[MockId | TestId, set[MockId | TestId]]
+
+
+class ProxyItem(NamedTuple):
+    proxy: Callable[..., None]
+    name: str
+
