@@ -6,9 +6,12 @@ from typing import Any, Callable, Optional
 
 from tini_test._internals._registry import attach_state
 from tini_test.enums import MockMode
-from tini_test.misc.annotations import (MockDefinitionWrapperHolder,
+from tini_test.misc.annotations import (MockDefinitionWrappedHolder,
                                         MockedFunction, MockWrappedObject,
-                                        ProxyItem, SharedWrappedObject, TestWrappedObject)
+                                        ProxyItem, RealTest,
+                                        SharedDefinitionHolder,
+                                        SharedWrappedObject, TestWrappedHolder,
+                                        TestWrappedObject)
 from tini_test.misc.exceptions import (MockCallDefinitionError,
                                        MockDefinitionError,
                                        MockMissingFunctionError)
@@ -235,34 +238,41 @@ class Mock:
     @classmethod
     def mock(cls,
              func: None
-                   | Any
-                   | Callable
-                   | TestWrappedObject 
+                   | RealTest
+                   | MockedFunction
+
+                   | TestWrappedObject
                    | MockWrappedObject
-                   | SharedWrappedObject = None,
+                   | SharedWrappedObject
+
+                   | TestWrappedHolder
+                   | MockDefinitionWrappedHolder
+                   | SharedDefinitionHolder = None,
              /,
              mock    : Optional[Any]            = MockNone,
              *,
              returns : Optional[Any]            = MockNone,
-             args    : Optional[tuple[Any]]     = MockNone,
-             kwargs  : Optional[dict[Any, Any]] = MockNone):
+             args    : Optional[tuple[Any]]     = (MockNone, ),
+             kwargs  : Optional[dict[Any, Any]] = {'_': MockNone}
+
+             ) ->  Callable[..., 
+                            Callable[..., 
+                                     MockDefinitionWrappedHolder[MockDefinition]]]:
         
         is_empty = (
             returns    == MockNone
-            and args   == MockNone
-            and kwargs == MockNone
+            and args   == (MockNone, )
+            and kwargs == {'_': MockNone}
         )
         mock_body = None
         _test_func = None
 
 
-        def wrapper(func) -> Callable[..., 
-                                      Callable[..., 
-                                               MockDefinitionWrapperHolder[MockDefinition]]]:
+        def wrapper(func) ->  Callable[..., 
+                                       MockDefinitionWrappedHolder[MockDefinition]]:
         
-            # ...
 
-            def _wrapper(*args, **kwargs) -> MockDefinitionWrapperHolder[MockDefinition]:
+            def _wrapper(*args, **kwargs) -> MockDefinitionWrappedHolder[MockDefinition]:
 
                 _func = (func or _test_func)
                 
