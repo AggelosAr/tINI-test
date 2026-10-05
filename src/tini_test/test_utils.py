@@ -9,7 +9,7 @@ from tini_test._internals._registry import attach_state
 from tini_test.context_managers import _thread_redirect_stdout, patch_mocks
 
 from .enums import TestStatus, Verbosity
-from .misc.annotations import (F_Callable, MockWrappedObject, S_Callable,
+from .misc.annotations import (F_Callable, MockWrappedObject, S_Callable, SharedWrappedObject,
                                StackTrace, TestWrappedObject)
 from .misc.exceptions import ExpectedWasDifferentFromActual
 from .mock import Mock, MockDefinition
@@ -133,14 +133,15 @@ class Test:
     def __str__(self) -> str:
         return '\n'.join(filter(lambda l: l != str(), map(str, self.operation_states)))
 
-    # TODO does this accept Any in test_func?
-
+    # TODO add validation on test func
     @classmethod
     def case(cls,
-             test_func: None 
+             test_func: None
+                        | Any
                         | Callable 
+                        | TestWrappedObject
                         | MockWrappedObject
-                        | TestWrappedObject = None,
+                        | SharedWrappedObject = None,
              /,
              *args   : Any,
              setup   : Optional[F_Callable] = None,
