@@ -1,5 +1,3 @@
-
-from tini_test.mock import Mock
 from tini_test.must_equals import must_equal
 from tini_test.test_utils import Test
 
@@ -22,21 +20,77 @@ def shared_accepts_valid_arguments(): ...
 
 
 @Test.case
-def shared_rejects_keyword_arguments():
+def shared_raises_when_receiving_keyword_arguments():
     test = '''
 @Shared(my_var=var.var_a)
 @Test.case
-def shared_rejects_keyword_arguments():
+def shared_raises_when_receiving_keyword_arguments(): ...
 '''
 
 
 @Test.case
+def shared_raises_when_receiving_argument_of_wrong_type():
+    # SharedAcceptedInvalidArguments
+    tests = [
+'''
+@Shared(1, var.var_a)
+@Test.case
+def shared_raises_when_receiving_argument_of_wrong_type(): ...
+''',
+
+'''
+@Shared(var.var_a, object)
+@Test.case
+def shared_raises_when_receiving_argument_of_wrong_type(): ...
+''',
+
+'''
+@Shared(var.var_a, object)
+@Test.case
+def shared_raises_when_receiving_argument_of_wrong_type(): ...
+''',
+
+'''
+@Shared(var.var_a, type)
+@Test.case
+def shared_raises_when_receiving_argument_of_wrong_type(): ...
+'''
+
+,
+
+'''
+@Shared(None)
+@Test.case
+def shared_raises_when_receiving_argument_of_wrong_type(): ...
+'''
+    ]
+    expected_results = [
+        
+    ]
+
+
+
+
+
+@Test.case
 def shared_rejects_same_variable_name():
+    # SharedVarAlreadyDefined
     test = '''
 @Shared(var.var_a, var.var_a)
 @Test.case
 def shared_rejects_same_variable_name():
 '''
+
+
+# @Test.case
+# def shared_raises_on_not_defined_variable_case_setup():
+#     SharedVarDoesNotExistInThisContext
+# @Test.case
+# def shared_raises_on_not_defined_variable_case_main():
+#     ...
+# @Test.case
+# def shared_raises_on_not_defined_variable_case_cleanup():
+#     ...
 
 
 @Shared(var.var_a)

@@ -1,5 +1,6 @@
 from types import FunctionType
 
+# TODO split these Exceptions into groups...
 
 class NotSupportedVerbosity(Exception):
 
@@ -100,3 +101,29 @@ class MockWasUsedOnWithoutTestDecorator(Exception):
             test_name = test_func.__name__
         reason = 'Missing test decorator for function decorated with mock function < %s >' % (test_name, )
         super().__init__(reason)
+
+
+class SharedOnlyAcceptsArguments(Exception):
+
+    def __init__(self) -> None:
+        super().__init__('Shared only accepts arguments.')
+
+
+class SharedAcceptedInvalidArguments(Exception):
+
+    def __init__(self, args_types: tuple[type, ...]) -> None:
+        super().__init__('Shared accepted not valid argument. Types received: %s' % (args_types, ))
+
+
+class SharedVarDoesNotExistInThisContext(Exception):
+
+    def __init__(self, var_name: str = '', test_name: str = '') -> None:
+        msg = 'Shared variable < %s > does not exist in this context for test < %s >.' % (var_name, test_name, )
+        super().__init__(msg)
+
+
+class SharedVarAlreadyDefined(Exception):
+
+    def __init__(self, var_name: str = '', test_name: str = '') -> None:
+        msg = 'Shared variable < %s > is already defined in this context for test < %s >.' % (var_name, test_name, )
+        super().__init__(msg)
