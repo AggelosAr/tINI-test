@@ -13,15 +13,31 @@ MappedDirectoryToTestFiles: TypeAlias = dict[DirectoryPath, list[FileName]]
 
 FullPythonPath: TypeAlias = str
 
-TimeTakenForTestDiscovery: TypeAlias = float
 
-# These are the same thing
+
+# -------------- TIMERS --------------
+TimeTakenForTestDiscovery: TypeAlias = float
 TimeTakenForSuiteInitialization: TypeAlias = float
 TimeTakenForTestCollection: TypeAlias = float
 
 TimeTakenForTest: TypeAlias = float
 
 TimeTakenToRunSuite: TypeAlias = float
+# -------------- TIMERS -----------------
+
+
+
+# -------------- SUMMARY STATS --------------
+SuiteSize: TypeAlias = int
+TestCollectionSize: TypeAlias = int
+
+Successes: TypeAlias = int
+
+Errors: TypeAlias = int
+
+FileLoadFailures: TypeAlias = int
+# -------------- SUMMARY STATS --------------
+
 
 
 PartialObject: TypeAlias = Callable # TODO update
@@ -36,16 +52,12 @@ DiffMessage: TypeAlias = str
 Comperator: TypeAlias = Callable[..., Any] # Callable[[Any, Any], bool]
 
 
-SuiteSize: TypeAlias = int
-TestCollectionSize: TypeAlias = int
-Successes: TypeAlias = int
-Errors: TypeAlias = int
-
-FileLoadFailures: TypeAlias = int
 
 
-MockWrappedObject: TypeAlias = Callable[..., Any] #############!
+
 TestWrappedObject: TypeAlias = Callable[..., F_Callable] #############!
+MockWrappedObject: TypeAlias = Callable[..., Any] #############!
+SharedWrappedObject: TypeAlias = Callable #############!
 
 
 MockedFunction: TypeAlias = Callable[..., Any]
