@@ -9,8 +9,8 @@ from tini_test._internals._registry import attach_state
 from tini_test.context_managers import _thread_redirect_stdout, patch_mocks
 
 from .enums import TestStatus, Verbosity
-from .misc.annotations import (F_Callable, FunctionName, MockWrappedObject,
-                               S_Callable, StackTrace, TestWrappedObject)
+from .misc.annotations import (F_Callable, MockWrappedObject, S_Callable,
+                               StackTrace, TestWrappedObject)
 from .misc.exceptions import ExpectedWasDifferentFromActual
 from .mock import Mock, MockDefinition
 from .state.state import OperationState
