@@ -8,7 +8,7 @@ from tini_test._internals._registry import attach_state
 from tini_test.enums import MockMode
 from tini_test.misc.annotations import (MockDefinitionWrapperHolder,
                                         MockedFunction, MockWrappedObject,
-                                        ProxyItem, TestWrappedObject)
+                                        ProxyItem, SharedWrappedObject, TestWrappedObject)
 from tini_test.misc.exceptions import (MockCallDefinitionError,
                                        MockDefinitionError,
                                        MockMissingFunctionError)
@@ -223,6 +223,8 @@ class MockDefinition:
         self._compile_mock(new_spec)
 
 
+# TODO add validation for func
+# TODO implement mock as /*
 class Mock:
     """
     Args and Kwargs for the mock definition.
@@ -233,18 +235,21 @@ class Mock:
     @classmethod
     def mock(cls,
              func: None
+                   | Any
                    | Callable
-                   | MockWrappedObject 
-                   | TestWrappedObject = None, 
+                   | TestWrappedObject 
+                   | MockWrappedObject
+                   | SharedWrappedObject = None,
              /,
-             mock    : Optional[Any] = MockNone,
-             returns : Optional[Any] = MockNone,
-             args    : Optional[tuple[Any]] = MockNone,
+             mock    : Optional[Any]            = MockNone,
+             *,
+             returns : Optional[Any]            = MockNone,
+             args    : Optional[tuple[Any]]     = MockNone,
              kwargs  : Optional[dict[Any, Any]] = MockNone):
         
         is_empty = (
-            returns == MockNone
-            and args == MockNone
+            returns    == MockNone
+            and args   == MockNone
             and kwargs == MockNone
         )
         mock_body = None
