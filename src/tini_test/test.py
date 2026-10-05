@@ -7,7 +7,7 @@ from typing import Callable, Optional
 
 from tini_test._internals.consts import _LINE_CLEAR, _LINE_UP, _RESET
 from tini_test.enums import Color, RunMode, Verbosity
-from tini_test.misc.annotations import (C_REG, M_REG, T_REG, DirectoryPath,
+from tini_test.misc.annotations import (T_REG, M_REG, S_REG, C_REG, DirectoryPath,
                                         Errors, FileName, MockId,
                                         MockWrappedObject, TestCollectionSize,
                                         TestFunctionName, TestId,
@@ -28,17 +28,17 @@ class TestCollection:
                  file: FileName) -> None:
         
         self.verbosity = verbosity
-        # class importlib.util.LazyLoader(loader) Maybe we want to lazily load the module to improve performance.
-        # self.module = import_module('%s.%s' % (module_path, file, ))
 
-        self._TEST_REGISTRY: T_REG = {}
-        self._MOCK_REGISTRY: M_REG = {}
-        self._CONN_REGISTRY: C_REG = {}
+        self._TEST_REGISTRY   : T_REG = {}
+        self._MOCK_REGISTRY   : M_REG = {}
+        self._SHARED_REGISTRY : S_REG = {}
+        self._CONN_REGISTRY   : C_REG = {}
 
         context = {
-            '_TEST_REGISTRY': self._TEST_REGISTRY,
-            '_MOCK_REGISTRY': self._MOCK_REGISTRY,
-            '_CONN_REGISTRY': self._CONN_REGISTRY,
+            '_TEST_REGISTRY'  : self._TEST_REGISTRY,
+            '_MOCK_REGISTRY'  : self._MOCK_REGISTRY,
+            '_SHARED_REGISTRY': self._SHARED_REGISTRY,
+            '_CONN_REGISTRY'  : self._CONN_REGISTRY,
         }
       
         self.module = self.import_with_context('%s.%s' % (module_path, file, ), context)
