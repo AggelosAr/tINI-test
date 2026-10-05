@@ -34,6 +34,8 @@ TimeTakenToRunSuite: TypeAlias = float
 # -------------- TIMERS -----------------
 
 
+
+
 # -------------- SUMMARY STATS --------------
 SuiteSize: TypeAlias = int
 TestCollectionSize: TypeAlias = int
@@ -47,31 +49,63 @@ FileLoadFailures: TypeAlias = int
 
 
 
-PartialObject: TypeAlias = Callable # TODO update
 
-F_Callable: TypeAlias = Callable[..., Any] #!!!!!!!!!!
-S_Callable: TypeAlias = Callable[..., Any] # Callable[[], Callable[..., Any]]
+# ---------------- CALLABLES ----------------
+# TODO FIX return types
+RealTest: TypeAlias = Callable[..., Any]
+
+SetupCallable: TypeAlias = Callable[..., Any] 
+CleanupCallable: TypeAlias = Callable[..., Any]
+_NoOp: TypeAlias = Callable[..., Any]
+
 
 MockedFunction: TypeAlias = Callable[..., Any]
 
 
+PartialObject: TypeAlias = Callable # TODO update
+# ---------------- CALLABLES ----------------
+
+
+
 
 # -------------- DECORATED OBJECTS --------------
-TestWrappedObject   : TypeAlias = Callable[..., F_Callable] #############!
+
+# TODO args of Test.case
+
+# Input types
+TestWrappedObject   : TypeAlias = Callable[..., Any] #############! TODO return types
 MockWrappedObject   : TypeAlias = Callable[..., Any] #############!
 SharedWrappedObject : TypeAlias = Callable[..., Any] #############!
-# -------------- DECORATED OBJECTS --------------
 
+# DownStreamWrappedObject: ...
+# UpStreamWrappedObject: ...
+
+WrapperInput: TypeAlias = (None
+                           | Callable
+                           | RealTest
+                           | TestWrappedObject 
+                           | MockWrappedObject 
+                           | SharedWrappedObject
+                           | 'MockDefinitionWrappedHolder'
+                           | 'SharedDefinitionHolder')
+
+
+# Return types
+# TODO add/fix the test return type...
+TestWrappedHolder: TypeAlias = Any
 
 
 _MockDefinition = TypeVar('_MockDefinition')
 
-MockDefinitionWrapperHolder: TypeAlias = tuple[F_Callable 
-                                               | MockWrappedObject 
-                                               | TestWrappedObject, 
-                                               _MockDefinition] | tuple[F_Callable
-                                                                        | MockWrappedObject 
-                                                                        | TestWrappedObject, ]
+M1: TypeAlias = tuple[WrapperInput, _MockDefinition]
+M2: TypeAlias = tuple[WrapperInput, ...]
+
+MockDefinitionWrappedHolder: TypeAlias = M1 | M2
+
+
+_SharedVar = TypeVar('_SharedVar')
+SharedDefinitionHolder: TypeAlias = _SharedVar | WrapperInput
+# -------------- DECORATED OBJECTS --------------
 
 
 
@@ -84,7 +118,7 @@ MockId   : TypeAlias = HexStr
 SharedId : TypeAlias = HexStr
 
 T_REG: TypeAlias = dict[TestId, TestWrappedObject]
-M_REG: TypeAlias = dict[MockId, Callable[..., MockDefinitionWrapperHolder]]
+M_REG: TypeAlias = dict[MockId, Callable[..., MockDefinitionWrappedHolder]]
 S_REG: TypeAlias = dict[SharedId, SharedWrappedObject]
 C_REG: TypeAlias = dict[TestId | MockId, MockId | TestId]
 
