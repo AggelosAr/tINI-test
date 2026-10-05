@@ -95,7 +95,7 @@ class TestCollection:
 
     
     def parse_wraps(self, _obj_id: TestId | MockId | SharedId) -> tuple[TestFunctionName, TestWrappedObject]:
-        
+
         test_wrap: TestWrappedObject
         test_func: Optional[FunctionType
                             |TestWrappedObject
@@ -160,7 +160,7 @@ class TestCollection:
                 shared_wrap = self._SHARED_REGISTRY[current_id]
                 found_shared_vars += 1
 
-                [_test_func, *_] = shared_wrap()
+                [_test_func, *_shared_holder] = shared_wrap()
 
                 if (
                     hex(id(_test_func)) in self.bi_con
@@ -170,9 +170,9 @@ class TestCollection:
                 ):
                     test_func = _test_func
 
-                if _:
+                if _shared_holder:
 
-                    _shared_vars, *_ = _
+                    _shared_vars, *_ = _shared_holder
 
                     for _shared_var in _shared_vars:
                         if _shared_var.__name__ in unique_shared_vars:

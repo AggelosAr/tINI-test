@@ -73,9 +73,9 @@ PartialObject: TypeAlias = Callable # TODO update
 # TODO args of Test.case
 
 # Input types
-TestWrappedObject   : TypeAlias = Callable[..., Any] #############! TODO return types
-MockWrappedObject   : TypeAlias = Callable[..., Any] #############!
-SharedWrappedObject : TypeAlias = Callable[..., Any] #############!
+TestWrappedObject   : TypeAlias = Callable[..., 'WrapperInput'] #############! TODO return types
+MockWrappedObject   : TypeAlias = Callable[..., 'WrapperInput'] #############!
+SharedWrappedObject : TypeAlias = Callable[..., 'WrapperInput'] #############!
 
 # DownStreamWrappedObject: ...
 # UpStreamWrappedObject: ...
@@ -96,15 +96,15 @@ TestWrappedHolder: TypeAlias = Any
 
 
 _MockDefinition = TypeVar('_MockDefinition')
-
 M1: TypeAlias = tuple[WrapperInput, _MockDefinition]
 M2: TypeAlias = tuple[WrapperInput, ...]
-
 MockDefinitionWrappedHolder: TypeAlias = M1 | M2
 
 
 _SharedVar = TypeVar('_SharedVar')
-SharedDefinitionHolder: TypeAlias = tuple[_SharedVar] | WrapperInput
+M3: TypeAlias = tuple[WrapperInput, _SharedVar]
+M4: TypeAlias = tuple[WrapperInput, ...]
+SharedDefinitionHolder: TypeAlias = M3 | M4
 # -------------- DECORATED OBJECTS --------------
 
 

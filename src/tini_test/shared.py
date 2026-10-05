@@ -80,9 +80,9 @@ class Shared:
             def _wrapper(*args, **kwargs) -> SharedDefinitionHolder[tuple[SharedVar]]:
 
                 if _vars:
-                    return _vars
+                    return (func, _vars, )
                 
-                return func
+                return (func, )
 
 
             _shared_reg, _conn_reg = attach_state(func.__globals__, _wrapper.__globals__, mode='shared')
