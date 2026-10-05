@@ -1,23 +1,33 @@
 from typing import Literal
 
-from tini_test.misc.annotations import C_REG, M_REG, T_REG, GlobalRegistry
+from tini_test.misc.annotations import T_REG, M_REG, S_REG, C_REG, GlobalRegistry
 
 
 # is this cov/cont?
 def attach_state(source_obj: GlobalRegistry, 
                  target_obj: GlobalRegistry,
-                 mode: Literal['mock', 'test'] ) -> tuple[M_REG | T_REG, C_REG]:
+                 /,
+                 *,
+                 mode: Literal['test', 
+                               'mock', 
+                               'shared']) -> tuple[T_REG | M_REG | S_REG, 
+                                                   C_REG]:
 
-    _test_reg: T_REG = source_obj.get('_TEST_REGISTRY')
-    _mock_reg: M_REG = source_obj.get('_MOCK_REGISTRY')
-    _conn_reg: C_REG = source_obj.get('_CONN_REGISTRY')
+    _test_reg   : T_REG = source_obj.get('_TEST_REGISTRY')
+    _mock_reg   : M_REG = source_obj.get('_MOCK_REGISTRY')
+    _shared_reg : S_REG = source_obj.get('_SHARED_REGISTRY')
+    _conn_reg   : C_REG = source_obj.get('_CONN_REGISTRY')
     
-    target_obj['_TEST_REGISTRY'] = _test_reg
-    target_obj['_MOCK_REGISTRY'] = _mock_reg
-    target_obj['_CONN_REGISTRY'] = _conn_reg
+    target_obj['_TEST_REGISTRY']   = _test_reg
+    target_obj['_MOCK_REGISTRY']   = _mock_reg
+    target_obj['_SHARED_REGISTRY'] = _shared_reg
+    target_obj['_CONN_REGISTRY']   = _conn_reg
 
-    if mode == 'mock':
-        return _mock_reg, _conn_reg
-    
     if mode == 'test':
         return _test_reg, _conn_reg
+    
+    if mode == 'mock':
+        return _mock_reg, _conn_reg
+
+    if mode == 'shared':
+        return _shared_reg, _conn_reg
