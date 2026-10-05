@@ -9,8 +9,11 @@ from tini_test._internals._registry import attach_state
 from tini_test.context_managers import _thread_redirect_stdout, patch_mocks
 
 from .enums import TestStatus, Verbosity
-from .misc.annotations import (F_Callable, MockWrappedObject, S_Callable, SharedWrappedObject,
-                               StackTrace, TestWrappedObject)
+from .misc.annotations import (CleanupCallable, MockDefinitionWrappedHolder,
+                               MockWrappedObject, RealTest, SetupCallable,
+                               SharedDefinitionHolder, SharedWrappedObject,
+                               StackTrace, TestWrappedHolder,
+                               TestWrappedObject, _NoOp)
 from .misc.exceptions import ExpectedWasDifferentFromActual
 from .mock import Mock, MockDefinition
 from .state.state import OperationState
@@ -23,7 +26,11 @@ _minimals_discard = {Verbosity.MINIMAL_NO_STACK, Verbosity.SUPER_MINIMAL}
 class TestStep:
 
     def __init__(self,
-                 func: F_Callable | S_Callable | None,
+                 func: None 
+                       | SetupCallable 
+                       | RealTest
+                       | CleanupCallable 
+                       | _NoOp,
                  success_status: TestStatus,
                  fail_status: TestStatus,
                  entry_status: Optional[TestStatus] = TestStatus.NO_OP,
@@ -91,11 +98,11 @@ class Test:
                  args,
                  /,
                  verbosity: Verbosity,
-                 test: F_Callable,
+                 test: RealTest,
                  test_args: tuple,
                  test_kwargs: dict[str, Any],
-                 setup: Optional[S_Callable] = None, 
-                 cleanup: Optional[S_Callable] = None,
+                 setup: Optional[SetupCallable] = None, 
+                 cleanup: Optional[CleanupCallable] = None,
                  mocks: Optional[list[MockDefinition]] = None) -> None:
 
         self.verbosity = verbosity
@@ -133,30 +140,38 @@ class Test:
     def __str__(self) -> str:
         return '\n'.join(filter(lambda l: l != str(), map(str, self.operation_states)))
 
-    # TODO add validation on test func
+    # XXX move relevant validation logic from wrap parser here if possible
     @classmethod
     def case(cls,
              test_func: None
-                        | Any
-                        | Callable 
+                        | RealTest
+                        | SetupCallable
+
                         | TestWrappedObject
                         | MockWrappedObject
-                        | SharedWrappedObject = None,
+                        | SharedWrappedObject
+
+                        | TestWrappedHolder
+                        | MockDefinitionWrappedHolder
+                        | SharedDefinitionHolder = None,
              /,
              *args   : Any,
-             setup   : Optional[F_Callable] = None,
-             cleanup : Optional[F_Callable] = None,
-             _no_op  : Optional[F_Callable] = None) -> F_Callable:
+             setup   : Optional[SetupCallable] = None,
+             cleanup : Optional[CleanupCallable] = None,
+             _no_op  : Optional[_NoOp] = None
 
-        def wrapper(test_func: F_Callable):
+             ) -> Callable[...,
+                           Callable[..., TestWrappedHolder]]:
+
+        def wrapper(test_func: Any) -> Callable[..., TestWrappedHolder]:
      
 
             def _wrapper(*args         : Any,
-                         ____test_func : Optional[F_Callable] = test_func,
+                         ____test_func : Optional[RealTest] = test_func,
                          ____collector : dict[str, Test], 
                          ____verbosity : Verbosity,
                          ____mocks     : list[MockDefinition] = [],
-                         **kwargs      : Any) -> Any:
+                         **kwargs      : Any) -> TestWrappedHolder:
 
                 assert ____test_func
                 
