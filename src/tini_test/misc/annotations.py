@@ -104,7 +104,7 @@ MockDefinitionWrappedHolder: TypeAlias = M1 | M2
 
 
 _SharedVar = TypeVar('_SharedVar')
-SharedDefinitionHolder: TypeAlias = _SharedVar | WrapperInput
+SharedDefinitionHolder: TypeAlias = tuple[_SharedVar] | WrapperInput
 # -------------- DECORATED OBJECTS --------------
 
 

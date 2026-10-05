@@ -6,7 +6,8 @@ from tini_test.misc.annotations import (MockDefinitionWrappedHolder,
                                         SharedDefinitionHolder,
                                         SharedWrappedObject, TestWrappedHolder,
                                         TestWrappedObject)
-from tini_test.misc.exceptions import SharedAcceptedInvalidArguments, SharedOnlyAcceptsArguments
+from tini_test.misc.exceptions import (SharedAcceptedInvalidArguments,
+                                       SharedOnlyAcceptsArguments)
 
 
 class NotInitialized:
@@ -69,14 +70,14 @@ class Shared:
 
                ) ->  Callable[..., 
                               Callable[..., 
-                                       SharedDefinitionHolder[SharedVar]]]:
+                                       SharedDefinitionHolder[tuple[SharedVar]]]]:
         
         _vars = None
 
         def wrapper(func) ->  Callable[..., 
                                        SharedDefinitionHolder[SharedVar]]:
 
-            def _wrapper(*args, **kwargs) -> SharedDefinitionHolder[SharedVar]:
+            def _wrapper(*args, **kwargs) -> SharedDefinitionHolder[tuple[SharedVar]]:
 
                 if _vars:
                     return _vars

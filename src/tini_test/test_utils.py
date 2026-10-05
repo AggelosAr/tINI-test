@@ -7,6 +7,7 @@ from typing import Any, Callable, Mapping, Optional
 
 from tini_test._internals._registry import attach_state
 from tini_test.context_managers import _thread_redirect_stdout, patch_mocks
+from tini_test.shared import SharedVar
 
 from .enums import TestStatus, Verbosity
 from .misc.annotations import (CleanupCallable, MockDefinitionWrappedHolder,
@@ -15,7 +16,7 @@ from .misc.annotations import (CleanupCallable, MockDefinitionWrappedHolder,
                                StackTrace, TestWrappedHolder,
                                TestWrappedObject, _NoOp)
 from .misc.exceptions import ExpectedWasDifferentFromActual
-from .mock import Mock, MockDefinition
+from .mock import MockDefinition
 from .state.state import OperationState
 
 _minimals_discard = {Verbosity.MINIMAL_NO_STACK, Verbosity.SUPER_MINIMAL}
@@ -34,21 +35,25 @@ class TestStep:
                  success_status: TestStatus,
                  fail_status: TestStatus,
                  entry_status: Optional[TestStatus] = TestStatus.NO_OP,
+                 
                  args: Optional[tuple] = None,
                  kwargs: Optional[Mapping[str, Any]] = None,
-                 mocks: Optional[list[MockDefinition]] = None) -> None:
 
+                 mocks: Optional[list[MockDefinition]] = None,
+                 shared_vars: Optional[list[SharedVar]] = None) -> None:
+
+        self.entry_status = entry_status
+        self.success_status = success_status
+        self.fail_status = fail_status
+        
         self.func = func
         self.args = args or ()
         self.kwargs = kwargs or {}
 
         self.mocks = mocks or []
+        self.shared_vars = shared_vars or []
 
-        self.entry_status = entry_status
-        self.success_status = success_status
-        self.fail_status = fail_status
-
-    def run_step(self, verbosity: Verbosity):
+    def run_step(self, verbosity: Verbosity) -> OperationState:
         
         if self.func is None:
             return OperationState(status=TestStatus.NO_OP)
@@ -98,12 +103,16 @@ class Test:
                  args,
                  /,
                  verbosity: Verbosity,
+
                  test: RealTest,
                  test_args: tuple,
                  test_kwargs: dict[str, Any],
+
                  setup: Optional[SetupCallable] = None, 
                  cleanup: Optional[CleanupCallable] = None,
-                 mocks: Optional[list[MockDefinition]] = None) -> None:
+
+                 mocks: Optional[list[MockDefinition]] = None,
+                 shared_vars: Optional[list[SharedVar]] = None) -> None:
 
         self.verbosity = verbosity
 
@@ -111,14 +120,13 @@ class Test:
 
         self._no_op = args
 
-        self.mocks = mocks or []
-
         self._fail_state = TestStatus.NO_OP
         self._fail_reasons: list[StackTrace] = []
-
+        
         self.steps = [
             TestStep(func=cleanup,
                      mocks=mocks,
+                     shared_vars=shared_vars,
                      entry_status=TestStatus.BREAK_DOWN_ENTRY,
                      success_status=TestStatus.BREAK_DOWN_SUCCESS,
                      fail_status=TestStatus.BREAK_DOWN_FAIL),
@@ -126,10 +134,12 @@ class Test:
                      args=test_args,
                      kwargs=test_kwargs,
                      mocks=mocks,
+                     shared_vars=shared_vars,
                      success_status=TestStatus.NO_OP,
                      fail_status=TestStatus.FAIL),
             TestStep(func=setup,
                      mocks=mocks,
+                     shared_vars=shared_vars,
                      entry_status=TestStatus.SET_UP_ENTRY,
                      success_status=TestStatus.SET_UP_SUCCESS,
                      fail_status=TestStatus.SET_UP_FAIL)
@@ -166,23 +176,25 @@ class Test:
         def wrapper(test_func: Any) -> Callable[..., TestWrappedHolder]:
      
 
-            def _wrapper(*args         : Any,
-                         ____test_func : Optional[RealTest] = test_func,
-                         ____collector : dict[str, Test], 
-                         ____verbosity : Verbosity,
-                         ____mocks     : list[MockDefinition] = [],
-                         **kwargs      : Any) -> TestWrappedHolder:
+            def _wrapper(*args           : Any,
+                         ____test_func   : Optional[RealTest] = test_func,
+                         ____mocks       : list[MockDefinition],
+                         ____shared_vars : list[SharedVar],
+                         ____collector   : dict[str, Test], 
+                         ____verbosity   : Verbosity,
+                         **kwargs        : Any) -> TestWrappedHolder:
 
                 assert ____test_func
                 
                 test_case = Test(_no_op,
+                                 verbosity=____verbosity,
                                  test=____test_func,
                                  test_args=args,
                                  test_kwargs=kwargs,
                                  setup=setup,
                                  cleanup=cleanup,
-                                 verbosity=____verbosity,
-                                 mocks=____mocks)
+                                 mocks=____mocks,
+                                 shared_vars=____shared_vars)
 
                 ____collector[____test_func.__name__ or test_func.__name__] = test_case
                 return _wrapper

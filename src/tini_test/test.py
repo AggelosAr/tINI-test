@@ -7,16 +7,18 @@ from typing import Callable, Optional
 
 from tini_test._internals.consts import _LINE_CLEAR, _LINE_UP, _RESET
 from tini_test.enums import Color, RunMode, Verbosity
-from tini_test.misc.annotations import (T_REG, M_REG, S_REG, C_REG, DirectoryPath,
-                                        Errors, FileName, MockId,
-                                        MockWrappedObject, TestCollectionSize,
-                                        TestFunctionName, TestId,
-                                        TestWrappedObject,
+from tini_test.misc.annotations import (C_REG, M_REG, S_REG, T_REG,
+                                        DirectoryPath, Errors, FileName,
+                                        MockId, MockWrappedObject, SharedId,
+                                        TestCollectionSize, TestFunctionName,
+                                        TestId, TestWrappedObject,
                                         _ReverseWrapConnections)
 from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
                                        MockWasUsedOnWithoutTestDecorator,
+                                       SharedVarAlreadyDefined,
                                        TestDecoratorUsedMoreThanOnce)
 from tini_test.mock import MockDefinition
+from tini_test.shared import SharedVar
 from tini_test.test_utils import Test
 
 
@@ -92,18 +94,21 @@ class TestCollection:
         return bi_con
 
     
-    def parse_wraps(self, _obj_id: MockId | TestId) -> tuple[TestFunctionName, TestWrappedObject]:
-
-        unique_mocks: set[str] = set()
-
-        mocks: list[MockDefinition] = []
+    def parse_wraps(self, _obj_id: TestId | MockId | SharedId) -> tuple[TestFunctionName, TestWrappedObject]:
+        
         test_wrap: TestWrappedObject
         test_func: Optional[FunctionType
                             |TestWrappedObject
                             |MockWrappedObject] = None
-        
         registered_tests = 0
+
+        mocks: list[MockDefinition] = []
+        unique_mocks: set[str] = set()
         found_mocks = 0
+
+        shared_vars: list[SharedVar] = []
+        unique_shared_vars: set[str] = set()
+        found_shared_vars = 0
 
         visited = set()
         q = deque([_obj_id])
@@ -120,15 +125,13 @@ class TestCollection:
             visited.add(current_id)
 
             if current_id in self._TEST_REGISTRY:
-
                 test_wrap = self._TEST_REGISTRY[current_id]
                 registered_tests += 1
 
 
             if current_id in self._MOCK_REGISTRY:
-
-                found_mocks += 1
                 mock_wrap = self._MOCK_REGISTRY[current_id]
+                found_mocks += 1
 
                 [_test_func, *_definition] = mock_wrap()
 
@@ -137,6 +140,7 @@ class TestCollection:
                     hex(id(_test_func)) in self.bi_con
                     and 'Mock.mock' not in repr(_test_func)
                     and 'Test.test' not in repr(_test_func)
+                    and 'Shared' not in repr(_test_func)
                 ):
                     test_func = _test_func
 
@@ -152,9 +156,37 @@ class TestCollection:
                     unique_mocks.add(definition.mock.__name__)
                     mocks.append(definition)
 
-                
+            if current_id in self._SHARED_REGISTRY:
+                shared_wrap = self._SHARED_REGISTRY[current_id]
+                found_shared_vars += 1
+
+                [_test_func, *_] = shared_wrap()
+
+                if (
+                    hex(id(_test_func)) in self.bi_con
+                    and 'Mock.mock' not in repr(_test_func)
+                    and 'Test.test' not in repr(_test_func)
+                    and 'Shared' not in repr(_test_func)
+                ):
+                    test_func = _test_func
+
+                if _:
+
+                    _shared_vars, *_ = _
+
+                    for _shared_var in _shared_vars:
+                        if _shared_var.__name__ in unique_shared_vars:
+                            raise SharedVarAlreadyDefined(var_name=_shared_var.__name__, 
+                                                          test_func=test_func.__name__)
+                        unique_shared_vars.add(_shared_var.__name__)
+
+                    shared_vars.extend(*_shared_vars)
+
+
+
             if _next := self.bi_con.get(current_id):
                 q.extend(_next)
+
 
         # TODO do we skip file? or collect remaining valid test?
         # XXX 2
@@ -173,7 +205,9 @@ class TestCollection:
         _registered_test = test_wrap.__closure__[-1].cell_contents
 
         # TODO remove magic strings.
-        if 'Mock.mock' in repr(_registered_test) or 'Test.test' in repr(_registered_test):
+        if ('Mock.mock' in repr(_registered_test) 
+            or 'Test.test' in repr(_registered_test)
+            or 'Shared' in repr(_registered_test)):
 
             # There is the case where the last closure is the actual test pre-condition.
             # In that case we must also attach it.
@@ -198,9 +232,10 @@ class TestCollection:
                 test_wrap = partial(test_wrap,  
                                     _Test____test_func=test_func)
 
-        # Also attach the mocks
+        # Also attach the mocks and the shared variables
         test_wrap = partial(test_wrap, 
-                            _Test____mocks=mocks)
+                            _Test____mocks=mocks,
+                            _Test____shared_vars=shared_vars)
         
         return test_name, test_wrap
 
