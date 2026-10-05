@@ -38,7 +38,7 @@ class SharedVar:
     
     def __init__(self, _var: str) -> None:
         self.stored_key = _var
-        setattr(self, _var, Cell(_var))
+        setattr(self, _var, Cell())
 
     def __getattr__(self, _: Any) -> Cell:
         raise RuntimeError
