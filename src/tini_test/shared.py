@@ -1,22 +1,22 @@
-from typing import Any, Callable, Generator, Optional
+from types import FunctionType
+from typing import Any, Callable, Generator, Literal, Optional, assert_never
 
 from tini_test._internals._registry import attach_state
-from tini_test.misc.annotations import (MockDefinitionWrappedHolder,
+from tini_test.misc.annotations import (CellName, CellValue,
+                                        MockDefinitionWrappedHolder,
                                         MockWrappedObject, RealTest,
-                                        SharedDefinitionHolder,
-                                        SharedWrappedObject, TestCallables,
+                                        SharedDefinitionHolder, SharedMetaId,
+                                        SharedScope, SharedWrappedObject,
                                         TestWrappedHolder, TestWrappedObject)
 from tini_test.misc.exceptions import (SharedAcceptedInvalidArguments,
-                                       SharedOnlyAcceptsArguments)
-
-# Fast solution
-SHAREDS = {}
+                                       SharedOnlyAcceptsArguments,
+                                       SharedVarDoesNotExistInThisContext)
 
 
 class _NotInitialized:
     object
 
-    @staticmethod # TODO
+    @staticmethod
     def is_not_initialized(_var: Any) -> bool:
         return type(_var) is not type or not issubclass(_var, _NotInitialized)
 
@@ -34,19 +34,21 @@ class SharedVar:
         instance = super().__new__(cls)
         return instance
     
-    def __init__(self, _var: str, _initializing: Optional[bool] = False) -> None:
+    def __init__(self, _var: str) -> None:
         self.stored_key = _var
-        self._initialized = True
         setattr(self, _var, Cell())
+
+    def __key__(self) -> str:
+        return object.__getattribute__(self, 'stored_key')
 
     def __getattr__(self, _: Any) -> Cell:
         raise RuntimeError
 
-    def __getattribute__(self, _: Any) -> _NotInitialized | Any:
-        if self._initialized:
-            return SHAREDS[hex(id(self))]
-        
+    def __getattribute__(self, attr: Literal['__key__'] | str) -> CellName | Cell:
         stored_key = object.__getattribute__(self, 'stored_key')
+        if attr == '__key__':
+            return object.__getattribute__(self, 'stored_key')
+
         return object.__getattribute__(self, stored_key)
     
     def __eq__(self, other: Any) -> bool:
@@ -64,23 +66,7 @@ class SharedVar:
             if not issubclass(_type, SharedVar):
                 raise SharedAcceptedInvalidArguments(args_types)
 
-        for item in args:
-            SHAREDS[hex(id(item))] = item
-
         return args
-
-    @staticmethod
-    def enable(scopes: list[TestCallables], _var: list['SharedVar']) -> None:
-        scope.update({var.key: var for var in _var})
-
-    @staticmethod
-    def get(value: 'SharedVar') -> str:
-        return value.key
-
-    @staticmethod
-    def update(scope, _var: 'SharedVar') -> None:
-        scope[_var.key] = _var
-
 
 
 class Shared:
@@ -143,16 +129,77 @@ class Shared:
         return wrapper
 
 
-NotInitialized = SharedVar('value', _initializing=True)
-
 class MetaSharedVar:
 
-    def __getattr__(self, key: str) -> SharedVar:
-        return next(MetaSharedVar.creator(key))
+    def __init__(self, _context: Optional[SharedScope[SharedVar]] = None):
+        self._context = _context
+
+    def __getattr__(self, key: str) -> SharedVar | CellValue:
+        if self._context is None:
+            return next(MetaSharedVar.new(key))
+        
+        return self.access_shard(key).key.value
+
+    def __setattr__(self, key: str, value: Any) -> None:
+        if key == '_context':
+            object.__setattr__(self, key, value)
+            return
+
+        self.access_shard(key).key.value = value
+
+    @staticmethod
+    def get_context_from_shards(shards: list[SharedVar]) -> SharedScope[SharedVar]:
+        return {var.__key__: var for var in shards}
+
+    @staticmethod
+    def extract_meta() -> SharedMetaId:
+        return 'var'
+    
+    @classmethod
+    def set_new_meta(cls, 
+                     meta_id: SharedMetaId, 
+                     apply_at: FunctionType,
+                     new_meta: 'MetaSharedVar') -> 'MetaSharedVar':
+        apply_at.__globals__[meta_id] = new_meta
+        return new_meta
 
     @classmethod
-    def creator(cls, key: str) -> Generator[SharedVar, None, None]:
+    def new(cls, key: str) -> Generator[SharedVar, None, None]:
         while True:
-            yield SharedVar(key, _initializing=True)
+            yield SharedVar(key)
 
+    @classmethod
+    def with_context(cls, context: SharedScope[SharedVar]) -> 'MetaSharedVar':
+        return cls(_context=context)
+    
+    @classmethod
+    def with_access_scope(cls, func: list[FunctionType | None]) -> 'MetaSharedVar':
+        raise NotImplementedError
+    
+    def access_shard(self, key: str) -> SharedVar:
+        match self._context:
+        
+            case None:
+                raise assert_never
+            
+            case _:
+                match key in self._context:
+                
+                    case True:
+                        shard = self._context.get(key)
+
+                        match shard:
+                            
+                            case None:
+                                raise SharedVarDoesNotExistInThisContext(key)
+                            case _:
+                                return shard
+                    
+                    case False:
+                        raise SharedVarDoesNotExistInThisContext(key)
+    
+
+
+
+NotInitialized = _NotInitialized
 var = MetaSharedVar()

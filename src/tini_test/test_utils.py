@@ -6,7 +6,8 @@ from traceback import format_exc, format_tb
 from typing import Any, Callable, Mapping, Optional
 
 from tini_test._internals._registry import attach_state
-from tini_test.context_managers import _thread_redirect_stdout, patch_mocks
+from tini_test.context_managers import (_thread_redirect_stdout, patch_mocks,
+                                        patch_shared)
 from tini_test.shared import SharedVar
 
 from .enums import TestStatus, Verbosity
@@ -40,7 +41,7 @@ class TestStep:
                  kwargs: Optional[Mapping[str, Any]] = None,
 
                  mocks: Optional[list[MockDefinition]] = None,
-                 shared_vars: Optional[list[SharedVar]] = None) -> None:
+                 shared_vars: Optional[list[SharedVar]] = None,) -> None:
 
         self.entry_status = entry_status
         self.success_status = success_status
@@ -67,7 +68,10 @@ class TestStep:
             with _thread_redirect_stdout(buffer):
 
                 with patch_mocks(self.mocks):
-                    self.func(*self.args, **self.kwargs)
+
+                    with patch_shared(self.func, self.shared_vars):
+
+                        self.func(*self.args, **self.kwargs)
 
         except ExpectedWasDifferentFromActual as e:
 

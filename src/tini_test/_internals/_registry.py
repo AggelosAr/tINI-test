@@ -4,7 +4,6 @@ from tini_test.misc.annotations import (C_REG, M_REG, S_REG, T_REG,
                                         GlobalRegistry)
 
 
-# is this cov/cont?
 def attach_state(source_obj: GlobalRegistry, 
                  target_obj: GlobalRegistry,
                  /,

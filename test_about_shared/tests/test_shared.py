@@ -4,7 +4,6 @@ from tini_test.must_equals import must_equal
 from tini_test.shared import NotInitialized, Shared, SharedVar, var
 from tini_test.test_utils import Test
 
-
 must_equal = partial(must_equal, comperator=SharedVar.__eq__)
 
 

@@ -1,5 +1,6 @@
 from typing import Any, Callable, NamedTuple, TypeAlias, TypeVar
 
+# -------------- GENERAL -------------- < UPDATE
 ColorValue: TypeAlias = str
 
 DirectoryPath: TypeAlias = str
@@ -20,6 +21,8 @@ StackTrace: TypeAlias = str
 DiffMessage: TypeAlias = str
 
 Comperator: TypeAlias = Callable[..., Any] # Callable[[Any, Any], bool]
+# -------------- GENERAL --------------
+
 
 
 
@@ -98,15 +101,17 @@ TestWrappedHolder: TypeAlias = Any
 
 
 _MockDefinition = TypeVar('_MockDefinition')
-M1: TypeAlias = tuple[WrapperInput, _MockDefinition]
-M2: TypeAlias = tuple[WrapperInput, ...]
-MockDefinitionWrappedHolder: TypeAlias = M1 | M2
+T1: TypeAlias = tuple[WrapperInput, _MockDefinition]
+T2: TypeAlias = tuple[WrapperInput, ...]
+
+MockDefinitionWrappedHolder: TypeAlias = T1 | T2
 
 
 _SharedVar = TypeVar('_SharedVar')
-M3: TypeAlias = tuple[WrapperInput, _SharedVar]
-M4: TypeAlias = tuple[WrapperInput, ...]
-SharedDefinitionHolder: TypeAlias = M3 | M4
+T3: TypeAlias = tuple[WrapperInput, _SharedVar]
+T4: TypeAlias = tuple[WrapperInput, ...]
+
+SharedDefinitionHolder: TypeAlias = T3 | T4
 # -------------- DECORATED OBJECTS --------------
 
 
@@ -129,13 +134,33 @@ C_REG: TypeAlias = dict[RegisteredIds, RegisteredIds]
 
 
 GlobalRegistry: TypeAlias = dict[str, Any]
-
+LocalRegistry: TypeAlias = dict[str, Any]
 _ReverseWrapConnections: TypeAlias = dict[RegisteredIds, set[RegisteredIds]]
 # -------------- REGISTERS --------------
 
 
 
+
+# -------------- MOCK SPECIFICS --------------
 class ProxyItem(NamedTuple):
     proxy: Callable[..., None]
     name: str
+# -------------- MOCK SPECIFICS --------------
+
+
+
+
+# -------------- SHARED SPECIFICS --------------
+SharedMetaId: TypeAlias = HexStr
+
+_SharedVar = TypeVar('_SharedVar')
+SharedVars: TypeAlias = dict[SharedId, '_SharedVar']
+
+TestPart: TypeAlias = HexStr
+SharedScope: TypeAlias = dict[TestPart, SharedVars]
+
+CellName: TypeAlias = str
+CellValue: TypeAlias = Any
+# -------------- SHARED SPECIFICS --------------
+
 

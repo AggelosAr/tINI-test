@@ -4,16 +4,18 @@ from collections import deque
 from contextlib import contextmanager
 from io import StringIO
 from threading import Lock
+from types import FunctionType
 from typing import Optional
 
 from tini_test.mock import MockDefinition
+from tini_test.shared import MetaSharedVar, SharedVar
 
 from .misc.exceptions import (ExceptionWasNotRaised,
                               WillRaiseReceivedNotAnException)
 
 _exceptions = (Exception, BaseException)
 
-_local_thread = threading.local() # Is this safe here? TODO
+_local_thread = threading.local()
 
 _lock = Lock()
 
@@ -103,10 +105,30 @@ def patch_mocks(mocks: list[MockDefinition]):
     if not mocks:
         yield
         return
-    
+
+    # TODO optimize
     with _lock:
         try:
             deque(map(lambda mock: mock.patch(), mocks), maxlen=0)
             yield
         finally:
             deque(map(lambda mock: mock.restore(), mocks), maxlen=0)
+
+
+# TODO this propably breaks again on async
+# We should create a seperate scope for each test.....
+@contextmanager
+def patch_shared(patching: FunctionType, shared_vars: list[SharedVar]):
+    if not shared_vars:
+        yield
+        return
+
+    meta_id = MetaSharedVar.extract_meta()
+    try:
+        context = MetaSharedVar.get_context_from_shards(shared_vars)
+        new_meta = MetaSharedVar.with_context(context)
+        _ = MetaSharedVar.set_new_meta(meta_id, patching, new_meta)
+
+        yield
+    finally:
+        ...

@@ -195,9 +195,8 @@ class TestCollection:
         if registered_tests > 1:
             raise TestDecoratorUsedMoreThanOnce(test_name=test_func)
         
-        # !! If the test was not mocked we don't have to do anything special
-        # Since there is the possibility that the test has been decorated with an empty mock.
-        if not mocks and not found_mocks:
+        # Test is alone
+        if not mocks and not found_mocks and not shared_vars:
             return str(test_wrap.__closure__[-1].cell_contents.__name__), test_wrap
         
         # Attach the correct test function to the test wrap
@@ -211,6 +210,10 @@ class TestCollection:
             # There is the case where the last closure is the actual test pre-condition.
             # In that case we must also attach it.
             if hex(id(_registered_test)) in self._MOCK_REGISTRY:
+                test_wrap = partial(test_wrap,  
+                                    _Test____test_func=test_func)
+                test_name = test_func.__name__
+            elif hex(id(_registered_test)) in self._SHARED_REGISTRY:
                 test_wrap = partial(test_wrap,  
                                     _Test____test_func=test_func)
                 test_name = test_func.__name__
@@ -253,7 +256,7 @@ class TestCollection:
 
             _id = hex(id(g_obj))
             
-            if not ((_id in self._TEST_REGISTRY) 
+            if not (  (_id in self._TEST_REGISTRY) 
                     ^ (_id in self._MOCK_REGISTRY) 
                     ^ (_id in self._SHARED_REGISTRY)):
                 continue
