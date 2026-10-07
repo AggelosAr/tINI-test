@@ -269,7 +269,7 @@ def test_big_multi_line_string_diff_case_and_omitted_diffs() -> None:
     Officia in dolor excepteur ullamco sint.
     Officia in dolor excepteur ullamco sint.
     Officia in dolor excepteur ullamco sint.
-    XXXOfficia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.
+    YYYOfficia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.
     Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.
     Officia in dolor excepteur ullamco sint.
     Officia in dolor excepteur ullamco sint.
@@ -287,10 +287,11 @@ def test_big_multi_line_string_diff_case_and_omitted_diffs() -> None:
     Officia in dolor excepteur ullamco sint.
     CCCAd qui magna consectetur amet enim consequat ullamco ea pariatur reprehenderit consectetur dolore est laboris. 
     Consectetur aliqua consequat proident qui'''
+
     
     with WillRaise(ExpectedWasDifferentFromActual) as context:
         must_equal(expected, actual)
-   
+
     
     must_equal(r'''
 ITEM:
@@ -355,10 +356,10 @@ actual:   '    OZficia in dolor excepteur ullamco s'
 
 string mismatch at index 4
 expected char: 'O'
-actual char:   'X'
+actual char:   'Y'
 
 expected: '    Officia in dolor excepteur ullamco '
-actual:   '    XXXOfficia in dolor excepteur ullam'
+actual:   '    YYYOfficia in dolor excepteur ullam'
                ^
      Officia in dolor excepteur ull[TRUNCATED<376>chars]a in dolor excepteur ullamco sint.
      Officia in dolor excepteur ullamco sint.
@@ -461,7 +462,7 @@ expected char: 'O'
 actual char:   'X'
 
 expected: '    Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor exc'
-actual:   '    XXXOfficia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor '
+actual:   '    YYYOfficia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor '
                ^
      Officia in dolor excepteur ullamco sint.Offic[TRUNCATED<346>chars]mco sint.Officia in dolor excepteur ullamco sint.
      Officia in dolor excepteur ullamco sint.
@@ -547,7 +548,7 @@ expected char: 'O'
 actual char:   'X'
 
 expected: '    Officia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor exc'
-actual:   '    XXXOfficia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor '
+actual:   '    YYYOfficia in dolor excepteur ullamco sint.Officia in dolor excepteur ullamco sint.Officia in dolor '
                ^
      Officia in dolor excepteur ullamco sint.Offic[TRUNCATED<346>chars]mco sint.Officia in dolor excepteur ullamco sint.
      Officia in dolor excepteur ullamco sint.
@@ -1178,7 +1179,7 @@ def heavy_nest():
                                                                                                                                                                                                                                                     },
                                                                                                                                                                                                                                                     'users': [
                                                                                                                                                                                                                                                         {   
-                                                                                                                                                                                                                                                            'fake_user': 'I could be free … If I could pluck out the memory of him from my heart as easily as his heart was plucked from the fire, I could be free. I discover that grief means living with someone who is no longer there. The Buddhists believe that our returning spirit XXXXXXXXXXXXXXXXX may inhabit any form it chooses. Is that him? Mistletoe on the winter oak. Is that him? Swooping above me in the body of a bird. I could wear him on my finger in the ring he gave me. If I rub it, will he appear again in human form?',
+                                                                                                                                                                                                                                                            'fake_user': 'I could be free … If I could pluck out the memory of him from my heart as easily as his heart was plucked from the fire, I could be free. I discover that grief means living with someone who is no longer there. The Buddhists believe that our returning spirit YYYYYYYYYYYYYYYXX may inhabit any form it chooses. Is that him? Mistletoe on the winter oak. Is that him? Swooping above me in the body of a bird. I could wear him on my finger in the ring he gave me. If I rub it, will he appear again in human form?',
                                                                                                                                                                                                                                                             'id': 1001,
                                                                                                                                                                                                                                                             'name': 'Alice',
                                                                                                                                                                                                                                                             'age': 31,
@@ -1366,10 +1367,10 @@ def heavy_nest():
 ITEM['mixed_values'][7][2]['a'][70]['users'][0]['fake_user']:
 string mismatch at index 10158
 expected char: 'm'
-actual char:   'X'
+actual char:   'Y'
 
 expected: ' believe that our returning spirit may inhabit any form it chooses. Is'
-actual:   ' believe that our returning spirit XXXXXXXXXXXXXXXXX may inhabit any f'
+actual:   ' believe that our returning spirit YYYYYYYYYYYYYYYXX may inhabit any f'
                                               ^
 [EOD]''', str(context.exception))  
 
@@ -1388,8 +1389,8 @@ actual:   ' believe that our returning spirit XXXXXXXXXXXXXXXXX may inhabit any 
     
     actual['mixed_values'][7][2]['a'][70]['users'][0]['fake_user'] = fake_data(actual['mixed_values'][7][2]['a'][70]['users'][0]['fake_user'], False)
     
-    # remove initial diff from expected  .replace('XXXXXXXXXXXXXXXXX ')
-    expected['mixed_values'][7][2]['a'][70]['users'][0]['fake_user'] = fake_data(str(expected['mixed_values'][7][2]['a'][70]['users'][0]['fake_user']).replace('XXXXXXXXXXXXXXXXX ', ''), True)
+    # remove initial diff from expected  .replace('YYYYYYYYYYYYYYYXX ')
+    expected['mixed_values'][7][2]['a'][70]['users'][0]['fake_user'] = fake_data(str(expected['mixed_values'][7][2]['a'][70]['users'][0]['fake_user']).replace('YYYYYYYYYYYYYYYXX ', ''), True)
     
     # print(actual['mixed_values'][7][2]['a'][70]['users'][0]['fake_user'])
     # print('----------')

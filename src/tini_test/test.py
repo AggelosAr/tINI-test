@@ -3,7 +3,7 @@ import importlib.util
 from collections import deque
 from functools import cached_property, lru_cache, partial
 from types import FunctionType, ModuleType
-from typing import Callable, Optional
+from typing import Callable, Optional, no_type_check
 
 from tini_test._internals.consts import _LINE_CLEAR, _LINE_UP, _RESET
 from tini_test.enums import Color, RunMode, Verbosity
@@ -69,7 +69,12 @@ class TestCollection:
     def import_with_context(self, module_name: str, context: dict) -> ModuleType:
 
         spec = importlib.util.find_spec(module_name)
-        # TODO raise here.
+        # @coverage
+        if spec is None:
+            raise RuntimeError('Cannot find module named %s' % (module_name, ))
+        if spec.loader is None:
+            raise RuntimeError('Cannot load module named %s' % (module_name, ))
+        
         module = importlib.util.module_from_spec(spec)
 
         module.__dict__.update(context)
@@ -93,13 +98,18 @@ class TestCollection:
 
         return bi_con
 
-    
+    # XXX
+    @no_type_check 
     def parse_wraps(self, _obj_id: TestId | MockId | SharedId) -> tuple[TestFunctionName, TestWrappedObject]:
+
+        # General case. We currently stop collecting on the first error. Should we continue?
+
+        # TODO remove magic strings.
 
         test_wrap: TestWrappedObject
         test_func: Optional[FunctionType
                             |TestWrappedObject
-                            |MockWrappedObject] = None
+                            |MockWrappedObject] = None # ?
         registered_tests = 0
 
         mocks: list[MockDefinition] = []
@@ -109,6 +119,10 @@ class TestCollection:
         shared_vars: list[SharedVar] = []
         unique_shared_vars: set[str] = set()
         found_shared_vars = 0
+
+        # In case of any error we still need to unwrap to get the test name...
+        aborted: list[Callable[[TestFunctionName], DuplicateMockRegisteredOnTest] 
+                      | Callable[[TestFunctionName], SharedVarAlreadyDefined]] = [] 
 
         visited = set()
         q = deque([_obj_id])
@@ -124,10 +138,16 @@ class TestCollection:
 
             visited.add(current_id)
 
+            if _next := self.bi_con.get(current_id):
+                q.extend(_next)
+            
             if current_id in self._TEST_REGISTRY:
                 test_wrap = self._TEST_REGISTRY[current_id]
                 registered_tests += 1
 
+            else:
+                if aborted:
+                    continue
 
             if current_id in self._MOCK_REGISTRY:
                 mock_wrap = self._MOCK_REGISTRY[current_id]
@@ -149,10 +169,15 @@ class TestCollection:
                     definition, *_ = _definition
                 
                     if definition.mock.__name__ in unique_mocks:
-                        # TODO provide the test name as well. and the line no.
-                        # Kinda difficult .
-                        # Or raise the exception from inside the wrapper.
-                        raise DuplicateMockRegisteredOnTest(mock_function=definition.mock.__name__)
+                        aborted.append(
+                            lambda test_name: 
+                                DuplicateMockRegisteredOnTest
+                                    (
+                                        mock_name=definition.mock.__name__, 
+                                        test_name=test_name
+                                    )
+                            )
+                    
                     unique_mocks.add(definition.mock.__name__)
                     mocks.append(definition)
 
@@ -175,25 +200,30 @@ class TestCollection:
                     _shared_vars, *_ = _shared_holder
 
                     for _shared_var in _shared_vars:
-                        if _shared_var.__name__ in unique_shared_vars:
-                            raise SharedVarAlreadyDefined(var_name=_shared_var.__name__, 
-                                                          test_func=test_func.__name__)
-                        unique_shared_vars.add(_shared_var.__name__)
+                        if _shared_var.__key__ in unique_shared_vars:
+
+                            aborted.append(
+                                lambda test_name: 
+                                    SharedVarAlreadyDefined
+                                        (
+                                            var_name=_shared_var.__key__, 
+                                            test_name=test_name
+                                        )
+                                )
+                            break
+
+                        unique_shared_vars.add(_shared_var.__key__)
 
                     shared_vars.extend(_shared_vars)
 
 
-            if _next := self.bi_con.get(current_id):
-                q.extend(_next)
-
-
-        # TODO do we skip file? or collect remaining valid test?
-        # XXX 2
+        
+        # XXX 2? Also need case for shared.
         if registered_tests == 0:
-            raise MockWasUsedOnWithoutTestDecorator(test_func=test_func)
+            raise MockWasUsedOnWithoutTestDecorator(test_func)
         # XXX 1
         if registered_tests > 1:
-            raise TestDecoratorUsedMoreThanOnce(test_name=test_func)
+            raise TestDecoratorUsedMoreThanOnce(test_func)
         
         # Test is alone
         if not mocks and not found_mocks and not shared_vars:
@@ -202,7 +232,7 @@ class TestCollection:
         # Attach the correct test function to the test wrap
         _registered_test = test_wrap.__closure__[-1].cell_contents
 
-        # TODO remove magic strings.
+       
         if ('Mock.mock' in repr(_registered_test) 
             or 'Test.test' in repr(_registered_test)
             or 'Shared' in repr(_registered_test)):
@@ -233,6 +263,9 @@ class TestCollection:
                 test_name = test_func.__name__
                 test_wrap = partial(test_wrap,  
                                     _Test____test_func=test_func)
+
+        if aborted:
+            raise aborted[0](test_name)# TODO raise the exeption from the correct line. 
 
         # Also attach the mocks and the shared variables
         test_wrap = partial(test_wrap, 

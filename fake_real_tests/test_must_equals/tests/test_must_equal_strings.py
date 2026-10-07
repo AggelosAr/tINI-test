@@ -193,7 +193,7 @@ def test_multiline_string_diff_case_special() -> None:
 
     actual = (
         'hello Again my little garden\n'
-        'world was a XXX bee next\n'
+        'world was a YYY bee next\n'
         'in the other side'
     )
 
@@ -214,10 +214,10 @@ ITEM:
 
 string mismatch at index 12
 expected char: 's'
-actual char:   'X'
+actual char:   'Y'
 
 expected: 'world was a small bee nest\n'
-actual:   'world was a XXX bee next\n'
+actual:   'world was a YYY bee next\n'
                        ^
  in the other side
 [EOD]''', str(context.exception))
@@ -226,7 +226,7 @@ actual:   'world was a XXX bee next\n'
 
 @Test.case
 def test_dict_value_dont_match_case() -> None:
-    expected = 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+    expected = 'YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
     actual = 'RRRRRRRRRRRRRRRRRRRRRRRsadasdasdasd'
    
     with WillRaise(ExpectedWasDifferentFromActual) as context:
@@ -236,10 +236,10 @@ def test_dict_value_dont_match_case() -> None:
     must_equal(r'''
 ITEM:
 string mismatch at index 0
-expected char: 'X'
+expected char: 'Y'
 actual char:   'R'
 
-expected: 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+expected: 'YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY'
 actual:   'RRRRRRRRRRRRRRRRRRRRRRRsadasdasdasd'
            ^
 [EOD]''', str(context.exception))
@@ -300,7 +300,7 @@ def test_str_long_fail() -> None:
 
 @Test.case
 def test_str_very_long() -> None:
-    expected = 'a' * 2**16 + 'X'
+    expected = 'a' * 2**16 + 'Y'
     actual = 'a' * 2**16 + 'b'
 
     with WillRaise(ExpectedWasDifferentFromActual) as context:

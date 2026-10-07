@@ -1,4 +1,5 @@
-from typing import Any, Callable, NamedTuple, TypeAlias, TypeVar
+from typing import (Any, Callable, Literal, NamedTuple, TypeAlias, TypedDict,
+                    TypeVar)
 
 # -------------- GENERAL -------------- < UPDATE
 ColorValue: TypeAlias = str
@@ -15,12 +16,11 @@ MappedDirectoryToTestFiles: TypeAlias = dict[DirectoryPath, list[FileName]]
 FullPythonPath: TypeAlias = str
 
 
-FunctionName: TypeAlias = str
 
 StackTrace: TypeAlias = str
 DiffMessage: TypeAlias = str
 
-Comperator: TypeAlias = Callable[..., Any] # Callable[[Any, Any], bool]
+Comperator: TypeAlias = Callable[..., Any] # !!!!!
 # -------------- GENERAL --------------
 
 
@@ -53,22 +53,21 @@ FileLoadFailures: TypeAlias = int
 
 
 
-# ---------------- CALLABLES ----------------
+# ---------------- SOME CALLABLES ----------------
 # TODO FIX return types
 RealTest: TypeAlias = Callable[..., Any]
 
 SetupCallable: TypeAlias = Callable[..., Any] 
 CleanupCallable: TypeAlias = Callable[..., Any]
+
+TestCallables: TypeAlias = RealTest | SetupCallable | CleanupCallable
+
 _NoOp: TypeAlias = Callable[..., Any]
 
-# TODO Fix this type.
-TestCallables: TypeAlias = SetupCallable | SetupCallable | CleanupCallable | _NoOp
-
-MockedFunction: TypeAlias = Callable[..., Any]
 
 
 PartialObject: TypeAlias = Callable # TODO update
-# ---------------- CALLABLES ----------------
+# ---------------- SOME CALLABLES ----------------
 
 
 
@@ -78,13 +77,14 @@ PartialObject: TypeAlias = Callable # TODO update
 # TODO args of Test.case
 
 # Input types
-TestWrappedObject   : TypeAlias = Callable[..., 'WrapperInput'] #############! TODO return types
-MockWrappedObject   : TypeAlias = Callable[..., 'WrapperInput'] #############!
-SharedWrappedObject : TypeAlias = Callable[..., 'WrapperInput'] #############!
+TestWrappedObject   : TypeAlias = Callable[..., 'WrapperInput'] #!!!!!!!!!!!!!
+MockWrappedObject   : TypeAlias = Callable[..., 'WrapperInput'] #!!!!!!!!!!!!!
+SharedWrappedObject : TypeAlias = Callable[..., 'WrapperInput'] #!!!!!!!!!!!!!
 
 # DownStreamWrappedObject: ...
 # UpStreamWrappedObject: ...
 
+# this is wrong...
 WrapperInput: TypeAlias = (None
                            | Callable
                            | RealTest
@@ -96,22 +96,21 @@ WrapperInput: TypeAlias = (None
 
 
 # Return types
-# TODO add/fix the test return type...
-TestWrappedHolder: TypeAlias = Any
+TestWrappedHolder: TypeAlias = Any # !!!!!!!!!!!!!
 
 
 _MockDefinition = TypeVar('_MockDefinition')
-T1: TypeAlias = tuple[WrapperInput, _MockDefinition]
+
+type T1[_MockDefinition] = tuple[WrapperInput, _MockDefinition]
 T2: TypeAlias = tuple[WrapperInput, ...]
 
-MockDefinitionWrappedHolder: TypeAlias = T1 | T2
-
+type MockDefinitionWrappedHolder[T] = T1[T] | T2
 
 _SharedVar = TypeVar('_SharedVar')
-T3: TypeAlias = tuple[WrapperInput, _SharedVar]
+type T3[_SharedVar] = tuple[WrapperInput, _SharedVar]
 T4: TypeAlias = tuple[WrapperInput, ...]
 
-SharedDefinitionHolder: TypeAlias = T3 | T4
+type SharedDefinitionHolder[T] = T3[T] | T4
 # -------------- DECORATED OBJECTS --------------
 
 
@@ -133,8 +132,16 @@ S_REG: TypeAlias = dict[SharedId, SharedWrappedObject]
 C_REG: TypeAlias = dict[RegisteredIds, RegisteredIds]
 
 
-GlobalRegistry: TypeAlias = dict[str, Any]
-LocalRegistry: TypeAlias = dict[str, Any]
+# TODO add literals and replace the hardcodes since they are already broken on edge
+class GlobalRegistry(TypedDict):
+    _TEST_REGISTRY   : T_REG
+    _MOCK_REGISTRY   : M_REG
+    _SHARED_REGISTRY : S_REG
+    _CONN_REGISTRY   : C_REG
+    ...
+
+SimpleGlobalRegistry: TypeAlias = dict[str, Any]
+
 _ReverseWrapConnections: TypeAlias = dict[RegisteredIds, set[RegisteredIds]]
 # -------------- REGISTERS --------------
 
@@ -142,6 +149,9 @@ _ReverseWrapConnections: TypeAlias = dict[RegisteredIds, set[RegisteredIds]]
 
 
 # -------------- MOCK SPECIFICS --------------
+MockedFunction: TypeAlias = Callable[..., Any]
+
+
 class ProxyItem(NamedTuple):
     proxy: Callable[..., None]
     name: str
@@ -151,13 +161,12 @@ class ProxyItem(NamedTuple):
 
 
 # -------------- SHARED SPECIFICS --------------
-SharedMetaId: TypeAlias = HexStr
+SharedMetaId: TypeAlias = Literal['var']
 
-_SharedVar = TypeVar('_SharedVar')
-SharedVars: TypeAlias = dict[SharedId, '_SharedVar']
+type SharedVars[_SharedVar] = dict[SharedId, _SharedVar]
 
 TestPart: TypeAlias = HexStr
-SharedScope: TypeAlias = dict[TestPart, SharedVars]
+type SharedScope[_SharedVar] = dict[TestPart, SharedVars[_SharedVar]]
 
 CellName: TypeAlias = str
 CellValue: TypeAlias = Any

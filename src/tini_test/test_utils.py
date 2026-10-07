@@ -14,7 +14,7 @@ from .enums import TestStatus, Verbosity
 from .misc.annotations import (CleanupCallable, MockDefinitionWrappedHolder,
                                MockWrappedObject, RealTest, SetupCallable,
                                SharedDefinitionHolder, SharedWrappedObject,
-                               StackTrace, TestWrappedHolder,
+                               StackTrace, TestFunctionName, TestWrappedHolder,
                                TestWrappedObject, _NoOp)
 from .misc.exceptions import ExpectedWasDifferentFromActual
 from .mock import MockDefinition
@@ -28,11 +28,11 @@ _minimals_discard = {Verbosity.MINIMAL_NO_STACK, Verbosity.SUPER_MINIMAL}
 class TestStep:
 
     def __init__(self,
+                 test_name: TestFunctionName,
                  func: None 
                        | SetupCallable 
                        | RealTest
-                       | CleanupCallable 
-                       | _NoOp,
+                       | CleanupCallable,
                  success_status: TestStatus,
                  fail_status: TestStatus,
                  entry_status: Optional[TestStatus] = TestStatus.NO_OP,
@@ -42,6 +42,8 @@ class TestStep:
 
                  mocks: Optional[list[MockDefinition]] = None,
                  shared_vars: Optional[list[SharedVar]] = None,) -> None:
+
+        self.test_name = test_name
 
         self.entry_status = entry_status
         self.success_status = success_status
@@ -67,9 +69,11 @@ class TestStep:
             
             with _thread_redirect_stdout(buffer):
 
-                with patch_mocks(self.mocks):
+                with patch_shared(root_name=self.test_name, 
+                                  patching=self.func, 
+                                  shared_vars=self.shared_vars):
 
-                    with patch_shared(self.func, self.shared_vars):
+                    with patch_mocks(self.mocks):
 
                         self.func(*self.args, **self.kwargs)
 
@@ -128,20 +132,23 @@ class Test:
         self._fail_reasons: list[StackTrace] = []
         
         self.steps = [
-            TestStep(func=cleanup,
+            TestStep(test_name=self.test_name,
+                     func=cleanup,
                      mocks=mocks,
                      shared_vars=shared_vars,
                      entry_status=TestStatus.BREAK_DOWN_ENTRY,
                      success_status=TestStatus.BREAK_DOWN_SUCCESS,
                      fail_status=TestStatus.BREAK_DOWN_FAIL),
-            TestStep(func=test,
+            TestStep(test_name=self.test_name,
+                     func=test,
                      args=test_args,
                      kwargs=test_kwargs,
                      mocks=mocks,
                      shared_vars=shared_vars,
                      success_status=TestStatus.NO_OP,
                      fail_status=TestStatus.FAIL),
-            TestStep(func=setup,
+            TestStep(test_name=self.test_name,
+                     func=setup,
                      mocks=mocks,
                      shared_vars=shared_vars,
                      entry_status=TestStatus.SET_UP_ENTRY,

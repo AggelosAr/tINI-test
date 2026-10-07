@@ -4,9 +4,9 @@ from collections import deque
 from contextlib import contextmanager
 from io import StringIO
 from threading import Lock
-from types import FunctionType
-from typing import Optional
+from typing import Generator, Optional
 
+from tini_test.misc.annotations import TestCallables, TestFunctionName
 from tini_test.mock import MockDefinition
 from tini_test.shared import MetaSharedVar, SharedVar
 
@@ -101,7 +101,7 @@ def _thread_redirect_stdout(stream: StringIO):
 
 
 @contextmanager
-def patch_mocks(mocks: list[MockDefinition]):
+def patch_mocks(mocks: list[MockDefinition]) -> Generator[None, None, None]:
     if not mocks:
         yield
         return
@@ -118,7 +118,9 @@ def patch_mocks(mocks: list[MockDefinition]):
 # TODO this propably breaks again on async
 # We should create a seperate scope for each test.....
 @contextmanager
-def patch_shared(patching: FunctionType, shared_vars: list[SharedVar]):
+def patch_shared(root_name: TestFunctionName, 
+                 patching: TestCallables, 
+                 shared_vars: list[SharedVar]) -> Generator[None, None, None]:
     if not shared_vars:
         yield
         return
@@ -126,8 +128,13 @@ def patch_shared(patching: FunctionType, shared_vars: list[SharedVar]):
     meta_id = MetaSharedVar.extract_meta()
     try:
         context = MetaSharedVar.get_context_from_shards(shared_vars)
-        new_meta = MetaSharedVar.with_context(context)
-        _ = MetaSharedVar.set_new_meta(meta_id, patching, new_meta)
+
+        new_meta = MetaSharedVar.with_context(test_name=root_name, 
+                                              context=context)
+        
+        _ = MetaSharedVar.set_new_meta(_id=meta_id, 
+                                       apply_at=patching, 
+                                       new_meta=new_meta)
 
         yield
     finally:

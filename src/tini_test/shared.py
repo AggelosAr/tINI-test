@@ -1,5 +1,4 @@
-from types import FunctionType
-from typing import Any, Callable, Generator, Literal, Optional, assert_never
+from typing import Any, Callable, Generator, Literal, Optional
 
 from tini_test._internals._registry import attach_state
 from tini_test.misc.annotations import (CellName, CellValue,
@@ -7,6 +6,7 @@ from tini_test.misc.annotations import (CellName, CellValue,
                                         MockWrappedObject, RealTest,
                                         SharedDefinitionHolder, SharedMetaId,
                                         SharedScope, SharedWrappedObject,
+                                        TestCallables, TestFunctionName,
                                         TestWrappedHolder, TestWrappedObject)
 from tini_test.misc.exceptions import (SharedAcceptedInvalidArguments,
                                        SharedOnlyAcceptsArguments,
@@ -14,8 +14,8 @@ from tini_test.misc.exceptions import (SharedAcceptedInvalidArguments,
 
 
 class _NotInitialized:
-    object
-
+    __slots__ = ()
+    
     @staticmethod
     def is_not_initialized(_var: Any) -> bool:
         return type(_var) is not type or not issubclass(_var, _NotInitialized)
@@ -64,7 +64,7 @@ class SharedVar:
         args_types = tuple(type(arg) for arg in args)
         for _type in args_types:
             if not issubclass(_type, SharedVar):
-                raise SharedAcceptedInvalidArguments(args_types)
+                raise SharedAcceptedInvalidArguments
 
         return args
 
@@ -130,37 +130,56 @@ class Shared:
 
 
 class MetaSharedVar:
-
-    def __init__(self, _context: Optional[SharedScope[SharedVar]] = None):
+    '''
+    Dynamic namespaces for shared variables.
+    '''
+    def __init__(self, 
+                 test_name: Optional[TestFunctionName] ='', 
+                 _context: Optional[SharedScope[SharedVar]] = None) -> None:
+        self._test_name = test_name
         self._context = _context
 
     def __getattr__(self, key: str) -> SharedVar | CellValue:
+        # TODO we can't do that we must check the globals for permissions.
+        # Since a default param may be used. And unless doing dirty things we can't know.
         if self._context is None:
             return next(MetaSharedVar.new(key))
         
         return self.access_shard(key).key.value
 
     def __setattr__(self, key: str, value: Any) -> None:
-        if key == '_context':
+        if key in ('_test_name', '_context'):
             object.__setattr__(self, key, value)
             return
 
         self.access_shard(key).key.value = value
 
     @staticmethod
+    def extract_meta() -> SharedMetaId:
+        return 'var' # XXX
+
+    @staticmethod
     def get_context_from_shards(shards: list[SharedVar]) -> SharedScope[SharedVar]:
         return {var.__key__: var for var in shards}
 
-    @staticmethod
-    def extract_meta() -> SharedMetaId:
-        return 'var'
+    @classmethod
+    def with_context(cls, 
+                     test_name: TestFunctionName, 
+                     context: SharedScope[SharedVar]) -> 'MetaSharedVar':
+        return cls(test_name=test_name, _context=context)
+
+    @classmethod
+    def with_access_scope(cls, 
+                          test_name: TestFunctionName, 
+                          funcs: list[TestCallables]) -> 'MetaSharedVar':
+        raise NotImplementedError
     
     @classmethod
     def set_new_meta(cls, 
-                     meta_id: SharedMetaId, 
-                     apply_at: FunctionType,
+                     _id: SharedMetaId, 
+                     apply_at: TestCallables,
                      new_meta: 'MetaSharedVar') -> 'MetaSharedVar':
-        apply_at.__globals__[meta_id] = new_meta
+        apply_at.__globals__[_id] = new_meta
         return new_meta
 
     @classmethod
@@ -168,19 +187,14 @@ class MetaSharedVar:
         while True:
             yield SharedVar(key)
 
-    @classmethod
-    def with_context(cls, context: SharedScope[SharedVar]) -> 'MetaSharedVar':
-        return cls(_context=context)
-    
-    @classmethod
-    def with_access_scope(cls, func: list[FunctionType | None]) -> 'MetaSharedVar':
-        raise NotImplementedError
-    
     def access_shard(self, key: str) -> SharedVar:
         match self._context:
         
             case None:
-                raise assert_never
+                # In this case the Shard was never initialized 
+                # As a result we don't have access to the test name.
+                # We don't care since the Exception already includes the line.
+                raise SharedVarDoesNotExistInThisContext(key)
             
             case _:
                 match key in self._context:
@@ -191,14 +205,13 @@ class MetaSharedVar:
                         match shard:
                             
                             case None:
-                                raise SharedVarDoesNotExistInThisContext(key)
+                                raise SharedVarDoesNotExistInThisContext(key, self._test_name)
                             case _:
                                 return shard
                     
                     case False:
-                        raise SharedVarDoesNotExistInThisContext(key)
+                        raise SharedVarDoesNotExistInThisContext(key, self._test_name)
     
-
 
 
 NotInitialized = _NotInitialized

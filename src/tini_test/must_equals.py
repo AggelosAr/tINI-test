@@ -288,14 +288,13 @@ def _single_line_diff(expected: str, actual: str) -> str:
         act_char,
         exp_snippet,
         act_snippet,
-        ' ' * (idx - start + 1), # TODO if char is excaped +1 (maybe)
+        ' ' * (idx - start + 1), # TODO if char is excaped +1 (maybe) or different length due to repr
     )
 
 # =========================================================
 # Core dispatcher
 # =========================================================
 
-# TODO if comperator is provided, maybe add a flag to enforce it . instead of type(expected) != type(actual)
 
 def _must_equal(expected: Any, 
                 actual: Any, 

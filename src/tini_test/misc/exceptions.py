@@ -1,6 +1,8 @@
 from types import FunctionType
+from typing import Optional
 
-# TODO split these Exceptions into groups...
+from tini_test.misc.annotations import CellName, TestFunctionName
+
 
 class NotSupportedVerbosity(Exception):
 
@@ -80,25 +82,29 @@ class MockMissingFunctionError(Exception):
 
 class DuplicateMockRegisteredOnTest(Exception):
 
-    def __init__(self, mock_function: str = '', test_name: str = '') -> None:
-        reason = 'Duplicate mock function < %s > registered on test < %s >' % (mock_function, test_name)
+    def __init__(self, mock_name: str, test_name: TestFunctionName) -> None:
+        reason = 'Duplicate mock function < %s > registered on test < %s >' % (mock_name, test_name)
         super().__init__(reason)
 
 
 class TestDecoratorUsedMoreThanOnce(Exception):
 
-    def __init__(self, test_name: str = '') -> None:
+    def __init__(self, test: Optional[FunctionType] = None) -> None:
+        if not test:
+            test_name = '<unknown>'
+        else:
+            test_name = test.__name__
         reason = 'Test decorator used more than once on test < %s >' % (test_name, )
         super().__init__(reason)
 
 
 class MockWasUsedOnWithoutTestDecorator(Exception):
 
-    def __init__(self, test_func: FunctionType | None = None) -> None:
-        if not test_func:
+    def __init__(self, test: Optional[FunctionType] = None) -> None:
+        if not test:
             test_name = '<unknown>'
         else:
-            test_name = test_func.__name__
+            test_name = test.__name__
         reason = 'Missing test decorator for function decorated with mock function < %s >' % (test_name, )
         super().__init__(reason)
 
@@ -106,24 +112,29 @@ class MockWasUsedOnWithoutTestDecorator(Exception):
 class SharedOnlyAcceptsArguments(Exception):
 
     def __init__(self) -> None:
-        super().__init__('Shared only accepts arguments.')
+        super().__init__('Shared only accepts positional arguments.')
 
 
 class SharedAcceptedInvalidArguments(Exception):
 
-    def __init__(self, args_types: tuple[type, ...]) -> None:
-        super().__init__('Shared accepted not valid argument. Types received: %s' % (args_types, ))
+    def __init__(self) -> None:
+        super().__init__('Shared accepts only <var> variables.')
 
 
 class SharedVarDoesNotExistInThisContext(Exception):
 
-    def __init__(self, var_name: str = '', test_name: str = '') -> None:
-        msg = 'Shared variable < %s > does not exist in this context for test < %s >.' % (var_name, test_name, )
+    def __init__(self, var_name: str, test_name: Optional[TestFunctionName] = '') -> None:
+        base_msg = 'Shared variable < %s > does not exist in this context.' % (var_name, )
+        extra_msg = 'For test < %s >' % (test_name, )
+        if test_name:
+            msg = '%s %s' % (base_msg, extra_msg, )
+        else:
+            msg = base_msg
         super().__init__(msg)
 
 
 class SharedVarAlreadyDefined(Exception):
 
-    def __init__(self, var_name: str = '', test_name: str = '') -> None:
-        msg = 'Shared variable < %s > is already defined in this context for test < %s >.' % (var_name, test_name, )
+    def __init__(self, var_name: CellName, test_name: TestFunctionName) -> None:
+        msg = 'Shared variable < %s > is already defined in this context. For test < %s >' % (var_name, test_name, )
         super().__init__(msg)

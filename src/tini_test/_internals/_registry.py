@@ -1,11 +1,11 @@
 from typing import Literal
 
 from tini_test.misc.annotations import (C_REG, M_REG, S_REG, T_REG,
-                                        GlobalRegistry)
+                                        GlobalRegistry, SimpleGlobalRegistry)
 
 
 def attach_state(source_obj: GlobalRegistry, 
-                 target_obj: GlobalRegistry,
+                 target_obj: SimpleGlobalRegistry | GlobalRegistry, # TODO Are we sure?
                  /,
                  *,
                  mode: Literal['test', 

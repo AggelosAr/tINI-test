@@ -227,10 +227,9 @@ class MockDefinition:
 
 
 # TODO add validation for func
-# TODO implement mock as /*
-# assert MockNone again...
 class Mock:
     """
+    Mock should be passed as positional.      # TODO implement mock as /*
     Args and Kwargs for the mock definition.
     Are accepted as is. And are not validated 
     against the function signature.
@@ -252,9 +251,9 @@ class Mock:
              /,
              mock    : Optional[Any]            = MockNone,
              *,
-             returns : Optional[Any]            = MockNone,
-             args    : Optional[tuple[Any]]     = MockNone,
-             kwargs  : Optional[dict[Any, Any]] = MockNone
+             returns : Optional[Any]            = MockNone, # better safe than sorry, assign MockNone in any case
+             args    : Optional[tuple[Any]]     = MockNone, # type: ignore[assignment] 
+             kwargs  : Optional[dict[Any, Any]] = MockNone  # type: ignore[assignment] 
 
              ) ->  Callable[..., 
                             Callable[..., 
