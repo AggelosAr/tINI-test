@@ -84,39 +84,6 @@ def _assert_comperator(comperator: Comperator | Any) -> None:
     
     return
 
-    from dis import Bytecode, dis  # TODO
-
-    # Review compare ops 
-    _TRUE_LOAD = 'LOAD_CONST1(True)'           #
-    _FALSE_LOAD = 'LOAD_CONST2(False)'         #
-    _COMPARE_OP = '_COMPARE_OP72(==)'          #
-    _COMPARE_OP_2 = 'COMPARE_OP2(==)'          #
-    _RETURN = 'RETURN_VALUE'                   #
-    # dis ->  With no argument, disassemble the last traceback
-    data = Bytecode(comperator).dis().split('\n')
-    data = list(map(lambda l: l.replace(' ', ''), data))
-    data = list(filter(lambda l: l != '', data))
-
-    has_loads = False
-    has_loads_idx = -1
-
-    for idx, line in enumerate(data):
-        
-        if any([_TRUE_LOAD in line,
-                _FALSE_LOAD in line,
-                _COMPARE_OP in line,
-                _COMPARE_OP_2 in line]):
-            has_loads = True
-            has_loads_idx = idx
-            continue
-
-        if all([_RETURN in line,
-                has_loads,
-                idx-1 == has_loads_idx]):
-            return
-
-    raise ComperatorIsNotValid
-
 
 def _raise_diff(msg: str) -> None:
     raise ExpectedWasDifferentFromActual(msg)
@@ -397,7 +364,6 @@ def _diff_alien_primitive(expected: Any,
                           path: str,
                           comperator: Optional[Comperator]=None) -> None:
 
-    # TODO maybe use the str or repr if it is defined?
     if not comperator or comperator(expected, actual) is False:
 
         return _raise_diff('%s: %s != %s' 

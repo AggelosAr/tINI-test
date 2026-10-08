@@ -101,12 +101,14 @@ class TestCollection:
         return bi_con
 
     # XXX
+    # remove magic strings.
+
     @no_type_check 
     def parse_wraps(self, _obj_id: TestId | MockId | SharedId) -> tuple[TestFunctionName, TestWrappedObject]:
 
         # General case. We currently stop collecting on the first error. Should we continue?
 
-        # TODO remove magic strings.
+        
 
         test_wrap: TestWrappedObject
         test_func: Optional[FunctionType
@@ -155,7 +157,6 @@ class TestCollection:
 
                 [_test_func, *_definition] = mock_wrap()
 
-                # TODO remove magic strings.
                 if (
                     hex(id(_test_func)) in self.bi_con
                     and 'Mock.mock' not in repr(_test_func)

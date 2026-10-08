@@ -52,7 +52,7 @@ from tini_test.test_utils import Test
 # @Mock.mock(mocked_function_call_with_var, args=(var.int,), kwargs={'var_a': var.klass, 
 #                                                                    'klass': var.klass,
 #                                                                    'callable': var.callable,
-#                                                                    'none': var.none,}) # var on args TODO
+#                                                                    'none': var.none,})
 # @Shared(var.int, var.klass, var.callable, var.none)
 # def test_integration_mock_call_with_var():
 #     var.int = 123

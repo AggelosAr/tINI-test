@@ -81,7 +81,6 @@ class OperationState:
     def align_message(self, el: str) -> str:
         return '%s%s' % ((SEPERATOR_LENGTH // 2 - (len(el) // 2)) * str(' '), el, )
 
-    # TODO maybe align messages relative to each other also, maybe @test
     def get_boxed_information(self) -> Iterable[str]:
 
         box = [self._a_entry_msg,

@@ -382,7 +382,7 @@ def test_single_line_diff_weird_case() -> None:
 
 
 @Test.case
-def xxxyyyzzz() -> None:
+def yyyzzz() -> None:
 
     must_equal(r'''
 ITEM:
