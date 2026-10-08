@@ -119,7 +119,7 @@ def test_must_equal_alien_object_with_eq() -> None:
 
 ### Adding Mocks
 
-The mocking machine accepts the function to be mocked as the first argument and up to 2 keyword arguments.
+The mocking machine accepts the function to be mocked as the first argument or via the `mock` keyword, along with up to 2 keyword arguments.
 Either the `returns` or a combination of `args` and `kwargs`. _Args_ must be a tuple of anything and _Kwargs_ a dict of anything.
 Mocking a function call or return is as easy as:
 
@@ -153,6 +153,15 @@ def test_multiple_mocks_with_args():
                f1('?', a='?', b='?') + 
                f2('?', c='?', d='?') + 
                f3('?', f='?', g='?'))
+```
+
+The mocked function can also be supplied by keyword:
+
+```python
+@Mock.mock(mock=f1, args=(1,), kwargs={'a': 8, 'b': 5})
+@Test.case
+def test_mock_function_by_keyword():
+    must_equal(1 + 8 + 5, f1('?', a='?', b='?'))
 ```
 
 The only requirement is that all functions to be mocked are unique and imported ( else syntax error ). Also it is not possible to mock both call and return values at the same time since that would defeat the whole point of mocking I assume (@roadmap).

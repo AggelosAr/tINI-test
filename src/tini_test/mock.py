@@ -226,10 +226,9 @@ class MockDefinition:
         self._compile_mock(new_spec)
 
 
-# TODO add validation for func
 class Mock:
     """
-    Mock should be passed as positional.      # TODO implement mock as /*
+    The function to mock can be passed positionally or as the `mock` keyword.
     Args and Kwargs for the mock definition.
     Are accepted as is. And are not validated 
     against the function signature.
@@ -307,5 +306,7 @@ class Mock:
             else:
                 mock = func
                 mock_body = MockDefinition.validate_mock_definition_arguments(returns, args, kwargs)
+        elif callable(mock) and not is_empty:
+            mock_body = MockDefinition.validate_mock_definition_arguments(returns, args, kwargs)
         
         return wrapper
