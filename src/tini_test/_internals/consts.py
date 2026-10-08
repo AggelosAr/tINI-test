@@ -24,3 +24,6 @@ SKIP_DIRS = {
         '.mypy_cache',
         'node_modules'
     }
+
+
+SHARED_ID = 'var'
