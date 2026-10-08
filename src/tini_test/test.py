@@ -17,7 +17,8 @@ from tini_test.misc.annotations import (C_REG, M_REG, S_REG, T_REG,
 from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
                                        MockWasUsedOnWithoutTestDecorator,
                                        SharedVarAlreadyDefined,
-                                       TestDecoratorUsedMoreThanOnce, SharedWasUsedOnWithoutTestDecorator)
+                                       SharedWasUsedOnWithoutTestDecorator,
+                                       TestDecoratorUsedMoreThanOnce)
 from tini_test.mock import MockDefinition
 from tini_test.shared import SharedVar
 from tini_test.test_utils import Test

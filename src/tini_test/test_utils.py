@@ -1,5 +1,4 @@
 import asyncio
-from collections import deque
 from functools import cached_property
 from io import StringIO
 from traceback import format_exc, format_tb
@@ -7,14 +6,14 @@ from typing import Any, Callable, Mapping, Optional
 
 from tini_test._internals._registry import attach_state
 from tini_test.context_managers import (_thread_redirect_stdout, patch_mocks,
-                                        patch_shared)
+                                        patch_shared, with_lock)
 from tini_test.shared import SharedVar
 
 from .enums import TestStatus, Verbosity
 from .misc.annotations import (CleanupCallable, MockDefinitionWrappedHolder,
                                MockWrappedObject, RealTest, SetupCallable,
                                SharedDefinitionHolder, SharedWrappedObject,
-                               StackTrace, TestFunctionName, TestWrappedHolder,
+                               StackTrace, TestWrappedHolder,
                                TestWrappedObject, _NoOp)
 from .misc.exceptions import ExpectedWasDifferentFromActual
 from .mock import MockDefinition
@@ -28,7 +27,6 @@ _minimals_discard = {Verbosity.MINIMAL_NO_STACK, Verbosity.SUPER_MINIMAL}
 class TestStep:
 
     def __init__(self,
-                 test_name: TestFunctionName,
                  func: None 
                        | SetupCallable 
                        | RealTest
@@ -38,12 +36,7 @@ class TestStep:
                  entry_status: Optional[TestStatus] = TestStatus.NO_OP,
                  
                  args: Optional[tuple] = None,
-                 kwargs: Optional[Mapping[str, Any]] = None,
-
-                 mocks: Optional[list[MockDefinition]] = None,
-                 shared_vars: Optional[list[SharedVar]] = None,) -> None:
-
-        self.test_name = test_name
+                 kwargs: Optional[Mapping[str, Any]] = None) -> None:
 
         self.entry_status = entry_status
         self.success_status = success_status
@@ -52,9 +45,6 @@ class TestStep:
         self.func = func
         self.args = args or ()
         self.kwargs = kwargs or {}
-
-        self.mocks = mocks or []
-        self.shared_vars = shared_vars or []
 
     def run_step(self, verbosity: Verbosity) -> OperationState:
         
@@ -69,18 +59,9 @@ class TestStep:
             
             with _thread_redirect_stdout(buffer):
 
-                with patch_shared(root_name=self.test_name, 
-                                  patching=self.func, 
-                                  shared_vars=self.shared_vars):
-
-                    with patch_mocks(self.mocks):
-
-                        self.func(*self.args, **self.kwargs)
+                self.func(*self.args, **self.kwargs)
 
         except ExpectedWasDifferentFromActual as e:
-
-            # Is this redundant due to patch_mocks context manager?
-            deque(map(lambda mock: mock.restore(), self.mocks), maxlen=0)
 
             exception_trace = '\n'.join(format_tb(e.__traceback__))
             return OperationState(entry_status=self.entry_status,
@@ -90,9 +71,6 @@ class TestStep:
                                   redirected_output=buffer if not apply_filters else StringIO(''))
 
         except Exception as e:
-
-            # Is this redundant due to patch_mocks context manager?
-            deque(map(lambda mock: mock.restore(), self.mocks), maxlen=0)
 
             exception_trace = format_exc()
             return OperationState(entry_status=self.entry_status,
@@ -130,27 +108,21 @@ class Test:
 
         self._fail_state = TestStatus.NO_OP
         self._fail_reasons: list[StackTrace] = []
+
+        self.mocks = mocks
+        self.shared_vars = shared_vars
         
         self.steps = [
-            TestStep(test_name=self.test_name,
-                     func=cleanup,
-                     mocks=mocks,
-                     shared_vars=shared_vars,
+            TestStep(func=cleanup,
                      entry_status=TestStatus.BREAK_DOWN_ENTRY,
                      success_status=TestStatus.BREAK_DOWN_SUCCESS,
                      fail_status=TestStatus.BREAK_DOWN_FAIL),
-            TestStep(test_name=self.test_name,
-                     func=test,
+            TestStep(func=test,
                      args=test_args,
                      kwargs=test_kwargs,
-                     mocks=mocks,
-                     shared_vars=shared_vars,
                      success_status=TestStatus.NO_OP,
                      fail_status=TestStatus.FAIL),
-            TestStep(test_name=self.test_name,
-                     func=setup,
-                     mocks=mocks,
-                     shared_vars=shared_vars,
+            TestStep(func=setup,
                      entry_status=TestStatus.SET_UP_ENTRY,
                      success_status=TestStatus.SET_UP_SUCCESS,
                      fail_status=TestStatus.SET_UP_FAIL)
@@ -225,7 +197,6 @@ class Test:
 
 
         if callable(test_func) and not args and setup is None and cleanup is None and _no_op is None:
-        
             return wrapper(test_func)
 
         if test_func is not None:
@@ -325,14 +296,22 @@ class Test:
                 self.operation_states.append(success_op)
 
     def close_state(self) -> None:
-        end_state = OperationState(TestStatus.NO_OP) # fishy maybe add another state
+        end_state = OperationState(TestStatus.NO_OP)
         end_state.exit_msg = OperationState.get_end_seperator()
         self.operation_states.append(end_state)
 
     def box_test(self, _verbosity: Optional[Verbosity] = None) -> None:
 
-        self.run_steps()
-        self.run_for_cleanup_if_needed()
+        # @ XXX 1 is this the most optimal way to do this ? probably not...
+        with with_lock(self.mocks or self.shared_vars):
+
+            with patch_mocks(self.mocks):
+
+                with patch_shared(self.test, self.shared_vars):
+
+                    self.run_steps()
+                    self.run_for_cleanup_if_needed()
+
         self.attach_end_state()
         self.close_state()
 

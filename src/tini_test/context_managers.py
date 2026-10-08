@@ -6,11 +6,11 @@ from io import StringIO
 from threading import Lock
 from typing import Generator, Optional
 
-from tini_test.misc.annotations import TestCallable, TestFunctionName
+from tini_test.misc.annotations import TestCallable
 from tini_test.mock import MockDefinition
 from tini_test.shared import MetaSharedVar, SharedVar
 
-from .misc.exceptions import (CouldNotFindMetaSharedVar, ExceptionWasNotRaised,
+from .misc.exceptions import (ExceptionWasNotRaised,
                               WillRaiseReceivedNotAnException)
 
 _exceptions = (Exception, BaseException)
@@ -99,37 +99,41 @@ def _thread_redirect_stdout(stream: StringIO):
 
 
 @contextmanager
+def with_lock(use: bool) -> Generator[None, None, None]:
+    if use:
+        _lock.acquire()
+    try:
+        yield
+    finally:
+        if use:
+            _lock.release()
+
+
+
+@contextmanager
 def patch_mocks(mocks: list[MockDefinition]) -> Generator[None, None, None]:
     if mocks:
-        with _lock:
-            try:
-                deque(map(lambda mock: mock.patch(), mocks), maxlen=0)
-                yield
-            finally:
-                deque(map(lambda mock: mock.restore(), mocks), maxlen=0)
+        try:
+            deque(map(lambda mock: mock.patch(), mocks), maxlen=0)
+            yield
+        finally:
+            deque(map(lambda mock: mock.restore(), mocks), maxlen=0)
     else:
         yield
 
 
 
-# TODO this propably breaks again on async
-# We should create a seperate scope for each test.....
-# TODO this should be applied 1 step above?
 @contextmanager
-def patch_shared(root_name: TestFunctionName, 
-                 patching: TestCallable, 
-                 shared_vars: list[SharedVar]) -> Generator[None, None, None]:
+def patch_shared(patching: TestCallable, shared_vars: list[SharedVar]) -> Generator[None, None, None]:
     if shared_vars:
        
         try:
             old_meta = MetaSharedVar.extract_meta(_from=patching)
 
-            if old_meta is None or not isinstance(old_meta, MetaSharedVar):
-                raise CouldNotFindMetaSharedVar(test_name=root_name)
-
             local_context = MetaSharedVar.get_context_from_shards(shared_vars)
-
-            old_meta.update_local_context(test_name=root_name, context=local_context)
+            
+            test_name = patching.__name__
+            old_meta.update_local_context(test_name=test_name, context=local_context)
 
             yield
 

@@ -10,7 +10,8 @@ from tini_test.misc.annotations import (CellName, CellValue, LocalSharedScope,
                                         SharedWrappedObject, TestCallable,
                                         TestFunctionName, TestWrappedHolder,
                                         TestWrappedObject)
-from tini_test.misc.exceptions import (SharedAcceptedInvalidArguments,
+from tini_test.misc.exceptions import (CouldNotFindMetaSharedVar,
+                                       SharedAcceptedInvalidArguments,
                                        SharedOnlyAcceptsArguments,
                                        SharedVarDoesNotExistInThisContext)
 
@@ -174,7 +175,10 @@ class MetaSharedVar:
 
     @staticmethod
     def extract_meta(_from: TestCallable) -> 'MetaSharedVar':
-        return _from.__globals__.get(MetaSharedVar.extract_meta_id())
+        meta = _from.__globals__.get(MetaSharedVar.extract_meta_id())
+        if meta is None or not isinstance(meta, MetaSharedVar):
+            raise CouldNotFindMetaSharedVar(test_name=_from.__name__)
+        return meta
 
     @classmethod
     def set_new_meta(cls, 
