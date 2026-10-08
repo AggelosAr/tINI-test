@@ -3,8 +3,6 @@ from tini_test._internals._broken import (delete_test_dir, get_temp_file,
 from tini_test.must_equals import must_equal
 from tini_test.test_utils import Test
 
-# TODO fix missing test names
-
 
 
 @Test.case
@@ -57,7 +55,7 @@ def %s() -> None:
     # print(completed_process.stderr)
     
     must_equal(1, completed_process.returncode)
-    # TODO FIX 
+    # TODO fix missing test names
     err = 'tini_test.misc.exceptions.TestDecoratorUsedMoreThanOnce: Test decorator used more than once on test < %s >' % test_name
     #err = 'tini_test.misc.exceptions.TestDecoratorUsedMoreThanOnce: Test decorator used more than once on test < <unknown> >'
     unique_lines = list(map(lambda l: l.strip(), list(dict.fromkeys(completed_process.stderr.splitlines()))))

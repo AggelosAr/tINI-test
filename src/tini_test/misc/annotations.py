@@ -54,7 +54,6 @@ FileLoadFailures: TypeAlias = int
 
 
 # ---------------- SOME CALLABLES ----------------
-# TODO FIX return types
 RealTest: TypeAlias = Callable[..., Any]
 
 SetupCallable: TypeAlias = Callable[..., Any] 
