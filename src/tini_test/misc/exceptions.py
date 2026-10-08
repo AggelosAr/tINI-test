@@ -1,6 +1,7 @@
 from types import FunctionType
 from typing import Optional
 
+from tini_test._internals.consts import SHARED_ID
 from tini_test.misc.annotations import CellName, TestFunctionName
 
 
@@ -137,4 +138,12 @@ class SharedVarAlreadyDefined(Exception):
 
     def __init__(self, var_name: CellName, test_name: TestFunctionName) -> None:
         msg = 'Shared variable < %s > is already defined in this context. For test < %s >' % (var_name, test_name, )
+        super().__init__(msg)
+
+
+
+class CouldNotFindMetaSharedVar(Exception):
+
+    def __init__(self, test_name: TestFunctionName) -> None:
+        msg = 'Shared namespace could not be resolved for test < %s > (import as %s)' % (test_name, SHARED_ID, )
         super().__init__(msg)
