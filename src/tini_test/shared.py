@@ -1,13 +1,15 @@
+from contextlib import contextmanager
 from typing import Any, Callable, Generator, Literal, Optional
 
 from tini_test._internals._registry import attach_state
-from tini_test.misc.annotations import (CellName, CellValue,
+from tini_test._internals.consts import SHARED_ID
+from tini_test.misc.annotations import (CellName, CellValue, LocalSharedScope,
                                         MockDefinitionWrappedHolder,
                                         MockWrappedObject, RealTest,
                                         SharedDefinitionHolder, SharedMetaId,
-                                        SharedScope, SharedWrappedObject,
-                                        TestCallables, TestFunctionName,
-                                        TestWrappedHolder, TestWrappedObject)
+                                        SharedWrappedObject, TestCallable,
+                                        TestFunctionName, TestWrappedHolder,
+                                        TestWrappedObject)
 from tini_test.misc.exceptions import (SharedAcceptedInvalidArguments,
                                        SharedOnlyAcceptsArguments,
                                        SharedVarDoesNotExistInThisContext)
@@ -34,21 +36,24 @@ class SharedVar:
         instance = super().__new__(cls)
         return instance
     
-    def __init__(self, _var: str) -> None:
-        self.stored_key = _var
+    def __init__(self, _var: CellName) -> None:
+        self._stored_key = _var
+        self._scope = None
         setattr(self, _var, Cell())
 
-    def __key__(self) -> str:
-        return object.__getattribute__(self, 'stored_key')
+    def __key__(self) -> CellName:
+        return object.__getattribute__(self, '_stored_key')
 
-    def __getattr__(self, _: Any) -> Cell:
-        raise RuntimeError
-
-    def __getattribute__(self, attr: Literal['__key__'] | str) -> CellName | Cell:
-        stored_key = object.__getattribute__(self, 'stored_key')
+    def __getattribute__(self, 
+                         attr: Literal['__key__', '_scope'] | CellName
+                         ) -> Optional[TestFunctionName] | CellName | Cell:
+        if attr == '_scope':
+            return object.__getattribute__(self, '_scope')
+        
         if attr == '__key__':
-            return object.__getattribute__(self, 'stored_key')
-
+            return object.__getattribute__(self, '_stored_key')
+        
+        stored_key = object.__getattribute__(self, '_stored_key')
         return object.__getattribute__(self, stored_key)
     
     def __eq__(self, other: Any) -> bool:
@@ -65,8 +70,12 @@ class SharedVar:
         for _type in args_types:
             if not issubclass(_type, SharedVar):
                 raise SharedAcceptedInvalidArguments
-
+            
         return args
+
+    @classmethod
+    def add_scope(cls, shared_var: 'SharedVar', scope: TestFunctionName) -> None:
+        shared_var._scope = scope
 
 
 class Shared:
@@ -123,6 +132,7 @@ class Shared:
         if callable(func) and not args:
             return wrapper(func)
 
+        # TODO None edge case?
         if func is not None:
             SharedVar.validate(_vars := (func, *args))
 
@@ -135,72 +145,77 @@ class MetaSharedVar:
     '''
     def __init__(self, 
                  test_name: Optional[TestFunctionName] ='', 
-                 _context: Optional[SharedScope[SharedVar]] = None) -> None:
+                 _local_context: Optional[LocalSharedScope[SharedVar]] = None) -> None:
         self._test_name = test_name
-        self._context = _context
+        self._local_context = _local_context
 
-    def __getattr__(self, key: str) -> SharedVar | CellValue:
-        # TODO we can't do that we must check the globals for permissions.
-        # Since a default param may be used. And unless doing dirty things we can't know.
-        if self._context is None:
-            return next(MetaSharedVar.new(key))
-        
-        return self.access_shard(key).key.value
+    def __getattr__(self, key: CellName) -> SharedVar | CellValue:
+        if self._local_context is None:
+            return SharedVar(key)
 
-    def __setattr__(self, key: str, value: Any) -> None:
-        if key in ('_test_name', '_context'):
+        with self.with_lock(key) as shard:
+            return shard.key.value
+
+    def __setattr__(self, key: CellName, value: Any) -> None:
+        if key in ('_test_name', '_local_context'):
             object.__setattr__(self, key, value)
             return
 
-        self.access_shard(key).key.value = value
+        with self.with_lock(key) as shard:
+            shard.key.value = value
 
     @staticmethod
-    def extract_meta() -> SharedMetaId:
-        return 'var' # XXX
+    def extract_meta_id() -> SharedMetaId:
+        return SHARED_ID
 
     @staticmethod
-    def get_context_from_shards(shards: list[SharedVar]) -> SharedScope[SharedVar]:
+    def get_context_from_shards(shards: list[SharedVar]) -> LocalSharedScope[SharedVar]:
         return {var.__key__: var for var in shards}
 
-    @classmethod
-    def with_context(cls, 
-                     test_name: TestFunctionName, 
-                     context: SharedScope[SharedVar]) -> 'MetaSharedVar':
-        return cls(test_name=test_name, _context=context)
+    @staticmethod
+    def extract_meta(_from: TestCallable) -> 'MetaSharedVar':
+        return _from.__globals__.get(MetaSharedVar.extract_meta_id())
 
-    @classmethod
-    def with_access_scope(cls, 
-                          test_name: TestFunctionName, 
-                          funcs: list[TestCallables]) -> 'MetaSharedVar':
-        raise NotImplementedError
-    
     @classmethod
     def set_new_meta(cls, 
                      _id: SharedMetaId, 
-                     apply_at: TestCallables,
+                     apply_at: TestCallable,
                      new_meta: 'MetaSharedVar') -> 'MetaSharedVar':
         apply_at.__globals__[_id] = new_meta
         return new_meta
 
-    @classmethod
-    def new(cls, key: str) -> Generator[SharedVar, None, None]:
-        while True:
-            yield SharedVar(key)
+    def update_local_context(self, 
+                             test_name: TestFunctionName, 
+                             context: LocalSharedScope[SharedVar]) -> None:
+        self._test_name = test_name
+        self._local_context = context
+        
+    @contextmanager
+    def with_lock(self, key: CellName) -> Generator[SharedVar, None, None]:
+        try:
+            shard = self.access_shard(key)
+            
+            if shard._scope != self._test_name:
+                raise SharedVarDoesNotExistInThisContext(key, self._test_name) # ! 
+            
+            yield shard
 
-    def access_shard(self, key: str) -> SharedVar:
-        match self._context:
+        finally:
+            ...
+
+    def access_shard(self, key: CellName) -> SharedVar:
+
+        match self._local_context:
         
             case None:
-                # In this case the Shard was never initialized 
-                # As a result we don't have access to the test name.
-                # We don't care since the Exception already includes the line.
-                raise SharedVarDoesNotExistInThisContext(key)
+
+                raise SharedVarDoesNotExistInThisContext(key, self._test_name)
             
             case _:
-                match key in self._context:
+                match key in self._local_context:
                 
                     case True:
-                        shard = self._context.get(key)
+                        shard = self._local_context.get(key)
 
                         match shard:
                             
