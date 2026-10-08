@@ -4,6 +4,396 @@ from tini_test.shared import NotInitialized, Shared, SharedVar, var
 from tini_test.test_utils import Test
 
 
+
+
+
+@Test.case
+@Shared
+def test_function_2400():
+    must_equal(True, True)
+
+
+@Shared
+@Test.case
+def test_function_2401():
+    must_equal(True, True)
+
+
+@Test.case
+@Shared
+@Mock.mock
+def test_function_2402():
+    must_equal(True, True)
+
+
+@Test.case
+@Mock.mock
+@Shared
+def test_function_2403():
+    must_equal(True, True)
+
+
+@Shared
+@Test.case
+@Mock.mock
+def test_function_2404():
+    must_equal(True, True)
+
+
+@Shared
+@Mock.mock
+@Test.case
+def test_function_2405():
+    must_equal(True, True)
+
+
+@Mock.mock
+@Test.case
+@Shared
+def test_function_2406():
+    must_equal(True, True)
+
+
+@Mock.mock
+@Shared
+@Test.case
+def test_function_2407():
+    must_equal(True, True)
+
+
+@Test.case
+@Shared
+@Mock.mock()
+def test_function_2408():
+    must_equal(True, True)
+
+
+@Test.case
+@Mock.mock()
+@Shared
+def test_function_2409():
+    must_equal(True, True)
+
+
+@Shared
+@Test.case
+@Mock.mock()
+def test_function_2410():
+    must_equal(True, True)
+
+
+@Shared
+@Mock.mock()
+@Test.case
+def test_function_2411():
+    must_equal(True, True)
+
+
+@Mock.mock()
+@Test.case
+@Shared
+def test_function_2412():
+    must_equal(True, True)
+
+
+@Mock.mock()
+@Shared
+@Test.case
+def test_function_2413():
+    must_equal(True, True)
+
+
+@Test.case
+@Shared()
+def test_function_2414():
+    must_equal(True, True)
+
+
+@Shared()
+@Test.case
+def test_function_2415():
+    must_equal(True, True)
+
+
+@Test.case
+@Shared()
+@Mock.mock
+def test_function_2416():
+    must_equal(True, True)
+
+
+@Test.case
+@Mock.mock
+@Shared()
+def test_function_2417():
+    must_equal(True, True)
+
+
+@Shared()
+@Test.case
+@Mock.mock
+def test_function_2418():
+    must_equal(True, True)
+
+
+@Shared()
+@Mock.mock
+@Test.case
+def test_function_2419():
+    must_equal(True, True)
+
+
+@Mock.mock
+@Test.case
+@Shared()
+def test_function_2420():
+    must_equal(True, True)
+
+
+@Mock.mock
+@Shared()
+@Test.case
+def test_function_2421():
+    must_equal(True, True)
+
+
+@Test.case
+@Shared()
+@Mock.mock()
+def test_function_2422():
+    must_equal(True, True)
+
+
+@Test.case
+@Mock.mock()
+@Shared()
+def test_function_2423():
+    must_equal(True, True)
+
+
+@Shared()
+@Test.case
+@Mock.mock()
+def test_function_2424():
+    must_equal(True, True)
+
+
+@Shared()
+@Mock.mock()
+@Test.case
+def test_function_2425():
+    must_equal(True, True)
+
+
+@Mock.mock()
+@Test.case
+@Shared()
+def test_function_2426():
+    must_equal(True, True)
+
+
+@Mock.mock()
+@Shared()
+@Test.case
+def test_function_2427():
+    must_equal(True, True)
+
+
+@Test.case()
+@Shared
+def test_function_2428():
+    must_equal(True, True)
+
+
+@Shared
+@Test.case()
+def test_function_2429():
+    must_equal(True, True)
+
+
+@Test.case()
+@Shared
+@Mock.mock
+def test_function_2430():
+    must_equal(True, True)
+
+
+@Test.case()
+@Mock.mock
+@Shared
+def test_function_2431():
+    must_equal(True, True)
+
+
+@Shared
+@Test.case()
+@Mock.mock
+def test_function_2432():
+    must_equal(True, True)
+
+
+@Shared
+@Mock.mock
+@Test.case()
+def test_function_2433():
+    must_equal(True, True)
+
+
+@Mock.mock
+@Test.case()
+@Shared
+def test_function_2434():
+    must_equal(True, True)
+
+
+@Mock.mock
+@Shared
+@Test.case()
+def test_function_2435():
+    must_equal(True, True)
+
+
+@Test.case()
+@Shared
+@Mock.mock()
+def test_function_2436():
+    must_equal(True, True)
+
+
+@Test.case()
+@Mock.mock()
+@Shared
+def test_function_2437():
+    must_equal(True, True)
+
+
+@Shared
+@Test.case()
+@Mock.mock()
+def test_function_2438():
+    must_equal(True, True)
+
+
+@Shared
+@Mock.mock()
+@Test.case()
+def test_function_2439():
+    must_equal(True, True)
+
+
+@Mock.mock()
+@Test.case()
+@Shared
+def test_function_2440():
+    must_equal(True, True)
+
+
+@Mock.mock()
+@Shared
+@Test.case()
+def test_function_2441():
+    must_equal(True, True)
+
+
+@Test.case()
+@Shared()
+def test_function_2442():
+    must_equal(True, True)
+
+
+@Shared()
+@Test.case()
+def test_function_2443():
+    must_equal(True, True)
+
+
+@Test.case()
+@Shared()
+@Mock.mock
+def test_function_2444():
+    must_equal(True, True)
+
+
+@Test.case()
+@Mock.mock
+@Shared()
+def test_function_2445():
+    must_equal(True, True)
+
+
+@Shared()
+@Test.case()
+@Mock.mock
+def test_function_2446():
+    must_equal(True, True)
+
+
+@Shared()
+@Mock.mock
+@Test.case()
+def test_function_2447():
+    must_equal(True, True)
+
+
+@Mock.mock
+@Test.case()
+@Shared()
+def test_function_2448():
+    must_equal(True, True)
+
+
+@Mock.mock
+@Shared()
+@Test.case()
+def test_function_2449():
+    must_equal(True, True)
+
+
+@Test.case()
+@Shared()
+@Mock.mock()
+def test_function_2450():
+    must_equal(True, True)
+
+
+@Test.case()
+@Mock.mock()
+@Shared()
+def test_function_2451():
+    must_equal(True, True)
+
+
+@Shared()
+@Test.case()
+@Mock.mock()
+def test_function_2452():
+    must_equal(True, True)
+
+
+@Shared()
+@Mock.mock()
+@Test.case()
+def test_function_2453():
+    must_equal(True, True)
+
+
+@Mock.mock()
+@Test.case()
+@Shared()
+def test_function_2454():
+    must_equal(True, True)
+
+
+@Mock.mock()
+@Shared()
+@Test.case()
+def test_function_2455():
+    must_equal(True, True)
+
+
+
+
+
 @Test.case
 @Mock.mock
 @Mock.mock()
