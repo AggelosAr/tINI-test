@@ -6,11 +6,11 @@ from io import StringIO
 from threading import Lock
 from typing import Generator, Optional
 
-from tini_test.misc.annotations import TestCallables, TestFunctionName
+from tini_test.misc.annotations import TestCallable, TestFunctionName
 from tini_test.mock import MockDefinition
 from tini_test.shared import MetaSharedVar, SharedVar
 
-from .misc.exceptions import (ExceptionWasNotRaised,
+from .misc.exceptions import (CouldNotFindMetaSharedVar, ExceptionWasNotRaised,
                               WillRaiseReceivedNotAnException)
 
 _exceptions = (Exception, BaseException)
@@ -23,7 +23,6 @@ _lock = Lock()
 class WillRaise(object):
 
     def __init__(self,  *exceptions) -> None:
-       
         try:
             assert any(issubclass(e, _e) for e in exceptions for _e in _exceptions)
         except:
@@ -39,7 +38,6 @@ class WillRaise(object):
         return self
 
     def __exit__(self, exc_type, exc_value, exc_traceback) -> Optional[bool]:
-
         if exc_type and exc_type.__name__ in self.exceptions:
 
             self.exception = exc_value
@@ -102,40 +100,42 @@ def _thread_redirect_stdout(stream: StringIO):
 
 @contextmanager
 def patch_mocks(mocks: list[MockDefinition]) -> Generator[None, None, None]:
-    if not mocks:
+    if mocks:
+        with _lock:
+            try:
+                deque(map(lambda mock: mock.patch(), mocks), maxlen=0)
+                yield
+            finally:
+                deque(map(lambda mock: mock.restore(), mocks), maxlen=0)
+    else:
         yield
-        return
 
-    # TODO optimize
-    with _lock:
-        try:
-            deque(map(lambda mock: mock.patch(), mocks), maxlen=0)
-            yield
-        finally:
-            deque(map(lambda mock: mock.restore(), mocks), maxlen=0)
 
 
 # TODO this propably breaks again on async
 # We should create a seperate scope for each test.....
+# TODO this should be applied 1 step above?
 @contextmanager
 def patch_shared(root_name: TestFunctionName, 
-                 patching: TestCallables, 
+                 patching: TestCallable, 
                  shared_vars: list[SharedVar]) -> Generator[None, None, None]:
-    if not shared_vars:
+    if shared_vars:
+       
+        try:
+            old_meta = MetaSharedVar.extract_meta(_from=patching)
+
+            if old_meta is None or not isinstance(old_meta, MetaSharedVar):
+                raise CouldNotFindMetaSharedVar(test_name=root_name)
+
+            local_context = MetaSharedVar.get_context_from_shards(shared_vars)
+
+            old_meta.update_local_context(test_name=root_name, context=local_context)
+
+            yield
+
+        finally:
+            ...
+
+    else:
         yield
-        return
 
-    meta_id = MetaSharedVar.extract_meta()
-    try:
-        context = MetaSharedVar.get_context_from_shards(shared_vars)
-
-        new_meta = MetaSharedVar.with_context(test_name=root_name, 
-                                              context=context)
-        
-        _ = MetaSharedVar.set_new_meta(_id=meta_id, 
-                                       apply_at=patching, 
-                                       new_meta=new_meta)
-
-        yield
-    finally:
-        ...
