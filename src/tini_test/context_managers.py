@@ -138,7 +138,7 @@ def patch_shared(patching: TestCallable, shared_vars: list[SharedVar]) -> Genera
             yield
 
         finally:
-            ...
+            old_meta.reset()
 
     else:
         yield

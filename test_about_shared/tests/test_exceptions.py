@@ -3,8 +3,9 @@ from tini_test._internals._broken import (delete_test_dir, get_temp_file,
 from tini_test.context_managers import WillRaise
 from tini_test.misc.exceptions import SharedVarDoesNotExistInThisContext
 from tini_test.must_equals import must_equal
-from tini_test.test_utils import Test
 from tini_test.shared import Shared, var
+from tini_test.test_utils import Test
+
 
 @Test.case
 def usage_of_non_declared_shared_variable_raises_setup() -> None:
@@ -42,7 +43,8 @@ def usage_of_non_declared_shared_variable_raises_main() -> None:
 
     with WillRaise(SharedVarDoesNotExistInThisContext) as context:
         print(var.var_y)
-            
+
+    # print(context.exception)
     must_equal(err, str(context.exception))
 
     with WillRaise(SharedVarDoesNotExistInThisContext) as context:
@@ -81,7 +83,7 @@ def %s(): ...
 
 ''' % test_name
 
-    err = 'tini_test.misc.exceptions.SharedVarDoesNotExistInThisContext: Shared variable < var_z > does not exist in this context.'
+    err = 'tini_test.misc.exceptions.SharedVarDoesNotExistInThisContext: Shared variable < var_a > does not exist in this context.'
 
     _ = get_temp_file(test, test_name)
     completed_process = run_test(test_name, test_name)

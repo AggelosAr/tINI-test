@@ -162,7 +162,6 @@ class SharedVarAlreadyDefined(Exception):
         super().__init__(msg)
 
 
-
 class CouldNotFindMetaSharedVar(Exception):
 
     def __init__(self, test_name: TestFunctionName) -> None:

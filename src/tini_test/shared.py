@@ -150,15 +150,17 @@ class MetaSharedVar:
         self._test_name = test_name
         self._local_context = _local_context
 
+        self._generating = True
+
     def __getattr__(self, key: CellName) -> SharedVar | CellValue:
-        if self._local_context is None:
+        if self._generating:
             return SharedVar(key)
 
         with self.with_lock(key) as shard:
             return shard.key.value
 
     def __setattr__(self, key: CellName, value: Any) -> None:
-        if key in ('_test_name', '_local_context'):
+        if key in ('_test_name', '_local_context', '_generating'):
             object.__setattr__(self, key, value)
             return
 
@@ -187,13 +189,7 @@ class MetaSharedVar:
                      new_meta: 'MetaSharedVar') -> 'MetaSharedVar':
         apply_at.__globals__[_id] = new_meta
         return new_meta
-
-    def update_local_context(self, 
-                             test_name: TestFunctionName, 
-                             context: LocalSharedScope[SharedVar]) -> None:
-        self._test_name = test_name
-        self._local_context = context
-        
+ 
     @contextmanager
     def with_lock(self, key: CellName) -> Generator[SharedVar, None, None]:
         try:
@@ -206,6 +202,19 @@ class MetaSharedVar:
 
         finally:
             ...
+
+    def toggle(self) -> None:
+        self._generating = False
+
+    def reset(self) -> None:
+        self._test_name = ''
+        self._local_context = None
+
+    def update_local_context(self, 
+                                test_name: TestFunctionName, 
+                                context: LocalSharedScope[SharedVar]) -> None:
+        self._test_name = test_name
+        self._local_context = context
 
     def access_shard(self, key: CellName) -> SharedVar:
 

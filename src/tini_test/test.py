@@ -20,7 +20,7 @@ from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
                                        SharedWasUsedOnWithoutTestDecorator,
                                        TestDecoratorUsedMoreThanOnce)
 from tini_test.mock import MockDefinition
-from tini_test.shared import SharedVar
+from tini_test.shared import MetaSharedVar, SharedVar
 from tini_test.test_utils import Test
 
 
@@ -52,6 +52,8 @@ class TestCollection:
         self.collector: dict[TestFunctionName, Test] = dict()
 
         self.file_name = self.module.__name__
+
+        self.shared_meta: Optional[MetaSharedVar] = None
     
     def __len__(self) -> TestCollectionSize:
         return self.total_tests
@@ -63,7 +65,7 @@ class TestCollection:
     @cached_property
     def bi_con(self) -> _ReverseWrapConnections:
         return self.reverse_connections()
-    
+
     @property
     def total_tests(self) -> TestCollectionSize:
         return len(self.decorated_tests)
@@ -293,9 +295,11 @@ class TestCollection:
 
         for obj in dir(self.module):
 
-
             g_obj = getattr(self.module, obj)
 
+            if isinstance(g_obj, MetaSharedVar):
+                self.shared_meta = g_obj
+          
             if not isinstance(g_obj, FunctionType):
                 continue 
 
@@ -317,7 +321,7 @@ class TestCollection:
             
             test_names.append(test_name)
             self.decorated_tests.append(test_obj)
-            
+
         return test_names
 
     def populate_tests(self) -> None:
@@ -484,6 +488,9 @@ class TestCollection:
         print('Running tests for < %s >\n' % (self.file_name, ))
 
         self.populate_tests()
+        if self.shared_meta:
+            # Disallow generation during runtime.
+            self.shared_meta.toggle()
 
     def __cleanup(self) -> Errors:
         if self.verbosity == Verbosity.SORT:
