@@ -4,9 +4,6 @@ from tini_test.shared import NotInitialized, Shared, SharedVar, var
 from tini_test.test_utils import Test
 
 
-
-
-
 @Test.case
 @Shared
 def test_function_2400():
