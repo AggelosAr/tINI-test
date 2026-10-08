@@ -1,8 +1,10 @@
 from tini_test._internals._broken import (delete_test_dir, get_temp_file,
                                           run_test)
+from tini_test.context_managers import WillRaise
+from tini_test.misc.exceptions import SharedVarDoesNotExistInThisContext
 from tini_test.must_equals import must_equal
 from tini_test.test_utils import Test
-
+from tini_test.shared import Shared, var
 
 @Test.case
 def usage_of_non_declared_shared_variable_raises_setup() -> None:
@@ -33,36 +35,36 @@ def %s(): ...
     delete_test_dir(test_name)
 
 
-# THIS TEST doesn't need subprocess, anyway XXX
+
 @Test.case
 def usage_of_non_declared_shared_variable_raises_main() -> None:
-    test_name = 'usage_of_non_declared_shared_variable_raises_main'
-    test = '''
+    err = 'Shared variable < var_y > does not exist in this context.'
 
-@Test.case
-def %s():
-    #print(var.var_y)
-    print('HELLO')
-    var.var_y = 111
+    with WillRaise(SharedVarDoesNotExistInThisContext) as context:
+        print(var.var_y)
+            
+    must_equal(err, str(context.exception))
 
-''' % test_name
-    
-    err = 'tini_test.misc.exceptions.SharedVarDoesNotExistInThisContext: Shared variable < var_y > does not exist in this context.'
+    with WillRaise(SharedVarDoesNotExistInThisContext) as context:
+        var.var_y
+            
+    must_equal(err, str(context.exception))
 
-    _ = get_temp_file(test, test_name)
+    with WillRaise(SharedVarDoesNotExistInThisContext) as context:
+        var.var_y = 10
+                
+    must_equal(err, str(context.exception))
 
-    completed_process = run_test(test_name, test_name)
+    with WillRaise(SharedVarDoesNotExistInThisContext) as context:
+        x = var.var_y
+                
+    must_equal(err, str(context.exception))
 
-    must_equal(0, completed_process.returncode)
-
-    for line in completed_process.stdout.splitlines():
-        if 'SharedVarDoesNotExistInThisContext' in line: 
-            search_line = line
-
-    must_equal(err, search_line)
-
-    delete_test_dir(test_name)
-
+    with WillRaise(SharedVarDoesNotExistInThisContext) as context:
+        x = lambda: var.var_y
+        x()
+                
+    must_equal(err, str(context.exception))
 
 
 @Test.case
@@ -125,39 +127,39 @@ def %s(): ...
     delete_test_dir(test_name)
 
 
-# THIS TEST doesn't need subprocess, anyway XXX
-@Test.case
-def shared_raises_on_not_defined_variable_case_main_case_with_name() -> None:
-    test_name = 'shared_raises_on_not_defined_variable_case_main_case_with_name'
-    test = '''
-
 @Shared(var.var_O)
 @Test.case
-def %s():
-    #print(var.var_y)
-    print('HELLO')
-    var.var_y = 111
-    
-    ''' % test_name
-    err = 'tini_test.misc.exceptions.SharedVarDoesNotExistInThisContext: Shared variable < var_y > does not exist in this context. For test < %s >' % test_name
+def shared_raises_on_not_defined_variable_case_main_case_with_name() -> None:
+    err = 'Shared variable < var_y > does not exist in this context. For test < shared_raises_on_not_defined_variable_case_main_case_with_name >'
 
-    _ = get_temp_file(test, test_name)
+    with WillRaise(SharedVarDoesNotExistInThisContext) as context:
+        print(var.var_y)
+        
+    must_equal(err, str(context.exception))
 
-    completed_process = run_test(test_name, test_name)
+    with WillRaise(SharedVarDoesNotExistInThisContext) as context:
+        var.var_y
+            
+    must_equal(err, str(context.exception))
 
-    # print(completed_process.stdout)
-    must_equal(0, completed_process.returncode)
+    with WillRaise(SharedVarDoesNotExistInThisContext) as context:
+        var.var_y = 10
+                
+    must_equal(err, str(context.exception))
 
-    for line in completed_process.stdout.splitlines():
-        if 'SharedVarDoesNotExistInThisContext' in line: 
-            search_line = line
+    with WillRaise(SharedVarDoesNotExistInThisContext) as context:
+        x = var.var_y
+                
+    must_equal(err, str(context.exception))
 
-    must_equal(err, search_line)
+    with WillRaise(SharedVarDoesNotExistInThisContext) as context:
+        x = lambda: var.var_y
+        # XXX ? @ usage_of_non_declared_shared_variable_raises_main
+        x()
+                
+    must_equal(err, str(context.exception))
 
-    delete_test_dir(test_name)
 
-
-# THIS TEST doesn't need subprocess, anyway XXX
 @Test.case
 def shared_raises_on_not_defined_variable_case_cleanup_case_with_name() -> None:
     test_name = 'shared_raises_on_not_defined_variable_case_cleanup_case_with_name'

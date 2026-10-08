@@ -19,7 +19,6 @@ def test_cleanup_works_even_if_test_fails():
 
 
 
-# Is there even a point to this test ? XXX
 _GG = 2_999
 def _setup():
     global _GG
