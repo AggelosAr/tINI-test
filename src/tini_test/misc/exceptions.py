@@ -90,11 +90,18 @@ class DuplicateMockRegisteredOnTest(Exception):
 
 class TestDecoratorUsedMoreThanOnce(Exception):
 
-    def __init__(self, test: Optional[FunctionType] = None) -> None:
+    def __init__(self, test: Optional[FunctionType | TestFunctionName] = None) -> None:
         if not test:
             test_name = '<unknown>'
         else:
-            test_name = test.__name__
+            if isinstance(test, str):
+                test_name = test
+            else:
+                test_name = test.__name__
+
+        if test_name == '_wrapper':
+            test_name = '<unknown>'
+            
         reason = 'Test decorator used more than once on test < %s >' % (test_name, )
         super().__init__(reason)
 
@@ -107,6 +114,20 @@ class MockWasUsedOnWithoutTestDecorator(Exception):
         else:
             test_name = test.__name__
         reason = 'Missing test decorator for function decorated with mock function < %s >' % (test_name, )
+        super().__init__(reason)
+
+
+class SharedWasUsedOnWithoutTestDecorator(Exception):
+
+    def __init__(self, test: Optional[FunctionType | TestFunctionName] = None) -> None:
+        if not test:
+            test_name = '<unknown>'
+        else:
+            if isinstance(test, str):
+                test_name = test
+            else:
+                test_name = test.__name__
+        reason = 'Missing test decorator for function decorated with Shared < %s >' % (test_name, )
         super().__init__(reason)
 
 
