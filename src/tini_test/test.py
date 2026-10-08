@@ -9,7 +9,8 @@ from tini_test._internals.consts import _LINE_CLEAR, _LINE_UP, _RESET
 from tini_test.enums import Color, RunMode, Verbosity
 from tini_test.misc.annotations import (C_REG, M_REG, S_REG, T_REG,
                                         DirectoryPath, Errors, FileName,
-                                        MockId, MockWrappedObject, SharedId,
+                                        GlobalRegistry, MockId,
+                                        MockWrappedObject, SharedId,
                                         TestCollectionSize, TestFunctionName,
                                         TestId, TestWrappedObject,
                                         _ReverseWrapConnections)
@@ -36,7 +37,7 @@ class TestCollection:
         self._SHARED_REGISTRY : S_REG = {}
         self._CONN_REGISTRY   : C_REG = {}
 
-        context = {
+        context: GlobalRegistry = {
             '_TEST_REGISTRY'  : self._TEST_REGISTRY,
             '_MOCK_REGISTRY'  : self._MOCK_REGISTRY,
             '_SHARED_REGISTRY': self._SHARED_REGISTRY,
@@ -66,7 +67,7 @@ class TestCollection:
     def total_tests(self) -> TestCollectionSize:
         return len(self.decorated_tests)
 
-    def import_with_context(self, module_name: str, context: dict) -> ModuleType:
+    def import_with_context(self, module_name: str, context: GlobalRegistry) -> ModuleType:
 
         spec = importlib.util.find_spec(module_name)
         # @coverage
@@ -200,19 +201,20 @@ class TestCollection:
                     _shared_vars, *_ = _shared_holder
 
                     for _shared_var in _shared_vars:
-                        if _shared_var.__key__ in unique_shared_vars:
+                        var_name = _shared_var.__key__
 
+                        if var_name in unique_shared_vars:
                             aborted.append(
                                 lambda test_name: 
                                     SharedVarAlreadyDefined
                                         (
-                                            var_name=_shared_var.__key__, 
+                                            var_name=var_name, 
                                             test_name=test_name
                                         )
                                 )
                             break
 
-                        unique_shared_vars.add(_shared_var.__key__)
+                        unique_shared_vars.add(var_name)
 
                     shared_vars.extend(_shared_vars)
 
@@ -225,7 +227,7 @@ class TestCollection:
         if registered_tests > 1:
             raise TestDecoratorUsedMoreThanOnce(test_func)
         
-        # Test is alone
+        # Test is alone # !!!!!!!!!! fix this cases pls test is alone with empty decorators
         if not mocks and not found_mocks and not shared_vars:
             return str(test_wrap.__closure__[-1].cell_contents.__name__), test_wrap
         
@@ -266,7 +268,10 @@ class TestCollection:
 
         if aborted:
             raise aborted[0](test_name)# TODO raise the exeption from the correct line. 
-
+        
+        for shared_var in shared_vars:
+            SharedVar.add_scope(shared_var, test_name)
+        
         # Also attach the mocks and the shared variables
         test_wrap = partial(test_wrap, 
                             _Test____mocks=mocks,
@@ -312,8 +317,7 @@ class TestCollection:
         deque(map(lambda dec_test_case: dec_test_case(), self.decorated_tests))
 
     def sort_tests(self) -> None:
-        self.collector = dict(sorted(self.collector.items(), 
-                                     key=lambda kv: kv[1].is_fail))
+        self.collector = dict(sorted(self.collector.items(), key=lambda kv: kv[1].is_fail))
     
     def box_tests(self) -> None:
         deque(map(lambda test_case: test_case.box_test(self.verbosity), self.collector.values()))
@@ -345,7 +349,7 @@ class TestCollection:
 
     def show_test_results_minimal(self) -> Errors:
 
-        # Cap the progress bar. # TODO broken on async?
+        # Cap the progress bar.
         bucket_size = 18
 
         e_symbol = ('%s   %s' % (Color.WHITE.value, _RESET, ))
