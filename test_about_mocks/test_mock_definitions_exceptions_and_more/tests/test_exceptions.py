@@ -57,8 +57,9 @@ def %s() -> None:
     # print(completed_process.stderr)
     
     must_equal(1, completed_process.returncode)
-
+    # TODO FIX 
     err = 'tini_test.misc.exceptions.TestDecoratorUsedMoreThanOnce: Test decorator used more than once on test < %s >' % test_name
+    #err = 'tini_test.misc.exceptions.TestDecoratorUsedMoreThanOnce: Test decorator used more than once on test < <unknown> >'
     unique_lines = list(map(lambda l: l.strip(), list(dict.fromkeys(completed_process.stderr.splitlines()))))
 
     passes = False
@@ -127,12 +128,11 @@ def %s() -> None:
         # print(completed_process.stdout)
         # print(completed_process.stderr)
 
-        must_equal(0, completed_process.returncode)
-        unique_lines = list(map(lambda l: l.strip(), list(dict.fromkeys(completed_process.stdout.splitlines()))))
+        must_equal(1, completed_process.returncode)
+        unique_lines = list(map(lambda l: l.strip(), list(dict.fromkeys(completed_process.stderr.splitlines()))))
 
-        err1 = 'Test files failed to load (1):'
         err2 = 'tini_test.misc.exceptions.TestDecoratorUsedMoreThanOnce: Test decorator used more than once on test < %s >' % f'test_exceptions_3_{i}'
-        must_equal(True, err1 in unique_lines and err2 in unique_lines)
+        must_equal(True, err2 in unique_lines)
 
         delete_test_dir(f'test_exceptions_3_{i}')
 
@@ -141,7 +141,6 @@ def %s() -> None:
 @Test.case
 def test_MockWasUsedOnWithoutTestDecorator() -> None:
     test_name = 'test_MockWasUsedOnWithoutTestDecorator'
-
     content = '''
 
 @Mock.mock

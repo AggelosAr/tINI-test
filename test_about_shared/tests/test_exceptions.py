@@ -5,7 +5,7 @@ from tini_test.test_utils import Test
 
 
 @Test.case
-def usage_of_non_declared_shared_variable_raises_setup():
+def usage_of_non_declared_shared_variable_raises_setup() -> None:
     test_name  = 'usage_of_non_declared_shared_variable_raises_setup'
     test = '''
 
@@ -35,7 +35,7 @@ def %s(): ...
 
 # THIS TEST doesn't need subprocess, anyway XXX
 @Test.case
-def usage_of_non_declared_shared_variable_raises_main():
+def usage_of_non_declared_shared_variable_raises_main() -> None:
     test_name = 'usage_of_non_declared_shared_variable_raises_main'
     test = '''
 
@@ -66,7 +66,7 @@ def %s():
 
 
 @Test.case
-def usage_of_non_declared_shared_variable_raises_cleanup():
+def usage_of_non_declared_shared_variable_raises_cleanup() -> None:
     test_name = 'usage_of_non_declared_shared_variable_raises_cleanup'
     test = '''
 
@@ -96,7 +96,7 @@ def %s(): ...
 
 
 @Test.case
-def shared_raises_on_not_defined_variable_case_setup_case_with_name():
+def shared_raises_on_not_defined_variable_case_setup_case_with_name() -> None:
     test_name = 'shared_raises_on_not_defined_variable_case_setup_case_with_name'
     test = '''
     
@@ -127,7 +127,7 @@ def %s(): ...
 
 # THIS TEST doesn't need subprocess, anyway XXX
 @Test.case
-def shared_raises_on_not_defined_variable_case_main_case_with_name():
+def shared_raises_on_not_defined_variable_case_main_case_with_name() -> None:
     test_name = 'shared_raises_on_not_defined_variable_case_main_case_with_name'
     test = '''
 
@@ -159,7 +159,7 @@ def %s():
 
 # THIS TEST doesn't need subprocess, anyway XXX
 @Test.case
-def shared_raises_on_not_defined_variable_case_cleanup_case_with_name():
+def shared_raises_on_not_defined_variable_case_cleanup_case_with_name() -> None:
     test_name = 'shared_raises_on_not_defined_variable_case_cleanup_case_with_name'
     test = '''
     
@@ -193,7 +193,7 @@ def %s(): ...
 
 
 @Test.case
-def shared_rejects_same_variable_name():
+def shared_rejects_same_variable_name() -> None:
     test_name = 'shared_rejects_same_variable_name'
     test = '''
 @Shared(var.var_a, var.var_a)
@@ -222,7 +222,7 @@ def %s(): ...
 
 
 @Test.case
-def shared_raises_when_receiving_keyword_arguments():
+def shared_raises_when_receiving_keyword_arguments() -> None:
     test_name = 'shared_raises_when_receiving_keyword_arguments'
     test = '''
 
@@ -278,3 +278,37 @@ def %s(): ...
     must_equal(err, search_line)
 
     delete_test_dir(test_name)
+
+
+
+@Test.case
+def test_SharedWasUsedOnWithoutTestDecorator() -> None:
+    # @test_MockWasUsedOnWithoutTestDecorator
+    # shared = ['@Shared', '@Shared()'] 
+
+    # all_permutations = []
+    # all_permutations.extend(permutations(shared))
+    # all_permutations.extend(permutations(*shared, *shared))
+    # all_permutations.extend(permutations(*shared, '@Shared(var.var_a)'))
+
+    # print('GENERATED PERMUTATIONS:', all_permutations)
+    test_name = 'test_SharedWasUsedOnWithoutTestDecorator'
+
+    content = '''
+@Shared
+def %s() -> None:
+    1/0
+''' % test_name
+
+    get_temp_file(content, test_name)
+
+    completed_process = run_test(test_name, test_name)
+
+    # print(completed_process.stderr)
+    must_equal(1, completed_process.returncode)
+
+    err = 'tini_test.misc.exceptions.SharedWasUsedOnWithoutTestDecorator: Missing test decorator for function decorated with Shared < %s >' % test_name
+    must_equal(err, completed_process.stderr.splitlines()[-1])
+
+    delete_test_dir(test_name)
+
