@@ -17,7 +17,7 @@ from tini_test.misc.annotations import (C_REG, M_REG, S_REG, T_REG,
 from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
                                        MockWasUsedOnWithoutTestDecorator,
                                        SharedVarAlreadyDefined,
-                                       TestDecoratorUsedMoreThanOnce)
+                                       TestDecoratorUsedMoreThanOnce, SharedWasUsedOnWithoutTestDecorator)
 from tini_test.mock import MockDefinition
 from tini_test.shared import SharedVar
 from tini_test.test_utils import Test
@@ -130,8 +130,6 @@ class TestCollection:
         
         while q:
 
-            # XXX 1
-            
             current_id = q.popleft()
             
             if current_id in visited:
@@ -218,23 +216,29 @@ class TestCollection:
 
                     shared_vars.extend(_shared_vars)
 
-
-        
-        # XXX 2? Also need case for shared.
+      
         if registered_tests == 0:
-            raise MockWasUsedOnWithoutTestDecorator(test_func)
-        # XXX 1
-        if registered_tests > 1:
-            raise TestDecoratorUsedMoreThanOnce(test_func)
+            if found_mocks:
+                raise MockWasUsedOnWithoutTestDecorator(test_func or str(mock_wrap.__closure__[-1].cell_contents.__name__))
+            if found_shared_vars:
+                raise SharedWasUsedOnWithoutTestDecorator(test_func or str(shared_wrap.__closure__[-1].cell_contents.__name__))
+
+        no_mocks = not mocks and not found_mocks
+        no_shared_vars = not shared_vars and not found_shared_vars
+        is_alone = no_mocks and no_shared_vars
+
+        if registered_tests > 1 and is_alone:
+            raise TestDecoratorUsedMoreThanOnce(test_func or str(test_wrap.__closure__[-1].cell_contents.__name__))
         
-        # Test is alone # !!!!!!!!!! fix this cases pls test is alone with empty decorators
-        if not mocks and not found_mocks and not shared_vars:
+        if is_alone:
             return str(test_wrap.__closure__[-1].cell_contents.__name__), test_wrap
-        
+
         # Attach the correct test function to the test wrap
         _registered_test = test_wrap.__closure__[-1].cell_contents
 
-       
+        if registered_tests > 1 and not is_alone:
+            raise TestDecoratorUsedMoreThanOnce(_registered_test)
+                
         if ('Mock.mock' in repr(_registered_test) 
             or 'Test.test' in repr(_registered_test)
             or 'Shared' in repr(_registered_test)):
@@ -266,9 +270,10 @@ class TestCollection:
                 test_wrap = partial(test_wrap,  
                                     _Test____test_func=test_func)
 
+
         if aborted:
             raise aborted[0](test_name)# TODO raise the exeption from the correct line. 
-        
+
         for shared_var in shared_vars:
             SharedVar.add_scope(shared_var, test_name)
         
@@ -276,7 +281,7 @@ class TestCollection:
         test_wrap = partial(test_wrap, 
                             _Test____mocks=mocks,
                             _Test____shared_vars=shared_vars)
-        
+
         return test_name, test_wrap
 
 
