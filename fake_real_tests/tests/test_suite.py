@@ -277,7 +277,7 @@ def test_suite_run_sync_super_minimal() -> None:
 
 
 
-# TODO update test
+# XXX update test
 @Test.case
 def test_thread_local_stdout():
     default_buffer = io.StringIO()
@@ -307,7 +307,7 @@ def test_thread_local_stdout():
 
 
 
-# TODO update test
+# XXX update test
 @Test.case
 def test_thread_local_stdout_fallback_after_cleanup():
     default_buffer = io.StringIO()
@@ -328,7 +328,7 @@ def test_thread_local_stdout_fallback_after_cleanup():
 
 
 
-# TODO update test 
+# XXX update test 
 @Test.case
 def test_thread_local_stdout_isatty():
     default_buffer = io.StringIO()

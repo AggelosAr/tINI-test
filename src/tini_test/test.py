@@ -276,7 +276,7 @@ class TestCollection:
 
 
         if aborted:
-            raise aborted[0](test_name)# TODO raise the exeption from the correct line. 
+            raise aborted[0](test_name)# XXX raise the exeption from the correct line. 
 
         for shared_var in shared_vars:
             SharedVar.add_scope(shared_var, test_name)

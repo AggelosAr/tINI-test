@@ -50,13 +50,8 @@ def %s() -> None:
 
     completed_process = run_test(test_name, test_name)
 
-    # print(completed_process.stdout)
-    # print(completed_process.stderr)
-    
     must_equal(1, completed_process.returncode)
-    # TODO fix missing test names
     err = 'tini_test.misc.exceptions.TestDecoratorUsedMoreThanOnce: Test decorator used more than once on test < %s >' % test_name
-    #err = 'tini_test.misc.exceptions.TestDecoratorUsedMoreThanOnce: Test decorator used more than once on test < <unknown> >'
     unique_lines = list(map(lambda l: l.strip(), list(dict.fromkeys(completed_process.stderr.splitlines()))))
 
     passes = False

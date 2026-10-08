@@ -167,3 +167,10 @@ class CouldNotFindMetaSharedVar(Exception):
     def __init__(self, test_name: TestFunctionName) -> None:
         msg = 'Shared namespace could not be resolved for test < %s > (import as %s)' % (test_name, SHARED_ID, )
         super().__init__(msg)
+
+
+class TestArgumentsShouldBeCallables(Exception):
+
+    def __init__(self, test_name: Optional[TestFunctionName]='') -> None:
+        msg = 'Test received as argument(s) not callable(s)'
+        super().__init__(msg)

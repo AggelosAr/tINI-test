@@ -27,6 +27,7 @@ def %s(): ...
 
     must_equal(0, completed_process.returncode)
 
+    search_line = None
     for line in completed_process.stdout.splitlines():
         if 'SharedVarDoesNotExistInThisContext' in line: 
             search_line = line
@@ -90,6 +91,7 @@ def %s(): ...
     
     must_equal(0, completed_process.returncode)
 
+    search_line = None
     for line in completed_process.stdout.splitlines():
         if 'SharedVarDoesNotExistInThisContext' in line: 
             search_line = line
@@ -120,6 +122,7 @@ def %s(): ...
 
     must_equal(0, completed_process.returncode)
 
+    search_line = None
     for line in completed_process.stdout.splitlines():
         if 'SharedVarDoesNotExistInThisContext' in line: 
             search_line = line
@@ -186,6 +189,7 @@ def %s(): ...
     
     must_equal(0, completed_process.returncode)
 
+    search_line = None
     for line in completed_process.stdout.splitlines():
         if 'SharedVarDoesNotExistInThisContext' in line: 
             search_line = line
@@ -215,6 +219,7 @@ def %s(): ...
 
     must_equal(1, completed_process.returncode)
 
+    search_line = None
     for line in completed_process.stderr.splitlines():
         if 'SharedVarAlreadyDefined' in line: 
             search_line = line
@@ -245,6 +250,7 @@ def %s(): ...
     
     must_equal(1, completed_process.returncode)
 
+    search_line = None
     for line in completed_process.stderr.splitlines():
         if 'SharedOnlyAcceptsArguments' in line: 
             search_line = line
@@ -275,6 +281,7 @@ def %s(): ...
     
     must_equal(1, completed_process.returncode)
 
+    search_line = None
     for line in completed_process.stderr.splitlines():
         if 'SharedAcceptedInvalidArguments' in line: 
             search_line = line

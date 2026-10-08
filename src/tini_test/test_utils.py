@@ -15,7 +15,8 @@ from .misc.annotations import (CleanupCallable, MockDefinitionWrappedHolder,
                                SharedDefinitionHolder, SharedWrappedObject,
                                StackTrace, TestWrappedHolder,
                                TestWrappedObject, _NoOp)
-from .misc.exceptions import ExpectedWasDifferentFromActual
+from .misc.exceptions import (ExpectedWasDifferentFromActual,
+                              TestArgumentsShouldBeCallables)
 from .mock import MockDefinition
 from .state.state import OperationState
 
@@ -211,6 +212,9 @@ class Test:
         if len(args) > 2:
             _no_op = args[2]
 
+        if (setup and not callable(setup)) or (cleanup and not callable(cleanup)):
+            raise TestArgumentsShouldBeCallables
+        
         return wrapper
     
     @cached_property
@@ -250,7 +254,7 @@ class Test:
                 break
     
     def run_for_cleanup_if_needed(self, _verbosity: Optional[Verbosity] = None) -> None:
-        # TODO What happens if user stops the program?
+        # XXX What happens if user stops the program?
         # If test fails and there is a cleanup 
         # Attempt to run it
         

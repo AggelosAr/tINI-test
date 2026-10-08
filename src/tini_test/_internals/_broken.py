@@ -7,7 +7,7 @@ NOTE:
 
 '''
 # We have problem on async? Maybe ? do this a context manager.
-# TODO Move passing tests to failing. And make the big tests 1
+# XXX Move passing tests to failing. And make the big tests 1
 
 import os
 import shutil
