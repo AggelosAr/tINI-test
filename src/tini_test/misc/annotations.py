@@ -60,7 +60,7 @@ RealTest: TypeAlias = Callable[..., Any]
 SetupCallable: TypeAlias = Callable[..., Any] 
 CleanupCallable: TypeAlias = Callable[..., Any]
 
-TestCallables: TypeAlias = RealTest | SetupCallable | CleanupCallable
+TestCallable: TypeAlias = RealTest | SetupCallable | CleanupCallable
 
 _NoOp: TypeAlias = Callable[..., Any]
 
@@ -166,7 +166,7 @@ SharedMetaId: TypeAlias = Literal['var']
 type SharedVars[_SharedVar] = dict[SharedId, _SharedVar]
 
 TestPart: TypeAlias = HexStr
-type SharedScope[_SharedVar] = dict[TestPart, SharedVars[_SharedVar]]
+type LocalSharedScope[_SharedVar] = dict[TestPart, SharedVars[_SharedVar]]
 
 CellName: TypeAlias = str
 CellValue: TypeAlias = Any
