@@ -8,15 +8,9 @@
 # *** EXCEPTION DURING TEST *** shows before Break down
 
 
-
 # Proxies
-# TODO collisions on global namespace for globals?
 # TODO efficient global management for proxy items?
 collisions on mocks and shared.
-
-
-
-# TODO at least one is required. Fix type on MockCall
 
 
 
@@ -25,7 +19,6 @@ collisions on mocks and shared.
 
 Add validation of Test decorator . and new exceptions . 
 Also add support for lambdas in Test returning results. setup cleanup and maybe test ?
-
 
 
 
@@ -41,16 +34,20 @@ but on also filter -t it will select only one !!!
 
 
 
-
-
-
 # TODO if comperator is provided, maybe add a flag to enforce it . instead of type(expected) != type(actual)
 
 
 
-
-mock is not in scope with shared 
-
 shared broken at integration
 
-# Test shared on nested structures as dict list class field.
+
+
+
+@ base decorator cases with shared.
+@Test.case
+@Shared()
+
+
+
+
+# TODO optimize lock
