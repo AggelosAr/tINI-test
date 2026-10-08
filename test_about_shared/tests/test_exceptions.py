@@ -33,6 +33,7 @@ def %s(): ...
     delete_test_dir(test_name)
 
 
+# THIS TEST doesn't need subprocess, anyway
 @Test.case
 def usage_of_non_declared_shared_variable_raises_main():
     test_name = 'usage_of_non_declared_shared_variable_raises_main'
@@ -124,6 +125,7 @@ def %s(): ...
     delete_test_dir(test_name)
 
 
+# THIS TEST doesn't need subprocess, anyway
 @Test.case
 def shared_raises_on_not_defined_variable_case_main_case_with_name():
     test_name = 'shared_raises_on_not_defined_variable_case_main_case_with_name'
@@ -155,6 +157,7 @@ def %s():
     delete_test_dir(test_name)
 
 
+# THIS TEST doesn't need subprocess, anyway
 @Test.case
 def shared_raises_on_not_defined_variable_case_cleanup_case_with_name():
     test_name = 'shared_raises_on_not_defined_variable_case_cleanup_case_with_name'
@@ -275,4 +278,3 @@ def %s(): ...
     must_equal(err, search_line)
 
     delete_test_dir(test_name)
-
