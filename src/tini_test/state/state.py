@@ -111,7 +111,7 @@ class OperationState:
                         s_msg = '%s*** EXCEPTION DURING TEST ***%s' % (CONFIG.get(status), _RESET, )
                         n_msg = ''
                     case _:
-                        # XXX (refactor) since detail is not used in any state
+                        # XXX detail is empty here?
                         # we will take advatage of that to put the MUST_EQUALS messages there.
                         s_msg = '%s*** EXCEPTION DURING TEST ***%s' % (CONFIG.get(status), _RESET, )
                         n_msg = '%s %s %s' % (CONFIG.get(status), detail, _RESET, )

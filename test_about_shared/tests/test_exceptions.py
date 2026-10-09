@@ -293,6 +293,38 @@ def %s(): ...
     delete_test_dir(test_name)
 
 
+
+@Test.case
+def shared_raises_when_receiving_argument_of_wrong_type_none():
+    test_name = 'shared_raises_when_receiving_argument_of_wrong_type_none'
+    test = '''
+
+@Shared(None)
+@Test.case
+def %s(): ...
+
+''' % test_name
+
+    err = 'tini_test.misc.exceptions.SharedAcceptedInvalidArguments: Shared accepts only <var> variables.'
+
+    _ = get_temp_file(test, test_name)
+    completed_process = run_test(test_name, test_name)
+
+    # print(completed_process.stderr)
+    
+    must_equal(1, completed_process.returncode)
+
+    search_line = None
+    for line in completed_process.stderr.splitlines():
+        if 'SharedAcceptedInvalidArguments' in line: 
+            search_line = line
+
+    must_equal(err, search_line)
+
+    delete_test_dir(test_name)
+
+
+
 # f4b46e9f2dd5f0e8b3f2758a1d2c994c67045516 XXX
 @Test.case
 def test_SharedWasUsedOnWithoutTestDecorator() -> None:
