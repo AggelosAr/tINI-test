@@ -109,7 +109,10 @@ class Shared:
         if kwargs:
             raise SharedOnlyAcceptsArguments
 
-        return Shared.shared(*args)
+        return _XShared.shared(*args)
+
+
+class _XShared:
 
     @classmethod
     def shared(cls,

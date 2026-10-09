@@ -18,7 +18,6 @@ single file fail.....
 update diff
 
 
-%s in exceptions?
 
 
 Add support for global shared.
@@ -28,3 +27,6 @@ if suite finds multiple files with the same name it will run them both
 on -f 
 but on also filter -t it will select only one !!!
 
+
+
+rename decorators to new _

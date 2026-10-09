@@ -105,13 +105,9 @@ class TestCollection:
 
     # XXX
     # remove magic strings.
-
+    # General case. We currently stop collecting on the first error. Should we continue?
     @no_type_check 
     def parse_wraps(self, _obj_id: TestId | MockId | SharedId) -> tuple[TestFunctionName, TestWrappedObject]:
-
-        # General case. We currently stop collecting on the first error. Should we continue?
-
-        
 
         test_wrap: TestWrappedObject
         test_func: Optional[FunctionType
@@ -164,7 +160,7 @@ class TestCollection:
                     hex(id(_test_func)) in self.bi_con
                     and 'Mock.mock' not in repr(_test_func)
                     and 'Test.test' not in repr(_test_func)
-                    and 'Shared' not in repr(_test_func)
+                    and '_XShared.shared' not in repr(_test_func)
                 ):
                     test_func = _test_func
 
@@ -195,7 +191,7 @@ class TestCollection:
                     hex(id(_test_func)) in self.bi_con
                     and 'Mock.mock' not in repr(_test_func)
                     and 'Test.test' not in repr(_test_func)
-                    and 'Shared' not in repr(_test_func)
+                    and '_XShared.shared' not in repr(_test_func)
                 ):
                     test_func = _test_func
 
@@ -249,7 +245,7 @@ class TestCollection:
                 
         if ('Mock.mock' in repr(_registered_test) 
             or 'Test.test' in repr(_registered_test)
-            or 'Shared' in repr(_registered_test)):
+            or '_XShared.shared' in repr(_registered_test)):
 
             # There is the case where the last closure is the actual test pre-condition.
             # In that case we must also attach it.

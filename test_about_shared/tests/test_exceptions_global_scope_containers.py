@@ -1,16 +1,15 @@
+import os
+
 from tini_test._internals._broken import (delete_test_dir, get_temp_file,
-                                          run_test)
+                                          get_unique_folder_name, run_test)
 from tini_test.must_equals import must_equal
-from tini_test.shared import Shared, var
 from tini_test.test_utils import Test
 
 
-
-@Shared(var.Z) # Force this test to run in isolation. XXX 3
 @Test.case
 def test_good_and_bad_tests():
     good_test = '''
-@Test.case
+@Test.case  #%%s %s
 def test_good_test(): ...
 '''
     
@@ -21,14 +20,15 @@ def test_bad_test(): ...
 
 [var.int]
 '''
-    _ = get_temp_file(good_test, 'good_test')
-    _ = get_temp_file(bad_test, 'bad_test')
+    folder_name = get_unique_folder_name()
+    _ = get_temp_file(good_test, os.path.join(folder_name, 'good_test'))
+    _ = get_temp_file(bad_test, os.path.join(folder_name, 'bad_test'))
 
 
-    completed_process = run_test()
+    completed_process = run_test(folder_name=folder_name)
 
-    # print(completed_process.stdout)
-    # print(completed_process.stderr)
+    print(completed_process.stdout)
+    print(completed_process.stderr)
 
     must_equal(0, completed_process.returncode)
 
@@ -46,7 +46,8 @@ def test_bad_test(): ...
             conditions.remove(f_line)
 
     must_equal(0, len(conditions))
-    delete_test_dir()
+    delete_test_dir(folder_name)
+
 
 
 @Test.case
@@ -59,13 +60,13 @@ def test_bad_test(): ...
 
 [var.int]
 '''
-
-    _ = get_temp_file(bad_test, 'bad_test')
+    folder_name = get_unique_folder_name()
+    _ = get_temp_file(bad_test, folder_name=folder_name)
     
-    completed_process = run_test()
+    completed_process = run_test(folder_name=folder_name)
 
-    # print(completed_process.stdout)
-    # print(completed_process.stderr)
+    print(completed_process.stdout)
+    print(completed_process.stderr)
 
     must_equal(0, completed_process.returncode)
 
@@ -82,7 +83,7 @@ def test_bad_test(): ...
             conditions.remove(f_line)
 
     must_equal(0, len(conditions))
-    delete_test_dir()
+    delete_test_dir(folder_name)
 
 
 
@@ -125,15 +126,17 @@ def e(): _()                       # And test fails since it is not in context
 '''
 ]
 
-@Shared(var.Z) # Force this test to run in isolation. XXX 3 
+
 @Test.case
 def cases():
     names = ['a', 'b', 'c', 'd', 'e']
+
+    folder_name = get_unique_folder_name()
+
     for test, name in zip(_cases, names):
-        _ = get_temp_file(test, name)
+        _ = get_temp_file(test, folder_name=os.path.join(folder_name, name))
 
-
-    completed_process = run_test()
+    completed_process = run_test(folder_name=folder_name)
 
     print(completed_process.stdout)
     print(completed_process.stderr)
@@ -170,5 +173,5 @@ def cases():
 
     must_equal(0, len(conditions))
 
-    delete_test_dir()
+    delete_test_dir(folder_name)
 

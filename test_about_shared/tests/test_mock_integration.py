@@ -1,11 +1,14 @@
+import os
+
+from tini_test._internals._broken import (delete_test_dir, get_temp_file,
+                                          get_unique_folder_name, run_test)
 from tini_test.context_managers import WillRaise
 from tini_test.misc.exceptions import SharedVarDoesNotExistInThisContext
 from tini_test.mock import Mock
 from tini_test.must_equals import must_equal
 from tini_test.shared import NotInitialized, Shared, var
 from tini_test.test_utils import Test
-from tini_test._internals._broken import (delete_test_dir, get_temp_file,
-                                          run_test)
+
 
 class MyNewClass:
     pass
@@ -104,12 +107,14 @@ def c(): ...
 ]
 @Test.case
 def cases():
+
+    folder_name = get_unique_folder_name()
     names = ['a', 'b', 'c']
     for test, name in zip(_cases, names):
-        _ = get_temp_file(test, name)
+        _ = get_temp_file(test, folder_name=os.path.join(folder_name, name))
 
 
-    completed_process = run_test()
+    completed_process = run_test(folder_name=folder_name)
 
     print(completed_process.stdout)
     print(completed_process.stderr)
@@ -141,7 +146,7 @@ def cases():
 
     must_equal(0, len(conditions))
 
-    delete_test_dir()
+    delete_test_dir(folder_name)
 
 
    

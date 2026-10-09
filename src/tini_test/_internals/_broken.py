@@ -13,6 +13,7 @@ import os
 import shutil
 import subprocess
 import tempfile
+import uuid
 from typing import Optional
 
 ROOT = '/tmp/python/tini_test'
@@ -24,6 +25,9 @@ from tini_test.shared import SharedVar, Shared, var, NotInitialized
 from tini_test.must_equals import must_equal
 
 '''
+
+def get_unique_folder_name() -> str:
+    return str(uuid.uuid4())
 
 
 def get_temp_file(content: str, folder_name: str) -> str:
@@ -46,6 +50,12 @@ def get_temp_file(content: str, folder_name: str) -> str:
 
 
 def delete_test_dir(folder_name: Optional[str] = '') -> None:
+    if not folder_name:
+        temp_dir = '/tmp/python'
+        if os.path.exists(temp_dir):
+            shutil.rmtree(temp_dir)
+        return
+    
     temp_dir = os.path.join(ROOT, folder_name)
     if os.path.exists(temp_dir):
         shutil.rmtree(temp_dir)

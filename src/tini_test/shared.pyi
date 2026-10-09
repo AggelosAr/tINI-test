@@ -1,8 +1,8 @@
 from traceback import FrameSummary
 from typing import Literal, Optional, overload
 
-from tini_test.misc.annotations import (CellName, CellValue,
-                                        LocalSharedScope, SharedMetaId, TestCallable,
+from tini_test.misc.annotations import (CellName, CellValue, LocalSharedScope,
+                                        SharedMetaId, TestCallable,
                                         TestFunctionName)
 
 class Cell: ...

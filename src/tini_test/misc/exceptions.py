@@ -3,9 +3,8 @@ from traceback import StackSummary
 from types import FunctionType
 from typing import Optional
 
-from tini_test._internals.consts import SHARED_ID, capture_flag
+from tini_test._internals.consts import _RESET, SHARED_ID, capture_flag
 from tini_test.misc.annotations import CellName, StackTrace, TestFunctionName
-from tini_test._internals.consts import _RESET
 
 RED = '\033[91m'
 # XXX APPLY colors to our exceptions for better readability
@@ -197,11 +196,10 @@ class GlobalSharedVarsAreNotSupported(Exception):
             if all(flag in str(item) for flag in capture_flag):
                 capturing = True
         
-        # 
+        # TODO 
         # Apply color formatting to the captured frames
         # Apply also back ground black colour 
         lines = traceback.format_list(captured_frames)
-        return ''.join(lines)
     
         longest = 0
         for line in lines:

@@ -4,7 +4,6 @@ from tini_test.shared import NotInitialized, Shared, SharedVar, var
 from tini_test.test_utils import Test
 
 
-
 @Test.case
 @Shared(var.Z)
 def test_function__0():
@@ -13,7 +12,7 @@ def test_function__0():
 
 @Shared(var.Z)
 @Test.case
-def test_Shared():
+def test_function__1():
     must_equal(True, True)
 
 

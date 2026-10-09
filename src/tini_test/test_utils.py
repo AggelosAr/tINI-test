@@ -110,8 +110,8 @@ class Test:
         self._fail_state = TestStatus.NO_OP
         self._fail_reasons: list[StackTrace] = []
 
-        self.mocks = mocks
-        self.shared_vars = shared_vars
+        self.mocks = mocks or []
+        self.shared_vars = shared_vars or []
         
         self.steps = [
             TestStep(func=cleanup,
@@ -224,6 +224,10 @@ class Test:
     @property
     def test_name(self) -> str:
         return self.test.__name__
+
+    @property
+    def should_lock(self) -> bool:
+        return (len(self.mocks) + len(self.shared_vars)) > 0
     
     @property
     def fail_state(self) -> TestStatus:
@@ -307,7 +311,7 @@ class Test:
     def box_test(self, _verbosity: Optional[Verbosity] = None) -> None:
 
         # @ XXX 1 is this the most optimal way to do this ? probably not...
-        with with_lock(self.mocks or self.shared_vars):
+        with with_lock(self.should_lock):
 
             with patch_mocks(self.mocks):
 
