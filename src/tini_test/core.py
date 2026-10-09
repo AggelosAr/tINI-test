@@ -176,6 +176,8 @@ class TestSuite:
 
         # Used to give fail reason while searching for a single test file
         single_test_file = None
+        # XXX
+        tests = None
 
         for module_path, test_file in _from:
 
@@ -194,6 +196,9 @@ class TestSuite:
                         tests.shared_meta.reset()
                       
             except Exception as e:
+                if tests and tests.shared_meta:
+                    tests.shared_meta.reset()
+                    
                 self.file_load_failures = 1
                 tb = self.format_file_failure_traceback(traceback.format_exc())
                 self.failed_to_collect_test_files_reasons[test_file] = '%s\n%s' % (str(e), tb, )

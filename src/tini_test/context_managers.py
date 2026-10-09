@@ -45,7 +45,6 @@ class WillRaise(object):
             self.exc_traceback = exc_traceback
             return True
         
-        # TODO maybe add a helpfull message on ExceptionWasNotRaised
         raise ExceptionWasNotRaised
 
 
@@ -85,7 +84,7 @@ sys.stdout = _ThreadLocalStdout(sys.stdout)
 
 @contextmanager
 def _thread_redirect_stdout(stream: StringIO):
-    # TODO add match on enum to discard output and exception traces in minimal modes ( which ones? )
+    # XXX add match on enum to discard output and exception traces in minimal modes ( which ones? )
     previous = getattr(_local_thread, 'stream', None)
     _local_thread.stream = stream
     try:

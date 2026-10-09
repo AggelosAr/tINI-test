@@ -109,6 +109,9 @@ class Shared:
         if kwargs:
             raise SharedOnlyAcceptsArguments
 
+        if any(arg is None for arg in args):
+            raise SharedAcceptedInvalidArguments
+
         return _XShared.shared(*args)
 
 
@@ -141,8 +144,7 @@ class _XShared:
             def _wrapper(*args, **kwargs) -> SharedDefinitionHolder[tuple[SharedVar]]:
 
                 return (func, ) if not _vars else (func, _vars, )
-
-
+            
             _shared_reg, _conn_reg = attach_state(func.__globals__, _wrapper.__globals__, mode='shared')
             
             if _conn_reg is None:
@@ -158,8 +160,7 @@ class _XShared:
 
         if callable(func) and not args:
             return wrapper(func)
-
-        # TODO None edge case?
+        
         if func is not None:
             SharedVar.validate(_vars := (func, *args))
 

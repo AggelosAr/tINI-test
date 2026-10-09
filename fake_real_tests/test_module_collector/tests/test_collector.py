@@ -70,8 +70,8 @@ def test_collector_collects_all() -> None:
                                                  'test_functions', 
                                                  'test_exceptions', 
                                                  'test_mock_integration',
-                                                 'test_shared_capacity', 
-                                                 'test_global_scope_containers', 
+                                                 'test_shared_capacity',
+                                                 'test_exceptions_global_scope_containers',
                                                  'test_shared_types_and_multiple_args', 
                                                  'test_walrus', 
                                                  'test_imports', 
@@ -135,15 +135,15 @@ def test_collector_collects_all_and_exclude_dir_works() -> None:
                                                            'test_mocks'],
                      'test_about_mocks.test_mock_definitions_exceptions_and_more.tests': ['test_exceptions'],
                      'test_about_shared.tests': ['test_decorator_schema', 
-                                                  'test_functions', 
-                                                  'test_exceptions', 
-                                                  'test_mock_integration',
-                                                  'test_shared_capacity', 
-                                                  'test_global_scope_containers', 
-                                                  'test_shared_types_and_multiple_args', 
-                                                  'test_walrus', 
-                                                  'test_imports', 
-                                                  'test_shared_base']}
+                                                 'test_functions', 
+                                                 'test_exceptions', 
+                                                 'test_mock_integration',
+                                                 'test_shared_capacity',
+                                                 'test_exceptions_global_scope_containers',
+                                                 'test_shared_types_and_multiple_args', 
+                                                 'test_walrus', 
+                                                 'test_imports', 
+                                                 'test_shared_base']}
 
     must_equal(correct_items, dict(test_collector.test_modules.items()))
 

@@ -9,8 +9,7 @@ Remove the insanity with subprocess or merge coverage.
 And are rejected.***
 
 
-# XXX 3 
-Add isolate decorator
+
 
 
 single file fail.....
@@ -28,11 +27,17 @@ on -f
 but on also filter -t it will select only one !!!
 
 
-
-rename decorators to new _
-
-
-
 # Edge case passing mock none to mock ....
 
 Clean consts 
+
+
+
+
+# XXX 3 
+Add isolate decorator
+
+
+
+# TODO add test where file fails to load and another file does not fail to reset meta 
+# Also refactor the try except and the collection init.

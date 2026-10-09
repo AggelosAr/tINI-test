@@ -84,6 +84,7 @@ class TestCollection:
 
         module.__dict__.update(context)
 
+        self.shared_meta = module.__dict__.get(MetaSharedVar.extract_meta_id()) # XXX
         spec.loader.exec_module(module)        
 
         return module

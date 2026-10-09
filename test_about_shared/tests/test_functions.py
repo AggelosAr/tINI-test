@@ -20,7 +20,6 @@ def test_function_returns_var():
 
 
 
-
 def side_effect_function(arg):
     var.int = arg
     return var.int
