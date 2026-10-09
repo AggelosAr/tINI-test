@@ -45,13 +45,13 @@ def get_temp_file(content: str, folder_name: str) -> str:
     return data
 
 
-def delete_test_dir(folder_name: str) -> None:
+def delete_test_dir(folder_name: Optional[str] = '') -> None:
     temp_dir = os.path.join(ROOT, folder_name)
     if os.path.exists(temp_dir):
         shutil.rmtree(temp_dir)
 
 
-def run_test(folder_name: str, 
+def run_test(folder_name: Optional[str] = None, 
              test_name: Optional[str] = None, 
              test_file: Optional[str] = None) -> subprocess.CompletedProcess:
 
@@ -60,7 +60,9 @@ def run_test(folder_name: str,
     env_path = '312venv/bin/activate'
     python_path_from_project = '312venv/bin/python'
     python_path_from_project = '.venv/bin/python'
-    
+
+    if not folder_name:
+        folder_name = 'tini_test'
 
     python3 = os.path.join(project_root, python_path_from_project)
 

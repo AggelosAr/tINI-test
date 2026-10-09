@@ -7,6 +7,7 @@ from tini_test.shared import Shared, var
 from tini_test.test_utils import Test
 
 
+@Shared(var.Z) # Force this test to run in isolation. XXX 3 
 @Test.case
 def usage_of_non_declared_shared_variable_raises_setup() -> None:
     test_name  = 'usage_of_non_declared_shared_variable_raises_setup'
@@ -70,6 +71,7 @@ def usage_of_non_declared_shared_variable_raises_main() -> None:
     must_equal(err, str(context.exception))
 
 
+@Shared(var.Z) # Force this test to run in isolation. XXX 3 
 @Test.case
 def usage_of_non_declared_shared_variable_raises_cleanup() -> None:
     test_name = 'usage_of_non_declared_shared_variable_raises_cleanup'
@@ -165,6 +167,7 @@ def shared_raises_on_not_defined_variable_case_main_case_with_name() -> None:
     must_equal(err, str(context.exception))
 
 
+@Shared(var.Z) # Force this test to run in isolation. XXX 3 
 @Test.case
 def shared_raises_on_not_defined_variable_case_cleanup_case_with_name() -> None:
     test_name = 'shared_raises_on_not_defined_variable_case_cleanup_case_with_name'
@@ -199,7 +202,7 @@ def %s(): ...
     delete_test_dir(test_name)
 
 
-
+@Shared(var.Z) # Force this test to run in isolation. XXX 3 
 @Test.case
 def shared_rejects_same_variable_name() -> None:
     test_name = 'shared_rejects_same_variable_name'
@@ -229,7 +232,7 @@ def %s(): ...
     delete_test_dir(test_name)
 
 
-
+@Shared(var.Z) # Force this test to run in isolation. XXX 3 
 @Test.case
 def shared_raises_when_receiving_keyword_arguments() -> None:
     test_name = 'shared_raises_when_receiving_keyword_arguments'
@@ -261,6 +264,7 @@ def %s(): ...
 
 
 
+#@Shared(var.Z) # Force this test to run in isolation. XXX 3 
 @Test.case
 def shared_raises_when_receiving_argument_of_wrong_type():
     test_name = 'shared_raises_when_receiving_argument_of_wrong_type'
@@ -292,6 +296,7 @@ def %s(): ...
 
 
 
+@Shared(var.Z) # Force this test to run in isolation. XXX 3 
 @Test.case
 def test_SharedWasUsedOnWithoutTestDecorator() -> None:
     # @test_MockWasUsedOnWithoutTestDecorator
@@ -312,7 +317,7 @@ def %s() -> None:
 ''' % test_name
 
     get_temp_file(content, test_name)
-
+    
     completed_process = run_test(test_name, test_name)
 
     # print(completed_process.stderr)

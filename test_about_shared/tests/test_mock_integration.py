@@ -1,8 +1,11 @@
+from tini_test.context_managers import WillRaise
+from tini_test.misc.exceptions import SharedVarDoesNotExistInThisContext
 from tini_test.mock import Mock
 from tini_test.must_equals import must_equal
-from tini_test.shared import Shared, var
+from tini_test.shared import NotInitialized, Shared, var
 from tini_test.test_utils import Test
-
+from tini_test._internals._broken import (delete_test_dir, get_temp_file,
+                                          run_test)
 
 class MyNewClass:
     pass
@@ -66,4 +69,145 @@ def test_integration_mock_call():
     must_equal(111, var.callable())
     must_equal(46, var.int)
     must_equal('X', var.none)
+
+
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+
+_cases = [
+'''
+def mocked_function(): ...
+@Shared(var.a)
+@Mock.mock(mocked_function, returns=(var.a,))            # XXX 2
+@Test.case
+def a(): ...
+''',
+
+'''
+def mocked_function(args): ...
+@Shared(var.b)
+@Mock.mock(mocked_function, args=(var.b,))               # ^
+@Test.case
+def b(): ...
+''',
+
+'''
+def mocked_function(args): ...
+@Shared(var.c)
+@Mock.mock(mocked_function, kwargs={'var_c': var.c})     # ^
+@Test.case
+def c(): ...
+'''
+]
+@Test.case
+def cases():
+    names = ['a', 'b', 'c']
+    for test, name in zip(_cases, names):
+        _ = get_temp_file(test, name)
+
+
+    completed_process = run_test()
+
+    print(completed_process.stdout)
+    print(completed_process.stderr)
+
+    must_equal(0, completed_process.returncode)
+
+    conditions = [
+        '| Total registered tests  : 0',
+        '| Total successes         : 0',
+        '| Total errors            : 0',
+        '| Test file load failures : 3',
+
+        'Reason: Global shared variable < a > is not supported.',
+        '@Mock.mock(mocked_function, returns=(var.a,))            # XXX 2',
+
+        'Reason: Global shared variable < b > is not supported.',
+        '@Mock.mock(mocked_function, args=(var.b,))               # ^',
+
+        'Reason: Global shared variable < c > is not supported.',
+        "@Mock.mock(mocked_function, kwargs={'var_c': var.c})     # ^",
+
+    ]
+    conditions = set(c.strip() for c in conditions)
+
+    for line in completed_process.stdout.splitlines():
+        f_line = line.strip()
+        if f_line in conditions:
+            conditions.remove(f_line)
+
+    must_equal(0, len(conditions))
+
+    delete_test_dir()
+
+
+   
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+ # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+  # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+def mocker(*args, **kwargs):
+    var.y
+    return args, kwargs
+
+
+@Test.case
+@Mock.mock(mocker, returns=(100,))
+@Shared(var.int)
+def mocker_raises_not_in_context_returns():
+    must_equal((100,), mocker())
+    
+
+
+@Test.case
+@Mock.mock(mocker, args=(100,))
+@Shared(var.int)
+def mocker_raises_not_in_context_args():
+    with WillRaise(SharedVarDoesNotExistInThisContext) as context:
+        mocker(var.int)
+
+    print(str(context.exception))
+    err = 'Shared variable < y > does not exist in this context. For test < mocker_raises_not_in_context_args >'
+    must_equal(err, str(context.exception))
+
+
+
+@Test.case
+@Mock.mock(mocker, kwargs={'var_c': 100})
+@Shared(var.int)
+def mocker_raises_not_in_context_kwargs():
+    with WillRaise(SharedVarDoesNotExistInThisContext) as context:
+        mocker(var.int)
+
+    print(str(context.exception))
+    err = 'Shared variable < y > does not exist in this context. For test < mocker_raises_not_in_context_kwargs >'
+    must_equal(err, str(context.exception))
+
+
+
+def mocker2(*args, **kwargs):
+    return args, kwargs
+
+@Test.case
+@Mock.mock(mocker2, kwargs={'var_c': lambda: var.Z})
+@Shared(var.int)
+def mocker_raises_on_container():
+    with WillRaise(SharedVarDoesNotExistInThisContext) as context:
+        mocker2(var.int)[1][ 'var_c' ]()
+
+    print(str(context.exception))
+    err = 'Shared variable < Z > does not exist in this context. For test < mocker_raises_on_container >'
+    must_equal(err, str(context.exception))
+
+
+
+@Test.case
+@Mock.mock(mocker2, kwargs={'var_c': lambda: var.Z})
+@Shared(var.Z)
+def mocker_wont_raise_on_container_if_in_context():
+    res = mocker2(var.Z)[1][ 'var_c' ]()
+    must_equal(NotInitialized, res)
 

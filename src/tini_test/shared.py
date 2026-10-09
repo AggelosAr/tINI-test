@@ -1,4 +1,6 @@
+import traceback
 from contextlib import contextmanager
+from traceback import FrameSummary
 from typing import Any, Callable, Generator, Literal, Optional
 
 from tini_test._internals._registry import attach_state
@@ -11,6 +13,7 @@ from tini_test.misc.annotations import (CellName, CellValue, LocalSharedScope,
                                         TestFunctionName, TestWrappedHolder,
                                         TestWrappedObject)
 from tini_test.misc.exceptions import (CouldNotFindMetaSharedVar,
+                                       GlobalSharedVarsAreNotSupported,
                                        SharedAcceptedInvalidArguments,
                                        SharedOnlyAcceptsArguments,
                                        SharedVarDoesNotExistInThisContext)
@@ -38,30 +41,50 @@ class SharedVar:
         return instance
     
     def __init__(self, _var: CellName) -> None:
+        self._trace = traceback.extract_stack()
+
         self._stored_key = _var
         self._scope = None
+
         setattr(self, _var, Cell())
 
     def __key__(self) -> CellName:
         return object.__getattribute__(self, '_stored_key')
 
     def __getattribute__(self, 
-                         attr: Literal['__key__', '_scope'] | CellName
-                         ) -> Optional[TestFunctionName] | CellName | Cell:
-        if attr == '_scope':
-            return object.__getattribute__(self, '_scope')
-        
-        if attr == '__key__':
-            return object.__getattribute__(self, '_stored_key')
-        
-        stored_key = object.__getattribute__(self, '_stored_key')
-        return object.__getattribute__(self, stored_key)
+                         attr: Literal['_trace', 
+                                       '_stored_key', 
+                                       '_scope', 
+                                       '__key__'] | CellName
+                         ) -> (list[FrameSummary] 
+                               | CellName 
+                               | Optional[TestFunctionName] 
+                               | CellName
+                               | Cell):
+        match attr:
+
+            case '_trace':
+                return object.__getattribute__(self, '_trace')
+
+            case '_stored_key':
+                return object.__getattribute__(self, '_stored_key')
+                        
+            case '_scope':
+                return object.__getattribute__(self, '_scope')
+
+            case '__key__':
+                return object.__getattribute__(self, '_stored_key')
+
+            case _:
+                stored_key = object.__getattribute__(self, '_stored_key')
+                return object.__getattribute__(self, stored_key)
+
     
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, SharedVar):
             return False
         return self._var.value == other._var.value
-
+    
     @classmethod
     def validate(cls, args: Any) -> tuple['SharedVar']:
         if not isinstance(args, tuple):
@@ -151,16 +174,19 @@ class MetaSharedVar:
         self._local_context = _local_context
 
         self._generating = True
+        self._maybe_globals: list[SharedVar] = []
 
     def __getattr__(self, key: CellName) -> SharedVar | CellValue:
         if self._generating:
-            return SharedVar(key)
-
+            _new = SharedVar(key)
+            self._maybe_globals.append(_new)
+            return _new
+        
         with self.with_lock(key) as shard:
             return shard.key.value
 
     def __setattr__(self, key: CellName, value: Any) -> None:
-        if key in ('_test_name', '_local_context', '_generating'):
+        if key in ('_test_name', '_local_context', '_generating', '_maybe_globals'):
             object.__setattr__(self, key, value)
             return
 
@@ -170,11 +196,7 @@ class MetaSharedVar:
     @staticmethod
     def extract_meta_id() -> SharedMetaId:
         return SHARED_ID
-
-    @staticmethod
-    def get_context_from_shards(shards: list[SharedVar]) -> LocalSharedScope[SharedVar]:
-        return {var.__key__: var for var in shards}
-
+    
     @staticmethod
     def extract_meta(_from: TestCallable) -> 'MetaSharedVar':
         meta = _from.__globals__.get(MetaSharedVar.extract_meta_id())
@@ -182,14 +204,10 @@ class MetaSharedVar:
             raise CouldNotFindMetaSharedVar(test_name=_from.__name__)
         return meta
 
-    @classmethod
-    def set_new_meta(cls, 
-                     _id: SharedMetaId, 
-                     apply_at: TestCallable,
-                     new_meta: 'MetaSharedVar') -> 'MetaSharedVar':
-        apply_at.__globals__[_id] = new_meta
-        return new_meta
- 
+    @staticmethod
+    def get_context_from_shards(shards: list[SharedVar]) -> LocalSharedScope[SharedVar]:
+        return {var.__key__: var for var in shards}
+    
     @contextmanager
     def with_lock(self, key: CellName) -> Generator[SharedVar, None, None]:
         try:
@@ -203,18 +221,28 @@ class MetaSharedVar:
         finally:
             ...
 
+    def raise_for_globals(self) -> None:
+        for shard in self._maybe_globals:
+            if shard._scope is None:
+                _args = (shard.__key__, shard._trace)
+                raise GlobalSharedVarsAreNotSupported(*_args)
+    
+    def reset(self) -> None:
+        self._generating = True
+        self._maybe_globals = []
+
     def toggle(self) -> None:
         self._generating = False
 
-    def reset(self) -> None:
-        self._test_name = ''
-        self._local_context = None
-
     def update_local_context(self, 
-                                test_name: TestFunctionName, 
-                                context: LocalSharedScope[SharedVar]) -> None:
+                             test_name: TestFunctionName, 
+                             context: LocalSharedScope[SharedVar]) -> None:
         self._test_name = test_name
         self._local_context = context
+
+    def test_reset(self) -> None:
+        self._test_name = ''
+        self._local_context = None
 
     def access_shard(self, key: CellName) -> SharedVar:
 

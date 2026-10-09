@@ -1,12 +1,30 @@
 FIX flickering on MINIMAL ASYNC, gl
 
+Remove the insanity with subprocess or merge coverage.
+
+
+
+# XXX 2
+***Shared vars used as returns or args to the Mock decorator are considered `globals`
+And are rejected.***
+
+
+# XXX 3 
+Add isolate decorator
+
+
+single file fail.....
 
 update diff
+
+
+%s in exceptions?
+
+
+Add support for global shared.
 
 # Update doc ?
 if suite finds multiple files with the same name it will run them both
 on -f 
 but on also filter -t it will select only one !!!
-
-
 

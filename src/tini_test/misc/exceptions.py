@@ -1,8 +1,14 @@
+import traceback
+from traceback import StackSummary
 from types import FunctionType
 from typing import Optional
 
-from tini_test._internals.consts import SHARED_ID
-from tini_test.misc.annotations import CellName, TestFunctionName
+from tini_test._internals.consts import SHARED_ID, capture_flag
+from tini_test.misc.annotations import CellName, StackTrace, TestFunctionName
+from tini_test._internals.consts import _RESET
+
+RED = '\033[91m'
+# XXX APPLY colors to our exceptions for better readability
 
 
 class NotSupportedVerbosity(Exception):
@@ -174,3 +180,47 @@ class TestArgumentsShouldBeCallables(Exception):
     def __init__(self, test_name: Optional[TestFunctionName]='') -> None:
         msg = 'Test received as argument(s) not callable(s)'
         super().__init__(msg)
+
+
+class GlobalSharedVarsAreNotSupported(Exception):
+
+    def __init__(self, var_name: CellName, stack_trace: Optional[StackSummary] = '') -> None:
+        msg = self.format_msg(var_name, stack_trace)
+        super().__init__(msg)
+
+    def format_exception(self, stack_trace: Optional[StackSummary] = '') -> StackTrace:
+        captured_frames = []
+        capturing = False
+        for item in stack_trace:
+            if capturing:
+                captured_frames.append(item)
+            if all(flag in str(item) for flag in capture_flag):
+                capturing = True
+        
+        # 
+        # Apply color formatting to the captured frames
+        # Apply also back ground black colour 
+        lines = traceback.format_list(captured_frames)
+        return ''.join(lines)
+    
+        longest = 0
+        for line in lines:
+            longest = max(longest, len(line))
+
+        
+        msg = ''.join(lines)
+        # Pad the lines with the lentgh of the longest in white space 
+        # e.g. the longest line determines the black box 
+        
+
+        msg = '%s%s' % ('\033[40m', msg)
+        return '%s%s%s' % (RED, msg, _RESET, )
+
+    def format_msg(self, var_name: CellName, stack_trace: StackTrace) -> StackTrace:
+        base_msg = 'Global shared variable < %s > is not supported.' % (var_name, )
+        trace = self.format_exception(stack_trace)
+        match trace:
+            case '':
+                return base_msg
+            case _:
+                return '%s\n%s' % (base_msg, trace)

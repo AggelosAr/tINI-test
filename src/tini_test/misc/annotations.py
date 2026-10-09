@@ -65,16 +65,13 @@ _NoOp: TypeAlias = Callable[..., Any]
 
 
 
-PartialObject: TypeAlias = Callable # TODO update
+PartialObject: TypeAlias = Callable[..., Any] # TODO update
 # ---------------- SOME CALLABLES ----------------
 
 
 
 
 # -------------- DECORATED OBJECTS --------------
-
-# TODO args of Test.case
-
 # Input types
 TestWrappedObject   : TypeAlias = Callable[..., 'WrapperInput'] #!!!!!!!!!!!!!
 MockWrappedObject   : TypeAlias = Callable[..., 'WrapperInput'] #!!!!!!!!!!!!!

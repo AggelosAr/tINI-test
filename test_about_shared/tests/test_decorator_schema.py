@@ -4,6 +4,31 @@ from tini_test.shared import NotInitialized, Shared, SharedVar, var
 from tini_test.test_utils import Test
 
 
+
+@Test.case
+@Shared(var.Z)
+def test_function__0():
+    must_equal(True, True)
+
+
+@Shared(var.Z)
+@Test.case
+def test_Shared():
+    must_equal(True, True)
+
+
+@Test.case()
+@Shared(var.Z)
+def test_function__2():
+    must_equal(True, True)
+
+
+@Test.case()
+@Shared(var.Z)
+def test_function__3():
+    must_equal(True, True)
+
+
 @Test.case
 @Shared
 def test_function_2400():

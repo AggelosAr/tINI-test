@@ -22,8 +22,11 @@ SKIP_DIRS = {
         '.git',
         '.pytest_cache',
         '.mypy_cache',
-        'node_modules'
+        'node_modules',
+        'jeepney'
     }
 
 
 SHARED_ID = 'var'
+
+capture_flag = ('<frozen importlib._bootstrap>', '_call_with_frames_removed', )

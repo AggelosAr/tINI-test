@@ -180,18 +180,19 @@ class TestSuite:
         for module_path, test_file in _from:
 
             try:
-
+                # Runtime checks require the try except. 
+                # Maybe some AST parsing can solve this issue.
                 tests = TestCollection(verbosity=self.verbosity, 
                                        module_path=module_path,
                                        file=test_file)
-
-                # Since some checks are done while gathering the tests.
-                # Like multiple test decorators passed on 1 test.
-                # Or errors relevant to the Mock definitions
-                # We will wrap the gather_tests in this block.
                 collected_tests = tests.gather_tests(func_name=self.test_function)
 
-
+                if collected_tests and tests.shared_meta:
+                    try:
+                        tests.shared_meta.raise_for_globals()
+                    finally:
+                        tests.shared_meta.reset()
+                      
             except Exception as e:
                 self.file_load_failures = 1
                 tb = self.format_file_failure_traceback(traceback.format_exc())
@@ -229,7 +230,7 @@ class TestSuite:
 
     def run_suite(self) -> None:
         
-        for _f_path, test_collection in self.container.items():
+        for _, test_collection in self.container.items():
 
             current_errors = test_collection.run_tests()
             assert isinstance(current_errors, int)
@@ -244,7 +245,7 @@ class TestSuite:
         
         # Gather all suites from all modules
         all_test_collections: list[TestCollection] = []
-        for _f_path, test_collection in self.container.items():
+        for _, test_collection in self.container.items():
             all_test_collections.append(test_collection)
         
         # Run all suites concurrently

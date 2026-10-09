@@ -5,7 +5,7 @@ from tini_test.misc.annotations import (C_REG, M_REG, S_REG, T_REG,
 
 
 def attach_state(source_obj: GlobalRegistry, 
-                 target_obj: SimpleGlobalRegistry | GlobalRegistry, # TODO Are we sure?
+                 target_obj: SimpleGlobalRegistry | GlobalRegistry,
                  /,
                  *,
                  mode: Literal['test', 

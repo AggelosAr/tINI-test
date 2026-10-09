@@ -10,9 +10,10 @@ from tini_test.enums import Color, RunMode, Verbosity
 from tini_test.misc.annotations import (C_REG, M_REG, S_REG, T_REG,
                                         DirectoryPath, Errors, FileName,
                                         GlobalRegistry, MockId,
-                                        MockWrappedObject, SharedId,
-                                        TestCollectionSize, TestFunctionName,
-                                        TestId, TestWrappedObject,
+                                        MockWrappedObject, PartialObject,
+                                        SharedId, TestCollectionSize,
+                                        TestFunctionName, TestId,
+                                        TestWrappedObject,
                                         _ReverseWrapConnections)
 from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
                                        MockWasUsedOnWithoutTestDecorator,
@@ -47,7 +48,7 @@ class TestCollection:
       
         self.module = self.import_with_context('%s.%s' % (module_path, file, ), context)
         
-        self.decorated_tests: list[Callable] = []
+        self.decorated_tests: list[PartialObject] = []
 
         self.collector: dict[TestFunctionName, Test] = dict()
 
@@ -223,16 +224,19 @@ class TestCollection:
       
         if registered_tests == 0:
             if found_mocks:
-                raise MockWasUsedOnWithoutTestDecorator(test_func or str(mock_wrap.__closure__[-1].cell_contents.__name__))
+                _t = test_func or str(mock_wrap.__closure__[-1].cell_contents.__name__)
+                raise MockWasUsedOnWithoutTestDecorator(_t)
             if found_shared_vars:
-                raise SharedWasUsedOnWithoutTestDecorator(test_func or str(shared_wrap.__closure__[-1].cell_contents.__name__))
+                _t = test_func or str(shared_wrap.__closure__[-1].cell_contents.__name__)
+                raise SharedWasUsedOnWithoutTestDecorator(_t)
 
         no_mocks = not mocks and not found_mocks
         no_shared_vars = not shared_vars and not found_shared_vars
         is_alone = no_mocks and no_shared_vars
 
         if registered_tests > 1 and is_alone:
-            raise TestDecoratorUsedMoreThanOnce(test_func or str(test_wrap.__closure__[-1].cell_contents.__name__))
+            _t = test_func or str(test_wrap.__closure__[-1].cell_contents.__name__)
+            raise TestDecoratorUsedMoreThanOnce(_t)
         
         if is_alone:
             return str(test_wrap.__closure__[-1].cell_contents.__name__), test_wrap
@@ -314,7 +318,7 @@ class TestCollection:
 
             if func_name and test_name != func_name:
                 continue
-            
+
             test_obj = partial(t_obj,
                                _Test____collector=self.collector,
                                _Test____verbosity=self.verbosity)
