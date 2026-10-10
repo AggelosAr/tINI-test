@@ -113,7 +113,7 @@ class TestSuite:
         self._failed_to_collect_test_files[new_file] = reason
 
     def format_file_failure_traceback(self, tb: str) -> str:
-        # Crop all lines ivolving importlib
+        # Crop all lines involving importlib
         lines = tb.splitlines()
         i = 0
         for i in range(len(lines) - 1, -1, -1):
