@@ -127,9 +127,9 @@ def patch_shared(patching: TestCallable, shared_vars: list[SharedVar]) -> Genera
     if shared_vars:
        
         try:
-            _meta = MetaSharedVar.extract_meta(_from=patching)
+            _meta = MetaSharedVar.get_meta_var()
 
-            local_context = MetaSharedVar.get_context_from_shards(shared_vars)
+            local_context = _meta.get_context_from_shards(shared_vars)
             
             test_name = patching.__name__
             _meta.update_local_context(test_name=test_name, context=local_context)

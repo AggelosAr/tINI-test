@@ -2,14 +2,15 @@ import asyncio
 import importlib.util
 from collections import deque
 from functools import cached_property, lru_cache, partial
+from importlib.machinery import ModuleSpec
 from types import FunctionType, ModuleType
 from typing import Callable, Optional, no_type_check
 
 from tini_test._internals.consts import _LINE_CLEAR, _LINE_UP, _RESET
 from tini_test.enums import Color, RunMode, Verbosity
 from tini_test.misc.annotations import (C_REG, M_REG, S_REG, T_REG,
-                                        DirectoryPath, Errors, FileName,
-                                        GlobalRegistry, MockId,
+                                        DirectoryPath, DotPythonPath, Errors,
+                                        FileName, GlobalRegistry, MockId,
                                         MockWrappedObject, PartialObject,
                                         SharedId, TestCollectionSize,
                                         TestFunctionName, TestId,
@@ -30,65 +31,83 @@ class TestCollection:
     def __init__(self,
                  verbosity: Verbosity,
                  module_path: DirectoryPath,
-                 file: FileName) -> None:
+                 file: FileName,
+                 shared_meta: MetaSharedVar) -> None:
         
+        self.module_path = module_path
         self.verbosity = verbosity
-
+        self.file_name = file
+        self.shared_meta = shared_meta
+        
         self._TEST_REGISTRY   : T_REG = {}
         self._MOCK_REGISTRY   : M_REG = {}
         self._SHARED_REGISTRY : S_REG = {}
         self._CONN_REGISTRY   : C_REG = {}
 
+        self.module: Optional[ModuleType] = None
+        
+        self.decorated_tests: list[PartialObject] = []
+        self.collector: dict[TestFunctionName, Test] = dict()
+
+    def __len__(self) -> TestCollectionSize:
+        return self.total_tests
+    
+    @cached_property
+    def module_name(self) -> FileName:
+        return self.file_name
+    
+    @cached_property
+    def bi_con(self) -> _ReverseWrapConnections:
+        return self.reverse_connections()
+
+    @cached_property
+    def dot_python_path(self) -> DotPythonPath:
+        return '%s.%s' % (self.module_path, self.file_name, )
+    
+    @property
+    def total_tests(self) -> TestCollectionSize:
+        return len(self.decorated_tests)
+
+    @property
+    def has_tests(self) -> bool:
+        return self.total_tests > 0
+    
+    @staticmethod
+    def get_module_loader(module_name: DotPythonPath) -> tuple[ModuleSpec, ModuleType]:
+        spec = importlib.util.find_spec(module_name)
+        # @coverage
+        if spec is None:
+            raise RuntimeError('Cannot find module named %s' % (module_name, ))
+        
+        module = importlib.util.module_from_spec(spec)
+        return spec, module
+
+    def update_globals(self, module: ModuleType) -> None:
         context: GlobalRegistry = {
             '_TEST_REGISTRY'  : self._TEST_REGISTRY,
             '_MOCK_REGISTRY'  : self._MOCK_REGISTRY,
             '_SHARED_REGISTRY': self._SHARED_REGISTRY,
             '_CONN_REGISTRY'  : self._CONN_REGISTRY,
         }
-      
-        self.module = self.import_with_context('%s.%s' % (module_path, file, ), context)
-        
-        self.decorated_tests: list[PartialObject] = []
-
-        self.collector: dict[TestFunctionName, Test] = dict()
-
-        self.file_name = self.module.__name__
-
-        self.shared_meta: Optional[MetaSharedVar] = None
-    
-    def __len__(self) -> TestCollectionSize:
-        return self.total_tests
-    
-    @cached_property
-    def module_name(self) -> str:
-        return self.module.__name__
-    
-    @cached_property
-    def bi_con(self) -> _ReverseWrapConnections:
-        return self.reverse_connections()
-
-    @property
-    def total_tests(self) -> TestCollectionSize:
-        return len(self.decorated_tests)
-
-    def import_with_context(self, module_name: str, context: GlobalRegistry) -> ModuleType:
-
-        spec = importlib.util.find_spec(module_name)
-        # @coverage
-        if spec is None:
-            raise RuntimeError('Cannot find module named %s' % (module_name, ))
-        if spec.loader is None:
-            raise RuntimeError('Cannot load module named %s' % (module_name, ))
-        
-        module = importlib.util.module_from_spec(spec)
-
         module.__dict__.update(context)
 
-        self.shared_meta = module.__dict__.get(MetaSharedVar.extract_meta_id()) # XXX
-        spec.loader.exec_module(module)        
+    def _import(self) -> None:
+        spec, module = self.get_module_loader(self.dot_python_path)
+        
+        self.update_globals(module)
+        
+        self.module = module
 
-        return module
-    
+        if spec.loader is None:
+            raise RuntimeError('Cannot load module named %s' % (self.dot_python_path, ))
+        spec.loader.exec_module(module)
+
+    def reset_shared_meta(self) -> None:
+        self.shared_meta.reset()
+
+    def raise_for_globals(self) -> None:
+        self.shared_meta.raise_for_globals()
+
     def reverse_connections(self) -> _ReverseWrapConnections:
         bi_con: _ReverseWrapConnections = {}
 
@@ -341,115 +360,6 @@ class TestCollection:
     def sort_tests_based_on_source(self) -> None:
         ...
     
-    def show_test_results_non_minimal(self) -> Errors:
-
-        failed_tests = 0
-
-        for idx, test_case in enumerate(self.collector.values(), start=1):
-            
-            print("[ %s / %s ]\n\tTEST\t—›  %s\n\t\t——› %s\n\n\n%s" 
-                  % (idx, 
-                     self.total_tests, 
-                     self.module_name,
-                     test_case.test_name, 
-                     str(test_case), ))
-
-
-            failed_tests += test_case.is_fail
-
-        return failed_tests
-
-    def show_test_results_minimal(self) -> Errors:
-
-        # Cap the progress bar.
-        bucket_size = 18
-
-        e_symbol = ('%s   %s' % (Color.WHITE.value, _RESET, ))
-        s_symbol = ('%s • %s' % (Color.RED.value, _RESET, ))
-        f_symbol = ('%s • %s' % (Color.GREEN.value, _RESET, ))
-
-        previous_progress: list[list[str]] = []
-        progress = ['[']+[e_symbol for _ in range(bucket_size)]+[']']
-
-        errors = 0
-        failed_tests, stacktraces = [], []
-
-
-        for idx, test_case in enumerate(self.collector.values()):
-            
-            bucket_idx = (idx)%bucket_size
-
-            if test_case.is_fail:
-
-                failed_tests.append(test_case.test_name)
-                stacktraces.append(test_case.fail_reasons)
-
-                progress[bucket_idx+1] = s_symbol
-
-            else:
-                progress[bucket_idx+1] = f_symbol
-
-
-            print(''.join(progress))
-            # sys.stdout.flush()
-
-            if idx != self.total_tests-1:
-
-                print(_LINE_UP, end=_LINE_CLEAR)
-            
-
-            if bucket_idx+1==bucket_size:
-
-                for _ in range(len(previous_progress)):
-                   
-                    print(_LINE_UP, end=_LINE_CLEAR)
-
-                previous_progress.append(progress)
-
-       
-                for _ in range(len(previous_progress)):
-                    print(''.join(previous_progress[_]))
-
-                progress = ['[']+[e_symbol for _ in range(bucket_size)]+[']']
-            
-        errors = len(failed_tests)
-
-        if self.verbosity == Verbosity.SUPER_MINIMAL:
-            return errors
-        
-        print('\nFinished running tests for < %s >\n' % (self.file_name, ))
-        print('Tests passed: [ %d / %d ]\n' 
-            % (self.total_tests - errors, self.total_tests, ))
-        
-        if not failed_tests:
-            print('...\n')
-            return errors
-        
-        if self.verbosity == Verbosity.MINIMAL_NO_STACK:
-
-            print('\nErrors:')
-
-            for failed_test in failed_tests:
-                print('\t—› %s' % (failed_test, ))
-
-            print('...\n')
-            return errors
-        
-        idx = 0
-        for test, traces in zip(failed_tests, stacktraces):
-            idx += 1
-            print('\nTEST\t—›  %s\n\t——› %s\n' % (self.module_name, test, ))
-
-            for trace in traces:
-
-                print(trace)
-
-                if idx != errors:
-                    print('%s ~~~ %s' % (Color.RED.value, _RESET, ))
-    
-        print('...\n')
-        return errors
-    
     @lru_cache
     def _pprint(mode: RunMode): # <<< !
         
@@ -489,9 +399,8 @@ class TestCollection:
         print('Running tests for < %s >\n' % (self.file_name, ))
 
         self.populate_tests()
-        if self.shared_meta:
-            # Disallow generation during runtime.
-            self.shared_meta.toggle()
+        # Disallow generation during runtime.
+        self.shared_meta.block()
 
     def __cleanup(self) -> Errors:
         if self.verbosity == Verbosity.SORT:
@@ -499,10 +408,10 @@ class TestCollection:
 
         match self.verbosity:
             case Verbosity.NORMAL | Verbosity.SORT:
-                errors = self.show_test_results_non_minimal()
+                errors = Printer.show_test_results_non_minimal(self)
 
             case Verbosity.MINIMAL | Verbosity.MINIMAL_NO_STACK | Verbosity.SUPER_MINIMAL:
-                errors = self.show_test_results_minimal()
+                errors = Printer.show_test_results_minimal(self)
         
         print()
     
@@ -515,4 +424,117 @@ class TestCollection:
     @_pprint(RunMode.ASYNC)
     async def arun_tests(self) -> Errors:
         await self.abox_tests()
-       
+
+
+class Printer:
+
+    @staticmethod
+    def show_test_results_non_minimal(collection: TestCollection) -> Errors:
+
+            failed_tests = 0
+
+            for idx, test_case in enumerate(collection.collector.values(), start=1):
+                
+                print("[ %s / %s ]\n\tTEST\t—›  %s\n\t\t——› %s\n\n\n%s" 
+                    % (idx, 
+                        collection.total_tests, 
+                        collection.module_name,
+                        test_case.test_name, 
+                        str(test_case), ))
+
+
+                failed_tests += test_case.is_fail
+
+            return failed_tests
+
+    @staticmethod
+    def show_test_results_minimal(collection: TestCollection) -> Errors:
+
+        # Cap the progress bar.
+        bucket_size = 18
+
+        e_symbol = ('%s   %s' % (Color.WHITE.value, _RESET, ))
+        s_symbol = ('%s • %s' % (Color.RED.value, _RESET, ))
+        f_symbol = ('%s • %s' % (Color.GREEN.value, _RESET, ))
+
+        previous_progress: list[list[str]] = []
+        progress = ['[']+[e_symbol for _ in range(bucket_size)]+[']']
+
+        errors = 0
+        failed_tests, stacktraces = [], []
+
+
+        for idx, test_case in enumerate(collection.collector.values()):
+            
+            bucket_idx = (idx)%bucket_size
+
+            if test_case.is_fail:
+
+                failed_tests.append(test_case.test_name)
+                stacktraces.append(test_case.fail_reasons)
+
+                progress[bucket_idx+1] = s_symbol
+
+            else:
+                progress[bucket_idx+1] = f_symbol
+
+
+            print(''.join(progress))
+            # sys.stdout.flush()
+
+            if idx != collection.total_tests-1:
+
+                print(_LINE_UP, end=_LINE_CLEAR)
+            
+
+            if bucket_idx+1==bucket_size:
+
+                for _ in range(len(previous_progress)):
+                    
+                    print(_LINE_UP, end=_LINE_CLEAR)
+
+                previous_progress.append(progress)
+
+        
+                for _ in range(len(previous_progress)):
+                    print(''.join(previous_progress[_]))
+
+                progress = ['[']+[e_symbol for _ in range(bucket_size)]+[']']
+            
+        errors = len(failed_tests)
+
+        if collection.verbosity == Verbosity.SUPER_MINIMAL:
+            return errors
+        
+        print('\nFinished running tests for < %s >\n' % (collection.file_name, ))
+        print('Tests passed: [ %d / %d ]\n' 
+            % (collection.total_tests - errors, collection.total_tests, ))
+        
+        if not failed_tests:
+            print('...\n')
+            return errors
+        
+        if collection.verbosity == Verbosity.MINIMAL_NO_STACK:
+
+            print('\nErrors:')
+
+            for failed_test in failed_tests:
+                print('\t—› %s' % (failed_test, ))
+
+            print('...\n')
+            return errors
+        
+        idx = 0
+        for test, traces in zip(failed_tests, stacktraces):
+            idx += 1
+            print('\nTEST\t—›  %s\n\t——› %s\n' % (collection.module_name, test, ))
+
+            for trace in traces:
+
+                print(trace)
+
+                if idx != errors:
+                    print('%s ~~~ %s' % (Color.RED.value, _RESET, ))
+
+        print('...\n')
+        return errors

@@ -174,12 +174,12 @@ class MetaSharedVar:
     def __init__(self, 
                  test_name: Optional[TestFunctionName] ='', 
                  _local_context: Optional[LocalSharedScope[SharedVar]] = None) -> None:
-        self._test_name = test_name
-        self._local_context = _local_context
-
         self._generating = True
         self._maybe_globals: list[SharedVar] = []
 
+        self._test_name = test_name
+        self._local_context = _local_context
+        
     def __getattr__(self, key: CellName) -> SharedVar | CellValue:
         if self._generating:
             _new = SharedVar(key)
@@ -197,16 +197,9 @@ class MetaSharedVar:
         with self.with_lock(key) as shard:
             shard.key.value = value
 
-    @staticmethod
-    def extract_meta_id() -> SharedMetaId:
-        return SHARED_ID
-    
-    @staticmethod
-    def extract_meta(_from: TestCallable) -> 'MetaSharedVar':
-        meta = _from.__globals__.get(MetaSharedVar.extract_meta_id())
-        if meta is None or not isinstance(meta, MetaSharedVar):
-            raise CouldNotFindMetaSharedVar(test_name=_from.__name__)
-        return meta
+    @classmethod
+    def get_meta_var(cls) -> 'MetaSharedVar':
+        return var
 
     @staticmethod
     def get_context_from_shards(shards: list[SharedVar]) -> LocalSharedScope[SharedVar]:
@@ -235,7 +228,7 @@ class MetaSharedVar:
         self._generating = True
         self._maybe_globals = []
 
-    def toggle(self) -> None:
+    def block(self) -> None:
         self._generating = False
 
     def update_local_context(self, 

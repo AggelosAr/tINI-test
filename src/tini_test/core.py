@@ -1,21 +1,22 @@
 import asyncio
 import traceback
 from functools import cached_property
+from itertools import repeat
 from time import perf_counter
 from typing import Optional
 
 from tini_test.enums import RunMode, Verbosity
-from tini_test.misc.annotations import (Errors, FileFailReason,
-                                        FileLoadFailures, FileName,
-                                        FullPythonPath, Successes, SuiteSize,
-                                        TestCollectionSize, TestFunctionName,
+from tini_test.misc.annotations import (DotPythonPath, Errors, FileFailReason,
+                                        FileLoadFailures, FileName, Successes,
+                                        SuiteSize, TestCollectionSize,
+                                        TestFunctionName,
                                         TimeTakenForSuiteInitialization,
                                         TimeTakenForTestDiscovery,
                                         TimeTakenToRunSuite)
 from tini_test.misc.exceptions import TestNotFound
 from tini_test.module_collector import ModuleCollector
+from tini_test.shared import MetaSharedVar
 from tini_test.test import TestCollection
-from itertools import repeat
 
 
 class TestSuite:
@@ -42,7 +43,7 @@ class TestSuite:
         self._file_load_failures = 0
         self._failed_to_collect_test_files: dict[FileName, FileFailReason] = {}
 
-        self.container: dict[FullPythonPath, TestCollection] = {}
+        self.container: dict[DotPythonPath, TestCollection] = {}
 
     @cached_property
     def searching_single_test(self) -> bool:
@@ -158,13 +159,13 @@ class TestSuite:
                             (
                                 len(__r := self.failed_to_collect_test_files_reasons),
                                 (
-                                    '\n\n\
-                                    %s\n\
-                                    %s\n\n' 
+                                    '\n\n'\
+                                    '%s\n'\
+                                    '%s\n\n' 
                                         % 
                                         (
-                                            repeat('~', 30), 
-                                            repeat('~', 30), 
+                                            ''.join(repeat('~', 40)), 
+                                            ''.join(repeat('~', 40)), 
                                         )
                                 ).join(
                                     '\t\t(%d). File: %s\n\n'\
@@ -183,54 +184,51 @@ class TestSuite:
 
         return '\n'.join(_r if self.file_load_failures else _r[:-2]) 
 
+    # XXX Async init of tests
     def initialize_tests(self, _from: ModuleCollector) -> None:
-        
         self.discovery_time = _from.discovery_time
 
         # Used to give fail reason while searching for a single test file
         single_test_file = None
-        # XXX
-        tests = None
+
+        shared_meta = MetaSharedVar.get_meta_var()
 
         for module_path, test_file in _from:
 
+            tests = TestCollection(verbosity=self.verbosity, 
+                                   module_path=module_path,
+                                   file=test_file,
+                                   shared_meta=shared_meta)
+            
             try:
-                # Runtime checks require the try except. 
-                # Maybe some AST parsing can solve this issue.
-                tests = TestCollection(verbosity=self.verbosity, 
-                                       module_path=module_path,
-                                       file=test_file)
+                tests._import()
+
                 collected_tests = tests.gather_tests(func_name=self.test_function)
 
-                if collected_tests and tests.shared_meta:
-                    try:
-                        tests.shared_meta.raise_for_globals()
-                    finally:
-                        tests.shared_meta.reset()
-                      
+                tests.raise_for_globals()
+                   
             except Exception as e:
-                if tests and tests.shared_meta:
-                    tests.shared_meta.reset()
-
                 self.file_load_failures = 1
                 tb = self.format_file_failure_traceback(traceback.format_exc())
                 self.failed_to_collect_test_files_reasons[test_file] = '%s\n%s' % (str(e), tb, )
                 single_test_file = test_file
                 continue
-               
-            if not collected_tests:
-                continue
-            
-            full_path = '%s.%s' % (module_path, test_file, )
+
+            finally:
+                tests.reset_shared_meta()
+
+                if not tests.has_tests:
+                    continue
+
 
             if self.searching_single_test:
 
                 if self.test_function in collected_tests:
 
-                    self.container[full_path] = tests
+                    self.container[tests.dot_python_path] = tests
                     break
             
-            self.container[full_path] = tests
+            self.container[tests.dot_python_path] = tests
 
 
         if self.searching_single_test and not self.container:
@@ -247,48 +245,36 @@ class TestSuite:
             raise TestNotFound(extra_msg=fail_reason)
 
     def run_suite(self) -> None:
-        
         for _, test_collection in self.container.items():
 
             current_errors = test_collection.run_tests()
-            assert isinstance(current_errors, int)
-        
-            self.suite_run_time = perf_counter()
 
+            self.suite_run_time = perf_counter()
             self.update_summary_stats(total_tests=test_collection.total_tests, new_errors=current_errors)
 
     async def _arun_suite(self) -> None:
-
         # @ XXX 1
         
-        # Gather all suites from all modules
         all_test_collections: list[TestCollection] = []
         for _, test_collection in self.container.items():
             all_test_collections.append(test_collection)
         
-        # Run all suites concurrently
         results = await asyncio.gather(
             *[test_collection.arun_tests() for test_collection in all_test_collections],
             return_exceptions=True
         )
-
         for test_collection, current_errors in zip(all_test_collections, results):
-
-            assert isinstance(current_errors, int)
-            
             self.update_summary_stats(total_tests=test_collection.total_tests, new_errors=current_errors)
 
     def runner(self) -> None:
-
         self._start = perf_counter()
-
+        
         match self.run_mode:
 
             case RunMode.SYNC:
                 self.run_suite()
 
             case RunMode.ASYNC:
-                
                 asyncio.run(self._arun_suite())
 
         self.suite_run_time = perf_counter()

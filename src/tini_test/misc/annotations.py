@@ -1,22 +1,28 @@
 from typing import (Any, Callable, Literal, NamedTuple, TypeAlias, TypedDict,
                     TypeVar)
 
+
+
+# -------------- PATHS --------------
+DirectoryPath: TypeAlias = str
+FileName: TypeAlias = str
+
+DotPythonPath: TypeAlias = str
+# -------------- PATHS --------------
+
+
+
+
 # -------------- GENERAL -------------- < UPDATE
 ColorValue: TypeAlias = str
 
-DirectoryPath: TypeAlias = str
-FileName: TypeAlias = str
-TestFunctionName: TypeAlias = str
 
-FileFailReason: TypeAlias = str
+TestFunctionName: TypeAlias = str
 
 
 MappedDirectoryToTestFiles: TypeAlias = dict[DirectoryPath, list[FileName]]
 
-FullPythonPath: TypeAlias = str
-
-
-
+FileFailReason: TypeAlias = str
 StackTrace: TypeAlias = str
 DiffMessage: TypeAlias = str
 
