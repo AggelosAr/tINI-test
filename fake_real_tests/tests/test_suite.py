@@ -7,6 +7,7 @@ import threading
 from contextlib import redirect_stdout
 from time import perf_counter
 
+from tini_test import Isolate, Test, must_equal
 from tini_test.__main__ import _tini_test
 from tini_test.context_managers import WillRaise, _ThreadLocalStdout
 from tini_test.core import TestSuite
@@ -14,8 +15,6 @@ from tini_test.enums import RunMode, Verbosity
 from tini_test.initializer import initialize_test_suite
 from tini_test.misc.exceptions import CantFindRelativePathToRoot, TestNotFound
 from tini_test.module_collector import ModuleCollector
-from tini_test.must_equals import must_equal
-from tini_test.test_utils import Test
 
 
 @Test.case
@@ -121,6 +120,7 @@ def crash_main() -> None:
 
 
 
+@Isolate
 @Test.case
 def test_suite_run_solved_failing_tests_for_coverage() -> None:
 
@@ -238,6 +238,7 @@ def test_suite_run_sync_normal() -> None:
 
 
 
+@Isolate
 @Test.case
 def test_suite_run_sync_minimal() -> None:
 

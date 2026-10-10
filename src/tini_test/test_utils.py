@@ -9,12 +9,12 @@ from tini_test.context_managers import (_thread_redirect_stdout, patch_mocks,
                                         patch_shared, with_lock)
 from tini_test.shared import SharedVar
 
-from .enums import TestStatus, Verbosity
-from .misc.annotations import (CleanupCallable, MockDefinitionWrappedHolder,
-                               MockWrappedObject, RealTest, SetupCallable,
-                               SharedDefinitionHolder, SharedWrappedObject,
-                               StackTrace, TestWrappedHolder,
-                               TestWrappedObject, _NoOp)
+from .enums import Plugs, TestStatus, Verbosity
+from .misc.annotations import (CleanupCallable, IsolateWrappedObject,
+                               MockDefinitionWrappedHolder, MockWrappedObject,
+                               RealTest, SetupCallable, SharedDefinitionHolder,
+                               SharedWrappedObject, StackTrace,
+                               TestWrappedHolder, TestWrappedObject, _NoOp)
 from .misc.exceptions import (ExpectedWasDifferentFromActual,
                               TestArgumentsShouldBeCallables)
 from .mock import MockDefinition
@@ -86,6 +86,13 @@ class TestStep:
 
 class Test:
 
+    @classmethod
+    def case(cls, *args, **kwargs):
+        return _XTest.case(*args, **kwargs)
+
+
+class _XTest:
+
     def __init__(self,
                  args,
                  /,
@@ -99,7 +106,8 @@ class Test:
                  cleanup: Optional[CleanupCallable] = None,
 
                  mocks: Optional[list[MockDefinition]] = None,
-                 shared_vars: Optional[list[SharedVar]] = None) -> None:
+                 shared_vars: Optional[list[SharedVar]] = None,
+                 isolate: Optional[bool] = None) -> None:
 
         self.verbosity = verbosity
 
@@ -112,6 +120,8 @@ class Test:
 
         self.mocks = mocks or []
         self.shared_vars = shared_vars or []
+
+        self.isolate = isolate or False
         
         self.steps = [
             TestStep(func=cleanup,
@@ -145,6 +155,8 @@ class Test:
                         | MockWrappedObject
                         | SharedWrappedObject
 
+                        | IsolateWrappedObject
+
                         | TestWrappedHolder
                         | MockDefinitionWrappedHolder
                         | SharedDefinitionHolder = None,
@@ -161,29 +173,31 @@ class Test:
      
 
             def _wrapper(*args           : Any,
+                         ____collector   : dict[str, _XTest], 
+                         ____verbosity   : Verbosity,
                          ____test_func   : Optional[RealTest] = test_func,
                          ____mocks       : Optional[list[MockDefinition]] = None,
                          ____shared_vars : Optional[list[SharedVar]] = None,
-                         ____collector   : dict[str, Test], 
-                         ____verbosity   : Verbosity,
+                         ____isolate     : Optional[bool] = False,
                          **kwargs        : Any) -> TestWrappedHolder:
 
                 assert ____test_func
                 
-                test_case = Test(_no_op,
-                                 verbosity=____verbosity,
-                                 test=____test_func,
-                                 test_args=args,
-                                 test_kwargs=kwargs,
-                                 setup=setup,
-                                 cleanup=cleanup,
-                                 mocks=____mocks or [],
-                                 shared_vars=____shared_vars or [])
+                test_case = _XTest(_no_op,
+                                   verbosity=____verbosity,
+                                   test=____test_func,
+                                   test_args=args,
+                                   test_kwargs=kwargs,
+                                   setup=setup,
+                                   cleanup=cleanup,
+                                   mocks=____mocks,
+                                   shared_vars=____shared_vars,
+                                   isolate=____isolate)
 
                 ____collector[____test_func.__name__ or test_func.__name__] = test_case
                 return _wrapper
             
-            _test_reg, _conn_reg = attach_state(test_func.__globals__, _wrapper.__globals__, mode='test')
+            _test_reg, _conn_reg = attach_state(test_func.__globals__, _wrapper.__globals__, mode=Plugs.TEST)
 
             if _conn_reg is None:
                 return _wrapper
@@ -227,7 +241,9 @@ class Test:
 
     @property
     def should_lock(self) -> bool:
-        return (len(self.mocks) + len(self.shared_vars)) > 0
+        has_mocks = len(self.mocks) > 0
+        has_shared_vars = len(self.shared_vars) > 0
+        return has_mocks or has_shared_vars or self.isolate
     
     @property
     def fail_state(self) -> TestStatus:

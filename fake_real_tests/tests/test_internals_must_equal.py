@@ -1,3 +1,4 @@
+from tini_test import Test, WillRaise
 from tini_test._internals._equals_engine import _must_equal
 from tini_test._internals._internal_exceptions._comparison_exceptions import (
     _BoolMismatchError, _DictionaryMismatchError, _DictionarySizeMismatchError,
@@ -5,8 +6,6 @@ from tini_test._internals._internal_exceptions._comparison_exceptions import (
     _ListSizeMismatchError, _MustEqualReceivedNotKnownTypes, _SetMismatchError,
     _SetSizeMismatchError, _StringMismatchError, _TupleMismatchError,
     _TupleSizeMismatchError, _TypeMismatchError)
-from tini_test.context_managers import WillRaise
-from tini_test.test_utils import Test
 
 x = 1
 ss = 1

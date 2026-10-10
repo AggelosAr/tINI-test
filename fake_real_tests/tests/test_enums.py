@@ -1,9 +1,7 @@
-from tini_test.context_managers import WillRaise
+from tini_test import Test, WillRaise, must_equal
 from tini_test.enums import RunMode, Verbosity
 from tini_test.misc.exceptions import (NotSupportedRunMode,
                                        NotSupportedVerbosity)
-from tini_test.must_equals import must_equal
-from tini_test.test import Test
 
 
 @Test.case

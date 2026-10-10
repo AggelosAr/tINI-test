@@ -1,13 +1,10 @@
 import os
 
+from tini_test import (Mock, NotInitialized, Shared, Test, WillRaise,
+                       must_equal, var)
 from tini_test._internals._broken import (delete_test_dir, get_temp_file,
                                           get_unique_folder_name, run_test)
-from tini_test.context_managers import WillRaise
 from tini_test.misc.exceptions import SharedVarDoesNotExistInThisContext
-from tini_test.mock import Mock
-from tini_test.must_equals import must_equal
-from tini_test.shared import NotInitialized, Shared, var
-from tini_test.test_utils import Test
 
 
 class MyNewClass:

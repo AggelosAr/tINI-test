@@ -1,7 +1,4 @@
-from typing import (Any, Callable, Literal, NamedTuple, TypeAlias, TypedDict,
-                    TypeVar)
-
-
+from typing import Any, Callable, Literal, NamedTuple, TypeAlias, TypeVar
 
 # -------------- PATHS --------------
 DirectoryPath: TypeAlias = str
@@ -79,9 +76,11 @@ PartialObject: TypeAlias = Callable[..., Any] # TODO update
 
 # -------------- DECORATED OBJECTS --------------
 # Input types
-TestWrappedObject   : TypeAlias = Callable[..., 'WrapperInput'] #!!!!!!!!!!!!!
-MockWrappedObject   : TypeAlias = Callable[..., 'WrapperInput'] #!!!!!!!!!!!!!
-SharedWrappedObject : TypeAlias = Callable[..., 'WrapperInput'] #!!!!!!!!!!!!!
+TestWrappedObject    : TypeAlias = Callable[..., 'WrapperInput'] #!!!!!!!!!!!!!
+MockWrappedObject    : TypeAlias = Callable[..., 'WrapperInput'] #!!!!!!!!!!!!!
+SharedWrappedObject  : TypeAlias = Callable[..., 'WrapperInput'] #!!!!!!!!!!!!!
+
+IsolateWrappedObject : TypeAlias = Callable[..., 'WrapperInput'] #!!!!!!!!!!!!!
 
 # DownStreamWrappedObject: ...
 # UpStreamWrappedObject: ...
@@ -93,6 +92,9 @@ WrapperInput: TypeAlias = (None
                            | TestWrappedObject 
                            | MockWrappedObject 
                            | SharedWrappedObject
+
+                           | IsolateWrappedObject
+
                            | 'MockDefinitionWrappedHolder'
                            | 'SharedDefinitionHolder')
 
@@ -121,26 +123,28 @@ type SharedDefinitionHolder[T] = T3[T] | T4
 # -------------- REGISTERS --------------
 HexStr = TypeVar('HexStr')
 
-TestId   : TypeAlias = HexStr
-MockId   : TypeAlias = HexStr
-SharedId : TypeAlias = HexStr
+TestId    : TypeAlias = HexStr
+MockId    : TypeAlias = HexStr
+SharedId  : TypeAlias = HexStr
+IsolateId : TypeAlias = HexStr
 
-RegisteredIds: TypeAlias = TestId | MockId | SharedId
+RegisteredIds: TypeAlias = TestId | MockId | SharedId | IsolateId
 
 T_REG: TypeAlias = dict[TestId, TestWrappedObject]
 M_REG: TypeAlias = dict[MockId, Callable[..., MockDefinitionWrappedHolder]]
 S_REG: TypeAlias = dict[SharedId, SharedWrappedObject]
 
+I_REG: TypeAlias = dict[IsolateId, IsolateWrappedObject]
+
 C_REG: TypeAlias = dict[RegisteredIds, RegisteredIds]
 
 
-# TODO add literals and replace the hardcodes since they are already broken on edge
-class GlobalRegistry(TypedDict):
-    _TEST_REGISTRY   : T_REG
-    _MOCK_REGISTRY   : M_REG
-    _SHARED_REGISTRY : S_REG
-    _CONN_REGISTRY   : C_REG
-    ...
+ConstRegId : TypeAlias = str
+GlobalRegistry: TypeAlias = dict[ConstRegId,  T_REG
+                                            | M_REG
+                                            | S_REG
+                                            | I_REG
+                                            | C_REG]
 
 SimpleGlobalRegistry: TypeAlias = dict[str, Any]
 

@@ -1,10 +1,7 @@
+from tini_test import Shared, Test, WillRaise, must_equal, var
 from tini_test._internals._broken import (delete_test_dir, get_temp_file,
                                           run_test)
-from tini_test.context_managers import WillRaise
 from tini_test.misc.exceptions import SharedVarDoesNotExistInThisContext
-from tini_test.must_equals import must_equal
-from tini_test.shared import Shared, var
-from tini_test.test_utils import Test
 
 
 @Test.case

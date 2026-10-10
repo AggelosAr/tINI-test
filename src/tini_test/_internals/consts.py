@@ -1,3 +1,4 @@
+import secrets
 
 _RESET = '\033[0m'                   # Reset line colours
 
@@ -30,3 +31,13 @@ SKIP_DIRS = {
 SHARED_ID = 'var'
 
 capture_flag = ('<frozen importlib._bootstrap>', '_call_with_frames_removed', )
+
+
+
+get_registry_key = lambda prefix: '%s_%s' % (prefix, secrets.token_hex(5))
+
+_T_REG = get_registry_key('_TEST_REGISTRY')
+_M_REG = get_registry_key('_MOCK_REGISTRY')
+_S_REG = get_registry_key('_SHARED_REGISTRY')
+_I_REG = get_registry_key('_ISOLATE_REGISTRY')
+_C_REG = get_registry_key('_CONNECTION_REGISTRY')

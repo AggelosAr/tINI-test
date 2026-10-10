@@ -4,16 +4,15 @@ from traceback import FrameSummary
 from typing import Any, Callable, Generator, Literal, Optional
 
 from tini_test._internals._registry import attach_state
-from tini_test._internals.consts import SHARED_ID
-from tini_test.misc.annotations import (CellName, CellValue, LocalSharedScope,
+from tini_test.enums import Plugs
+from tini_test.misc.annotations import (CellName, CellValue,
+                                        IsolateWrappedObject, LocalSharedScope,
                                         MockDefinitionWrappedHolder,
                                         MockWrappedObject, RealTest,
-                                        SharedDefinitionHolder, SharedMetaId,
-                                        SharedWrappedObject, TestCallable,
-                                        TestFunctionName, TestWrappedHolder,
-                                        TestWrappedObject)
-from tini_test.misc.exceptions import (CouldNotFindMetaSharedVar,
-                                       GlobalSharedVarsAreNotSupported,
+                                        SharedDefinitionHolder,
+                                        SharedWrappedObject, TestFunctionName,
+                                        TestWrappedHolder, TestWrappedObject)
+from tini_test.misc.exceptions import (GlobalSharedVarsAreNotSupported,
                                        SharedAcceptedInvalidArguments,
                                        SharedOnlyAcceptsArguments,
                                        SharedVarDoesNotExistInThisContext)
@@ -103,7 +102,7 @@ class SharedVar:
 
 
 class Shared:
-
+    
     def __new__(cls, *args: tuple[Any], **kwargs: Any):
 
         if kwargs:
@@ -126,6 +125,8 @@ class _XShared:
                      | MockWrappedObject
                      | SharedWrappedObject
 
+                     | IsolateWrappedObject
+                     
                      | TestWrappedHolder
                      | MockDefinitionWrappedHolder
                      | SharedDefinitionHolder = None,
@@ -145,7 +146,7 @@ class _XShared:
 
                 return (func, ) if not _vars else (func, _vars, )
             
-            _shared_reg, _conn_reg = attach_state(func.__globals__, _wrapper.__globals__, mode='shared')
+            _shared_reg, _conn_reg = attach_state(func.__globals__, _wrapper.__globals__, mode=Plugs.SHARED)
             
             if _conn_reg is None:
                 return wrapper

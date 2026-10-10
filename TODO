@@ -16,11 +16,7 @@ And are rejected.***
 
 
 Remove the insanity with subprocess or merge coverage.
-
 single file fail.....
-
-
-
 
 
 
@@ -41,14 +37,12 @@ Clean consts
 
 
 
-# XXX 3 
-Add isolate decorator
-
-
-
 # TODO add test where file fails to load and fail to reset meta 
 
 
 
 fail some to format errors
 
+
+
+add path to failures 

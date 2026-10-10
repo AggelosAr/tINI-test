@@ -1,9 +1,8 @@
 import os
 
+from tini_test import Test, must_equal
 from tini_test._internals._broken import (delete_test_dir, get_temp_file,
                                           get_unique_folder_name, run_test)
-from tini_test.must_equals import must_equal
-from tini_test.test_utils import Test
 
 
 @Test.case

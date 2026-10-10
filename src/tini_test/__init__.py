@@ -1,7 +1,9 @@
+from ._internals._isolate import Isolate
 from .context_managers import WillRaise
 from .misc.exceptions import ExpectedWasDifferentFromActual
 from .mock import Mock
 from .must_equals import must_equal
+from .shared import NotInitialized, Shared, var
 from .test_utils import Test
 
 __all__ = [
@@ -9,5 +11,9 @@ __all__ = [
     'WillRaise',
     'must_equal',
     'ExpectedWasDifferentFromActual',
-    'Mock'
+    'Mock',
+    'Shared',
+    'NotInitialized',
+    'var',
+    'Isolate'
 ]

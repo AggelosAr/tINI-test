@@ -1,5 +1,4 @@
-from tini_test.must_equals import must_equal
-from tini_test.test_utils import Test
+from tini_test import Test, must_equal
 
 
 @Test.case

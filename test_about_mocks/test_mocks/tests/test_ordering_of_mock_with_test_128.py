@@ -1,5 +1,4 @@
-from tini_test.mock import Mock
-from tini_test.test_utils import Test
+from tini_test import Mock, Test
 
 
 @Test.case

@@ -1,6 +1,4 @@
-from tini_test.mock import Mock
-from tini_test.must_equals import must_equal
-from tini_test.test_utils import Test
+from tini_test import Mock, Test, must_equal
 
 
 def func_d(arg1, arg2, k_val_1=None, k_val_2=None):

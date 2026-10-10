@@ -1,8 +1,5 @@
-
 from test_about_mocks.test_mocks.tests.test_imports import add_args_function
-from tini_test.mock import Mock
-from tini_test.must_equals import must_equal
-from tini_test.test_utils import Test
+from tini_test import Mock, Test, must_equal
 
 
 @Test.case

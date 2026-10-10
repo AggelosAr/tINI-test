@@ -1,8 +1,5 @@
-from tini_test.context_managers import WillRaise
+from tini_test import NotInitialized, Shared, Test, WillRaise, must_equal, var
 from tini_test.misc.exceptions import SharedVarDoesNotExistInThisContext
-from tini_test.must_equals import must_equal
-from tini_test.shared import NotInitialized, Shared, var
-from tini_test.test_utils import Test
 
 
 def simple_function(use):

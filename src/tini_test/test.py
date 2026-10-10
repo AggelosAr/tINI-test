@@ -6,16 +6,16 @@ from importlib.machinery import ModuleSpec
 from types import FunctionType, ModuleType
 from typing import Callable, Optional, no_type_check
 
-from tini_test._internals.consts import _LINE_CLEAR, _LINE_UP, _RESET
+from tini_test._internals.consts import (_C_REG, _I_REG, _LINE_CLEAR, _LINE_UP,
+                                         _M_REG, _RESET, _S_REG, _T_REG)
 from tini_test.enums import Color, RunMode, Verbosity
-from tini_test.misc.annotations import (C_REG, M_REG, S_REG, T_REG,
+from tini_test.misc.annotations import (C_REG, I_REG, M_REG, S_REG, T_REG,
                                         DirectoryPath, DotPythonPath, Errors,
                                         FileName, GlobalRegistry, MockId,
-                                        MockWrappedObject, PartialObject,
-                                        SharedId, TestCollectionSize,
-                                        TestFunctionName, TestId,
-                                        TestWrappedObject,
-                                        _ReverseWrapConnections)
+                                        PartialObject, SharedId,
+                                        TestCollectionSize, TestFunctionName,
+                                        TestId, TestWrappedObject,
+                                        WrapperInput, _ReverseWrapConnections)
 from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
                                        MockWasUsedOnWithoutTestDecorator,
                                        SharedVarAlreadyDefined,
@@ -23,7 +23,7 @@ from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
                                        TestDecoratorUsedMoreThanOnce)
 from tini_test.mock import MockDefinition
 from tini_test.shared import MetaSharedVar, SharedVar
-from tini_test.test_utils import Test
+from tini_test.test_utils import _XTest
 
 
 class TestCollection:
@@ -39,15 +39,16 @@ class TestCollection:
         self.file_name = file
         self.shared_meta = shared_meta
         
-        self._TEST_REGISTRY   : T_REG = {}
-        self._MOCK_REGISTRY   : M_REG = {}
-        self._SHARED_REGISTRY : S_REG = {}
-        self._CONN_REGISTRY   : C_REG = {}
+        self.TEST_REGISTRY       : T_REG = {}
+        self.MOCK_REGISTRY       : M_REG = {}
+        self.SHARED_REGISTRY     : S_REG = {}
+        self.ISOLATE_REGISTRY    : I_REG = {}
+        self.CONNECTION_REGISTRY : C_REG = {}
 
         self.module: Optional[ModuleType] = None
         
         self.decorated_tests: list[PartialObject] = []
-        self.collector: dict[TestFunctionName, Test] = dict()
+        self.collector: dict[TestFunctionName, _XTest] = dict()
 
     def __len__(self) -> TestCollectionSize:
         return self.total_tests
@@ -84,10 +85,11 @@ class TestCollection:
 
     def update_globals(self, module: ModuleType) -> None:
         context: GlobalRegistry = {
-            '_TEST_REGISTRY'  : self._TEST_REGISTRY,
-            '_MOCK_REGISTRY'  : self._MOCK_REGISTRY,
-            '_SHARED_REGISTRY': self._SHARED_REGISTRY,
-            '_CONN_REGISTRY'  : self._CONN_REGISTRY,
+            _T_REG : self.TEST_REGISTRY,
+            _M_REG : self.MOCK_REGISTRY,
+            _S_REG : self.SHARED_REGISTRY,
+            _I_REG : self.ISOLATE_REGISTRY,
+            _C_REG : self.CONNECTION_REGISTRY,
         }
         module.__dict__.update(context)
 
@@ -111,7 +113,7 @@ class TestCollection:
     def reverse_connections(self) -> _ReverseWrapConnections:
         bi_con: _ReverseWrapConnections = {}
 
-        for k, v in self._CONN_REGISTRY.items():
+        for k, v in self.CONNECTION_REGISTRY.items():
 
             if k not in bi_con:
                 bi_con[k] = set()
@@ -122,7 +124,24 @@ class TestCollection:
             bi_con[v].add(k)
 
         return bi_con
+    
+    def wrap_is_test(self, _func: WrapperInput) -> bool:
+        return (
+            hex(id(_func)) in self.bi_con
+            and '_XMock.mock' not in repr(_func)
+            and '_XTest.test' not in repr(_func)
+            and '_XShared.shared' not in repr(_func)
+            and '_XIsolate.isolate' not in repr(_func)
+        )
 
+    def wrap_is_wrap(self, _func_repr: str) -> bool:
+        return (
+               '_XMock.mock' in _func_repr
+            or '_XTest.test' in _func_repr
+            or '_XShared.shared' in _func_repr
+            or '_XIsolate.isolate' in _func_repr
+        )
+            
     # XXX
     # remove magic strings.
     # General case. We currently stop collecting on the first error. Should we continue?
@@ -130,9 +149,7 @@ class TestCollection:
     def parse_wraps(self, _obj_id: TestId | MockId | SharedId) -> tuple[TestFunctionName, TestWrappedObject]:
 
         test_wrap: TestWrappedObject
-        test_func: Optional[FunctionType
-                            |TestWrappedObject
-                            |MockWrappedObject] = None # ?
+        test_func: Optional[WrapperInput] = None # ?
         registered_tests = 0
 
         mocks: list[MockDefinition] = []
@@ -143,9 +160,14 @@ class TestCollection:
         unique_shared_vars: set[str] = set()
         found_shared_vars = 0
 
+        isolates = 0
+
         # In case of any error we still need to unwrap to get the test name...
-        aborted: list[Callable[[TestFunctionName], DuplicateMockRegisteredOnTest] 
-                      | Callable[[TestFunctionName], SharedVarAlreadyDefined]] = [] 
+        aborted: list[Callable[[TestFunctionName], 
+                               DuplicateMockRegisteredOnTest] 
+                      | Callable[[TestFunctionName], 
+                                 SharedVarAlreadyDefined]
+                      ] = [] 
 
         visited = set()
         q = deque([_obj_id])
@@ -162,26 +184,30 @@ class TestCollection:
             if _next := self.bi_con.get(current_id):
                 q.extend(_next)
             
-            if current_id in self._TEST_REGISTRY:
-                test_wrap = self._TEST_REGISTRY[current_id]
+            if current_id in self.TEST_REGISTRY:
+                test_wrap = self.TEST_REGISTRY[current_id]
                 registered_tests += 1
 
             else:
                 if aborted:
                     continue
 
-            if current_id in self._MOCK_REGISTRY:
-                mock_wrap = self._MOCK_REGISTRY[current_id]
+
+            if current_id in self.ISOLATE_REGISTRY:
+                isolate_wrap = self.ISOLATE_REGISTRY[current_id]
+                _test_func = isolate_wrap()
+                isolates += 1
+
+                if self.wrap_is_test(_test_func):
+                    test_func = _test_func
+
+            if current_id in self.MOCK_REGISTRY:
+                mock_wrap = self.MOCK_REGISTRY[current_id]
                 found_mocks += 1
 
                 [_test_func, *_definition] = mock_wrap()
 
-                if (
-                    hex(id(_test_func)) in self.bi_con
-                    and 'Mock.mock' not in repr(_test_func)
-                    and 'Test.test' not in repr(_test_func)
-                    and '_XShared.shared' not in repr(_test_func)
-                ):
+                if self.wrap_is_test(_test_func):
                     test_func = _test_func
 
                 if _definition:
@@ -201,18 +227,13 @@ class TestCollection:
                     unique_mocks.add(definition.mock.__name__)
                     mocks.append(definition)
 
-            if current_id in self._SHARED_REGISTRY:
-                shared_wrap = self._SHARED_REGISTRY[current_id]
+            if current_id in self.SHARED_REGISTRY:
+                shared_wrap = self.SHARED_REGISTRY[current_id]
                 found_shared_vars += 1
 
                 [_test_func, *_shared_holder] = shared_wrap()
 
-                if (
-                    hex(id(_test_func)) in self.bi_con
-                    and 'Mock.mock' not in repr(_test_func)
-                    and 'Test.test' not in repr(_test_func)
-                    and '_XShared.shared' not in repr(_test_func)
-                ):
+                if self.wrap_is_test(_test_func):
                     test_func = _test_func
 
                 if _shared_holder:
@@ -248,7 +269,7 @@ class TestCollection:
 
         no_mocks = not mocks and not found_mocks
         no_shared_vars = not shared_vars and not found_shared_vars
-        is_alone = no_mocks and no_shared_vars
+        is_alone = no_mocks and no_shared_vars and isolates == 0
 
         if registered_tests > 1 and is_alone:
             _t = test_func or str(test_wrap.__closure__[-1].cell_contents.__name__)
@@ -262,24 +283,22 @@ class TestCollection:
 
         if registered_tests > 1 and not is_alone:
             raise TestDecoratorUsedMoreThanOnce(_registered_test)
-                
-        if ('Mock.mock' in repr(_registered_test) 
-            or 'Test.test' in repr(_registered_test)
-            or '_XShared.shared' in repr(_registered_test)):
 
+
+        if self.wrap_is_wrap(repr(_registered_test)):
+
+            _id = hex(id(_registered_test))
             # There is the case where the last closure is the actual test pre-condition.
             # In that case we must also attach it.
-            if hex(id(_registered_test)) in self._MOCK_REGISTRY:
-                test_wrap = partial(test_wrap,  
-                                    _Test____test_func=test_func)
+            if (_id in self.MOCK_REGISTRY 
+                or _id in self.SHARED_REGISTRY 
+                or _id in self.ISOLATE_REGISTRY):
+
+                test_wrap = partial(test_wrap, _XTest____test_func=test_func)
                 test_name = test_func.__name__
-            elif hex(id(_registered_test)) in self._SHARED_REGISTRY:
-                test_wrap = partial(test_wrap,  
-                                    _Test____test_func=test_func)
-                test_name = test_func.__name__
+           
             else:
                 test_wrap.__closure__[-1].cell_contents.__code__ = test_func.__code__
-                
                 test_name = str(test_wrap.__closure__[-1].cell_contents.__name__)
      
         else:
@@ -290,9 +309,8 @@ class TestCollection:
                 ...
             else:
 
+                test_wrap = partial(test_wrap, _XTest____test_func=test_func)
                 test_name = test_func.__name__
-                test_wrap = partial(test_wrap,  
-                                    _Test____test_func=test_func)
 
 
         if aborted:
@@ -301,11 +319,15 @@ class TestCollection:
         for shared_var in shared_vars:
             SharedVar.add_scope(shared_var, test_name)
         
-        # Also attach the mocks and the shared variables
-        test_wrap = partial(test_wrap, 
-                            _Test____mocks=mocks,
-                            _Test____shared_vars=shared_vars)
+        if mocks:
+            test_wrap = partial(test_wrap, _XTest____mocks=mocks)
 
+        if shared_vars:
+            test_wrap = partial(test_wrap, _XTest____shared_vars=shared_vars)
+
+        if isolates:
+            test_wrap = partial(test_wrap, _XTest____isolate=True)
+      
         return test_name, test_wrap
 
 
@@ -325,9 +347,10 @@ class TestCollection:
 
             _id = hex(id(g_obj))
             
-            if not (  (_id in self._TEST_REGISTRY) 
-                    ^ (_id in self._MOCK_REGISTRY) 
-                    ^ (_id in self._SHARED_REGISTRY)):
+            if not (  (_id in self.TEST_REGISTRY) 
+                    ^ (_id in self.MOCK_REGISTRY) 
+                    ^ (_id in self.SHARED_REGISTRY)
+                    ^ (_id in self.ISOLATE_REGISTRY)):
                 continue
 
             test_name, t_obj = self.parse_wraps(_obj_id=_id)
@@ -336,8 +359,8 @@ class TestCollection:
                 continue
 
             test_obj = partial(t_obj,
-                               _Test____collector=self.collector,
-                               _Test____verbosity=self.verbosity)
+                               _XTest____collector=self.collector,
+                               _XTest____verbosity=self.verbosity)
             
             test_names.append(test_name)
             self.decorated_tests.append(test_obj)

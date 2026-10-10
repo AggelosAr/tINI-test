@@ -145,6 +145,13 @@ class MockMode(Enum):
     PATCH_RETURN = 'PATCH_RETURN'
     
 
+class Plugs(Enum):
+    TEST = 'TEST'
+    MOCK = 'MOCK'
+    SHARED = 'SHARED'
+    ISOLATE = 'ISOLATE'
+
+
 CONFIG: Mapping[TestStatus, ColorValue] = {
     TestStatus.SUCCESS: Color.GREEN.value,
     TestStatus.FAIL: Color.RED.value,

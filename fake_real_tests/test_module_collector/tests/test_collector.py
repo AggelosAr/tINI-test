@@ -1,10 +1,8 @@
-from tini_test.context_managers import WillRaise
+from tini_test import Isolate, Test, WillRaise, must_equal
 from tini_test.enums import RunMode, Verbosity
 from tini_test.initializer import initialize_test_suite
 from tini_test.misc.exceptions import CantFindRelativePathToRoot, TestNotFound
 from tini_test.module_collector import ModuleCollector
-from tini_test.must_equals import must_equal
-from tini_test.test_utils import Test
 
 
 @Test.case
@@ -13,9 +11,9 @@ def test_collector_collects_all() -> None:
     test_collector.walk_and_collect_test_files(root=test_collector.root)
     test_collector.normalize_collected_data()
 
-    # print('------------------------------------------------')
-    # print(dict(test_collector.test_modules.items()))
-    # print('------------------------------------------------')
+    print('------------------------------------------------')
+    print(dict(test_collector.test_modules.items()))
+    print('------------------------------------------------')
 
     correct_items = {'fake_real_tests.test_must_equals.tests': ['test_must_equal_lists', 
                                                                   'test_must_equal_dicts',
@@ -251,6 +249,7 @@ def test_test_module_will_not_collect_a_single_function_if_it_doesnt_exist() -> 
 
 
 
+@Isolate
 @Test.case
 def test_test_module_will_collect_a_single_function() -> None:
     
@@ -272,6 +271,7 @@ def test_test_module_will_collect_a_single_function() -> None:
 
 
 
+@Isolate
 @Test.case
 def test_test_module_will_collect_this_function() -> None:
 

@@ -1,10 +1,7 @@
 from test_about_mocks.test_mocks.tests.test_imports import (add_args_function,
                                                             f1, f2)
-from tini_test.context_managers import WillRaise
+from tini_test import Mock, Test, WillRaise, must_equal
 from tini_test.misc.exceptions import ExpectedWasDifferentFromActual
-from tini_test.mock import Mock
-from tini_test.must_equals import must_equal
-from tini_test.test import Test
 
 
 @Mock.mock

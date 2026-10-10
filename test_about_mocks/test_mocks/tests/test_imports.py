@@ -1,9 +1,7 @@
 from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import \
     func_c
 from test_about_mocks.test_mocks.tests.import_a.m_a import func_a
-from tini_test.mock import Mock
-from tini_test.must_equals import must_equal
-from tini_test.test_utils import Test
+from tini_test import Mock, Test, must_equal
 
 
 def add_args_function(*args, k_val_1: int = 0, k_val_2: int = 0) -> int:

@@ -45,6 +45,8 @@ class TestSuite:
 
         self.container: dict[DotPythonPath, TestCollection] = {}
 
+        self.errored_files = []
+
     @cached_property
     def searching_single_test(self) -> bool:
         return self.test_function is not None
@@ -137,6 +139,7 @@ class TestSuite:
 
     def pprint(self) -> None:
         print(self.get_summary())
+        print('Errored files: ', self.errored_files)
 
     def get_summary(self) -> str:
         _r = [
@@ -238,6 +241,7 @@ class TestSuite:
             # Also there is a case there is a failure in another file 
             # while collecting, as a result we also show the other failures
             # Is this possible to improve the fail reason further? (probably)
+            # THIS IS WRONG
             fail_reason = ''
             if single_test_file:
                 fail_reason = self.failed_to_collect_test_files_reasons[single_test_file]
@@ -264,6 +268,8 @@ class TestSuite:
             return_exceptions=True
         )
         for test_collection, current_errors in zip(all_test_collections, results):
+            if current_errors:
+                self.errored_files.append(test_collection.dot_python_path)
             self.update_summary_stats(total_tests=test_collection.total_tests, new_errors=current_errors)
 
     def runner(self) -> None:

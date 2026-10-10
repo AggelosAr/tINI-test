@@ -5,8 +5,9 @@ from collections import deque
 from typing import Any, Callable, Optional
 
 from tini_test._internals._registry import attach_state
-from tini_test.enums import MockMode
-from tini_test.misc.annotations import (MockDefinitionWrappedHolder,
+from tini_test.enums import MockMode, Plugs
+from tini_test.misc.annotations import (IsolateWrappedObject,
+                                        MockDefinitionWrappedHolder,
                                         MockedFunction, MockWrappedObject,
                                         ProxyItem, RealTest,
                                         SharedDefinitionHolder,
@@ -226,7 +227,15 @@ class MockDefinition:
         self._compile_mock(new_spec)
 
 
+
 class Mock:
+
+    @classmethod
+    def mock(cls, *args, **kwargs):
+        return _XMock.mock(*args, **kwargs)
+
+    
+class _XMock:
     """
     The function to mock can be passed positionally or as the `mock` keyword.
     Args and Kwargs for the mock definition.
@@ -244,6 +253,8 @@ class Mock:
                    | MockWrappedObject
                    | SharedWrappedObject
 
+                   | IsolateWrappedObject
+                   
                    | TestWrappedHolder
                    | MockDefinitionWrappedHolder
                    | SharedDefinitionHolder = None,
@@ -284,7 +295,7 @@ class Mock:
             if (func is None or not MockDefinition.arg_exists(mock)) and not is_empty:
                 raise MockMissingFunctionError()
             
-            _mock_reg, _conn_reg = attach_state(func.__globals__, _wrapper.__globals__, mode='mock')
+            _mock_reg, _conn_reg = attach_state(func.__globals__, _wrapper.__globals__, mode=Plugs.MOCK)
 
             if _conn_reg is None:
                 return wrapper

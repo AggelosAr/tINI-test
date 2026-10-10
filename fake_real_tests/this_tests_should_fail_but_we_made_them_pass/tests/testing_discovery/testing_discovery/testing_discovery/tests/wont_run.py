@@ -1,4 +1,4 @@
-from tini_test.test import Test
+from tini_test import Test
 
 
 @Test.case
