@@ -15,6 +15,7 @@ from tini_test.misc.annotations import (Errors, FileFailReason,
 from tini_test.misc.exceptions import TestNotFound
 from tini_test.module_collector import ModuleCollector
 from tini_test.test import TestCollection
+from itertools import repeat
 
 
 class TestSuite:
@@ -137,7 +138,6 @@ class TestSuite:
         print(self.get_summary())
 
     def get_summary(self) -> str:
-        # TODO @verbocity normals add error sources e.g. what files they occured in?
         _r = [
             '\n'
                 ' ------------------------------------------',
@@ -154,17 +154,30 @@ class TestSuite:
                     '\n',
                     '\n',
                         'Test files failed to load (%d):\n\n%s'
-                            % (
-                                # TODO move to a separate method for better readability!
-                                len(self.failed_to_collect_test_files_reasons),
-                                ('\n\n%s\n%s\n\n' % ('~'*30, '~'*30, )).join(
-                                    '\t\t(%d). File: %s\n\n\t\t\tReason: %s' 
+                            % 
+                            (
+                                len(__r := self.failed_to_collect_test_files_reasons),
+                                (
+                                    '\n\n\
+                                    %s\n\
+                                    %s\n\n' 
                                         % 
-                                        (idx, file, reason, )
+                                        (
+                                            repeat('~', 30), 
+                                            repeat('~', 30), 
+                                        )
+                                ).join(
+                                    '\t\t(%d). File: %s\n\n'\
+                                    '\t\t\tReason: %s' 
+                                        % 
+                                        (
+                                            idx, 
+                                            file, 
+                                            reason, 
+                                        )
                                         for idx, (file, reason) in 
-                                        enumerate(self.failed_to_collect_test_files_reasons.items(),
-                                                  start=1)
-                                ),
+                                        enumerate(__r.items(), start=1)
+                                    ),
                             ),
         ]
 
@@ -198,7 +211,7 @@ class TestSuite:
             except Exception as e:
                 if tests and tests.shared_meta:
                     tests.shared_meta.reset()
-                    
+
                 self.file_load_failures = 1
                 tb = self.format_file_failure_traceback(traceback.format_exc())
                 self.failed_to_collect_test_files_reasons[test_file] = '%s\n%s' % (str(e), tb, )
