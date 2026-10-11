@@ -239,6 +239,7 @@ def test_collector_will_not_find_anything_if_nonexisting_file_is_requested() -> 
 
 
 
+@Isolate
 @Test.case
 def test_test_module_will_not_collect_a_single_function_if_it_doesnt_exist() -> None:
     with WillRaise(TestNotFound):

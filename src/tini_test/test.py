@@ -164,10 +164,7 @@ class TestCollection:
 
         # In case of any error we still need to unwrap to get the test name...
         aborted: list[Callable[[TestFunctionName], 
-                               DuplicateMockRegisteredOnTest] 
-                      | Callable[[TestFunctionName], 
-                                 SharedVarAlreadyDefined]
-                      ] = [] 
+                               DuplicateMockRegisteredOnTest | SharedVarAlreadyDefined]] = [] 
 
         visited = set()
         q = deque([_obj_id])

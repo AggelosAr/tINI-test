@@ -45,7 +45,7 @@ class TestSuite:
 
         self.container: dict[DotPythonPath, TestCollection] = {}
 
-        self.errored_files = []
+        # self.errored_files = []
 
     @cached_property
     def searching_single_test(self) -> bool:
@@ -268,8 +268,8 @@ class TestSuite:
             return_exceptions=True
         )
         for test_collection, current_errors in zip(all_test_collections, results):
-            if current_errors:
-                self.errored_files.append(test_collection.dot_python_path)
+            # if current_errors:
+            #     self.errored_files.append(test_collection.dot_python_path)
             self.update_summary_stats(total_tests=test_collection.total_tests, new_errors=current_errors)
 
     def runner(self) -> None:

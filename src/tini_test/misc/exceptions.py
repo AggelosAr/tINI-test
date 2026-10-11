@@ -113,11 +113,14 @@ class TestDecoratorUsedMoreThanOnce(Exception):
 
 class MockWasUsedOnWithoutTestDecorator(Exception):
 
-    def __init__(self, test: Optional[FunctionType] = None) -> None:
+    def __init__(self, test: Optional[FunctionType | TestFunctionName] = None) -> None:
         if not test:
             test_name = '<unknown>'
         else:
-            test_name = test.__name__
+            if isinstance(test, str):
+                test_name = test
+            else:
+                test_name = test.__name__
         reason = 'Missing test decorator for function decorated with mock function < %s >' % (test_name, )
         super().__init__(reason)
 
