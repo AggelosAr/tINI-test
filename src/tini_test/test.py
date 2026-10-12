@@ -9,10 +9,10 @@ from typing import Callable, Optional, no_type_check
 from tini_test._internals.consts import (_C_REG, _I_REG, _LINE_CLEAR, _LINE_UP,
                                          _M_REG, _RESET, _S_REG, _T_REG)
 from tini_test.enums import Color, RunMode, Verbosity
-from tini_test.misc.annotations import (C_REG, I_REG, M_REG, S_REG, T_REG,
-                                        DirectoryPath, DotPythonPath, Errors,
-                                        FileName, GlobalRegistry, MockId,
-                                        PartialObject, SharedId,
+from tini_test.misc.annotations import (C_Reg, DirectoryPath, DotPythonPath,
+                                        Errors, FileName, GlobalRegistry,
+                                        I_Reg, M_Reg, MockId, PartialObject,
+                                        S_Reg, SharedId, T_Reg,
                                         TestCollectionSize, TestFunctionName,
                                         TestId, TestWrappedObject,
                                         WrapperInput, _ReverseWrapConnections)
@@ -39,11 +39,11 @@ class TestCollection:
         self.file_name = file
         self.shared_meta = shared_meta
         
-        self.TEST_REGISTRY       : T_REG = {}
-        self.MOCK_REGISTRY       : M_REG = {}
-        self.SHARED_REGISTRY     : S_REG = {}
-        self.ISOLATE_REGISTRY    : I_REG = {}
-        self.CONNECTION_REGISTRY : C_REG = {}
+        self.TEST_REGISTRY       : T_Reg = {}
+        self.MOCK_REGISTRY       : M_Reg = {}
+        self.SHARED_REGISTRY     : S_Reg = {}
+        self.ISOLATE_REGISTRY    : I_Reg = {}
+        self.CONNECTION_REGISTRY : C_Reg = {}
 
         self.module: Optional[ModuleType] = None
         

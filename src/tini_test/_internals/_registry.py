@@ -1,25 +1,47 @@
+from typing import Literal, overload
+
 from tini_test._internals.consts import _C_REG, _I_REG, _M_REG, _S_REG, _T_REG
 from tini_test.enums import Plugs
-from tini_test.misc.annotations import (C_REG, I_REG, M_REG, S_REG, T_REG,
-                                        GlobalRegistry, SimpleGlobalRegistry)
+from tini_test.misc.annotations import (C_Reg, GlobalRegistry, I_Reg, M_Reg,
+                                        S_Reg, SimpleGlobalRegistry, T_Reg)
 
 
-def attach_state(source_obj: GlobalRegistry, 
+@overload
+def attach_state(source_obj: GlobalRegistry,
                  target_obj: SimpleGlobalRegistry | GlobalRegistry,
                  /,
                  *,
-                 mode: Plugs) -> tuple[T_REG 
-                                       | M_REG 
-                                       | S_REG 
-                                       | I_REG, C_REG]:
+                 mode: Literal[Plugs.TEST]) -> tuple[T_Reg | None, C_Reg | None]: ...
+@overload
+def attach_state(source_obj: GlobalRegistry,
+                 target_obj: SimpleGlobalRegistry | GlobalRegistry,
+                 /,
+                 *,
+                 mode: Literal[Plugs.MOCK]) -> tuple[M_Reg | None, C_Reg | None]: ...
+@overload
+def attach_state(source_obj: GlobalRegistry,
+                 target_obj: SimpleGlobalRegistry | GlobalRegistry,
+                 /,
+                 *,
+                 mode: Literal[Plugs.SHARED]) -> tuple[S_Reg | None, C_Reg | None]: ...
+@overload
+def attach_state(source_obj: GlobalRegistry,
+                 target_obj: SimpleGlobalRegistry | GlobalRegistry,
+                 /,
+                 *,
+                 mode: Literal[Plugs.ISOLATE]) -> tuple[I_Reg | None, C_Reg | None]: ...
+def attach_state(source_obj: GlobalRegistry,
+                 target_obj: SimpleGlobalRegistry | GlobalRegistry,
+                 /,
+                 *,
+                 mode: Plugs) -> tuple[T_Reg | M_Reg | S_Reg | I_Reg | None, 
+                                       C_Reg | None]:
 
-    _test_reg   : T_REG = source_obj.get(_T_REG)
-    _mock_reg   : M_REG = source_obj.get(_M_REG)
-    _shared_reg : S_REG = source_obj.get(_S_REG)
-
-    _isol_reg   : I_REG = source_obj.get(_I_REG)
-    
-    _conn_reg   : C_REG = source_obj.get(_C_REG)
+    _test_reg   = source_obj.get(_T_REG)
+    _mock_reg   = source_obj.get(_M_REG)
+    _shared_reg = source_obj.get(_S_REG)
+    _isol_reg   = source_obj.get(_I_REG)
+    _conn_reg   = source_obj.get(_C_REG)
 
     target_obj[_T_REG] = _test_reg
     target_obj[_M_REG] = _mock_reg

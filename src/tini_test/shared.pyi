@@ -14,20 +14,7 @@ class SharedVar:
     _stored_key: str
     _scope: Optional[TestFunctionName]
 
-    @overload
-    def __getattribute__(self, attr: Literal['_trace', '_stored_key', '_scope', '__key__']) -> list[FrameSummary] | Cell | Optional[TestFunctionName] | CellName: ...
-
-    # @overload
-    # def __getattribute__(self, attr: Literal['_stored_key']) -> Cell: ...
-
-    # @overload
-    # def __getattribute__(self, attr: Literal['_scope']) -> Optional[TestFunctionName]: ...
-
-    # @overload
-    # def __getattribute__(self, attr: Literal['__key__']) -> CellName: ...
-
-    @overload
-    def __getattribute__(self, attr: CellName) -> Cell: ...
+    def __key__(self) -> CellName: ...
 
     @classmethod
     def add_scope(cls, shared_var: 'SharedVar', scope: TestFunctionName) -> None: ...
@@ -41,21 +28,6 @@ class MetaSharedVar:
 
     _generating: bool
     _maybe_globals: list[SharedVar]
-
-    @overload
-    def __getattr__(self, attr: Literal['_test_name']) -> Optional[TestFunctionName]: ...
-
-    @overload
-    def __getattr__(self, attr: Literal['_local_context']) -> Optional[LocalSharedScope[SharedVar]]: ...
-
-    @overload
-    def __getattr__(self, attr: Literal['_generating']) -> bool: ...
-
-    @overload
-    def __getattr__(self, attr: Literal['_maybe_globals']) -> list[SharedVar]: ...
-
-    @overload
-    def __getattr__(self, key: CellName) -> SharedVar | CellValue: ...
 
     @classmethod
     def get_meta_var(cls) -> MetaSharedVar: ...

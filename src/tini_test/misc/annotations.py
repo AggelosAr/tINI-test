@@ -1,4 +1,4 @@
-from typing import Any, Callable, Literal, NamedTuple, TypeAlias, TypeVar
+from typing import Any, Callable, Literal, NamedTuple, NewType, TypeAlias, TypeVar, TypedDict, overload
 
 # -------------- PATHS --------------
 DirectoryPath: TypeAlias = str
@@ -104,17 +104,21 @@ TestWrappedHolder: TypeAlias = Any # !!!!!!!!!!!!!
 
 
 _MockDefinition = TypeVar('_MockDefinition')
-
 type T1[_MockDefinition] = tuple[WrapperInput, _MockDefinition]
 T2: TypeAlias = tuple[WrapperInput, ...]
 
 type MockDefinitionWrappedHolder[T] = T1[T] | T2
+
 
 _SharedVar = TypeVar('_SharedVar')
 type T3[_SharedVar] = tuple[WrapperInput, _SharedVar]
 T4: TypeAlias = tuple[WrapperInput, ...]
 
 type SharedDefinitionHolder[T] = T3[T] | T4
+
+
+_EncapsulatedReturn = TypeVar('_EncapsulatedReturn')
+type EncapsulatedReturn[_EncapsulatedReturn]  = Callable[..., _EncapsulatedReturn] | _EncapsulatedReturn
 # -------------- DECORATED OBJECTS --------------
 
 
@@ -130,21 +134,68 @@ IsolateId : TypeAlias = HexStr
 
 RegisteredIds: TypeAlias = TestId | MockId | SharedId | IsolateId
 
-T_REG: TypeAlias = dict[TestId, TestWrappedObject]
-M_REG: TypeAlias = dict[MockId, Callable[..., MockDefinitionWrappedHolder]]
-S_REG: TypeAlias = dict[SharedId, SharedWrappedObject]
 
-I_REG: TypeAlias = dict[IsolateId, IsolateWrappedObject]
+T_Reg: TypeAlias = dict[TestId, TestWrappedObject]
+M_Reg: TypeAlias = dict[MockId, Callable[..., MockDefinitionWrappedHolder]]
+S_Reg: TypeAlias = dict[SharedId, SharedWrappedObject]
+I_Reg: TypeAlias = dict[IsolateId, IsolateWrappedObject]
+C_Reg: TypeAlias = dict[RegisteredIds, RegisteredIds]
 
-C_REG: TypeAlias = dict[RegisteredIds, RegisteredIds]
+
+T_ConstRegId = NewType('T_ConstRegId', str)
+M_ConstRegId = NewType('M_ConstRegId', str)
+S_ConstRegId = NewType('S_ConstRegId', str)
+I_ConstRegId = NewType('I_ConstRegId', str)
+C_ConstRegId = NewType('C_ConstRegId', str)
 
 
-ConstRegId : TypeAlias = str
-GlobalRegistry: TypeAlias = dict[ConstRegId,  T_REG
-                                            | M_REG
-                                            | S_REG
-                                            | I_REG
-                                            | C_REG]
+class GlobalRegistry(dict[str, Any]):
+
+    @overload
+    def __getitem__(self, key: T_ConstRegId) -> T_Reg | None: ...
+    @overload
+    def __getitem__(self, key: M_ConstRegId) -> M_Reg | None: ...
+    @overload
+    def __getitem__(self, key: S_ConstRegId) -> S_Reg | None: ...
+    @overload
+    def __getitem__(self, key: I_ConstRegId) -> I_Reg | None: ...
+    @overload
+    def __getitem__(self, key: C_ConstRegId) -> C_Reg | None: ...
+    @overload
+    def __getitem__(self, key: str) -> Any: ...
+    def __getitem__(self, key: str) -> Any:
+        return super().__getitem__(key)
+
+    @overload  # type: ignore[override]
+    def get(self, key: T_ConstRegId, default: None = None, /) -> T_Reg | None: ...
+    @overload
+    def get(self, key: M_ConstRegId, default: None = None, /) -> M_Reg | None: ...
+    @overload
+    def get(self, key: S_ConstRegId, default: None = None, /) -> S_Reg | None: ...
+    @overload
+    def get(self, key: I_ConstRegId, default: None = None, /) -> I_Reg | None: ...
+    @overload
+    def get(self, key: C_ConstRegId, default: None = None, /) -> C_Reg | None: ...
+    @overload
+    def get(self, key: str, default: Any = None, /) -> Any: ...
+    def get(self, key: str, default: Any = None, /) -> Any:
+        return super().get(key, default)
+
+    @overload
+    def __setitem__(self, key: T_ConstRegId, value: T_Reg) -> None: ...
+    @overload
+    def __setitem__(self, key: M_ConstRegId, value: M_Reg) -> None: ...
+    @overload
+    def __setitem__(self, key: S_ConstRegId, value: S_Reg) -> None: ...
+    @overload
+    def __setitem__(self, key: I_ConstRegId, value: I_Reg) -> None: ...
+    @overload
+    def __setitem__(self, key: C_ConstRegId, value: C_Reg) -> None: ...
+    @overload
+    def __setitem__(self, key: str, value: Any) -> None: ...
+    def __setitem__(self, key: str, value: Any) -> None:
+        super().__setitem__(key, value)
+
 
 SimpleGlobalRegistry: TypeAlias = dict[str, Any]
 

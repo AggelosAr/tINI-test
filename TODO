@@ -46,3 +46,34 @@ fail some to format errors
 
 
 add path to failures 
+
+
+XXX
+directory loading fails to load broken files ... on request of sigle test .
+and shown reason or failed files not relevant to sindle file ....
+
+
+
+
+
+
+
+###
+Duplicate function breaks >???? shared 
+
+@Shared(var.int)
+@Test.case
+def test_var_can_passed_as_armument_to_heavy_nest_function():
+    must_equal(NotInitialized, var.int)
+    var.int = 666
+    must_equal(666 + 2, func_a(var.int))
+
+
+
+
+@Shared(var.int)
+@Test.case
+def test_var_can_passed_as_armument_to_heavy_nest_function():
+    must_equal(NotInitialized, var.int)
+    var.int = 666
+    must_equal(666, func_c(var.int))

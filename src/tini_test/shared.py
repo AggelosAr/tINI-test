@@ -5,7 +5,7 @@ from typing import Any, Callable, Generator, Literal, Optional
 
 from tini_test._internals._registry import attach_state
 from tini_test.enums import Plugs
-from tini_test.misc.annotations import (CellName, CellValue,
+from tini_test.misc.annotations import (CellName, CellValue, EncapsulatedReturn,
                                         IsolateWrappedObject, LocalSharedScope,
                                         MockDefinitionWrappedHolder,
                                         MockWrappedObject, RealTest,
@@ -134,20 +134,21 @@ class _XShared:
                *args: Optional[tuple[Any | SharedVar]], 
 
                ) ->  Callable[..., 
-                              Callable[..., 
-                                       SharedDefinitionHolder[tuple[SharedVar]]]]:
+                              EncapsulatedReturn[SharedDefinitionHolder[tuple[SharedVar]]]]:
         
         _vars = None
 
-        def wrapper(func) ->  Callable[..., 
-                                       SharedDefinitionHolder[SharedVar]]:
+        def wrapper(func) ->  EncapsulatedReturn[SharedDefinitionHolder[tuple[SharedVar]]]:
 
             def _wrapper(*args, **kwargs) -> SharedDefinitionHolder[tuple[SharedVar]]:
 
                 return (func, ) if not _vars else (func, _vars, )
             
             _shared_reg, _conn_reg = attach_state(func.__globals__, _wrapper.__globals__, mode=Plugs.SHARED)
-            
+
+            if _shared_reg is None:
+                return wrapper
+
             if _conn_reg is None:
                 return wrapper
             

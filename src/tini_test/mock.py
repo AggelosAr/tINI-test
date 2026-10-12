@@ -6,7 +6,7 @@ from typing import Any, Callable, Optional
 
 from tini_test._internals._registry import attach_state
 from tini_test.enums import MockMode, Plugs
-from tini_test.misc.annotations import (IsolateWrappedObject,
+from tini_test.misc.annotations import (EncapsulatedReturn, IsolateWrappedObject,
                                         MockDefinitionWrappedHolder,
                                         MockedFunction, MockWrappedObject,
                                         ProxyItem, RealTest,
@@ -266,8 +266,7 @@ class _XMock:
              kwargs  : Optional[dict[Any, Any]] = MockNone  # type: ignore[assignment] 
 
              ) ->  Callable[..., 
-                            Callable[..., 
-                                     MockDefinitionWrappedHolder[MockDefinition]]]:
+                            EncapsulatedReturn[MockDefinitionWrappedHolder[MockDefinition]]]:
         
         is_empty = (
             returns    == MockNone
@@ -278,8 +277,7 @@ class _XMock:
         _test_func = None
 
 
-        def wrapper(func) ->  Callable[..., 
-                                       MockDefinitionWrappedHolder[MockDefinition]]:
+        def wrapper(func) ->  EncapsulatedReturn[MockDefinitionWrappedHolder[MockDefinition]]:
         
 
             def _wrapper(*args, **kwargs) -> MockDefinitionWrappedHolder[MockDefinition]:
@@ -297,6 +295,9 @@ class _XMock:
             
             _mock_reg, _conn_reg = attach_state(func.__globals__, _wrapper.__globals__, mode=Plugs.MOCK)
 
+            if _mock_reg is None:
+                return wrapper
+                
             if _conn_reg is None:
                 return wrapper
             

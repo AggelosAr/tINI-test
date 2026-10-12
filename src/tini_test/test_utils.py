@@ -199,6 +199,9 @@ class _XTest:
             
             _test_reg, _conn_reg = attach_state(test_func.__globals__, _wrapper.__globals__, mode=Plugs.TEST)
 
+            if _test_reg is None:
+                return _wrapper
+
             if _conn_reg is None:
                 return _wrapper
             

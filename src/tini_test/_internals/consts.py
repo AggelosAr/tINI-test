@@ -1,4 +1,5 @@
-import secrets
+from tini_test._internals._dynamic_reg_ids import (__C_REG, __I_REG, __M_REG,
+                                                   __S_REG, __T_REG)
 
 _RESET = '\033[0m'                   # Reset line colours
 
@@ -33,11 +34,8 @@ SHARED_ID = 'var'
 capture_flag = ('<frozen importlib._bootstrap>', '_call_with_frames_removed', )
 
 
-
-get_registry_key = lambda prefix: '%s_%s' % (prefix, secrets.token_hex(5))
-
-_T_REG = get_registry_key('_TEST_REGISTRY')
-_M_REG = get_registry_key('_MOCK_REGISTRY')
-_S_REG = get_registry_key('_SHARED_REGISTRY')
-_I_REG = get_registry_key('_ISOLATE_REGISTRY')
-_C_REG = get_registry_key('_CONNECTION_REGISTRY')
+_T_REG = __T_REG
+_M_REG = __M_REG
+_S_REG = __S_REG
+_I_REG = __I_REG
+_C_REG = __C_REG

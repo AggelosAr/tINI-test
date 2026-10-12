@@ -139,7 +139,7 @@ class TestSuite:
 
     def pprint(self) -> None:
         print(self.get_summary())
-        print('Errored files: ', self.errored_files)
+        # print('Errored files: ', self.errored_files)
 
     def get_summary(self) -> str:
         _r = [
