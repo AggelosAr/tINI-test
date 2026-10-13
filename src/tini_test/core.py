@@ -112,7 +112,7 @@ class TestSuite:
         return self._failed_to_collect_test_files
 
     @failed_to_collect_test_files_reasons.setter
-    def failed_to_collect_test_files_reasons(self, new_file: FileName, reason: FileFailReason) -> None:
+    def failed_to_collect_test_files_reasons(self, new_file: FileName, reason: FileFailReason) -> None: # type: ignore[misc]
         self._failed_to_collect_test_files[new_file] = reason
 
     def format_file_failure_traceback(self, tb: str) -> str:
@@ -241,7 +241,7 @@ class TestSuite:
             # Also there is a case there is a failure in another file 
             # while collecting, as a result we also show the other failures
             # Is this possible to improve the fail reason further? (probably)
-            # THIS IS WRONG
+            # THIS IS WRONG?
             fail_reason = ''
             if single_test_file:
                 fail_reason = self.failed_to_collect_test_files_reasons[single_test_file]
@@ -268,8 +268,7 @@ class TestSuite:
             return_exceptions=True
         )
         for test_collection, current_errors in zip(all_test_collections, results):
-            # if current_errors:
-            #     self.errored_files.append(test_collection.dot_python_path)
+            assert isinstance(current_errors, int)
             self.update_summary_stats(total_tests=test_collection.total_tests, new_errors=current_errors)
 
     def runner(self) -> None:

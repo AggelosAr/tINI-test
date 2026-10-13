@@ -8,27 +8,29 @@ from tini_test.misc.annotations import (C_ConstRegId, I_ConstRegId,
 get_registry_key = lambda prefix: '%s_%s' % (prefix, secrets.token_hex(5))
 
 
-
 @dataclass
 class TestRegistry:
     _id: T_ConstRegId
+
 
 @dataclass
 class MockRegistry:
     _id: M_ConstRegId
 
+
 @dataclass
 class SharedRegistry:
     _id: S_ConstRegId
+
 
 @dataclass
 class IsolateRegistry:
     _id: I_ConstRegId
 
+
 @dataclass
 class ConnectionRegistry:
     _id: C_ConstRegId
-
 
 
 __T_REG = TestRegistry(T_ConstRegId(get_registry_key('_TEST_REGISTRY')))._id

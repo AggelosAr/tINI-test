@@ -29,8 +29,6 @@ SKIP_DIRS = {
     }
 
 
-SHARED_ID = 'var'
-
 capture_flag = ('<frozen importlib._bootstrap>', '_call_with_frames_removed', )
 
 

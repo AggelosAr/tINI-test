@@ -1,4 +1,5 @@
-from tini_test import NotInitialized, Shared, Test, must_equal, var
+from tini_test import NotInitialized, Shared, Test, must_equal, var, WillRaise
+from tini_test.misc.exceptions import ExpectedWasDifferentFromActual
 
 
 @Shared()
@@ -89,3 +90,24 @@ def var_mod_in_cleanup_does_not_exist_in_setup_and_main(): must_equal(NotInitial
 def unused_shared_variable(): must_equal(NotInitialized, var.var_a)
 
 
+
+@Shared(var.var_a, var.var_b)
+@Test.case
+def shared_equivalence():
+    must_equal(NotInitialized, var.var_a)
+    must_equal(NotInitialized, var.var_b)
+    must_equal(var.var_a, var.var_b)
+
+    var.var_a = 42
+
+    with WillRaise(ExpectedWasDifferentFromActual) as context:
+        must_equal(var.var_a, var.var_b)
+
+    must_equal('''
+ITEM: type mismatch
+expected: <class 'int'>
+actual:   <class 'type'>
+[EOD]''', str(context.exception))
+
+    var.var_b = 42
+    must_equal(var.var_a, var.var_b)

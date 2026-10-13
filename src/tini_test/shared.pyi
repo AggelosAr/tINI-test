@@ -1,8 +1,7 @@
 from traceback import FrameSummary
-from typing import Literal, Optional, overload
+from typing import Optional
 
-from tini_test.misc.annotations import (CellName, CellValue, LocalSharedScope,
-                                        SharedMetaId, TestCallable,
+from tini_test.misc.annotations import (CellName, LocalSharedScope,
                                         TestFunctionName)
 
 class Cell: ...
@@ -14,10 +13,15 @@ class SharedVar:
     _stored_key: str
     _scope: Optional[TestFunctionName]
 
+    @property
     def __key__(self) -> CellName: ...
 
     @classmethod
-    def add_scope(cls, shared_var: 'SharedVar', scope: TestFunctionName) -> None: ...
+    def validate_duplicate_vars(cls, shared_vars: list['SharedVar'], test_name: TestFunctionName) -> None: ...
+    
+    @classmethod
+    def add_scope(cls, shared_vars: list['SharedVar'], scope: TestFunctionName) -> None: ...
+    
 
 
 
@@ -44,3 +48,10 @@ class MetaSharedVar:
     def update_local_context(self, test_name: TestFunctionName, context: LocalSharedScope[SharedVar]) -> None: ...
 
     def test_reset(self) -> None: ...
+
+
+class NotInitialized: ...
+
+class Shared: ...
+
+class var: ...

@@ -346,8 +346,10 @@ Of course the above is somewhat cancelled because the algorithm tries to autocom
 
 ## Roadmap
 
-* [ ] Add test context/shared vars.
+* [ ] Make diff better.
 * [ ] Add side effects to Mocks.
 * [ ] Add exclude dir arg.
 * [ ] Register tests into groups (group-level setup/cleanup).
 * [ ] Add global fail sort mode, not just per module.
+* [ ] Add support for global shared (xxx2).
+* [ ] Fix terminal flickering on async ( minimal )

@@ -4,26 +4,21 @@ from collections import deque
 from functools import cached_property, lru_cache, partial
 from importlib.machinery import ModuleSpec
 from types import FunctionType, ModuleType
-from typing import Callable, Optional, no_type_check
+from typing import Callable, Optional
 
 from tini_test._internals.consts import (_C_REG, _I_REG, _LINE_CLEAR, _LINE_UP,
                                          _M_REG, _RESET, _S_REG, _T_REG)
 from tini_test.enums import Color, RunMode, Verbosity
 from tini_test.misc.annotations import (C_Reg, DirectoryPath, DotPythonPath,
-                                        Errors, FileName, GlobalRegistry,
-                                        I_Reg, M_Reg, MockId, PartialObject,
-                                        S_Reg, SharedId, T_Reg,
+                                        Errors, FileName, I_Reg, M_Reg,
+                                        PartialObject, S_Reg, T_Reg,
                                         TestCollectionSize, TestFunctionName,
-                                        TestId, TestWrappedObject,
-                                        WrapperInput, _ReverseWrapConnections)
-from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
-                                       MockWasUsedOnWithoutTestDecorator,
-                                       SharedVarAlreadyDefined,
-                                       SharedWasUsedOnWithoutTestDecorator,
-                                       TestDecoratorUsedMoreThanOnce)
+                                        _ReverseWrapConnections)
+from tini_test.misc.exceptions import DuplicateTestFound
 from tini_test.mock import MockDefinition
 from tini_test.shared import MetaSharedVar, SharedVar
 from tini_test.test_utils import _XTest
+from tini_test.wrap_utils import DecoratedTestChain
 
 
 class TestCollection:
@@ -37,11 +32,12 @@ class TestCollection:
         self.module_path = module_path
         self.verbosity = verbosity
         self.file_name = file
+
         self.shared_meta = shared_meta
         
         self.TEST_REGISTRY       : T_Reg = {}
-        self.MOCK_REGISTRY       : M_Reg = {}
-        self.SHARED_REGISTRY     : S_Reg = {}
+        self.MOCK_REGISTRY       : M_Reg[MockDefinition] = {}
+        self.SHARED_REGISTRY     : S_Reg[SharedVar] = {}
         self.ISOLATE_REGISTRY    : I_Reg = {}
         self.CONNECTION_REGISTRY : C_Reg = {}
 
@@ -84,7 +80,7 @@ class TestCollection:
         return spec, module
 
     def update_globals(self, module: ModuleType) -> None:
-        context: GlobalRegistry = {
+        context = {
             _T_REG : self.TEST_REGISTRY,
             _M_REG : self.MOCK_REGISTRY,
             _S_REG : self.SHARED_REGISTRY,
@@ -124,213 +120,11 @@ class TestCollection:
             bi_con[v].add(k)
 
         return bi_con
-    
-    def wrap_is_test(self, _func: WrapperInput) -> bool:
-        return (
-            hex(id(_func)) in self.bi_con
-            and '_XMock.mock' not in repr(_func)
-            and '_XTest.test' not in repr(_func)
-            and '_XShared.shared' not in repr(_func)
-            and '_XIsolate.isolate' not in repr(_func)
-        )
-
-    def wrap_is_wrap(self, _func_repr: str) -> bool:
-        return (
-               '_XMock.mock' in _func_repr
-            or '_XTest.test' in _func_repr
-            or '_XShared.shared' in _func_repr
-            or '_XIsolate.isolate' in _func_repr
-        )
-            
-    # XXX
-    # remove magic strings.
-    # General case. We currently stop collecting on the first error. Should we continue?
-    @no_type_check 
-    def parse_wraps(self, _obj_id: TestId | MockId | SharedId) -> tuple[TestFunctionName, TestWrappedObject]:
-
-        test_wrap: TestWrappedObject
-        test_func: Optional[WrapperInput] = None # ?
-        registered_tests = 0
-
-        mocks: list[MockDefinition] = []
-        unique_mocks: set[str] = set()
-        found_mocks = 0
-
-        shared_vars: list[SharedVar] = []
-        unique_shared_vars: set[str] = set()
-        found_shared_vars = 0
-
-        isolates = 0
-
-        # In case of any error we still need to unwrap to get the test name...
-        aborted: list[Callable[[TestFunctionName], 
-                               DuplicateMockRegisteredOnTest | SharedVarAlreadyDefined]] = [] 
-
-        visited = set()
-        q = deque([_obj_id])
-        
-        while q:
-
-            current_id = q.popleft()
-            
-            if current_id in visited:
-                continue
-
-            visited.add(current_id)
-
-            if _next := self.bi_con.get(current_id):
-                q.extend(_next)
-            
-            if current_id in self.TEST_REGISTRY:
-                test_wrap = self.TEST_REGISTRY[current_id]
-                registered_tests += 1
-
-            else:
-                if aborted:
-                    continue
-
-
-            if current_id in self.ISOLATE_REGISTRY:
-                isolate_wrap = self.ISOLATE_REGISTRY[current_id]
-                _test_func = isolate_wrap()
-                isolates += 1
-
-                if self.wrap_is_test(_test_func):
-                    test_func = _test_func
-
-            if current_id in self.MOCK_REGISTRY:
-                mock_wrap = self.MOCK_REGISTRY[current_id]
-                found_mocks += 1
-
-                [_test_func, *_definition] = mock_wrap()
-
-                if self.wrap_is_test(_test_func):
-                    test_func = _test_func
-
-                if _definition:
-
-                    definition, *_ = _definition
-                
-                    if definition.mock.__name__ in unique_mocks:
-                        aborted.append(
-                            lambda test_name: 
-                                DuplicateMockRegisteredOnTest
-                                    (
-                                        mock_name=definition.mock.__name__, 
-                                        test_name=test_name
-                                    )
-                            )
-                    
-                    unique_mocks.add(definition.mock.__name__)
-                    mocks.append(definition)
-
-            if current_id in self.SHARED_REGISTRY:
-                shared_wrap = self.SHARED_REGISTRY[current_id]
-                found_shared_vars += 1
-
-                [_test_func, *_shared_holder] = shared_wrap()
-
-                if self.wrap_is_test(_test_func):
-                    test_func = _test_func
-
-                if _shared_holder:
-
-                    _shared_vars, *_ = _shared_holder
-
-                    for _shared_var in _shared_vars:
-                        var_name = _shared_var.__key__
-
-                        if var_name in unique_shared_vars:
-                            aborted.append(
-                                lambda test_name: 
-                                    SharedVarAlreadyDefined
-                                        (
-                                            var_name=var_name, 
-                                            test_name=test_name
-                                        )
-                                )
-                            break
-
-                        unique_shared_vars.add(var_name)
-
-                    shared_vars.extend(_shared_vars)
-
-      
-        if registered_tests == 0:
-            if found_mocks:
-                _t = test_func or str(mock_wrap.__closure__[-1].cell_contents.__name__)
-                raise MockWasUsedOnWithoutTestDecorator(_t)
-            if found_shared_vars:
-                _t = test_func or str(shared_wrap.__closure__[-1].cell_contents.__name__)
-                raise SharedWasUsedOnWithoutTestDecorator(_t)
-
-        no_mocks = not mocks and not found_mocks
-        no_shared_vars = not shared_vars and not found_shared_vars
-        is_alone = no_mocks and no_shared_vars and isolates == 0
-
-        if registered_tests > 1 and is_alone:
-            _t = test_func or str(test_wrap.__closure__[-1].cell_contents.__name__)
-            raise TestDecoratorUsedMoreThanOnce(_t)
-        
-        if is_alone:
-            return str(test_wrap.__closure__[-1].cell_contents.__name__), test_wrap
-
-        # Attach the correct test function to the test wrap
-        _registered_test = test_wrap.__closure__[-1].cell_contents
-
-        if registered_tests > 1 and not is_alone:
-            raise TestDecoratorUsedMoreThanOnce(_registered_test)
-
-
-        if self.wrap_is_wrap(repr(_registered_test)):
-
-            _id = hex(id(_registered_test))
-            # There is the case where the last closure is the actual test pre-condition.
-            # In that case we must also attach it.
-            if (_id in self.MOCK_REGISTRY 
-                or _id in self.SHARED_REGISTRY 
-                or _id in self.ISOLATE_REGISTRY):
-
-                test_wrap = partial(test_wrap, _XTest____test_func=test_func)
-                test_name = test_func.__name__
-           
-            else:
-                test_wrap.__closure__[-1].cell_contents.__code__ = test_func.__code__
-                test_name = str(test_wrap.__closure__[-1].cell_contents.__name__)
-     
-        else:
-
-            # We need to see if the test is already attached
-            if _registered_test == test_func.__closure__[-1].cell_contents:
-                test_name = _registered_test.__name__
-                ...
-            else:
-
-                test_wrap = partial(test_wrap, _XTest____test_func=test_func)
-                test_name = test_func.__name__
-
-
-        if aborted:
-            raise aborted[0](test_name)# XXX raise the exeption from the correct line. 
-
-        for shared_var in shared_vars:
-            SharedVar.add_scope(shared_var, test_name)
-        
-        if mocks:
-            test_wrap = partial(test_wrap, _XTest____mocks=mocks)
-
-        if shared_vars:
-            test_wrap = partial(test_wrap, _XTest____shared_vars=shared_vars)
-
-        if isolates:
-            test_wrap = partial(test_wrap, _XTest____isolate=True)
-      
-        return test_name, test_wrap
-
 
     def gather_tests(self, func_name: Optional[TestFunctionName] = None) -> list[TestFunctionName]:
 
         test_names = []
+        counter = 0
 
         for obj in dir(self.module):
 
@@ -350,15 +144,45 @@ class TestCollection:
                     ^ (_id in self.ISOLATE_REGISTRY)):
                 continue
 
-            test_name, t_obj = self.parse_wraps(_obj_id=_id)
+            counter += 1
+            # General case. We currently stop collecting on the first error.
+            test_chain = DecoratedTestChain.resolve_chain(self.bi_con,
+                                                          self.TEST_REGISTRY,
+                                                          self.MOCK_REGISTRY,
+                                                          self.SHARED_REGISTRY,
+                                                          self.ISOLATE_REGISTRY,
+                                                          _obj_id=_id)
 
+            test_chain.raise_for_multiple_test_wraps()
+            test_chain.raise_for_no_test_wraps()
+
+            match test_chain.has_not_dependencies:
+
+                case True:
+                    test_wrap = test_chain.test_wrap
+                    test_name, t_obj = str(test_wrap.__closure__[-1].cell_contents.__name__), test_wrap # type: ignore[index]
+
+                case False:
+                    test_name, t_obj = test_chain.resolve_dependencies(self.MOCK_REGISTRY,
+                                                                       self.SHARED_REGISTRY,
+                                                                       self.ISOLATE_REGISTRY)
+
+                    test_chain.validate_dependencies(test_name)
+                    
+                    SharedVar.add_scope(test_chain.shared_vars, test_name)
+                    t_obj = partial(t_obj, 
+                                    _XTest____mocks=test_chain.mocks,
+                                    _XTest____shared_vars=test_chain.shared_vars,
+                                    _XTest____isolate=test_chain.isolate)
+                
+            
             if func_name and test_name != func_name:
                 continue
 
             test_obj = partial(t_obj,
                                _XTest____collector=self.collector,
                                _XTest____verbosity=self.verbosity)
-            
+
             test_names.append(test_name)
             self.decorated_tests.append(test_obj)
 
@@ -401,7 +225,7 @@ class TestCollection:
 
                     case RunMode.ASYNC:
 
-                        async def ____wrapper() -> Errors:
+                        async def ____wrapper() -> Errors: # type: ignore[misc]
 
                             self.__setup()
                             await runner(self)
@@ -438,11 +262,11 @@ class TestCollection:
         return errors
     
     @_pprint(RunMode.SYNC)
-    def run_tests(self) -> Errors:
+    def run_tests(self):
         self.box_tests()
         
     @_pprint(RunMode.ASYNC)
-    async def arun_tests(self) -> Errors:
+    async def arun_tests(self):
         await self.abox_tests()
 
 

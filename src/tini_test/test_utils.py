@@ -144,7 +144,6 @@ class _XTest:
     def __str__(self) -> str:
         return '\n'.join(filter(lambda l: l != str(), map(str, self.operation_states)))
 
-    # XXX move relevant validation logic from wrap parser here if possible
     @classmethod
     def case(cls,
              test_func: None

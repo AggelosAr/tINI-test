@@ -1,4 +1,5 @@
-from typing import Any, Callable, Literal, NamedTuple, NewType, TypeAlias, TypeVar, TypedDict, overload
+from typing import (Any, Callable, NamedTuple, NewType, TypeAlias, TypeVar,
+                    overload)
 
 # -------------- PATHS --------------
 DirectoryPath: TypeAlias = str
@@ -68,7 +69,7 @@ _NoOp: TypeAlias = Callable[..., Any]
 
 
 
-PartialObject: TypeAlias = Callable[..., Any] # TODO update
+PartialObject: TypeAlias = Callable[..., Any] #!!!!!!!!!!!!!
 # ---------------- SOME CALLABLES ----------------
 
 
@@ -79,12 +80,10 @@ PartialObject: TypeAlias = Callable[..., Any] # TODO update
 TestWrappedObject    : TypeAlias = Callable[..., 'WrapperInput'] #!!!!!!!!!!!!!
 MockWrappedObject    : TypeAlias = Callable[..., 'WrapperInput'] #!!!!!!!!!!!!!
 SharedWrappedObject  : TypeAlias = Callable[..., 'WrapperInput'] #!!!!!!!!!!!!!
-
 IsolateWrappedObject : TypeAlias = Callable[..., 'WrapperInput'] #!!!!!!!!!!!!!
 
-# DownStreamWrappedObject: ...
-# UpStreamWrappedObject: ...
 
+# UpStreamWrappedObject: ...
 # this is wrong...
 WrapperInput: TypeAlias = (None
                            | Callable
@@ -97,28 +96,24 @@ WrapperInput: TypeAlias = (None
 
                            | 'MockDefinitionWrappedHolder'
                            | 'SharedDefinitionHolder')
-
+# DownStreamWrappedObject: ...
 
 # Return types
-TestWrappedHolder: TypeAlias = Any # !!!!!!!!!!!!!
+TestWrappedHolder: TypeAlias = Callable[..., 'TestWrappedHolder']
 
 
 _MockDefinition = TypeVar('_MockDefinition')
 type T1[_MockDefinition] = tuple[WrapperInput, _MockDefinition]
-T2: TypeAlias = tuple[WrapperInput, ...]
+T2: TypeAlias = tuple[WrapperInput, ]
 
 type MockDefinitionWrappedHolder[T] = T1[T] | T2
 
 
 _SharedVar = TypeVar('_SharedVar')
-type T3[_SharedVar] = tuple[WrapperInput, _SharedVar]
-T4: TypeAlias = tuple[WrapperInput, ...]
+type T3[_SharedVar] = tuple[WrapperInput, tuple[_SharedVar]]
+T4: TypeAlias = tuple[WrapperInput, ]
 
 type SharedDefinitionHolder[T] = T3[T] | T4
-
-
-_EncapsulatedReturn = TypeVar('_EncapsulatedReturn')
-type EncapsulatedReturn[_EncapsulatedReturn]  = Callable[..., _EncapsulatedReturn] | _EncapsulatedReturn
 # -------------- DECORATED OBJECTS --------------
 
 
@@ -135,9 +130,9 @@ IsolateId : TypeAlias = HexStr
 RegisteredIds: TypeAlias = TestId | MockId | SharedId | IsolateId
 
 
-T_Reg: TypeAlias = dict[TestId, TestWrappedObject]
-M_Reg: TypeAlias = dict[MockId, Callable[..., MockDefinitionWrappedHolder]]
-S_Reg: TypeAlias = dict[SharedId, SharedWrappedObject]
+T_Reg: TypeAlias = dict[TestId, TestWrappedHolder]
+type M_Reg[_MockDefinition] = dict[MockId, Callable[..., MockDefinitionWrappedHolder[_MockDefinition]]]
+type S_Reg[_SharedVar] = dict[SharedId, Callable[..., SharedDefinitionHolder[_SharedVar]]]
 I_Reg: TypeAlias = dict[IsolateId, IsolateWrappedObject]
 C_Reg: TypeAlias = dict[RegisteredIds, RegisteredIds]
 
@@ -218,8 +213,6 @@ class ProxyItem(NamedTuple):
 
 
 # -------------- SHARED SPECIFICS --------------
-SharedMetaId: TypeAlias = Literal['var']
-
 type SharedVars[_SharedVar] = dict[SharedId, _SharedVar]
 
 TestPart: TypeAlias = HexStr

@@ -42,8 +42,7 @@ class _XIsolate:
                                Callable[..., 
                                         WrapperInput]]:
 
-        def wrapper(func) ->  Callable[..., 
-                                       WrapperInput]:
+        def wrapper(func) ->  Callable:
 
             def _wrapper(*args, **kwargs) -> WrapperInput:
 

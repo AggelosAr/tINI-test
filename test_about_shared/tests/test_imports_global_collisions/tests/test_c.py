@@ -34,8 +34,6 @@ def test_var_can_passed_as_armument_to_heavy_nest_function_2():
 
 
 # ADD test .... if u try to use var without importing it, it breaks as expected.
-# we can still force it to be used without being imported to the destination
-# but I guess this is not pythonic. XXX
 @Shared(var.int)
 @Test.case
 def test_var_can_be_used_in_heavy_nest_function_without_import_in_the_nest_function():

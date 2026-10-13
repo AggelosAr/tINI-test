@@ -1,10 +1,10 @@
 import traceback
 from traceback import StackSummary
-from types import FunctionType
 from typing import Optional
 
-from tini_test._internals.consts import _RESET, SHARED_ID, capture_flag
-from tini_test.misc.annotations import CellName, StackTrace, TestFunctionName
+from tini_test._internals.consts import _RESET, capture_flag
+from tini_test.misc.annotations import (CellName, RealTest, StackTrace,
+                                        TestFunctionName)
 
 RED = '\033[91m'
 # XXX APPLY colors to our exceptions for better readability
@@ -67,22 +67,21 @@ class ExceptionWasNotRaised(Exception):
         super().__init__(reason)
 
 
+class MockMissingFunctionError(Exception):
+
+    def __init__(self) -> None:
+        super().__init__('Mock function is missing.')
+
+
 class MockDefinitionError(Exception):
 
-    def __init__(self, reason: str = '') -> None:
-        super().__init__(reason)
+    def __init__(self) -> None:
+        super().__init__('Mock should not accept both return value and arguments.')
 
 
 class MockCallDefinitionError(Exception):
 
     def __init__(self, reason: str = '') -> None:
-        super().__init__(reason)
-
-
-class MockMissingFunctionError(Exception):
-
-    def __init__(self, reason: str = '') -> None:
-        reason = 'Mock function is missing.'
         super().__init__(reason)
 
 
@@ -95,7 +94,7 @@ class DuplicateMockRegisteredOnTest(Exception):
 
 class TestDecoratorUsedMoreThanOnce(Exception):
 
-    def __init__(self, test: Optional[FunctionType | TestFunctionName] = None) -> None:
+    def __init__(self, test: Optional[RealTest | TestFunctionName] = None) -> None:
         if not test:
             test_name = '<unknown>'
         else:
@@ -113,7 +112,7 @@ class TestDecoratorUsedMoreThanOnce(Exception):
 
 class MockWasUsedOnWithoutTestDecorator(Exception):
 
-    def __init__(self, test: Optional[FunctionType | TestFunctionName] = None) -> None:
+    def __init__(self, test: Optional[RealTest | TestFunctionName] = None) -> None:
         if not test:
             test_name = '<unknown>'
         else:
@@ -127,7 +126,7 @@ class MockWasUsedOnWithoutTestDecorator(Exception):
 
 class SharedWasUsedOnWithoutTestDecorator(Exception):
 
-    def __init__(self, test: Optional[FunctionType | TestFunctionName] = None) -> None:
+    def __init__(self, test: Optional[RealTest | TestFunctionName] = None) -> None:
         if not test:
             test_name = '<unknown>'
         else:
@@ -136,6 +135,20 @@ class SharedWasUsedOnWithoutTestDecorator(Exception):
             else:
                 test_name = test.__name__
         reason = 'Missing test decorator for function decorated with Shared < %s >' % (test_name, )
+        super().__init__(reason)
+
+
+class IsolateWasUsedOnWithoutTestDecorator(Exception):
+
+    def __init__(self, test: Optional[RealTest | TestFunctionName] = None) -> None:
+        if not test:
+            test_name = '<unknown>'
+        else:
+            if isinstance(test, str):
+                test_name = test
+            else:
+                test_name = test.__name__
+        reason = 'Missing test decorator for function decorated with Isolate < %s >' % (test_name, )
         super().__init__(reason)
 
 
@@ -170,13 +183,6 @@ class SharedVarAlreadyDefined(Exception):
         super().__init__(msg)
 
 
-class CouldNotFindMetaSharedVar(Exception):
-
-    def __init__(self, test_name: TestFunctionName) -> None:
-        msg = 'Shared namespace could not be resolved for test < %s > (import as %s)' % (test_name, SHARED_ID, )
-        super().__init__(msg)
-
-
 class TestArgumentsShouldBeCallables(Exception):
 
     def __init__(self, test_name: Optional[TestFunctionName]='') -> None:
@@ -186,13 +192,14 @@ class TestArgumentsShouldBeCallables(Exception):
 
 class GlobalSharedVarsAreNotSupported(Exception):
 
-    def __init__(self, var_name: CellName, stack_trace: Optional[StackSummary] = '') -> None:
+    def __init__(self, var_name: CellName, stack_trace: Optional[StackSummary] = None) -> None:
         msg = self.format_msg(var_name, stack_trace)
         super().__init__(msg)
 
-    def format_exception(self, stack_trace: Optional[StackSummary] = '') -> StackTrace:
+    def format_exception(self, stack_trace: StackSummary) -> StackTrace:
         captured_frames = []
         capturing = False
+        
         for item in stack_trace:
             if capturing:
                 captured_frames.append(item)
@@ -217,11 +224,18 @@ class GlobalSharedVarsAreNotSupported(Exception):
         msg = '%s%s' % ('\033[40m', msg)
         return '%s%s%s' % (RED, msg, _RESET, )
 
-    def format_msg(self, var_name: CellName, stack_trace: StackTrace) -> StackTrace:
+    def format_msg(self, var_name: CellName, stack_trace: Optional[StackSummary] = None) -> StackTrace:
         base_msg = 'Global shared variable < %s > is not supported.' % (var_name, )
+        
+        if stack_trace is None:
+            return base_msg
+        
         trace = self.format_exception(stack_trace)
-        match trace:
-            case '':
-                return base_msg
-            case _:
-                return '%s\n%s' % (base_msg, trace)
+        return '%s\n%s' % (base_msg, trace)
+
+
+class DuplicateTestFound(Exception):
+
+    def __init__(self, test_name: TestFunctionName) -> None:
+        msg = 'Duplicate test found: < %s >' % (test_name, )
+        super().__init__(msg) # TODO # Duplicate function breaks shared reset.

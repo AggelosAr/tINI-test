@@ -142,9 +142,119 @@ def %s() -> None:
 
     completed_process = run_test(test_name, test_name)
 
+    # print(completed_process.stdout)
+    # print(completed_process.stderr)
+
     must_equal(1, completed_process.returncode)
 
     err = 'tini_test.misc.exceptions.MockWasUsedOnWithoutTestDecorator: Missing test decorator for function decorated with mock function < %s >' % test_name
+    must_equal(err, completed_process.stderr.splitlines()[-1])
+
+    delete_test_dir(test_name)
+
+
+@Test.case
+def test_MockMissingFunctionError() -> None:
+    test_name = 'test_MockMissingFunctionError'
+    content = '''
+     
+@Mock.mock(None, returns=42)
+@Test.case
+def %s() -> None:
+    1/0
+    ''' % test_name
+    get_temp_file(content, test_name)
+
+    completed_process = run_test(test_name, test_name)
+
+    must_equal(1, completed_process.returncode)
+
+    err = 'tini_test.misc.exceptions.MockMissingFunctionError: Mock function is missing.' 
+    must_equal(err, completed_process.stderr.splitlines()[-1])
+
+    delete_test_dir(test_name)
+
+    test_name = 'test_MockMissingFunctionError'
+    content = '''
+        
+@Mock.mock(returns=42)
+@Test.case
+def %s() -> None:
+    1/0
+    ''' % test_name
+    get_temp_file(content, test_name)
+
+    completed_process = run_test(test_name, test_name)
+
+    must_equal(1, completed_process.returncode)
+
+    err = 'tini_test.misc.exceptions.MockMissingFunctionError: Mock function is missing.' 
+    must_equal(err, completed_process.stderr.splitlines()[-1])
+
+    delete_test_dir(test_name)
+
+
+@Test.case
+def test_MockGotBothReturnValueAndArgs() -> None:
+    test_name = 'test_MockGotBothReturnValueAndArgs'
+    content = '''
+     
+@Mock.mock(lambda: 1, args=(), kwargs={}, returns=42)
+@Test.case
+def %s() -> None:
+    1/0
+    ''' % test_name
+    get_temp_file(content, test_name)
+
+    completed_process = run_test(test_name, test_name)
+
+    must_equal(1, completed_process.returncode)
+
+    err = 'tini_test.misc.exceptions.MockDefinitionError: Mock should not accept both return value and arguments.' 
+    must_equal(err, completed_process.stderr.splitlines()[-1])
+
+    delete_test_dir(test_name)
+
+
+@Test.case
+def test_MockCallDefinitionErrorArgs() -> None:
+    test_name = 'test_MockCallDefinitionErrorArgs'
+    content = '''
+     
+@Mock.mock(lambda: 1, args=100,)
+@Test.case
+def %s() -> None:
+    1/0
+    ''' % test_name
+    get_temp_file(content, test_name)
+
+    completed_process = run_test(test_name, test_name)
+
+    must_equal(1, completed_process.returncode)
+
+    err = 'tini_test.misc.exceptions.MockCallDefinitionError: Arguments should be of type tuple.' 
+    must_equal(err, completed_process.stderr.splitlines()[-1])
+
+    delete_test_dir(test_name)
+
+
+@Test.case
+def test_MockCallDefinitionErrorKwargs() -> None:
+    test_name = 'test_MockCallDefinitionErrorKwargs'
+    content = '''
+     
+@Mock.mock(lambda: 1, kwargs=100)
+@Test.case
+def %s() -> None:
+    1/0
+    ''' % test_name
+    get_temp_file(content, test_name)
+
+    completed_process = run_test(test_name, test_name)
+
+    must_equal(1, completed_process.returncode)
+
+    err = 'tini_test.misc.exceptions.MockCallDefinitionError: Keyword arguments should be of type dict.' 
     must_equal(err, completed_process.stderr.splitlines()[-1])
 
     delete_test_dir(test_name)

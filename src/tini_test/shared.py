@@ -5,7 +5,7 @@ from typing import Any, Callable, Generator, Literal, Optional
 
 from tini_test._internals._registry import attach_state
 from tini_test.enums import Plugs
-from tini_test.misc.annotations import (CellName, CellValue, EncapsulatedReturn,
+from tini_test.misc.annotations import (CellName, CellValue,
                                         IsolateWrappedObject, LocalSharedScope,
                                         MockDefinitionWrappedHolder,
                                         MockWrappedObject, RealTest,
@@ -15,6 +15,7 @@ from tini_test.misc.annotations import (CellName, CellValue, EncapsulatedReturn,
 from tini_test.misc.exceptions import (GlobalSharedVarsAreNotSupported,
                                        SharedAcceptedInvalidArguments,
                                        SharedOnlyAcceptsArguments,
+                                       SharedVarAlreadyDefined,
                                        SharedVarDoesNotExistInThisContext)
 
 
@@ -88,17 +89,26 @@ class SharedVar:
     def validate(cls, args: Any) -> tuple['SharedVar']:
         if not isinstance(args, tuple):
             raise SharedOnlyAcceptsArguments(args)
-        
+
         args_types = tuple(type(arg) for arg in args)
         for _type in args_types:
             if not issubclass(_type, SharedVar):
                 raise SharedAcceptedInvalidArguments
-            
+
         return args
 
     @classmethod
-    def add_scope(cls, shared_var: 'SharedVar', scope: TestFunctionName) -> None:
-        shared_var._scope = scope
+    def validate_duplicate_vars(cls, shared_vars: list['SharedVar'], test_name: TestFunctionName) -> None:
+        unique_shared_vars = set()
+        for shared_var in shared_vars:
+            if shared_var.__key__ in unique_shared_vars:
+                raise SharedVarAlreadyDefined(var_name=shared_var.__key__, test_name=test_name)
+            unique_shared_vars.add(shared_var.__key__)
+
+    @classmethod
+    def add_scope(cls, shared_vars: list['SharedVar'], scope: TestFunctionName) -> None:
+        for shared_var in shared_vars:
+            shared_var._scope = scope
 
 
 class Shared:
@@ -134,11 +144,12 @@ class _XShared:
                *args: Optional[tuple[Any | SharedVar]], 
 
                ) ->  Callable[..., 
-                              EncapsulatedReturn[SharedDefinitionHolder[tuple[SharedVar]]]]:
+                              Callable[..., 
+                                       SharedDefinitionHolder[tuple[SharedVar]]]]:
         
         _vars = None
 
-        def wrapper(func) ->  EncapsulatedReturn[SharedDefinitionHolder[tuple[SharedVar]]]:
+        def wrapper(func) ->  Callable:
 
             def _wrapper(*args, **kwargs) -> SharedDefinitionHolder[tuple[SharedVar]]:
 
@@ -164,7 +175,8 @@ class _XShared:
             return wrapper(func)
         
         if func is not None:
-            SharedVar.validate(_vars := (func, *args))
+            _args = (func, *args)
+            _vars = SharedVar.validate(_args)
 
         return wrapper
 
