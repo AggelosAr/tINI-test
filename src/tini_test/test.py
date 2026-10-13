@@ -14,7 +14,6 @@ from tini_test.misc.annotations import (C_Reg, DirectoryPath, DotPythonPath,
                                         PartialObject, S_Reg, T_Reg,
                                         TestCollectionSize, TestFunctionName,
                                         _ReverseWrapConnections)
-from tini_test.misc.exceptions import DuplicateTestFound
 from tini_test.mock import MockDefinition
 from tini_test.shared import MetaSharedVar, SharedVar
 from tini_test.test_utils import _XTest
@@ -124,7 +123,6 @@ class TestCollection:
     def gather_tests(self, func_name: Optional[TestFunctionName] = None) -> list[TestFunctionName]:
 
         test_names = []
-        counter = 0
 
         for obj in dir(self.module):
 
@@ -144,7 +142,6 @@ class TestCollection:
                     ^ (_id in self.ISOLATE_REGISTRY)):
                 continue
 
-            counter += 1
             # General case. We currently stop collecting on the first error.
             test_chain = DecoratedTestChain.resolve_chain(self.bi_con,
                                                           self.TEST_REGISTRY,
@@ -156,12 +153,11 @@ class TestCollection:
             test_chain.raise_for_multiple_test_wraps()
             test_chain.raise_for_no_test_wraps()
 
-            match test_chain.has_not_dependencies:
+            match test_chain.has_dependencies:
 
                 case True:
                     test_wrap = test_chain.test_wrap
                     test_name, t_obj = str(test_wrap.__closure__[-1].cell_contents.__name__), test_wrap # type: ignore[index]
-
                 case False:
                     test_name, t_obj = test_chain.resolve_dependencies(self.MOCK_REGISTRY,
                                                                        self.SHARED_REGISTRY,
