@@ -236,6 +236,9 @@ class GlobalSharedVarsAreNotSupported(Exception):
 
 class DuplicateTestFound(Exception):
 
-    def __init__(self, test_name: TestFunctionName) -> None:
-        msg = 'Duplicate test found: < %s >' % (test_name, )
-        super().__init__(msg) # TODO # Duplicate function breaks shared reset.
+    def __init__(self, test_name: Optional[TestFunctionName] = None) -> None:
+        if not test_name:
+            test_name = '<unknown>'
+
+        msg = 'Duplicate test(s) found: < %s >' % (test_name, )
+        super().__init__(msg) # TODO # Duplicate function breaks shared. add test and breaks reset of shared ....

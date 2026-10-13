@@ -213,6 +213,7 @@ class TestSuite:
             except Exception as e:
                 self.file_load_failures = 1
                 tb = self.format_file_failure_traceback(traceback.format_exc())
+                # This is wrong we should use the full dot path of the test file instead of just the file name
                 self.failed_to_collect_test_files_reasons[test_file] = '%s\n%s' % (str(e), tb, )
                 single_test_file = test_file
                 continue
