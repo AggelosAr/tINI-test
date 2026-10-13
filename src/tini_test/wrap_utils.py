@@ -35,11 +35,11 @@ class DecoratedTestChain:
     @property
     def has_dependencies(self) -> bool:
         return (
-            (len(self.mocks) > 0 and self._is_mock_decorated)
-            or
-            (len(self.shared_vars) > 0 and self._is_shared_decorated) 
-            or
-            (self.isolate and self._is_isolate_decorated)
+            (len(self.mocks) == 0 and not self._is_mock_decorated)
+            and
+            (len(self.shared_vars) == 0 and not self._is_shared_decorated) 
+            and
+            (not self.isolate and not self._is_isolate_decorated)
         )
 
     @property
