@@ -4,8 +4,9 @@ from collections import deque
 from functools import cached_property, lru_cache, partial
 from importlib.machinery import ModuleSpec
 from types import FunctionType, ModuleType
-from typing import Callable, Optional
+from typing import Callable, Counter, Optional
 
+from tini_test._internals._ast_utils import AstParser
 from tini_test._internals.consts import (_C_REG, _I_REG, _LINE_CLEAR, _LINE_UP,
                                          _M_REG, _RESET, _S_REG, _T_REG)
 from tini_test.enums import Color, RunMode, Verbosity
@@ -14,6 +15,7 @@ from tini_test.misc.annotations import (C_Reg, DirectoryPath, DotPythonPath,
                                         PartialObject, S_Reg, T_Reg,
                                         TestCollectionSize, TestFunctionName,
                                         _ReverseWrapConnections)
+from tini_test.misc.exceptions import DuplicateTestFound
 from tini_test.mock import MockDefinition
 from tini_test.shared import MetaSharedVar, SharedVar
 from tini_test.test_utils import _XTest
@@ -74,7 +76,7 @@ class TestCollection:
         # @coverage
         if spec is None:
             raise RuntimeError('Cannot find module named %s' % (module_name, ))
-        
+
         module = importlib.util.module_from_spec(spec)
         return spec, module
 
@@ -90,6 +92,8 @@ class TestCollection:
 
     def _import(self) -> None:
         spec, module = self.get_module_loader(self.dot_python_path)
+
+        self.validate_duplicate_tests()
         
         self.update_globals(module)
         
@@ -99,6 +103,14 @@ class TestCollection:
             raise RuntimeError('Cannot load module named %s' % (self.dot_python_path, ))
         spec.loader.exec_module(module)
 
+    def validate_duplicate_tests(self) -> None:
+        top_level_test_names = AstParser(self.dot_python_path).extract_decorated_test_names()
+        names = Counter(top_level_test_names)
+        duplicates = {n for n in names if names[n] > 1}
+        print('Duplicates found: ', duplicates)
+        if duplicates:
+            raise DuplicateTestFound(list(duplicates))
+        
     def reset_shared_meta(self) -> None:
         self.shared_meta.reset()
 
@@ -122,7 +134,7 @@ class TestCollection:
 
     def gather_tests(self, func_name: Optional[TestFunctionName] = None) -> list[TestFunctionName]:
 
-        test_names = []
+        test_names = set()
 
         for obj in dir(self.module):
 
@@ -179,10 +191,13 @@ class TestCollection:
                                _XTest____collector=self.collector,
                                _XTest____verbosity=self.verbosity)
 
-            test_names.append(test_name)
+            test_names.add(test_name)
             self.decorated_tests.append(test_obj)
 
-        return test_names
+        # if len(test_names) != len(self.TEST_REGISTRY):
+        #     raise DuplicateTestFound
+        
+        return list(test_names)
 
     def populate_tests(self) -> None:
         deque(map(lambda dec_test_case: dec_test_case(), self.decorated_tests))

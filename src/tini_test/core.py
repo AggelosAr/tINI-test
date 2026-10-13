@@ -192,7 +192,7 @@ class TestSuite:
         shared_meta = MetaSharedVar.get_meta_var()
 
         # XXX ???
-        # extreme case tests.dot_python_path is not unique inside nested sub dirs .
+        # extreme case tests.dot_python_path is not unique inside nested sub dirs . 
         # Just fail ASAP... is this even possible ?
         # can't think of a way to replicate .... I think it's not possible XD
         all_paths = set()

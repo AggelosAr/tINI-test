@@ -316,3 +316,6 @@ def test_thread_local_stdout_isatty():
 
     # StringIO doesn't implement isatty(), so fallback is False
     assert stdout.isatty() is False
+
+
+# TODO add subprocess tests to validate we found duplicates .
