@@ -185,6 +185,7 @@ def %s(): ...
     completed_process = run_test(test_name, test_name)
 
     # print(completed_process.stdout)
+    # print(completed_process.stderr)
     
     must_equal(0, completed_process.returncode)
 
@@ -209,21 +210,24 @@ def %s(): ...
 
 ''' % test_name
 
-    err = 'tini_test.misc.exceptions.SharedVarAlreadyDefined: Shared variable < var_a > is already defined in this context. For test < %s >' % test_name
-    
     _ = get_temp_file(test, test_name)
     completed_process = run_test(test_name, test_name)
 
-    # print(completed_process.stderr)
+    # print(completed_process.stdout)
 
-    must_equal(1, completed_process.returncode)
+    must_equal(0, completed_process.returncode)
 
-    search_line = None
-    for line in completed_process.stderr.splitlines():
-        if 'SharedVarAlreadyDefined' in line: 
-            search_line = line
+    conditions = [
+        '| Test file load failures : 1',
+        'tini_test.misc.exceptions.SharedVarAlreadyDefined: Shared variable < var_a > is already defined in this context. For test < %s >' % test_name
+    ]   
+    
+    for line in completed_process.stdout.splitlines():
+        for condition in conditions:
+            if condition in line:
+                conditions.remove(condition)
 
-    must_equal(err, search_line)
+    must_equal(0, len(conditions))
 
     delete_test_dir(test_name)
 
@@ -239,21 +243,25 @@ def %s(): ...
 
 ''' % test_name
 
-    err = 'tini_test.misc.exceptions.SharedOnlyAcceptsArguments: Shared only accepts positional arguments.'
     
     _ = get_temp_file(test, test_name)
     completed_process = run_test(test_name, test_name)
 
     # print(completed_process.stderr)
     
-    must_equal(1, completed_process.returncode)
+    must_equal(0, completed_process.returncode)
 
-    search_line = None
-    for line in completed_process.stderr.splitlines():
-        if 'SharedOnlyAcceptsArguments' in line: 
-            search_line = line
+    conditions = [
+        '| Test file load failures : 1',
+        'tini_test.misc.exceptions.SharedOnlyAcceptsArguments: Shared only accepts positional arguments.'
+    ]
 
-    must_equal(err, search_line)
+    for line in completed_process.stdout.splitlines():
+        for condition in conditions:
+            if condition in line:
+                conditions.remove(condition)
+
+    must_equal(0, len(conditions))
 
     delete_test_dir(test_name)
 
@@ -271,21 +279,25 @@ def %s(): ...
 
 ''' % test_name
 
-    err = 'tini_test.misc.exceptions.SharedAcceptedInvalidArguments: Shared accepts only <var> variables.'
 
     _ = get_temp_file(test, test_name)
     completed_process = run_test(test_name, test_name)
 
     # print(completed_process.stderr)
     
-    must_equal(1, completed_process.returncode)
+    must_equal(0, completed_process.returncode)
 
-    search_line = None
-    for line in completed_process.stderr.splitlines():
-        if 'SharedAcceptedInvalidArguments' in line: 
-            search_line = line
+    conditions = [
+        '| Test file load failures : 1',
+        'tini_test.misc.exceptions.SharedAcceptedInvalidArguments: Shared accepts only <var> variables.'
+    ]
 
-    must_equal(err, search_line)
+    for line in completed_process.stdout.splitlines():
+        for condition in conditions:
+            if condition in line:
+                conditions.remove(condition)
+
+    must_equal(0, len(conditions))
 
     delete_test_dir(test_name)
 
@@ -302,21 +314,25 @@ def %s(): ...
 
 ''' % test_name
 
-    err = 'tini_test.misc.exceptions.SharedAcceptedInvalidArguments: Shared accepts only <var> variables.'
-
     _ = get_temp_file(test, test_name)
     completed_process = run_test(test_name, test_name)
 
     # print(completed_process.stderr)
     
-    must_equal(1, completed_process.returncode)
+    must_equal(0, completed_process.returncode)
 
-    search_line = None
-    for line in completed_process.stderr.splitlines():
-        if 'SharedAcceptedInvalidArguments' in line: 
-            search_line = line
+    conditions = [
+        '| Test file load failures : 1',
+        'tini_test.misc.exceptions.SharedAcceptedInvalidArguments: Shared accepts only <var> variables.'
+    ]
 
-    must_equal(err, search_line)
+    for line in completed_process.stdout.splitlines():
+        for condition in conditions:
+            if condition in line:
+                conditions.remove(condition)
+
+    must_equal(0, len(conditions))
+
 
     delete_test_dir(test_name)
 
@@ -347,10 +363,18 @@ def %s() -> None:
     completed_process = run_test(test_name, test_name)
 
     # print(completed_process.stderr)
-    must_equal(1, completed_process.returncode)
+    must_equal(0, completed_process.returncode)
 
-    err = 'tini_test.misc.exceptions.SharedWasUsedOnWithoutTestDecorator: Missing test decorator for function decorated with Shared < %s >' % test_name
-    must_equal(err, completed_process.stderr.splitlines()[-1])
+    conditions = [
+        '| Test file load failures : 1',
+        'tini_test.misc.exceptions.SharedWasUsedOnWithoutTestDecorator: Missing test decorator for function decorated with Shared < %s >' % test_name
+    ]
+    for line in completed_process.stdout.splitlines():
+        for condition in conditions:
+            if condition in line:
+                conditions.remove(condition)
+
+    must_equal(0, len(conditions))
 
     delete_test_dir(test_name)
 

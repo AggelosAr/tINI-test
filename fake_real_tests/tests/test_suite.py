@@ -13,7 +13,7 @@ from tini_test.context_managers import WillRaise, _ThreadLocalStdout
 from tini_test.core import TestSuite
 from tini_test.enums import RunMode, Verbosity
 from tini_test.initializer import initialize_test_suite
-from tini_test.misc.exceptions import CantFindRelativePathToRoot, TestNotFound
+from tini_test.misc.exceptions import CantFindRelativePathToRoot
 from tini_test.module_collector import ModuleCollector
 
 
@@ -85,20 +85,6 @@ def test_suite_run() -> None:
     
 #     must_equal(1, completed_process.returncode)
 
-#     must_equal('''
-# Traceback (most recent call last):
-#   File "<frozen runpy>", line 198, in _run_module_as_main
-#   File "<frozen runpy>", line 88, in _run_code
-#   File "/home/papaggalos/workspace/python_projects/tINI-test/src/tini_test/__main__.py", line 10, in <module>
-#     test_suite = initialize_test_suite(**args)
-#                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#   File "/home/papaggalos/workspace/python_projects/tINI-test/src/tini_test/initializer.py", line 29, in initialize_test_suite
-#     test_suite.initialize_tests(_from=test_collector)
-#   File "/home/papaggalos/workspace/python_projects/tINI-test/src/tini_test/core.py", line 169, in initialize_tests
-#     raise TestNotFound
-# tini_test.misc.exceptions.TestNotFound: Test function was not found.
-# '''.strip()+'\n', completed_process.stderr)
-
 
 
 @Test.case
@@ -110,13 +96,6 @@ def crash_main() -> None:
                     'search_dir': '././././where_is?',
                     'file_name': 'None',
                     'test_function': None})
-        
-    with WillRaise(TestNotFound):
-        _tini_test({'run_mode': RunMode.ASYNC,
-                    'verbosity': Verbosity.MINIMAL,
-                    'search_dir': '.',
-                    'file_name': 'None',
-                    'test_function': '/./././where_is_it?'})
 
 
 

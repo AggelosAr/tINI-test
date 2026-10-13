@@ -7,7 +7,7 @@
 # '''
 
 
-# from dataclasses import dataclass
+from dataclasses import dataclass
 
 from tini_test.must_equals import must_equal
 from tini_test.shared import NotInitialized, Shared, var
@@ -21,8 +21,8 @@ from tini_test.test_utils import Test
 @Shared(var.int)
 @Test.case
 def test_var_can_passed_as_armument_to_heavy_nest_function():
-    must_equal(NotInitialized, var.int)
-    var.int = 666
+    # must_equal(NotInitialized, var.int)
+    # var.int = 666
     ...
     
 
@@ -32,7 +32,7 @@ def test_var_can_passed_as_armument_to_heavy_nest_function():
 @Shared(var.int)
 @Test.case
 def test_var_can_passed_as_armument_to_heavy_nest_function():
-    must_equal(NotInitialized, var.int)
-    var.int = 666
+    # must_equal(NotInitialized, var.int)
+    # var.int = 666
     ...
    

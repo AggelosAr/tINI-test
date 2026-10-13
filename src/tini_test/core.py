@@ -13,7 +13,6 @@ from tini_test.misc.annotations import (DotPythonPath, Errors, FileFailReason,
                                         TimeTakenForSuiteInitialization,
                                         TimeTakenForTestDiscovery,
                                         TimeTakenToRunSuite)
-from tini_test.misc.exceptions import TestNotFound
 from tini_test.module_collector import ModuleCollector
 from tini_test.shared import MetaSharedVar
 from tini_test.test import TestCollection
@@ -187,14 +186,16 @@ class TestSuite:
 
         return '\n'.join(_r if self.file_load_failures else _r[:-2]) 
 
-    # XXX Async init of tests
     def initialize_tests(self, _from: ModuleCollector) -> None:
         self.discovery_time = _from.discovery_time
 
-        # Used to give fail reason while searching for a single test file
-        single_test_file = None
-
         shared_meta = MetaSharedVar.get_meta_var()
+
+        # XXX ???
+        # extreme case tests.dot_python_path is not unique inside nested sub dirs .
+        # Just fail ASAP... is this even possible ?
+        # can't think of a way to replicate .... I think it's not possible XD
+        all_paths = set()
 
         for module_path, test_file in _from:
 
@@ -202,6 +203,10 @@ class TestSuite:
                                    module_path=module_path,
                                    file=test_file,
                                    shared_meta=shared_meta)
+
+            if tests.dot_python_path in all_paths:
+                raise RuntimeError('Duplicate path detected: %s' % (tests.dot_python_path, ))
+            all_paths.add(tests.dot_python_path)
             
             try:
                 tests._import()
@@ -213,9 +218,7 @@ class TestSuite:
             except Exception as e:
                 self.file_load_failures = 1
                 tb = self.format_file_failure_traceback(traceback.format_exc())
-                # This is wrong we should use the full dot path of the test file instead of just the file name
-                self.failed_to_collect_test_files_reasons[test_file] = '%s\n%s' % (str(e), tb, )
-                single_test_file = test_file
+                self.failed_to_collect_test_files_reasons[tests.dot_python_path] = '%s\n%s' % (str(e), tb, )
                 continue
 
             finally:
@@ -233,21 +236,6 @@ class TestSuite:
                     break
             
             self.container[tests.dot_python_path] = tests
-
-
-        if self.searching_single_test and not self.container:
-            # TODO while searching for a single test, provide more context in the fail reason.
-            # Currently the get_summary is skipped.
-            # Because the test may be found but it has an error
-            # Also there is a case there is a failure in another file 
-            # while collecting, as a result we also show the other failures
-            # Is this possible to improve the fail reason further? (probably)
-            # THIS IS WRONG?
-            fail_reason = ''
-            if single_test_file:
-                fail_reason = self.failed_to_collect_test_files_reasons[single_test_file]
-
-            raise TestNotFound(extra_msg=fail_reason)
 
     def run_suite(self) -> None:
         for _, test_collection in self.container.items():

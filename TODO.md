@@ -12,9 +12,7 @@ but on also filter -t it will select only one !!!
 Clean consts 
 
 
-# add test where file fails to load and fail to reset meta fixed?
+# Duplicate function on same test file todo 
 
-# on single test file search -> if test is broken do we show it ?
-# on single test file if another file fails -> test is not found ?
 
 

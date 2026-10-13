@@ -1,7 +1,7 @@
 from tini_test import Isolate, Test, WillRaise, must_equal
 from tini_test.enums import RunMode, Verbosity
 from tini_test.initializer import initialize_test_suite
-from tini_test.misc.exceptions import CantFindRelativePathToRoot, TestNotFound
+from tini_test.misc.exceptions import CantFindRelativePathToRoot
 from tini_test.module_collector import ModuleCollector
 
 
@@ -242,12 +242,14 @@ def test_collector_will_not_find_anything_if_nonexisting_file_is_requested() -> 
 @Isolate
 @Test.case
 def test_test_module_will_not_collect_a_single_function_if_it_doesnt_exist() -> None:
-    with WillRaise(TestNotFound):
-        _ = initialize_test_suite(verbosity=Verbosity.MINIMAL,
-                                  run_mode=RunMode.SYNC,
-                                  search_dir='.',
-                                  test_function='file_that_is_not_here')
-
+    _ = initialize_test_suite(verbosity=Verbosity.MINIMAL,
+                              run_mode=RunMode.SYNC,
+                              search_dir='.',
+                              test_function='file_that_is_not_here')
+    must_equal(0, _.total_tests)
+    must_equal(0, _.successes)
+    must_equal(0, _.errors)
+    # must_equal(0, _.file_load_failures) XXX we can crop them
 
 
 @Isolate

@@ -21,10 +21,22 @@ def test_DuplicateMockRegisteredOnTest() -> None:
 
     completed_process = run_test(test_name, test_name)
 
-    must_equal(1, completed_process.returncode)
+    # print(completed_process.stdout)
+    # print(completed_process.stderr)
 
-    err = 'tini_test.misc.exceptions.DuplicateMockRegisteredOnTest: Duplicate mock function < __ > registered on test < %s >' % test_name
-    must_equal(err, completed_process.stderr.splitlines()[-1])
+    must_equal(0, completed_process.returncode)
+
+    conditions = [
+        '| Test file load failures : 1',
+        'tini_test.misc.exceptions.DuplicateMockRegisteredOnTest: Duplicate mock function < __ > registered on test < %s >' % test_name
+    ]
+
+    for line in completed_process.stdout.splitlines():
+        for condition in conditions:
+            if condition in line:
+                conditions.remove(condition)
+
+    must_equal(0, len(conditions))
 
     delete_test_dir(test_name)
 
@@ -49,15 +61,19 @@ def %s() -> None:
 
     completed_process = run_test(test_name, test_name)
 
-    must_equal(1, completed_process.returncode)
-    err = 'tini_test.misc.exceptions.TestDecoratorUsedMoreThanOnce: Test decorator used more than once on test < %s >' % test_name
-    unique_lines = list(map(lambda l: l.strip(), list(dict.fromkeys(completed_process.stderr.splitlines()))))
+    must_equal(0, completed_process.returncode)
 
-    passes = False
-    for idx, line in enumerate(unique_lines):
-            if err in line:
-                passes = True
-    must_equal(True, passes)
+    conditions = [
+        '| Test file load failures : 1',
+        'tini_test.misc.exceptions.TestDecoratorUsedMoreThanOnce: Test decorator used more than once on test < %s >' % test_name
+    ]
+
+    for line in completed_process.stdout.splitlines():
+        for condition in conditions:
+            if condition in line:
+                conditions.remove(condition)
+
+    must_equal(0, len(conditions))
 
     delete_test_dir(test_name)
 
@@ -119,11 +135,18 @@ def %s() -> None:
         # print(completed_process.stdout)
         # print(completed_process.stderr)
 
-        must_equal(1, completed_process.returncode)
-        unique_lines = list(map(lambda l: l.strip(), list(dict.fromkeys(completed_process.stderr.splitlines()))))
+        must_equal(0, completed_process.returncode)
 
-        err2 = 'tini_test.misc.exceptions.TestDecoratorUsedMoreThanOnce: Test decorator used more than once on test < %s >' % f'test_exceptions_3_{i}'
-        must_equal(True, err2 in unique_lines)
+        conditions = [
+            '| Test file load failures : 1',
+            'tini_test.misc.exceptions.TestDecoratorUsedMoreThanOnce: Test decorator used more than once on test < %s >' % f'test_exceptions_3_{i}'
+        ]
+        for line in completed_process.stdout.splitlines():
+            for condition in conditions:
+                if condition in line:
+                    conditions.remove(condition)
+
+        must_equal(0, len(conditions))
 
         delete_test_dir(f'test_exceptions_3_{i}')
 
@@ -145,10 +168,18 @@ def %s() -> None:
     # print(completed_process.stdout)
     # print(completed_process.stderr)
 
-    must_equal(1, completed_process.returncode)
+    must_equal(0, completed_process.returncode)
 
-    err = 'tini_test.misc.exceptions.MockWasUsedOnWithoutTestDecorator: Missing test decorator for function decorated with mock function < %s >' % test_name
-    must_equal(err, completed_process.stderr.splitlines()[-1])
+    conditions = [
+        '| Test file load failures : 1',
+        'tini_test.misc.exceptions.MockWasUsedOnWithoutTestDecorator: Missing test decorator for function decorated with mock function < %s >' % test_name
+    ]
+    for line in completed_process.stdout.splitlines():
+        for condition in conditions:
+            if condition in line:
+                conditions.remove(condition)
+
+    must_equal(0, len(conditions))
 
     delete_test_dir(test_name)
 
@@ -167,11 +198,19 @@ def %s() -> None:
 
     completed_process = run_test(test_name, test_name)
 
-    must_equal(1, completed_process.returncode)
+    must_equal(0, completed_process.returncode)
 
-    err = 'tini_test.misc.exceptions.MockMissingFunctionError: Mock function is missing.' 
-    must_equal(err, completed_process.stderr.splitlines()[-1])
+    conditions = [
+        '| Test file load failures : 1',
+        'tini_test.misc.exceptions.MockMissingFunctionError: Mock function is missing.'
+    ]
+    for line in completed_process.stdout.splitlines():
+        for condition in conditions:
+            if condition in line:
+                conditions.remove(condition)
 
+    must_equal(0, len(conditions))
+    
     delete_test_dir(test_name)
 
     test_name = 'test_MockMissingFunctionError'
@@ -186,10 +225,18 @@ def %s() -> None:
 
     completed_process = run_test(test_name, test_name)
 
-    must_equal(1, completed_process.returncode)
+    must_equal(0, completed_process.returncode)
 
-    err = 'tini_test.misc.exceptions.MockMissingFunctionError: Mock function is missing.' 
-    must_equal(err, completed_process.stderr.splitlines()[-1])
+    conditions = [
+        '| Test file load failures : 1',
+        'tini_test.misc.exceptions.MockMissingFunctionError: Mock function is missing.'
+    ]
+    for line in completed_process.stdout.splitlines():
+        for condition in conditions:
+            if condition in line:
+                conditions.remove(condition)
+
+    must_equal(0, len(conditions))
 
     delete_test_dir(test_name)
 
@@ -208,10 +255,18 @@ def %s() -> None:
 
     completed_process = run_test(test_name, test_name)
 
-    must_equal(1, completed_process.returncode)
+    must_equal(0, completed_process.returncode)
 
-    err = 'tini_test.misc.exceptions.MockDefinitionError: Mock should not accept both return value and arguments.' 
-    must_equal(err, completed_process.stderr.splitlines()[-1])
+    conditions = [
+        '| Test file load failures : 1',
+        'tini_test.misc.exceptions.MockDefinitionError: Mock should not accept both return value and arguments.'
+    ]
+    for line in completed_process.stdout.splitlines():
+        for condition in conditions:
+            if condition in line:
+                conditions.remove(condition)
+
+    must_equal(0, len(conditions))
 
     delete_test_dir(test_name)
 
@@ -230,10 +285,18 @@ def %s() -> None:
 
     completed_process = run_test(test_name, test_name)
 
-    must_equal(1, completed_process.returncode)
+    must_equal(0, completed_process.returncode)
 
-    err = 'tini_test.misc.exceptions.MockCallDefinitionError: Arguments should be of type tuple.' 
-    must_equal(err, completed_process.stderr.splitlines()[-1])
+    conditions = [
+        '| Test file load failures : 1',
+        'tini_test.misc.exceptions.MockCallDefinitionError: Arguments should be of type tuple.'
+    ]
+    for line in completed_process.stdout.splitlines():
+        for condition in conditions:
+            if condition in line:
+                conditions.remove(condition)
+
+    must_equal(0, len(conditions))
 
     delete_test_dir(test_name)
 
@@ -252,10 +315,18 @@ def %s() -> None:
 
     completed_process = run_test(test_name, test_name)
 
-    must_equal(1, completed_process.returncode)
+    must_equal(0, completed_process.returncode)
 
-    err = 'tini_test.misc.exceptions.MockCallDefinitionError: Keyword arguments should be of type dict.' 
-    must_equal(err, completed_process.stderr.splitlines()[-1])
+    conditions = [
+        '| Test file load failures : 1',
+        'tini_test.misc.exceptions.MockCallDefinitionError: Keyword arguments should be of type dict.'
+    ]
+    for line in completed_process.stdout.splitlines():
+        for condition in conditions:
+            if condition in line:
+                conditions.remove(condition)
+
+    must_equal(0, len(conditions))
 
     delete_test_dir(test_name)
 

@@ -28,12 +28,6 @@ class CantFindRelativePathToRoot(Exception):
         super().__init__("Can't find the requested relative path to root.")
 
 
-class TestNotFound(Exception):
-
-    def __init__(self, extra_msg: str = '') -> None:
-        super().__init__('Test function was not found.\n\t%s' % (extra_msg, ))
-
-
 class WillRaiseReceivedNotAnException(Exception):
 
     def __init__(self) -> None:

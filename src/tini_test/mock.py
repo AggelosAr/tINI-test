@@ -232,6 +232,8 @@ class MockDefinition:
             # Ignore returns since we can't validate it. It can be an arbitrary value.
             MockDefinition.validate_mocked_function(mock)
             return MockReturn(mock, return_value=returns)
+
+        raise MockDefinitionError
         
     @classmethod
     def validate_mocks(cls, mocks: list['MockDefinition'], test_name: TestFunctionName) -> None:

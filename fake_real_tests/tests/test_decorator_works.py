@@ -100,13 +100,17 @@ def case3(): ...
         _ = get_temp_file(test, test_name)
         completed_process = run_test(test_name, test_name)
 
-        must_equal(1, completed_process.returncode)
+        must_equal(0, completed_process.returncode)
 
-        search_line = None
-        for line in completed_process.stderr.splitlines():
-            if 'tini_test.misc.exceptions.TestArgumentsShouldBeCallables:' in line: 
-                search_line = line
-        
-        must_equal(err, search_line)
+        conditions = [
+            '| Test file load failures : 1',
+            err
+        ]
+
+        for line in completed_process.stdout.splitlines():
+            if line in conditions:
+                conditions.remove(line)
+
+        must_equal(0, len(conditions))
 
         delete_test_dir(test_name)

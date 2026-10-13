@@ -1,7 +1,7 @@
 from ._internals._profiler import profiler
 from .arg_parser import ArgsDict, receive_args
 from .initializer import initialize_test_suite
-from .misc.exceptions import CantFindRelativePathToRoot, TestNotFound
+from .misc.exceptions import CantFindRelativePathToRoot
 
 _PROFILING = False
 
@@ -14,13 +14,9 @@ def _tini_test(kwargs: ArgsDict):
     except CantFindRelativePathToRoot:
         raise
 
-    except TestNotFound:
-        raise
-
     else:
         test_suite.runner()
         test_suite.pprint()
-
 
 if __name__=='__main__':
     

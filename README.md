@@ -352,4 +352,5 @@ Of course the above is somewhat cancelled because the algorithm tries to autocom
 * [ ] Register tests into groups (group-level setup/cleanup).
 * [ ] Add global fail sort mode, not just per module.
 * [ ] Add support for global shared (xxx2).
+* [ ] Async initialization of tests.
 * [ ] Fix terminal flickering on async ( minimal )
