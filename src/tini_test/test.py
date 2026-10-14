@@ -164,7 +164,7 @@ class TestCollection:
             test_chain.raise_for_multiple_test_wraps()
             test_chain.raise_for_no_test_wraps()
 
-            match test_chain.has_dependencies:
+            match test_chain.has_not_dependencies:
 
                 case True:
                     test_wrap = test_chain.test_wrap
@@ -192,9 +192,6 @@ class TestCollection:
 
             test_names.add(test_name)
             self.decorated_tests.append(test_obj)
-
-        # if len(test_names) != len(self.TEST_REGISTRY):
-        #     raise DuplicateTestFound
         
         return list(test_names)
 

@@ -33,7 +33,7 @@ class DecoratedTestChain:
         self._is_isolate_decorated = False
 
     @property
-    def has_dependencies(self) -> bool:
+    def has_not_dependencies(self) -> bool:
         return (
             (len(self.mocks) == 0 and not self._is_mock_decorated)
             and
@@ -43,8 +43,8 @@ class DecoratedTestChain:
         )
 
     @property
-    def has_not_dependencies(self) -> bool:
-        return not self.has_dependencies
+    def has_dependencies(self) -> bool:
+        return not self.has_not_dependencies
 
     @property
     def test_wrap(self) -> TestWrappedHolder:

@@ -133,26 +133,12 @@ from tini_test.test_utils import Test
 def f1(x, a, b):
     return x + a + b
 
-def f2(x, c, d):
-    return x + c + d
-
-def f3(x, f, g):
-    return x + f + g
-
 
 @Mock.mock(f1, args=(1,), kwargs={'a': 8, 'b': 5})
-@Mock.mock(f2, args=(9,), kwargs={'c': 2, 'd': 7})
-@Mock.mock(f3, args=(4,), kwargs={'f': 6, 'g': 3})
 @Test.case
 def test_multiple_mocks_with_args():
     must_equal(1 + 8 + 5, f1('?', a='?', b='?'))
-    must_equal(9 + 2 + 7, f2('?', c='?', d='?'))
-    must_equal(4 + 6 + 3, f3('?', f='?', g='?'))
-
-    must_equal(1 + 8 + 5 + 9 + 2 + 7 + 4 + 6 + 3, 
-               f1('?', a='?', b='?') + 
-               f2('?', c='?', d='?') + 
-               f3('?', f='?', g='?'))
+               
 ```
 
 The mocked function can also be supplied by keyword:
@@ -226,7 +212,6 @@ A file is considered discoverable when:
 ### Flow
 
 - Setup is executed before the test function runs.
-
 
 - Cleanup is executed after the test function completes.
 
