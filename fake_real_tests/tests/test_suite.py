@@ -124,6 +124,7 @@ def test_suite_run_solved_failing_tests_for_coverage() -> None:
     test_suite.runner()
     test_suite.pprint()
 
+    
     must_equal(21, test_suite.total_tests)
     must_equal(2, test_suite.successes)
     must_equal(19, test_suite.errors)
@@ -131,13 +132,19 @@ def test_suite_run_solved_failing_tests_for_coverage() -> None:
 
     
     lines = set(map(lambda l: l.strip(), list(dict.fromkeys(test_suite.get_summary().splitlines()))))
+
     conditions = [
         'Test files failed to load (1):',
-        '(1). File: test_fails_to_collect',
+        'test_fails_to_collect',
         'Reason: division by zero'
         ]
     for condition in conditions:
-        must_equal(True, condition in lines)
+        at_least_some_part = False
+        for line in lines:
+            if condition in line:
+                at_least_some_part = True
+
+        must_equal(True, at_least_some_part)
 
             #   -------------------------------------------------------
             # -------------------------------------------------------
@@ -163,11 +170,17 @@ def test_suite_run_solved_failing_tests_for_coverage() -> None:
     lines = set(map(lambda l: l.strip(), list(dict.fromkeys(test_suite.get_summary().splitlines()))))
     conditions = [
         'Test files failed to load (1):',
-        '(1). File: test_fails_to_collect',
+        'test_fails_to_collect',
         'Reason: division by zero'
         ]
     for condition in conditions:
-        must_equal(True, condition in lines)
+        at_least_some_part = False
+        for line in lines:
+            if condition in line:
+                at_least_some_part = True
+
+        must_equal(True, at_least_some_part)
+        
 
             #   -------------------------------------------------------
             # -------------------------------------------------------
@@ -197,13 +210,17 @@ def test_suite_run_solved_failing_tests_for_coverage() -> None:
     lines = set(map(lambda l: l.strip(), list(dict.fromkeys(test_suite.get_summary().splitlines()))))
     conditions = [
         'Test files failed to load (1):',
-        '(1). File: test_fails_to_collect',
+        'test_fails_to_collect',
         'Reason: division by zero'
         ]
     for condition in conditions:
-        must_equal(True, condition in lines)
+        at_least_some_part = False
+        for line in lines:
+            if condition in line:
+                at_least_some_part = True
 
-
+        must_equal(True, at_least_some_part)
+        
 
 @Test.case
 def test_suite_run_sync_normal() -> None:

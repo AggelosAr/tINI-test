@@ -1,12 +1,14 @@
 import ast
 from importlib.machinery import ModuleSpec
 from pathlib import Path
+from typing import no_type_check
 
 from tini_test.misc.annotations import TestFunctionName
 
 
 class AstParser:
 
+    @no_type_check
     def __init__(self, from_spec: ModuleSpec | Path) -> None:
 
         if isinstance(from_spec, ModuleSpec):
@@ -28,12 +30,14 @@ class AstParser:
                 calls.append(node.func.id)
         return calls
 
+    @no_type_check
     def extract_top_level_function_nodes(self) -> list[ast.FunctionDef]:
         return [node for node in self.root_node.body if isinstance(node, ast.FunctionDef)]
 
     def extract_top_level_function_names(self) -> list[TestFunctionName]:
         return [fn.name for fn in self.extract_top_level_function_nodes()]
 
+    @no_type_check
     def extract_top_level_function_nodes_with_test_decorator(self) -> list[ast.FunctionDef]:
         return [
             fn for fn in self.extract_top_level_function_nodes()

@@ -72,8 +72,11 @@ def test_collector_collects_all() -> None:
                                                  'test_exceptions_global_scope_containers',
                                                  'test_shared_types_and_multiple_args', 
                                                  'test_walrus', 
-                                                 'test_imports', 
-                                                 'test_shared_base']}
+                                                 'test_shared_base'],
+                      'test_about_shared.tests.test_imports_global_collisions.tests': ['test_c', 
+                                                                                       'test_b', 
+                                                                                       'test_imports', 
+                                                                                       'test_a']}
 
     must_equal(correct_items, dict(test_collector.test_modules.items()))
 
@@ -140,8 +143,11 @@ def test_collector_collects_all_and_exclude_dir_works() -> None:
                                                  'test_exceptions_global_scope_containers',
                                                  'test_shared_types_and_multiple_args', 
                                                  'test_walrus', 
-                                                 'test_imports', 
-                                                 'test_shared_base']}
+                                                 'test_shared_base'],
+                      'test_about_shared.tests.test_imports_global_collisions.tests': ['test_c', 
+                                                                                       'test_b', 
+                                                                                       'test_imports', 
+                                                                                       'test_a']}
 
     must_equal(correct_items, dict(test_collector.test_modules.items()))
 
