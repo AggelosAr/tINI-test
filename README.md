@@ -2,18 +2,19 @@
 ![Coverage](coverage.svg)
 
 A lightweight Python test framework (hand-crafted) focused on simple test discovery and execution from the command line with **zero dependencies**. 
+
 The main utilities provided by the suite are:
 
-- Defining test cases with via `_@Test.case_` decorators
+- Defining test cases with via _@Test.case_ decorators
     - With optional setup/cleanup functionality per test
 
-- Adding mocks via `_@Mock.mock_` decorators
+- Adding mocks via _@Mock.mock_ decorators
     - Mock any function call or return
 
-- Adding shared/context vars via `_@Shared_` decorators
+- Adding shared/context vars via _@Shared_ decorators
     - Variables defined will be usable in any part of the code reachable from the test.
 
-- Isolating a test via the `_@Isolate_` decorators (*experimental*)
+- Isolating a test via the _@Isolate_ decorators (*experimental*)
     - Will force the test to run sequentially.
 
 - Validating exceptions via the _WillRaise_ context manager.
