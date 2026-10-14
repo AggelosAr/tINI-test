@@ -1,13 +1,6 @@
-'''
-NOTE: 
-    For each test passing using this method, ensure there is a identical 
-    test failing in the <> dir for coverage. 
-    >>> The alternative is to run a custom coverage command, inside each 
-    of these tests and merge the final coverage results with the main coverage report.
-
-'''
+# TODO cleanup here
 # We have problem on async? Maybe ? do this a context manager.
-# XXX Move passing tests to failing. And make the big tests 1
+
 
 import os
 import shutil
@@ -15,6 +8,12 @@ import subprocess
 import tempfile
 import uuid
 from typing import Optional
+
+
+USING_COVERAGE = True
+USING_COVERAGE = False
+
+COVERAGE_ROOT = '/tmp/coverages/tini_test/'
 
 ROOT = '/tmp/python/tini_test'
 
@@ -65,26 +64,53 @@ def run_test(folder_name: Optional[str] = None,
              test_name: Optional[str] = None, 
              test_file: Optional[str] = None) -> subprocess.CompletedProcess:
 
-    # TODO
+    
     project_root = '/home/papaggalos/workspace/python_projects/tINI-test'
     env_path = '312venv/bin/activate'
     python_path_from_project = '312venv/bin/python'
-    python_path_from_project = '.venv/bin/python'
+    # python_path_from_project = '.venv/bin/python'
 
     if not folder_name:
         folder_name = 'tini_test'
 
     python3 = os.path.join(project_root, python_path_from_project)
 
+    
     commands = [
         'cd %s' % (ROOT, ),
-        '%s -m tini_test -d %s' % (python3, folder_name, )
     ]
+
+
+    run_tini_test_command = '%s -m tini_test -d %s' % (python3, folder_name, )
+
+    if USING_COVERAGE:
+        if not os.path.exists(COVERAGE_ROOT):
+            os.makedirs(COVERAGE_ROOT, exist_ok=True)
+
+        tini_test_source = '/home/papaggalos/workspace/python_projects/tINI-test/src'
+        coverage_command = ('%s -m '\
+                            'coverage run '\
+                            '--source=%s '\
+                            '--data-file=%s.coverage.run_%s '\
+                            '-m '
+                                % 
+                                (
+                                    python3, 
+                                    tini_test_source, 
+                                    COVERAGE_ROOT, get_unique_folder_name(), 
+                                )
+                            )
+        
+        run_tini_test_command = '%s tini_test -d %s' % (coverage_command, folder_name, )
     
     if test_name:
-        commands[-1] += ' -t %s' % test_name
+        run_tini_test_command += ' -t %s' % test_name
     if test_file:
-        commands[-1] += ' -f %s' % test_file
+        run_tini_test_command += ' -f %s' % test_file
+
+    
+    commands.append(run_tini_test_command)
+
 
     completed_process = subprocess.run(' && '.join(commands),
                                        timeout=10, 

@@ -260,7 +260,6 @@ class MetaSharedVar:
         match self._local_context:
         
             case None:
-
                 raise SharedVarDoesNotExistInThisContext(key, self._test_name)
             
             case _:
@@ -273,6 +272,7 @@ class MetaSharedVar:
                             
                             case None:
                                 raise SharedVarDoesNotExistInThisContext(key, self._test_name)
+                            
                             case _:
                                 return shard
                     

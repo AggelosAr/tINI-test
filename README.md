@@ -1,7 +1,7 @@
 # tINI test
 ![Coverage](coverage.svg)
 
-A lightweight Python test framework (hand-crafted) focused on simple test discovery and execution from the command line with **zero dependencies**. 
+A lightweight Python test framework (hand-crafted and almost full type safe) focused on simple test discovery and execution from the command line with **zero dependencies**. 
 
 The main utilities provided by the suite are:
 
@@ -19,7 +19,7 @@ The main utilities provided by the suite are:
 
 - Validating exceptions via the _WillRaise_ context manager.
 
-- Asserting equality via the _must_equal_ helper fuinction.
+- Asserting equality via the *must_equal* helper function.
 
 *These utilities can be combined in any way.*
 

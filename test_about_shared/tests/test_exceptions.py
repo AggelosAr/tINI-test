@@ -118,6 +118,9 @@ def %s(): ...
     _ = get_temp_file(test, test_name)
     completed_process = run_test(test_name, test_name)
 
+    # print(completed_process.stdout)
+    # print(completed_process.stderr)
+
     must_equal(0, completed_process.returncode)
 
     search_line = None
