@@ -245,15 +245,15 @@ def test_side_effects():
 The shared vars can be used in any part of the code reachable during the lifetime of the test as long as 
 the var is imported and used. e.g. `from tini_test import var`
 
-> Rationale
-Assume you called @Test.case with a setup callable and you retrieved a row from the db. 
+#### Rationale
+> Assume you called @Test.case with a setup callable and you retrieved a row from the db. 
 The _Shared_ decorator enables you to store the item in the local context of the test and use it later.
 Instead of having to do N+1 queries. 
 
-> NOTES
-Trying to access a variable not defined in the _Shared_ will raise _SharedVarDoesNotExistInThisContext_ 
-Trying to use global variables as var will raise _GlobalSharedVarsAreNotSupported_ 
-During async tests with shared are locked. (@ROADMAP)
+#### NOTES
+> Trying to access a variable not defined in the _Shared_ will raise _SharedVarDoesNotExistInThisContext_ 
+> Trying to use global variables as var will raise _GlobalSharedVarsAreNotSupported_ 
+> During async tests with shared are locked. (@ROADMAP)
 
 ## Test Discovery
 
