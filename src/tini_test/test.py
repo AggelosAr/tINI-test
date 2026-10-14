@@ -93,7 +93,7 @@ class TestCollection:
     def _import(self) -> None:
         spec, module = self.get_module_loader(self.dot_python_path)
 
-        self.validate_duplicate_tests()
+        self.validate_duplicate_tests(spec)
         
         self.update_globals(module)
         
@@ -103,11 +103,10 @@ class TestCollection:
             raise RuntimeError('Cannot load module named %s' % (self.dot_python_path, ))
         spec.loader.exec_module(module)
 
-    def validate_duplicate_tests(self) -> None:
-        top_level_test_names = AstParser(self.dot_python_path).extract_decorated_test_names()
+    def validate_duplicate_tests(self, spec: ModuleSpec) -> None:
+        top_level_test_names = AstParser(spec).extract_decorated_test_names()
         names = Counter(top_level_test_names)
         duplicates = {n for n in names if names[n] > 1}
-        print('Duplicates found: ', duplicates)
         if duplicates:
             raise DuplicateTestFound(list(duplicates))
         

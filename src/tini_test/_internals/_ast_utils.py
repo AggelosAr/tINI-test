@@ -31,8 +31,8 @@ class AstParser:
     def extract_top_level_function_nodes(self) -> list[ast.FunctionDef]:
         return [node for node in self.root_node.body if isinstance(node, ast.FunctionDef)]
 
-    def extract_top_level_function_names(self) -> set[TestFunctionName]:
-        return set(fn.name for fn in self.extract_top_level_function_nodes())
+    def extract_top_level_function_names(self) -> list[TestFunctionName]:
+        return [fn.name for fn in self.extract_top_level_function_nodes()]
 
     def extract_top_level_function_nodes_with_test_decorator(self) -> list[ast.FunctionDef]:
         return [
@@ -43,6 +43,5 @@ class AstParser:
             )
         ]
 
-    def extract_decorated_test_names(self) -> set[TestFunctionName]:
-        return set(fn.name for fn in self.extract_top_level_function_nodes_with_test_decorator())
-
+    def extract_decorated_test_names(self) -> list[TestFunctionName]:
+        return [fn.name for fn in self.extract_top_level_function_nodes_with_test_decorator()]

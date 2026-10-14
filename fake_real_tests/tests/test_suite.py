@@ -9,6 +9,7 @@ from time import perf_counter
 
 from tini_test import Isolate, Test, must_equal
 from tini_test.__main__ import _tini_test
+from tini_test._internals._broken import delete_test_dir, get_temp_file, get_unique_folder_name, run_test
 from tini_test.context_managers import WillRaise, _ThreadLocalStdout
 from tini_test.core import TestSuite
 from tini_test.enums import RunMode, Verbosity
@@ -318,4 +319,51 @@ def test_thread_local_stdout_isatty():
     assert stdout.isatty() is False
 
 
-# TODO add subprocess tests to validate we found duplicates .
+@Isolate
+@Test.case
+def test_suite_find_duplicates() -> None:
+    duplicate_test = '''
+
+@Test.case
+def test_duplicate():
+    pass
+
+@Shared(var.int)
+@Test.case
+def test_duplicate():
+    pass
+'''
+    normal_test = '''
+
+@Test.case
+def test_normal():
+    pass
+'''
+    file_names = ['duplicate_test', 'normal_test']
+
+    folder_name = get_unique_folder_name()
+    
+    for test, name in zip([duplicate_test, normal_test], file_names):
+        _ = get_temp_file(test, folder_name=os.path.join(folder_name, name))
+
+    completed_process = run_test(folder_name=folder_name)
+
+    must_equal(0, completed_process.returncode)
+
+    conditions = [
+        '| Total registered tests  : 1',
+        '| Total successes         : 1',
+        '| Total errors            : 0',
+        '| Test file load failures : 1',
+        'Reason: Duplicate test(s) found: < test_duplicate >'
+
+    ]
+
+    for line in completed_process.stdout.splitlines():
+        __line = line.strip()
+        if __line in conditions:
+            conditions.remove(__line)
+
+    must_equal(0, len(conditions))
+
+    delete_test_dir()
