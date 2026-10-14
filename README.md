@@ -252,7 +252,9 @@ Instead of having to do N+1 queries.
 
 #### NOTES
 > Trying to access a variable not defined in the _Shared_ will raise _SharedVarDoesNotExistInThisContext_ 
+
 > Trying to use global variables as var will raise _GlobalSharedVarsAreNotSupported_ 
+
 > During async tests with shared are locked. (@ROADMAP)
 
 ## Test Discovery
