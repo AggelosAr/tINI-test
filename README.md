@@ -255,7 +255,7 @@ Instead of having to do N+1 queries.
 
 > Trying to use global variables as var will raise _GlobalSharedVarsAreNotSupported_ 
 
-> During async tests with shared are locked. (@ROADMAP)
+> During async excecution, tests with shared are locked. (@ROADMAP)
 
 ## Test Discovery
 
