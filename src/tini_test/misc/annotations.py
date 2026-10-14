@@ -158,7 +158,7 @@ class GlobalRegistry(dict[str, Any]):
     def __getitem__(self, key: C_ConstRegId) -> C_Reg | None: ...
     @overload
     def __getitem__(self, key: str) -> Any: ...
-    def __getitem__(self, key: str) -> Any:
+    def __getitem__(self, key: str) -> Any: # pragma: no cover
         return super().__getitem__(key)
 
     @overload  # type: ignore[override]
@@ -173,7 +173,7 @@ class GlobalRegistry(dict[str, Any]):
     def get(self, key: C_ConstRegId, default: None = None, /) -> C_Reg | None: ...
     @overload
     def get(self, key: str, default: Any = None, /) -> Any: ...
-    def get(self, key: str, default: Any = None, /) -> Any:
+    def get(self, key: str, default: Any = None, /) -> Any: # pragma: no cover
         return super().get(key, default)
 
     @overload
@@ -188,7 +188,7 @@ class GlobalRegistry(dict[str, Any]):
     def __setitem__(self, key: C_ConstRegId, value: C_Reg) -> None: ...
     @overload
     def __setitem__(self, key: str, value: Any) -> None: ...
-    def __setitem__(self, key: str, value: Any) -> None:
+    def __setitem__(self, key: str, value: Any) -> None: # pragma: no cover
         super().__setitem__(key, value)
 
 

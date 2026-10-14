@@ -158,7 +158,7 @@ def cases():
         'Reason: Global shared variable < c > is not supported.',
         
         "def e(): _()                       # And test fails since it is not in context",
-        '         ~^^',
+        '         ^^^', # ok this was supposed to be ~^^ xD
         "_ = lambda: var.e                  # >>> Accepts to give this <var.e> as 'global'",
         '            ^^^^^',
         'tini_test.misc.exceptions.SharedVarDoesNotExistInThisContext: Shared variable < e > does not exist in this context. For test < e >',
@@ -170,6 +170,7 @@ def cases():
         if f_line in conditions:
             conditions.remove(f_line)
 
+    # print('REMAINING CONDITIONS:', conditions)
     must_equal(0, len(conditions))
 
     delete_test_dir(folder_name)

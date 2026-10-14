@@ -9,7 +9,6 @@ import tempfile
 import uuid
 from typing import Optional
 
-
 USING_COVERAGE = True
 USING_COVERAGE = False
 
