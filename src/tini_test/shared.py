@@ -78,12 +78,6 @@ class SharedVar:
             case _:
                 stored_key = object.__getattribute__(self, '_stored_key')
                 return object.__getattribute__(self, stored_key)
-
-    
-    def __eq__(self, other: Any) -> bool:
-        if not isinstance(other, SharedVar):
-            return False
-        return self._var.value == other._var.value
     
     @classmethod
     def validate(cls, args: Any) -> tuple['SharedVar']:

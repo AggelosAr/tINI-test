@@ -43,10 +43,6 @@ class DecoratedTestChain:
         )
 
     @property
-    def has_dependencies(self) -> bool:
-        return not self.has_not_dependencies
-
-    @property
     def test_wrap(self) -> TestWrappedHolder:
         return self._test_wraps[-1]
 

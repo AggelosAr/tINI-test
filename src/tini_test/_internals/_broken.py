@@ -1,7 +1,3 @@
-# TODO cleanup here
-# We have problem on async? Maybe ? do this a context manager.
-
-
 import os
 import shutil
 import subprocess
@@ -9,12 +5,21 @@ import tempfile
 import uuid
 from typing import Optional
 
+
+# TODO cleanup here
+
 USING_COVERAGE = True
 USING_COVERAGE = False
 
 COVERAGE_ROOT = '/tmp/coverages/tini_test/'
 
 ROOT = '/tmp/python/tini_test'
+
+
+PYTHON_PATH = '312venv/bin/python'
+PROJECT_ROOT = '/home/papaggalos/workspace/python_projects/tINI-test'
+TINI_TEST_COVERAGE_SOURCE = '/home/papaggalos/workspace/python_projects/tINI-test/src'
+
 
 HEADERS = '''
 from tini_test.test_utils import Test
@@ -63,22 +68,14 @@ def run_test(folder_name: Optional[str] = None,
              test_name: Optional[str] = None, 
              test_file: Optional[str] = None) -> subprocess.CompletedProcess:
 
-    
-    project_root = '/home/papaggalos/workspace/python_projects/tINI-test'
-    env_path = '312venv/bin/activate'
-    python_path_from_project = '312venv/bin/python'
-    # python_path_from_project = '.venv/bin/python'
-
     if not folder_name:
         folder_name = 'tini_test'
 
-    python3 = os.path.join(project_root, python_path_from_project)
+    python3 = os.path.join(PROJECT_ROOT, PYTHON_PATH)
 
-    
     commands = [
         'cd %s' % (ROOT, ),
     ]
-
 
     run_tini_test_command = '%s -m tini_test -d %s' % (python3, folder_name, )
 
@@ -86,7 +83,6 @@ def run_test(folder_name: Optional[str] = None,
         if not os.path.exists(COVERAGE_ROOT):
             os.makedirs(COVERAGE_ROOT, exist_ok=True)
 
-        tini_test_source = '/home/papaggalos/workspace/python_projects/tINI-test/src'
         coverage_command = ('%s -m '\
                             'coverage run '\
                             '--source=%s '\
@@ -95,7 +91,7 @@ def run_test(folder_name: Optional[str] = None,
                                 % 
                                 (
                                     python3, 
-                                    tini_test_source, 
+                                    TINI_TEST_COVERAGE_SOURCE, 
                                     COVERAGE_ROOT, get_unique_folder_name(), 
                                 )
                             )

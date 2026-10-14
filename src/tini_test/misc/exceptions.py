@@ -106,42 +106,36 @@ class TestDecoratorUsedMoreThanOnce(Exception):
 
 class MockWasUsedOnWithoutTestDecorator(Exception):
 
-    def __init__(self, test: Optional[RealTest | TestFunctionName] = None) -> None:
+    def __init__(self, test: Optional[RealTest] = None) -> None:
         if not test:
             test_name = '<unknown>'
         else:
-            if isinstance(test, str):
-                test_name = test
-            else:
-                test_name = test.__name__
+            test_name = test.__name__
+
         reason = 'Missing test decorator for function decorated with mock function < %s >' % (test_name, )
         super().__init__(reason)
 
 
 class SharedWasUsedOnWithoutTestDecorator(Exception):
 
-    def __init__(self, test: Optional[RealTest | TestFunctionName] = None) -> None:
+    def __init__(self, test: Optional[RealTest] = None) -> None:
         if not test:
             test_name = '<unknown>'
         else:
-            if isinstance(test, str):
-                test_name = test
-            else:
-                test_name = test.__name__
+            test_name = test.__name__
+
         reason = 'Missing test decorator for function decorated with Shared < %s >' % (test_name, )
         super().__init__(reason)
 
 
 class IsolateWasUsedOnWithoutTestDecorator(Exception):
 
-    def __init__(self, test: Optional[RealTest | TestFunctionName] = None) -> None:
+    def __init__(self, test: Optional[RealTest] = None) -> None:
         if not test:
             test_name = '<unknown>'
         else:
-            if isinstance(test, str):
-                test_name = test
-            else:
-                test_name = test.__name__
+            test_name = test.__name__
+
         reason = 'Missing test decorator for function decorated with Isolate < %s >' % (test_name, )
         super().__init__(reason)
 
@@ -230,9 +224,6 @@ class GlobalSharedVarsAreNotSupported(Exception):
 
 class DuplicateTestFound(Exception):
 
-    def __init__(self, test_name: Optional[list[TestFunctionName]] = None) -> None:
-        if not test_name:
-            test_name = ['<unknown>']
-
-        msg = 'Duplicate test(s) found: < %s >' % (', '.join(test_name), )
+    def __init__(self, test_names: list[TestFunctionName]) -> None:
+        msg = 'Duplicate test(s) found: < %s >' % (', '.join(test_names), )
         super().__init__(msg)

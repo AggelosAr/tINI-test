@@ -65,9 +65,6 @@ class MockCall(CreateMock):
         self.kwargs = kwargs or {}
         super().__init__(mock)
 
-    def __str__(self) -> str:
-        return 'MockCall(args=%s, kwargs=%s)' % (self.args, self.kwargs, )
-
     @staticmethod
     def validate_call(args: Any, kwargs: Any) -> None:
         MockCall.validate_args(args)
@@ -153,9 +150,6 @@ class MockReturn(CreateMock):
         self.return_value = return_value
         super().__init__(mock)
 
-    def __str__(self) -> str:
-        return 'MockReturn(%s)' % (self.return_value, )
-
     def _patch(self) -> None:
     
         _, _proxy_name = self._proxy_generator()
@@ -184,9 +178,6 @@ class MockDefinition:
                  body: MockCall | MockReturn) -> None:
         self.mock = mock
         self.body = body
-
-    def __str__(self) -> str:
-        return 'MockDefinition(%s, %s)' % (self.mock, self.body, )
     
     @staticmethod
     def arg_exists(arg: Any) -> bool:
