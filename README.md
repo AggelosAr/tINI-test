@@ -1,8 +1,28 @@
 # tINI test
 ![Coverage](coverage.svg)
 
-A lightweight Python test framework (hand-crafted) focused on simple test discovery and execution from the command line with **zero dependencies**.
-The framework was developed and tested using its' own test suite. It was also stress tested and profiled on around 10K tests to test db connections on a temp sqlite3 and management of globals. It also allows pretty prints inside the tests while running and the print verbocity modes should provide plenty of options.
+A lightweight Python test framework (hand-crafted) focused on simple test discovery and execution from the command line with **zero dependencies**. 
+The main utilities provided by the suite are:
+
+    - Defining test cases with via `_@Test.case_` decorators
+        - With optional setup/cleanup functionality per test
+
+    - Adding mocks via `_@Mock.mock_` decorators
+        - Mock any function call or return
+
+    - Adding shared/context vars via `_@Shared_` decorators
+        - Variables defined will be usable in any part of the code reachable from the test.
+    
+    - Isolating a test via the `_@Isolate_` decorators (*experimental*)
+        - Will force the test to run sequentially.
+
+    - Validating exceptions via the _WillRaise_ context manager.
+
+    - Asserting equality via the _must_equal_ helper fuinction.
+
+*These utilities can be combined in any way.*
+
+The framework was developed and tested using its' own test suite. It was also stress tested and profiled on around 10K tests to test db connections on a temp sqlite3 and management of globals. Currently the base tests that run to power the suite are ~5k (to cover almost all possible combinations) with ~400-600 unique cases. It also allows pretty prints inside the tests while running and the print verbocity modes should provide plenty of options.
 
 ## Installation
 
@@ -33,6 +53,8 @@ Filters are applied from broadest to narrowest scope:
 ## Test Registration
 
 ```python
+from tini_test import Test
+
 @Test.case
 def test_cats() -> None:
     ...
@@ -125,9 +147,7 @@ Mocking a function call or return is as easy as:
 
 
 ```python
-from tini_test.mock import Mock
-from tini_test.must_equals import must_equal
-from tini_test.test_utils import Test
+from tini_test import Test, Mock, must_equal
 
 
 def f1(x, a, b):
@@ -172,7 +192,7 @@ def test_mock_callable_in_returns():
 
 ```
 
-Here is a more complex example. The function call of func_e during the test will be proxied to the Mock as a result it will receive as args the lambda and the 1 and as kwargs the function g. Also the the top and bottom Mock decorators are ignored.
+Here is a more complex example. The function call of func_e during the test will be proxied to the Mock as a result it will receive as args the lambda and the 1 and as kwargs the function f. Also the the top and bottom Mock decorators are ignored.
 
 ```python
 
@@ -193,9 +213,46 @@ def test_mock_anon_callable_none_in_args_kwargs():
 
 ```
 
-#### NOTES:
-> Since the mock has a side effect of changing the live code object of the function, the ASYNC mode of running tests with a Mock is *Locked* e.g. an actual lock was put in place to stop global leakage to tests requesting the mocked function the time it was being mocked. In an attempt to mitigate this issue the fast solution I came up with was to simply lock it. An attempt, was also made, of parsing the _AST_ but it was hastely abandoned. @ROADMAP.
 
+#### NOTES:
+> Since the mock has a side effect of changing the live code object of the function, the ASYNC mode of running tests with a Mock is *Locked* e.g. an actual lock was put in place to stop global leakage to tests requesting the mocked function the time it was being mocked. In an attempt to mitigate this issue the fast solution I came up with was to simply lock it. An attempt, was also made, of parsing the _AST_ but it was hastely abandoned. (@ROADMAP)
+
+
+
+### Adding Shared vars
+
+Shared vars can be defined and be used in the following way
+
+```python
+
+from tini_test import Test, Shared, var
+
+def side_effect_function(arg):
+    var.int = arg
+    return var.int
+
+
+@Test.case
+@Shared(var.int)
+def test_side_effects():
+    must_equal(NotInitialized, var.int)
+    side_effect_function(456)
+    must_equal(456, var.int)
+
+```
+
+The shared vars can be used in any part of the code reachable during the lifetime of the test as long as 
+the var is imported and used. e.g. `from tini_test import var`
+
+> Rationale
+Assume you called @Test.case with a setup callable and you retrieved a row from the db. 
+The _Shared_ decorator enables you to store the item in the local context of the test and use it later.
+Instead of having to do N+1 queries. 
+
+> NOTES
+Trying to access a variable not defined in the _Shared_ will raise _SharedVarDoesNotExistInThisContext_ 
+Trying to use global variables as var will raise _GlobalSharedVarsAreNotSupported_ 
+During async tests with shared are locked. (@ROADMAP)
 
 ## Test Discovery
 
@@ -338,4 +395,5 @@ Of course the above is somewhat cancelled because the algorithm tries to autocom
 * [ ] Add global fail sort mode, not just per module.
 * [ ] Add support for global shared (xxx2).
 * [ ] Async initialization of tests.
+* [ ] True Async support for mock/shared.
 * [ ] Fix terminal flickering on async ( minimal )
