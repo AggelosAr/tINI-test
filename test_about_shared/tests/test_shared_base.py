@@ -22,6 +22,17 @@ def shared_accepts_valid_arguments(): ...
 def shared_initializes_shared_variable(): must_equal(NotInitialized, var.var_a)
 
 
+@Shared
+@Shared()
+@Shared
+@Shared
+@Shared
+@Test.case
+@Shared
+@Shared()
+@Shared
+def empty_shared_stacked(): ...
+
 
 @Shared(var.var_a)
 @Test.case
@@ -94,6 +105,29 @@ def unused_shared_variable(): must_equal(NotInitialized, var.var_a)
 @Shared(var.var_a, var.var_b)
 @Test.case
 def shared_equivalence():
+    must_equal(NotInitialized, var.var_a)
+    must_equal(NotInitialized, var.var_b)
+    must_equal(var.var_a, var.var_b)
+
+    var.var_a = 42
+
+    with WillRaise(ExpectedWasDifferentFromActual) as context:
+        must_equal(var.var_a, var.var_b)
+
+    must_equal('''
+ITEM: type mismatch
+expected: <class 'int'>
+actual:   <class 'type'>
+[EOD]''', str(context.exception))
+
+    var.var_b = 42
+    must_equal(var.var_a, var.var_b)
+
+
+@Shared(var.var_b)
+@Shared(var.var_a)
+@Test.case
+def shared_equivalence_on_different_order():
     must_equal(NotInitialized, var.var_a)
     must_equal(NotInitialized, var.var_b)
     must_equal(var.var_a, var.var_b)

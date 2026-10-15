@@ -213,3 +213,23 @@ def mocker_wont_raise_on_container_if_in_context():
     res = mocker2(var.Z)[1][ 'var_c' ]()
     must_equal(NotInitialized, res)
 
+
+
+@Mock.mock
+@Shared
+@Shared(var.Z)
+@Shared()
+@Shared
+@Shared
+@Mock.mock(mocker2, kwargs={'var_c': lambda: var.Z})
+@Shared
+@Mock.mock()
+@Mock.mock
+@Test.case
+@Shared
+@Shared()
+@Shared
+def empty_shared_stacked_2():
+    res = mocker2(var.Z)[1][ 'var_c' ]()
+    must_equal(NotInitialized, res)
+

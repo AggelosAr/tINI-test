@@ -1,6 +1,6 @@
 import traceback
 from traceback import StackSummary
-from typing import Optional
+from typing import Any, Optional
 
 from tini_test._internals.consts import _RESET, capture_flag
 from tini_test.misc.annotations import (CellName, RealTest, StackTrace,
@@ -88,16 +88,13 @@ class DuplicateMockRegisteredOnTest(Exception):
 
 class TestDecoratorUsedMoreThanOnce(Exception):
 
-    def __init__(self, test: Optional[RealTest | TestFunctionName] = None) -> None:
-        if not test:
-            test_name = '<unknown>'
-        else:
-            if isinstance(test, str):
-                test_name = test
-            else:
-                test_name = test.__name__
+    def __init__(self, test: Any) -> None:
 
-        if test_name == '_wrapper':
+        if callable(test):
+            test_name = test.__name__
+            if test_name == '_wrapper':
+                test_name = '<unknown>'
+        else:
             test_name = '<unknown>'
             
         reason = 'Test decorator used more than once on test < %s >' % (test_name, )
@@ -106,7 +103,7 @@ class TestDecoratorUsedMoreThanOnce(Exception):
 
 class MockWasUsedOnWithoutTestDecorator(Exception):
 
-    def __init__(self, test: Optional[RealTest] = None) -> None:
+    def __init__(self, test: RealTest | None) -> None:
         if not test:
             test_name = '<unknown>'
         else:
@@ -118,7 +115,7 @@ class MockWasUsedOnWithoutTestDecorator(Exception):
 
 class SharedWasUsedOnWithoutTestDecorator(Exception):
 
-    def __init__(self, test: Optional[RealTest] = None) -> None:
+    def __init__(self, test: RealTest | None) -> None:
         if not test:
             test_name = '<unknown>'
         else:
@@ -130,7 +127,7 @@ class SharedWasUsedOnWithoutTestDecorator(Exception):
 
 class IsolateWasUsedOnWithoutTestDecorator(Exception):
 
-    def __init__(self, test: Optional[RealTest] = None) -> None:
+    def __init__(self, test: RealTest | None) -> None:
         if not test:
             test_name = '<unknown>'
         else:

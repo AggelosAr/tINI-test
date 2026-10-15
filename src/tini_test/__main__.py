@@ -1,9 +1,11 @@
+from tini_test._internals.consts import _PROFILING
+
 from ._internals._profiler import profiler
 from .arg_parser import ArgsDict, receive_args
 from .initializer import initialize_test_suite
 from .misc.exceptions import CantFindRelativePathToRoot
 
-_PROFILING = False
+
 
 @profiler(_PROFILING)
 def _tini_test(kwargs: ArgsDict):

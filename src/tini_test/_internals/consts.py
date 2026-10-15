@@ -1,5 +1,19 @@
+from pathlib import Path
+
 from tini_test._internals._dynamic_reg_ids import (__C_REG, __I_REG, __M_REG,
                                                    __S_REG, __T_REG)
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+PYTHON_PATH = '312venv/bin/python'
+COVERAGE_ROOT = '/tmp/coverages/tini_test/'
+GENERATED_TESTS_ROOT = '/tmp/python/tini_test'
+
+
+
+_USING_COVERAGE = False
+_PROFILING = False
+
+
 
 _RESET = '\033[0m'                   # Reset line colours
 

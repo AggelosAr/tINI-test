@@ -5,20 +5,11 @@ import tempfile
 import uuid
 from typing import Optional
 
+from tini_test._internals.consts import (COVERAGE_ROOT, GENERATED_TESTS_ROOT,
+                                         PROJECT_ROOT, PYTHON_PATH,
+                                         _USING_COVERAGE)
 
-# TODO cleanup here
-
-USING_COVERAGE = True
-USING_COVERAGE = False
-
-COVERAGE_ROOT = '/tmp/coverages/tini_test/'
-
-ROOT = '/tmp/python/tini_test'
-
-
-PYTHON_PATH = '312venv/bin/python'
-PROJECT_ROOT = '/home/papaggalos/workspace/python_projects/tINI-test'
-TINI_TEST_COVERAGE_SOURCE = '/home/papaggalos/workspace/python_projects/tINI-test/src'
+TINI_TEST_COVERAGE_SOURCE = os.path.join(PROJECT_ROOT, 'src')
 
 
 HEADERS = '''
@@ -59,7 +50,7 @@ def delete_test_dir(folder_name: Optional[str] = '') -> None:
             shutil.rmtree(temp_dir)
         return
     
-    temp_dir = os.path.join(ROOT, folder_name)
+    temp_dir = os.path.join(GENERATED_TESTS_ROOT, folder_name)
     if os.path.exists(temp_dir):
         shutil.rmtree(temp_dir)
 
@@ -74,12 +65,12 @@ def run_test(folder_name: Optional[str] = None,
     python3 = os.path.join(PROJECT_ROOT, PYTHON_PATH)
 
     commands = [
-        'cd %s' % (ROOT, ),
+        'cd %s' % (GENERATED_TESTS_ROOT, ),
     ]
 
     run_tini_test_command = '%s -m tini_test -d %s' % (python3, folder_name, )
 
-    if USING_COVERAGE:
+    if _USING_COVERAGE:
         if not os.path.exists(COVERAGE_ROOT):
             os.makedirs(COVERAGE_ROOT, exist_ok=True)
 

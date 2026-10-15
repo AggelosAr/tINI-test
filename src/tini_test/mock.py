@@ -20,7 +20,7 @@ from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
 
 
 class MockNone:
-    pass
+    __slots__ = ()
 
 
 class CreateMock:
@@ -217,9 +217,6 @@ class MockDefinition:
         
         if _returns_exist:
 
-            if _args_exist or _kwargs_exist:
-                raise MockDefinitionError
-
             # Ignore returns since we can't validate it. It can be an arbitrary value.
             MockDefinition.validate_mocked_function(mock)
             return MockReturn(mock, return_value=returns)
@@ -301,10 +298,7 @@ class _XMock:
             
             _mock_reg, _conn_reg = attach_state(func.__globals__, _wrapper.__globals__, mode=Plugs.MOCK)
 
-            if _mock_reg is None:
-                return wrapper
-                
-            if _conn_reg is None:
+            if _mock_reg is None or _conn_reg is None:
                 return wrapper
             
             assert hex(id(_wrapper)) not in _mock_reg

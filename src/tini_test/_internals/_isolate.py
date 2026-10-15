@@ -50,10 +50,7 @@ class _XIsolate:
             
             _isol_reg, _conn_reg = attach_state(func.__globals__, _wrapper.__globals__, mode=Plugs.ISOLATE)
 
-            if _isol_reg is None:
-                return wrapper
-
-            if _conn_reg is None:
+            if _isol_reg is None or _conn_reg is None:
                 return wrapper
             
             assert hex(id(_wrapper)) not in _isol_reg

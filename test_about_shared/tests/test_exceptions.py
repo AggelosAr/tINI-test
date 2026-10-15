@@ -42,7 +42,6 @@ def usage_of_non_declared_shared_variable_raises_main() -> None:
     with WillRaise(SharedVarDoesNotExistInThisContext) as context:
         print(var.var_y)
 
-    # print(context.exception)
     must_equal(err, str(context.exception))
 
     with WillRaise(SharedVarDoesNotExistInThisContext) as context:
@@ -118,9 +117,6 @@ def %s(): ...
     _ = get_temp_file(test, test_name)
     completed_process = run_test(test_name, test_name)
 
-    # print(completed_process.stdout)
-    # print(completed_process.stderr)
-
     must_equal(0, completed_process.returncode)
 
     search_line = None
@@ -186,9 +182,6 @@ def %s(): ...
 
     _ = get_temp_file(test, test_name)
     completed_process = run_test(test_name, test_name)
-
-    # print(completed_process.stdout)
-    # print(completed_process.stderr)
     
     must_equal(0, completed_process.returncode)
 
@@ -216,7 +209,36 @@ def %s(): ...
     _ = get_temp_file(test, test_name)
     completed_process = run_test(test_name, test_name)
 
-    # print(completed_process.stdout)
+    must_equal(0, completed_process.returncode)
+
+    conditions = [
+        '| Test file load failures : 1',
+        'tini_test.misc.exceptions.SharedVarAlreadyDefined: Shared variable < var_a > is already defined in this context. For test < %s >' % test_name
+    ]   
+    
+    for line in completed_process.stdout.splitlines():
+        for condition in conditions:
+            if condition in line:
+                conditions.remove(condition)
+
+    must_equal(0, len(conditions))
+
+    delete_test_dir(test_name)
+
+
+@Test.case
+def shared_rejects_same_variable_name_on_different_order() -> None:
+    test_name = 'shared_rejects_same_variable_name_on_different_order'
+    test = '''
+@Shared(var.var_a)
+@Shared(var.var_a)
+@Test.case
+def %s(): ...
+
+''' % test_name
+
+    _ = get_temp_file(test, test_name)
+    completed_process = run_test(test_name, test_name)
 
     must_equal(0, completed_process.returncode)
 
@@ -249,8 +271,6 @@ def %s(): ...
     
     _ = get_temp_file(test, test_name)
     completed_process = run_test(test_name, test_name)
-
-    # print(completed_process.stderr)
     
     must_equal(0, completed_process.returncode)
 
@@ -282,11 +302,8 @@ def %s(): ...
 
 ''' % test_name
 
-
     _ = get_temp_file(test, test_name)
     completed_process = run_test(test_name, test_name)
-
-    # print(completed_process.stderr)
     
     must_equal(0, completed_process.returncode)
 
@@ -319,8 +336,6 @@ def %s(): ...
 
     _ = get_temp_file(test, test_name)
     completed_process = run_test(test_name, test_name)
-
-    # print(completed_process.stderr)
     
     must_equal(0, completed_process.returncode)
 
@@ -340,19 +355,8 @@ def %s(): ...
     delete_test_dir(test_name)
 
 
-
-# f4b46e9f2dd5f0e8b3f2758a1d2c994c67045516 XXX
 @Test.case
 def test_SharedWasUsedOnWithoutTestDecorator() -> None:
-    # @test_MockWasUsedOnWithoutTestDecorator
-    # shared = ['@Shared', '@Shared()'] 
-
-    # all_permutations = []
-    # all_permutations.extend(permutations(shared))
-    # all_permutations.extend(permutations(*shared, *shared))
-    # all_permutations.extend(permutations(*shared, '@Shared(var.var_a)'))
-
-    # print('GENERATED PERMUTATIONS:', all_permutations)
     test_name = 'test_SharedWasUsedOnWithoutTestDecorator'
 
     content = '''
@@ -365,7 +369,6 @@ def %s() -> None:
     
     completed_process = run_test(test_name, test_name)
 
-    # print(completed_process.stderr)
     must_equal(0, completed_process.returncode)
 
     conditions = [

@@ -21,10 +21,6 @@ from tini_test.misc.exceptions import (GlobalSharedVarsAreNotSupported,
 
 class _NotInitialized:
     __slots__ = ()
-    
-    @staticmethod
-    def is_not_initialized(_var: Any) -> bool:
-        return type(_var) is not type or not issubclass(_var, _NotInitialized)
 
 
 class Cell:
@@ -81,8 +77,6 @@ class SharedVar:
     
     @classmethod
     def validate(cls, args: Any) -> tuple['SharedVar']:
-        if not isinstance(args, tuple):
-            raise SharedOnlyAcceptsArguments(args)
 
         args_types = tuple(type(arg) for arg in args)
         for _type in args_types:
@@ -151,10 +145,7 @@ class _XShared:
             
             _shared_reg, _conn_reg = attach_state(func.__globals__, _wrapper.__globals__, mode=Plugs.SHARED)
 
-            if _shared_reg is None:
-                return wrapper
-
-            if _conn_reg is None:
+            if _shared_reg is None or _conn_reg is None:
                 return wrapper
             
             assert hex(id(_wrapper)) not in _shared_reg
