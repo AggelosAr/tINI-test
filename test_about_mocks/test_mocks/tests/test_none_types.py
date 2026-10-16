@@ -24,3 +24,31 @@ def test_mock_none_in_returns():
     print('works')
     must_equal(None, func_d(100, 1, k_val_1=100, k_val_2=100))
 
+
+
+@Mock.mock(func_d, args=(None, None))
+@Test.case()
+def full_none_in_args():
+    print('works')
+    must_equal(0, func_d(100, 1, k_val_1=100, k_val_2=100))
+
+
+
+
+class A:
+    def __init__(self, value):
+        self.value = value
+
+def object_func(arg1, arg2=A(11)):
+    return (arg1 or 0) + (arg2.value or 0)
+
+
+@Mock.mock(object_func, args=(None, ), )
+@Test.case()
+def test_mock_none_in_object_func():
+    print('works')
+    must_equal(11, object_func(None))
+
+
+
+

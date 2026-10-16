@@ -53,3 +53,8 @@ def test_cleanup_provided() -> None:
     print('main called val is-> %d' % (_GG, ))
     assert _GG == 999
 
+
+
+@Test.case(cleanup=lambda: print('cleanup called'))
+def test_cleanup_provided_as_kwarg() -> None:
+    ...

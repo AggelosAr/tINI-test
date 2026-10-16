@@ -276,3 +276,22 @@ def test_multiple_mocks_with_returns():
                 f3(4_000, f=6_000, g=3_000))
     print('works')
 
+
+
+
+def func_rx(arg1, arg2, k_val_1=1000, k_val_2=2000):
+    return (arg1 or 0) + (arg2 or 0) + (k_val_1 or 0) + (k_val_2 or 0)
+
+@Mock.mock(func_rx, args=(None, None, 100), kwargs={'k_val_2': 100})
+@Test.case()
+def test_mock_correclty_replaces_args_as_kwargs():
+    print('works')
+    must_equal(100 + 100, func_rx(None))
+
+
+@Mock.mock(func_rx, args=(1, 2), kwargs={'k_val_2': 4})
+@Test.case()
+def test_mock_correclty_replaces_args_as_kwargs_2():
+    print('works')
+    must_equal(1 + 2 + 1000 + 4, func_rx(1/0.1))
+

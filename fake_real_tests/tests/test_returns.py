@@ -5,8 +5,8 @@ def setup() -> int:
     return 1
 
 
-def cleanup() -> int:
-    return 1
+def cleanup() -> str:
+    return '1'
 
 @Test.case(setup=setup)
 def test_setup_returns() -> int:

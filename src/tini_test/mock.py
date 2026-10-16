@@ -80,31 +80,7 @@ class MockCall(CreateMock):
         if not isinstance(kwargs, dict):
             raise MockCallDefinitionError('Keyword arguments should be of type dict.')
 
-    def get_default_kwargs(self, spec: inspect.FullArgSpec, sig: inspect.Signature) -> dict:
-     
-        kwarg_defaults = {
-            name: param.default
-            for name, param in sig.parameters.items()
-            if param.default is not inspect.Parameter.empty
-        }
-
-        extra_args = ()
-        args = spec.args or []
-        defaults = spec.defaults or ()
-
-        if len(self.args) < len(args) and defaults:
-            extra_args = defaults[len(args) - len(self.args):]
-
-        extra_kwargs = {}
-
-        for k in kwarg_defaults:
-            if k not in self.kwargs:
-                extra_kwargs[k] = kwarg_defaults[k]
-
-        return extra_kwargs
-
     def _patch(self) -> None:
-    
         _, _proxy_name = self._proxy_generator()
         _proxy_x, _proxy_x_name = self._proxy_generator()
         _, _proxy_locals__args_name = self._proxy_generator()
@@ -115,27 +91,30 @@ class MockCall(CreateMock):
         self._proxy_pool.add(_proxy_locals__args_name)
         self._proxy_pool.add(_proxy_locals__kwargs_name)
 
+
+        _proxy_x.__signature__ = inspect.signature(self.mock)
+     
         _proxy_x.__code__ = self.mock.__code__
 
+      
         self.mock.__globals__[_proxy_x_name] = _proxy_x
         self.mock.__globals__[_proxy_locals__args_name] = self.args
 
-        spec = inspect.getfullargspec(self.mock)
-        sig = inspect.signature(self.mock)
-        default_kwargs = self.get_default_kwargs(spec, sig)
-
-        self.mock.__globals__[_proxy_locals__kwargs_name] = {**self.kwargs, **default_kwargs}
+        self.mock.__globals__[_proxy_locals__kwargs_name] = self.kwargs
 
         _proxy_x.__globals__.update(self.mock.__globals__)
         
-        new_spec = ('def _%s(*args, **kwargs): return %s(*globals()["%s"], **globals()["%s"])' 
+        new_spec = ('def _%s(*args, **kwargs): \n'\
+                    '    bound = globals()["%s"].__signature__.bind(*globals()["%s"], **globals()["%s"])\n'\
+                    '    bound.apply_defaults()\n'\
+                    '    return %s(*bound.args, **bound.kwargs)\n' 
                     % 
                         (
                             _proxy_name,
-                            _proxy_x_name, 
+                            _proxy_x_name,
                             _proxy_locals__args_name,
                             _proxy_locals__kwargs_name,
-
+                            _proxy_x_name, 
                         )
                     )
         self._compile_mock(new_spec)

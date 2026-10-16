@@ -69,7 +69,11 @@ def snakes() -> None:
 > Multiple Test decorators on the same test will invalidate the file being tested.
 
 The decorator accepts up to two optional callables.
+(The items should all be passed in a similar way e.g. all as arguments or kwargs.)
 
+If you want to pass arguments to the functions you should use a callable.
+
+Else you can just pass the callable as is.
 
 ```python
 @Test.case(

@@ -14,3 +14,8 @@ def test_setup_provided() -> None:
     print('inside test_setup_provided val-----------> %d' % (GG, ))
     assert GG == 1_000
 
+
+
+@Test.case(setup=lambda: print('setup called'))
+def test_setup_provided_as_kwarg() -> None:
+    ...

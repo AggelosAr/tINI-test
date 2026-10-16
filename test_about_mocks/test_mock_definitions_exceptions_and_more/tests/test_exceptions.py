@@ -330,3 +330,40 @@ def %s() -> None:
 
     delete_test_dir(test_name)
 
+
+
+
+
+@Test.case
+def test_MockCallDefinitionErrorArgsAndKwargsConflict() -> None:
+    test_name = 'test_MockCallDefinitionErrorArgsAndKwargsConflict'
+    content = '''
+     
+def func_e(arg1, arg2, k_val_1=1000, k_val_2=2000):
+    return (arg1 or 0) + (arg2 or 0) + (k_val_1 or 0) + (k_val_2 or 0)
+
+@Mock.mock(func_e, args=(None, None, 100, 100), kwargs={'k_val_2': 100})
+@Test.case()
+def test_MockCallDefinitionErrorArgsAndKwargsConflict():
+    print('works')
+    must_equal(100 + 100, func_e(None))
+'''
+    get_temp_file(content, test_name)
+
+    completed_process = run_test(test_name, test_name)
+
+    must_equal(0, completed_process.returncode)
+
+    conditions = [
+        '| Total errors            : 1',
+        "TypeError: multiple values for argument 'k_val_2'"
+    ]
+    for line in completed_process.stdout.splitlines():
+        for condition in conditions:
+            if condition in line:
+                conditions.remove(condition)
+
+    must_equal(0, len(conditions))
+
+    delete_test_dir(test_name)
+

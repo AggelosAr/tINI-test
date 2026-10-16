@@ -562,3 +562,21 @@ def test_db_transaction_rollback() -> None:
     must_equal(1, count)
     
     conn.close()
+
+
+
+def x_setup():
+    print('SETUP called')
+    return (None, )
+
+def x_cleanup():
+    print('CLEANUP called')
+    return (None, )
+
+@Test.case(setup=x_setup, cleanup=x_cleanup)
+def test_setup_cleanup_misc() -> None:
+    print('In main')
+
+# @Test.case(x_cleanup, setup=x_setup)
+# def test_setup_cleanup_misc_2() -> None:
+#     print('In main')
