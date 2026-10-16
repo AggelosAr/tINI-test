@@ -6,7 +6,6 @@ from .initializer import initialize_test_suite
 from .misc.exceptions import CantFindRelativePathToRoot
 
 
-
 @profiler(_PROFILING)
 def _tini_test(kwargs: ArgsDict):
 

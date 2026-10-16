@@ -5,9 +5,9 @@ import tempfile
 import uuid
 from typing import Optional
 
-from tini_test._internals.consts import (COVERAGE_ROOT, GENERATED_TESTS_ROOT,
-                                         PROJECT_ROOT, PYTHON_PATH,
-                                         _USING_COVERAGE)
+from tini_test._internals.consts import (_USING_COVERAGE, COVERAGE_ROOT,
+                                         GENERATED_TESTS_ROOT, PROJECT_ROOT,
+                                         PYTHON_PATH)
 
 TINI_TEST_COVERAGE_SOURCE = os.path.join(PROJECT_ROOT, 'src')
 
