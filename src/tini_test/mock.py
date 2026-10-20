@@ -5,18 +5,19 @@ from collections import deque
 from typing import Any, Callable, Optional
 
 from tini_test._internals._registry import attach_state
-from tini_test.enums import MockMode, Plugs
+from tini_test.enums import MockType, Plugs
 from tini_test.misc.annotations import (IsolateWrappedObject,
                                         MockDefinitionWrappedHolder,
-                                        MockedFunction, MockWrappedObject,
-                                        ProxyItem, RealTest,
+                                        MockedClass, MockedFunction,
+                                        MockWrappedObject, ProxyItem, RealTest,
                                         SharedDefinitionHolder,
                                         SharedWrappedObject, TestFunctionName,
                                         TestWrappedHolder, TestWrappedObject)
 from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
                                        MockCallDefinitionError,
+                                       MockClassDefinitionError,
                                        MockDefinitionError,
-                                       MockMissingFunctionError)
+                                       MockMissingFunctionOrClass)
 
 
 class MockNone:
@@ -25,10 +26,11 @@ class MockNone:
 
 class CreateMock:
 
-    def __init__(self, mock: MockedFunction) -> None:
+    def __init__(self, mock: MockedFunction | MockedClass) -> None:
+        self.mock = mock
+
         self._proxy_pool: set[str] = set()
 
-        self.mock = mock
         self._mock_backup_store = lambda: None
         self._mock_backup_store.__code__ = mock.__code__
     
@@ -36,10 +38,9 @@ class CreateMock:
         
         def _proxy(*args, **kwargs): ...
 
-        _proxy.__name__ = '_proxy_%s' % (secrets.token_hex(10), )
+        _proxy.__name__ = '_proxy_%s' % (secrets.token_hex(7), )
 
         return ProxyItem(_proxy, _proxy.__name__)
-
 
     def _compile_mock(self, source: str) -> None:
         self.mock.__code__ = compile(textwrap.dedent(source), 
@@ -54,15 +55,15 @@ class CreateMock:
 
 class MockCall(CreateMock):
 
-    mode = MockMode.PATCH_CALL
-
     def __init__(self,
-                 mock: MockedFunction,
+                 mock: MockedFunction | MockedClass,
                  args: Optional[tuple] = None, 
                  kwargs: Optional[dict] = None) -> None:
         self.mock = mock
+
         self.args = args or ()
         self.kwargs = kwargs or {}
+        
         super().__init__(mock)
 
     @staticmethod
@@ -91,15 +92,12 @@ class MockCall(CreateMock):
         self._proxy_pool.add(_proxy_locals__args_name)
         self._proxy_pool.add(_proxy_locals__kwargs_name)
 
-
         _proxy_x.__signature__ = inspect.signature(self.mock)
-     
+
         _proxy_x.__code__ = self.mock.__code__
 
-      
         self.mock.__globals__[_proxy_x_name] = _proxy_x
         self.mock.__globals__[_proxy_locals__args_name] = self.args
-
         self.mock.__globals__[_proxy_locals__kwargs_name] = self.kwargs
 
         _proxy_x.__globals__.update(self.mock.__globals__)
@@ -119,18 +117,19 @@ class MockCall(CreateMock):
                     )
         self._compile_mock(new_spec)
 
-    
+
 class MockReturn(CreateMock):
 
-    mode = MockMode.PATCH_RETURN
-
-    def __init__(self, mock: MockedFunction, return_value: Any) -> None:
+    def __init__(self, 
+                 mock: MockedFunction | MockedClass,
+                 return_value: Any) -> None:
         self.mock = mock
+
         self.return_value = return_value
+
         super().__init__(mock)
 
     def _patch(self) -> None:
-    
         _, _proxy_name = self._proxy_generator()
         _, _proxy_return_name = self._proxy_generator()
         
@@ -152,7 +151,7 @@ class MockReturn(CreateMock):
 class MockDefinition:
     
     def __init__(self,
-                 mock: MockedFunction,
+                 mock: MockedFunction | MockedClass,
                  *,
                  body: MockCall | MockReturn) -> None:
         self.mock = mock
@@ -163,17 +162,28 @@ class MockDefinition:
         return type(arg) is not type or not issubclass(arg, MockNone)
 
     @staticmethod
-    def validate_mocked_function(mock: Any) -> None:
-        if not MockDefinition.arg_exists(mock) or not callable(mock):
-            raise MockMissingFunctionError()
+    def validate_mocked_item(mock: Any) -> MockType:
+        _mock_exists = MockDefinition.arg_exists(mock)
+
+        if not _mock_exists:
+            raise MockMissingFunctionOrClass
+
+        if inspect.isclass(mock):
+            return MockType.CLASS
+        
+        if callable(mock):
+            return MockType.FUNCTION
+        
+        raise MockMissingFunctionOrClass
         
     @staticmethod
-    def validate_mock_definition_arguments(mock: MockedFunction,
+    def validate_mock_definition_arguments(mock: MockedFunction | MockedClass,
                                            returns: Any, 
                                            args: Any, 
                                            kwargs: Any
                                            ) -> MockCall | MockReturn:
-        
+        mock_type = MockDefinition.validate_mocked_item(mock)
+
         _returns_exist = MockDefinition.arg_exists(returns)
         _args_exist = MockDefinition.arg_exists(args)
         _kwargs_exist = MockDefinition.arg_exists(kwargs)
@@ -188,16 +198,28 @@ class MockDefinition:
             if not _kwargs_exist:
                 kwargs = {}
 
-            MockDefinition.validate_mocked_function(mock)
             MockCall.validate_call(args, kwargs)
+
+            match mock_type:
+
+                case MockType.FUNCTION:
+                    ...
+
+                case MockType.CLASS:
+                    args = (mock, *args, )
+                    mock = mock.__init__
 
             return MockCall(mock, args=args, kwargs=kwargs)
 
-        
         if _returns_exist:
+    
+            match mock_type:
+                case MockType.FUNCTION:
+                    ...
+                case MockType.CLASS:
+                    raise MockClassDefinitionError
 
             # Ignore returns since we can't validate it. It can be an arbitrary value.
-            MockDefinition.validate_mocked_function(mock)
             return MockReturn(mock, return_value=returns)
 
         raise MockDefinitionError
@@ -238,6 +260,7 @@ class _XMock:
              func: None
                    | RealTest
                    | MockedFunction
+                   | MockedClass
 
                    | TestWrappedObject
                    | MockWrappedObject
@@ -249,7 +272,7 @@ class _XMock:
                    | MockDefinitionWrappedHolder
                    | SharedDefinitionHolder = None,
              /,
-             mock    : Optional[Any]            = MockNone,
+             mock    : Optional[Any] = MockNone,
              *,
              returns : Optional[Any]            = MockNone, # better safe than sorry, assign MockNone in any case
              args    : Optional[tuple[Any]]     = MockNone, # type: ignore[assignment] 
@@ -296,7 +319,7 @@ class _XMock:
             else:
                 mock = func
                 mock_body = MockDefinition.validate_mock_definition_arguments(mock, returns, args, kwargs)
-        elif callable(mock) and not is_empty:
+        elif not is_empty:
             mock_body = MockDefinition.validate_mock_definition_arguments(mock, returns, args, kwargs)
         
         return wrapper

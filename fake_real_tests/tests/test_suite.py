@@ -12,7 +12,7 @@ from tini_test.__main__ import _tini_test
 from tini_test._internals._broken import delete_test_dir, get_temp_file, get_unique_folder_name, run_test
 from tini_test.context_managers import WillRaise, _ThreadLocalStdout
 from tini_test.core import TestSuite
-from tini_test.enums import RunMode, Verbosity
+from tini_test.enums import Coverage, RunMode, Verbosity
 from tini_test.initializer import initialize_test_suite
 from tini_test.misc.exceptions import CantFindRelativePathToRoot
 from tini_test.module_collector import ModuleCollector
@@ -94,6 +94,9 @@ def crash_main() -> None:
     with WillRaise(CantFindRelativePathToRoot):
         _tini_test({'run_mode': RunMode.ASYNC,
                     'verbosity': Verbosity.MINIMAL,
+                    'coverage': Coverage.DISABLED,
+                    'coverage_target': None,
+                    'store_coverage_at': None,
                     'search_dir': '././././where_is?',
                     'file_name': 'None',
                     'test_function': None})
@@ -115,7 +118,10 @@ def test_suite_run_solved_failing_tests_for_coverage() -> None:
          'test_fails_to_collect']
     }
     test_suite = TestSuite(run_mode=RunMode.ASYNC,
-                           verbosity=Verbosity.NORMAL)
+                           verbosity=Verbosity.NORMAL,
+                           coverage=Coverage.DISABLED,
+                           coverage_target=None,
+                           store_coverage_at=None)
     
     test_suite.initialize_tests(_from=test_collector)
     test_suite.suite_init_time = perf_counter()
@@ -153,7 +159,10 @@ def test_suite_run_solved_failing_tests_for_coverage() -> None:
             #   -------------------------------------------------------
 
     test_suite = TestSuite(run_mode=RunMode.SYNC,
-                           verbosity=Verbosity.MINIMAL)
+                           verbosity=Verbosity.MINIMAL,
+                           coverage=Coverage.DISABLED,
+                           coverage_target=None,
+                           store_coverage_at=None)
     
     test_suite.initialize_tests(_from=test_collector)
     test_suite.suite_init_time = perf_counter()
@@ -189,7 +198,10 @@ def test_suite_run_solved_failing_tests_for_coverage() -> None:
             #   -------------------------------------------------------
 
     test_suite = TestSuite(run_mode=RunMode.SYNC,
-                           verbosity=Verbosity.MINIMAL_NO_STACK)
+                           verbosity=Verbosity.MINIMAL_NO_STACK,
+                           coverage=Coverage.DISABLED,
+                           coverage_target=None,
+                           store_coverage_at=None)
     
     test_collector.test_modules['fake_real_tests.test_must_equals.tests'] = [
         'test_must_equal_bytes'
@@ -227,6 +239,9 @@ def test_suite_run_sync_normal() -> None:
 
     suite = initialize_test_suite(run_mode=RunMode.SYNC,
                                   verbosity=Verbosity.NORMAL,
+                                  coverage=Coverage.DISABLED,
+                                  coverage_target=None,
+                                  store_coverage_at=None,
                                   search_dir='test_must_equals')
     
     print(suite.container)
@@ -241,6 +256,9 @@ def test_suite_run_sync_minimal() -> None:
 
     suite = initialize_test_suite(run_mode=RunMode.ASYNC,
                                   verbosity=Verbosity.MINIMAL,
+                                  coverage=Coverage.DISABLED,
+                                  coverage_target=None,
+                                  store_coverage_at=None,
                                   search_dir='test_must_equals')
     
     print(suite.container)
@@ -254,6 +272,9 @@ def test_suite_run_sync_minimal_no_stack() -> None:
 
     suite = initialize_test_suite(run_mode=RunMode.SYNC,
                                   verbosity=Verbosity.MINIMAL_NO_STACK,
+                                  coverage=Coverage.DISABLED,
+                                  coverage_target=None,
+                                  store_coverage_at=None,
                                   search_dir='test_must_equals')
     
     print(suite.container)
@@ -267,6 +288,9 @@ def test_suite_run_sync_super_minimal() -> None:
 
     suite = initialize_test_suite(run_mode=RunMode.ASYNC,
                                   verbosity=Verbosity.SUPER_MINIMAL,
+                                  coverage=Coverage.DISABLED,
+                                  coverage_target=None,
+                                  store_coverage_at=None,
                                   search_dir='test_must_equals')
     
     print(suite.container)

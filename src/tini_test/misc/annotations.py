@@ -10,6 +10,21 @@ DotPythonPath: TypeAlias = str
 
 
 
+# -------------- COVERAGE --------------
+CodeLineNumber: TypeAlias = int
+LineContent: TypeAlias = str
+
+StatementId: TypeAlias = int
+
+
+HTML: TypeAlias = str
+
+HTMLContent: TypeAlias = str
+
+CoverageStore: TypeAlias = dict[DirectoryPath, set[CodeLineNumber]]
+# -------------- COVERAGE --------------
+
+
 
 # -------------- GENERAL -------------- < UPDATE
 ColorValue: TypeAlias = str
@@ -202,6 +217,7 @@ _ReverseWrapConnections: TypeAlias = dict[RegisteredIds, set[RegisteredIds]]
 
 # -------------- MOCK SPECIFICS --------------
 MockedFunction: TypeAlias = Callable[..., Any]
+MockedClass: TypeAlias = type[Any]
 
 
 class ProxyItem(NamedTuple):

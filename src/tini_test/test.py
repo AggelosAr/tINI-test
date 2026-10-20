@@ -9,7 +9,7 @@ from typing import Callable, Counter, Optional
 from tini_test._internals._ast_utils import AstParser
 from tini_test._internals.consts import (_C_REG, _I_REG, _LINE_CLEAR, _LINE_UP,
                                          _M_REG, _RESET, _S_REG, _T_REG)
-from tini_test.enums import Color, RunMode, Verbosity
+from tini_test.enums import Color, Coverage, RunMode, Verbosity
 from tini_test.misc.annotations import (C_Reg, DirectoryPath, DotPythonPath,
                                         Errors, FileName, I_Reg, M_Reg,
                                         PartialObject, S_Reg, T_Reg,
@@ -26,12 +26,15 @@ class TestCollection:
     
     def __init__(self,
                  verbosity: Verbosity,
+                 coverage: Coverage,
                  module_path: DirectoryPath,
                  file: FileName,
                  shared_meta: MetaSharedVar) -> None:
-        
-        self.module_path = module_path
+
         self.verbosity = verbosity
+        self.coverage = coverage
+
+        self.module_path = module_path
         self.file_name = file
 
         self.shared_meta = shared_meta
@@ -46,6 +49,8 @@ class TestCollection:
         
         self.decorated_tests: list[PartialObject] = []
         self.collector: dict[TestFunctionName, _XTest] = dict()
+
+        self.unique_test_names: list[TestFunctionName] = []
 
     def __len__(self) -> TestCollectionSize:
         return self.total_tests
@@ -90,11 +95,19 @@ class TestCollection:
         }
         module.__dict__.update(context)
 
-    def _import(self) -> None:
+    def _import(self, single_func_name: TestFunctionName | None) -> None:
         spec, module = self.get_module_loader(self.dot_python_path)
 
+        self.unique_test_names = AstParser.from_spec(spec).extract_decorated_test_names()
+
+        # Very important! In case we are searching for a specific test function
+        # Before importing we must see if the function exists, because 
+        # during the import the file may crash.
+        if single_func_name and single_func_name not in self.unique_test_names:
+            return
+
         self.validate_duplicate_tests(spec)
-        
+
         self.update_globals(module)
         
         self.module = module
@@ -104,8 +117,7 @@ class TestCollection:
         spec.loader.exec_module(module)
 
     def validate_duplicate_tests(self, spec: ModuleSpec) -> None:
-        top_level_test_names = AstParser(spec).extract_decorated_test_names()
-        names = Counter(top_level_test_names)
+        names = Counter(self.unique_test_names)
         duplicates = {n for n in names if names[n] > 1}
         if duplicates:
             raise DuplicateTestFound(list(duplicates))
@@ -131,10 +143,9 @@ class TestCollection:
 
         return bi_con
 
-    def gather_tests(self, func_name: Optional[TestFunctionName] = None) -> list[TestFunctionName]:
-
-        test_names = set()
-
+    def gather_tests(self, single_func_name: TestFunctionName | None) -> list[TestFunctionName]:
+        test_names: set[TestFunctionName] = set()
+        
         for obj in dir(self.module):
 
             g_obj = getattr(self.module, obj)
@@ -177,14 +188,21 @@ class TestCollection:
                     test_chain.validate_dependencies(test_name)
                     
                     SharedVar.add_scope(test_chain.shared_vars, test_name)
-                    t_obj = partial(t_obj, 
-                                    _XTest____mocks=test_chain.mocks,
-                                    _XTest____shared_vars=test_chain.shared_vars,
-                                    _XTest____isolate=test_chain.isolate)
-                
-            
-            if func_name and test_name != func_name:
+
+                    if test_chain.mocks:
+                        t_obj = partial(t_obj, _XTest____mocks=test_chain.mocks)
+
+                    if test_chain.shared_vars:
+                        t_obj = partial(t_obj, _XTest____shared_vars=test_chain.shared_vars)
+
+                    if test_chain.isolate:
+                        t_obj = partial(t_obj, _XTest____isolate=test_chain.isolate)
+
+            if single_func_name and test_name != single_func_name:
                 continue
+
+            if self.coverage == Coverage.ENABLED:
+                t_obj = partial(t_obj, _XTest____coverage=True)
 
             test_obj = partial(t_obj,
                                _XTest____collector=self.collector,

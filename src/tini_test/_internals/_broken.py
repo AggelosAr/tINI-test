@@ -11,6 +11,7 @@ from tini_test._internals.consts import (_USING_COVERAGE, COVERAGE_ROOT,
 
 TINI_TEST_COVERAGE_SOURCE = os.path.join(PROJECT_ROOT, 'src')
 
+_V2 = True
 
 HEADERS = '''
 from tini_test.test_utils import Test
@@ -57,49 +58,65 @@ def delete_test_dir(folder_name: Optional[str] = '') -> None:
 
 def run_test(folder_name: Optional[str] = None, 
              test_name: Optional[str] = None, 
-             test_file: Optional[str] = None) -> subprocess.CompletedProcess:
+             test_file: Optional[str] = None,
+             timeout: int = 10) -> subprocess.CompletedProcess:
 
     if not folder_name:
         folder_name = 'tini_test'
 
-    python3 = os.path.join(PROJECT_ROOT, PYTHON_PATH)
+    _python3 = os.path.join(PROJECT_ROOT, PYTHON_PATH)
 
     commands = [
         'cd %s' % (GENERATED_TESTS_ROOT, ),
     ]
 
-    run_tini_test_command = '%s -m tini_test -d %s' % (python3, folder_name, )
+    python3 = '%s -m ' % _python3
 
     if _USING_COVERAGE:
         if not os.path.exists(COVERAGE_ROOT):
             os.makedirs(COVERAGE_ROOT, exist_ok=True)
 
-        coverage_command = ('%s -m '\
-                            'coverage run '\
-                            '--source=%s '\
-                            '--data-file=%s.coverage.run_%s '\
-                            '-m '
-                                % 
-                                (
-                                    python3, 
-                                    TINI_TEST_COVERAGE_SOURCE, 
-                                    COVERAGE_ROOT, get_unique_folder_name(), 
+        if _V2:
+            coverage_command = (
+                                '--coverage '\
+                                '--coverage-target %s '\
+                                '--coverage-store %s/.coverage_%s' 
+                                    % 
+                                    (   
+                                        TINI_TEST_COVERAGE_SOURCE,
+                                        COVERAGE_ROOT, get_unique_folder_name(), 
+                                    )
+                               )
+            run_tini_test_command = 'tini_test %s -d %s' % (coverage_command, folder_name, )
+
+        else:
+            coverage_command = (
+                                'coverage run '\
+                                '--source=%s '\
+                                '--data-file=%s.coverage.run_%s '\
+                                '-m '
+                                    % 
+                                    (
+                                        TINI_TEST_COVERAGE_SOURCE, 
+                                        COVERAGE_ROOT, get_unique_folder_name(), 
+                                    )
                                 )
-                            )
         
-        run_tini_test_command = '%s tini_test -d %s' % (coverage_command, folder_name, )
+            run_tini_test_command = '%s tini_test -d %s' % (coverage_command, folder_name, )
+
     
     if test_name:
         run_tini_test_command += ' -t %s' % test_name
+
     if test_file:
         run_tini_test_command += ' -f %s' % test_file
 
     
-    commands.append(run_tini_test_command)
+    commands.append(python3 + run_tini_test_command)
 
 
     completed_process = subprocess.run(' && '.join(commands),
-                                       timeout=10, 
+                                       timeout=timeout, 
                                        text=True, 
                                        capture_output=True,
                                        shell=True)

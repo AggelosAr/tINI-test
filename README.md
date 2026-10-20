@@ -9,7 +9,7 @@ The main utilities provided by the suite are:
     - With optional setup/cleanup functionality per test
 
 - Adding mocks via _@Mock.mock_ decorators
-    - Mock any function call or return
+    - Mock any function call or return or Class instantiation
 
 - Adding shared/context vars via _@Shared_ decorators
     - Variables defined will be usable in any part of the code reachable from the test.
@@ -194,8 +194,29 @@ def test_mock_callable_in_returns():
     result = func_g()()
     must_equal(999, result)
 
+```
+
+
+```python
+
+class MyClass:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def add(self):
+        return self.x + self.y
+
+@Test.case
+@Mock.mock(MyClass, args=(1, 2))
+def test_mocking_my_class():
+    instance = MyClass(10, 20)
+    must_equal(1 + 2, instance.add())
 
 ```
+#### NOTES:
+> For mocking classes only the __init__ method is manipulated. So if custom logic exists in __new__ you may need a custom mock.
+
 
 Here is a more complex example. The function call of func_e during the test will be proxied to the Mock as a result it will receive as args the lambda and the 1 and as kwargs the function f. Also the the top and bottom Mock decorators are ignored.
 

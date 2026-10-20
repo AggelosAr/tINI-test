@@ -1,5 +1,5 @@
 from tini_test import Isolate, Test, WillRaise, must_equal
-from tini_test.enums import RunMode, Verbosity
+from tini_test.enums import Coverage, RunMode, Verbosity
 from tini_test.initializer import initialize_test_suite
 from tini_test.misc.exceptions import CantFindRelativePathToRoot
 from tini_test.module_collector import ModuleCollector
@@ -76,7 +76,8 @@ def test_collector_collects_all() -> None:
                       'test_about_shared.tests.test_imports_global_collisions.tests': ['test_c', 
                                                                                        'test_b', 
                                                                                        'test_imports', 
-                                                                                       'test_a']}
+                                                                                       'test_a'],
+                      'test_coverage.tests': ['test_coverage_cli', 'test_full_suite_coverage']}
 
     must_equal(correct_items, dict(test_collector.test_modules.items()))
 
@@ -147,7 +148,8 @@ def test_collector_collects_all_and_exclude_dir_works() -> None:
                       'test_about_shared.tests.test_imports_global_collisions.tests': ['test_c', 
                                                                                        'test_b', 
                                                                                        'test_imports', 
-                                                                                       'test_a']}
+                                                                                       'test_a'],
+                      'test_coverage.tests': ['test_coverage_cli', 'test_full_suite_coverage']}
 
     must_equal(correct_items, dict(test_collector.test_modules.items()))
 
@@ -249,6 +251,9 @@ def test_collector_will_not_find_anything_if_nonexisting_file_is_requested() -> 
 @Test.case
 def test_test_module_will_not_collect_a_single_function_if_it_doesnt_exist() -> None:
     _ = initialize_test_suite(verbosity=Verbosity.MINIMAL,
+                              coverage=Coverage.DISABLED,
+                              coverage_target=None,
+                              store_coverage_at=None,
                               run_mode=RunMode.SYNC,
                               search_dir='.',
                               test_function='file_that_is_not_here')
@@ -264,6 +269,9 @@ def test_test_module_will_collect_a_single_function() -> None:
     
     correct_item = 'test_decorator_works_with_parenthesis'
     suite = initialize_test_suite(verbosity=Verbosity.MINIMAL,
+                                  coverage=Coverage.DISABLED,
+                                  coverage_target=None,
+                                  store_coverage_at=None,
                                   run_mode=RunMode.SYNC,
                                   search_dir='.',
                                   test_function='test_decorator_works_with_parenthesis')
@@ -286,6 +294,9 @@ def test_test_module_will_collect_this_function() -> None:
 
     t = 'test_test_module_will_collect_this_function'
     suite = initialize_test_suite(verbosity=Verbosity.MINIMAL,
+                                  coverage=Coverage.DISABLED,
+                                  coverage_target=None,
+                                  store_coverage_at=None,
                                   run_mode=RunMode.SYNC,
                                   search_dir='.',
                                   test_function=t)

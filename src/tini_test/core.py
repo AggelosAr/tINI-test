@@ -5,8 +5,10 @@ from itertools import repeat
 from time import perf_counter
 from typing import Optional
 
-from tini_test.enums import RunMode, Verbosity
-from tini_test.misc.annotations import (DotPythonPath, Errors, FileFailReason,
+from tini_test.coverage._coverage import CoverageTracker
+from tini_test.enums import Coverage, RunMode, Verbosity
+from tini_test.misc.annotations import (CoverageStore, DirectoryPath,
+                                        DotPythonPath, Errors, FileFailReason,
                                         FileLoadFailures, FileName, Successes,
                                         SuiteSize, TestCollectionSize,
                                         TestFunctionName,
@@ -23,11 +25,23 @@ class TestSuite:
     def __init__(self,
                  run_mode: RunMode,
                  verbosity: Verbosity,
+                 coverage: Coverage,
+                 coverage_target: DirectoryPath | FileName | None,
+                 store_coverage_at: DirectoryPath | FileName | None,
                  test_function: Optional[TestFunctionName] = None
                  ) -> None:
         
         self.run_mode = run_mode
         self.verbosity = verbosity
+
+        self.coverage = coverage
+
+        self.coverage_target = coverage_target
+        self.store_coverage_at = store_coverage_at
+
+        self._coverage_total: CoverageStore = {}
+        self._coverage_fails: CoverageStore = {}
+
         self.test_function = test_function
 
         self._discovery_time = 0.0
@@ -43,8 +57,6 @@ class TestSuite:
         self._failed_to_collect_test_files: dict[FileName, FileFailReason] = {}
 
         self.container: dict[DotPythonPath, TestCollection] = {}
-
-        # self.errored_files = []
 
     @cached_property
     def searching_single_test(self) -> bool:
@@ -136,9 +148,24 @@ class TestSuite:
         self.errors = new_errors
         self.file_load_failures = current_file_load_failures
 
-    def pprint(self) -> None:
-        print(self.get_summary())
-        # print('Errored files: ', self.errored_files)
+    def update_coverage_stores(self, test_collection: TestCollection) -> None:
+        if self.coverage == Coverage.DISABLED:
+            return
+
+        for test in test_collection.collector.values():
+
+            for file, lines in test.coverage_store.items():
+                self._coverage_total.setdefault(file, set()).update(lines)
+
+                if test.is_fail:
+                    self._coverage_fails.setdefault(file, set()).update(lines)
+
+    def get_covered_store(self) -> CoverageStore:
+        store = {}
+        for file, lines in self._coverage_total.items():
+            store[file] = set(lines) - self._coverage_fails.get(file, set())
+
+        return store
 
     def get_summary(self) -> str:
         _r = [
@@ -192,14 +219,15 @@ class TestSuite:
         shared_meta = MetaSharedVar.get_meta_var()
 
         # XXX ???
-        # extreme case tests.dot_python_path is not unique inside nested sub dirs . 
+        # extreme case tests.dot_python_path is not unique inside nested sub dirs. 
         # Just fail ASAP... is this even possible ?
         # can't think of a way to replicate .... I think it's not possible XD
         all_paths = set()
 
         for module_path, test_file in _from:
 
-            tests = TestCollection(verbosity=self.verbosity, 
+            tests = TestCollection(verbosity=self.verbosity,
+                                   coverage=self.coverage,
                                    module_path=module_path,
                                    file=test_file,
                                    shared_meta=shared_meta)
@@ -209,16 +237,19 @@ class TestSuite:
             all_paths.add(tests.dot_python_path)
             
             try:
-                tests._import()
 
-                collected_tests = tests.gather_tests(func_name=self.test_function)
+                tests._import(single_func_name=self.test_function)
+
+                collected_tests = tests.gather_tests(single_func_name=self.test_function)
 
                 tests.raise_for_globals()
                    
             except Exception as e:
+
                 self.file_load_failures = 1
                 tb = self.format_file_failure_traceback(traceback.format_exc())
                 self.failed_to_collect_test_files_reasons[tests.dot_python_path] = '%s\n%s' % (str(e), tb, )
+
                 continue
 
             finally:
@@ -239,15 +270,14 @@ class TestSuite:
 
     def run_suite(self) -> None:
         for _, test_collection in self.container.items():
-
             current_errors = test_collection.run_tests()
 
-            self.suite_run_time = perf_counter()
             self.update_summary_stats(total_tests=test_collection.total_tests, new_errors=current_errors)
+            self.update_coverage_stores(test_collection)
 
     async def _arun_suite(self) -> None:
         # @ XXX 1
-        
+
         all_test_collections: list[TestCollection] = []
         for _, test_collection in self.container.items():
             all_test_collections.append(test_collection)
@@ -258,7 +288,9 @@ class TestSuite:
         )
         for test_collection, current_errors in zip(all_test_collections, results):
             assert isinstance(current_errors, int)
+
             self.update_summary_stats(total_tests=test_collection.total_tests, new_errors=current_errors)
+            self.update_coverage_stores(test_collection)
 
     def runner(self) -> None:
         self._start = perf_counter()
@@ -272,3 +304,17 @@ class TestSuite:
                 asyncio.run(self._arun_suite())
 
         self.suite_run_time = perf_counter()
+
+    def pprint(self) -> None:
+        print(self.get_summary())
+        # print('Errored files: ', self.errored_files)
+
+    def get_coverage(self) -> None:
+        if self.coverage == Coverage.DISABLED:
+            return
+
+        tracker = CoverageTracker(source=self.coverage_target, 
+                                  runtime_covered_lines=self.get_covered_store(),
+                                  metadata_save_path=self.store_coverage_at)
+        tracker.serialize()
+        # tracker.to_html()

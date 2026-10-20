@@ -2,11 +2,13 @@ import sys
 import threading
 from collections import deque
 from contextlib import contextmanager
+from functools import partial
 from io import StringIO
 from threading import Lock
 from typing import Generator, Optional
 
-from tini_test.misc.annotations import TestCallable
+from tini_test.coverage._coverage import CoverageTracker
+from tini_test.misc.annotations import CoverageStore, TestCallable
 from tini_test.mock import MockDefinition
 from tini_test.shared import MetaSharedVar, SharedVar
 
@@ -18,6 +20,8 @@ _exceptions = (Exception, BaseException)
 _local_thread = threading.local()
 
 _lock = Lock()
+
+_tracer = CoverageTracker.tracer
 
 
 class WillRaise(object):
@@ -142,3 +146,15 @@ def patch_shared(patching: TestCallable, shared_vars: list[SharedVar]) -> Genera
     else:
         yield
 
+
+
+@contextmanager
+def coverage(trace: bool, storage: CoverageStore) -> Generator[None, None, None]:
+    if trace:
+        sys.settrace(partial(_tracer, storage))
+        try:
+            yield
+        finally:
+            sys.settrace(None)
+    else:
+        yield

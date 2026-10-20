@@ -10,7 +10,7 @@ GENERATED_TESTS_ROOT = '/tmp/python/tini_test'
 
 
 
-_USING_COVERAGE = False
+_USING_COVERAGE = True
 _PROFILING = False
 
 

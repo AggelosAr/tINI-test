@@ -61,16 +61,22 @@ class ExceptionWasNotRaised(Exception):
         super().__init__(reason)
 
 
-class MockMissingFunctionError(Exception):
+class MockMissingFunctionOrClass(Exception):
 
     def __init__(self) -> None:
-        super().__init__('Mock function is missing.')
+        super().__init__('Mock can only be applied to functions or classes.')
 
 
 class MockDefinitionError(Exception):
 
     def __init__(self) -> None:
         super().__init__('Mock should not accept both return value and arguments.')
+
+
+class MockClassDefinitionError(Exception):
+
+    def __init__(self) -> None:
+        super().__init__('Mock class only accepts initialization arguments.')
 
 
 class MockCallDefinitionError(Exception):

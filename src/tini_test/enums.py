@@ -2,6 +2,7 @@ from enum import Enum
 from functools import lru_cache
 from typing import Mapping
 
+from tini_test.coverage.consts import STORE
 from tini_test.misc.exceptions import (NotSupportedRunMode,
                                        NotSupportedVerbosity)
 
@@ -15,8 +16,7 @@ class RunMode(Enum):
 
     @classmethod
     def supported_modes_help_msg(cls) -> str:
-        modes = ', '.join(member.value for member in cls)
-        return 'Supported run modes are <%s>' % (modes, )
+        return 'Supported run modes are <SYNC> and <ASYNC>'
     
     @classmethod
     def arg_parser_type(cls, value: str) -> 'RunMode':
@@ -28,15 +28,15 @@ class RunMode(Enum):
     @classmethod
     def arg_parser_info(cls) -> str:
         return r'''
--Case insesitive. 
+-Case insensitive. 
 
 Sync ( DEFAULT )
 ----
-Run all tests in async mode.
+Run all tests in sync mode.
 
 Async
 -----
-Run all tests in sync mode.
+Run all tests in async mode.
                '''
     
 
@@ -63,7 +63,7 @@ class Verbosity(Enum):
     @classmethod
     def arg_parser_info(cls) -> str:
         return r'''
--Case insesitive.
+-Case insensitive.
 
 Normal
 ------
@@ -87,7 +87,24 @@ super_minimal
 -------------
 Same as `MINIMAL_NO_STACK` but less verbose.
                '''
-    
+
+
+class Coverage(Enum):
+    ENABLED = 'ENABLED'
+    DISABLED = 'DISABLED'
+
+    @classmethod
+    def arg_parser_info(cls) -> str:
+        return r'''
+> Doesn't accept any arguments.
+
+If passed, coverage tracking will be enabled.
+The report that will be generated, shows the coverage analysis of the code based on the collected data.
+The report will be generated in HTML format and will be stored inside the `%s` directory.
+TODO in order to generate the report the other command must be run.
+Use --coverage-target and --coverage-store to further configure the behavior of the coverage report.
+               ''' % STORE
+
 
 class Color(Enum):
 
@@ -140,16 +157,16 @@ class TestStatus(Enum):
         return status in cls.fail_operations()
 
 
-class MockMode(Enum):
-    PATCH_CALL = 'PATCH_CALL'
-    PATCH_RETURN = 'PATCH_RETURN'
-    
-
 class Plugs(Enum):
     TEST = 'TEST'
     MOCK = 'MOCK'
     SHARED = 'SHARED'
     ISOLATE = 'ISOLATE'
+
+
+class MockType(Enum):
+    FUNCTION = 'FUNCTION'
+    CLASS = 'CLASS'
 
 
 CONFIG: Mapping[TestStatus, ColorValue] = {

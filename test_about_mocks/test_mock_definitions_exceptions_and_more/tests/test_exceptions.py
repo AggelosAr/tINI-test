@@ -21,9 +21,6 @@ def test_DuplicateMockRegisteredOnTest() -> None:
 
     completed_process = run_test(test_name, test_name)
 
-    # print(completed_process.stdout)
-    # print(completed_process.stderr)
-
     must_equal(0, completed_process.returncode)
 
     conditions = [
@@ -132,9 +129,6 @@ def %s() -> None:
 
         completed_process = run_test(f'test_exceptions_3_{i}', f'test_exceptions_3_{i}')
 
-        # print(completed_process.stdout)
-        # print(completed_process.stderr)
-
         must_equal(0, completed_process.returncode)
 
         conditions = [
@@ -165,9 +159,6 @@ def %s() -> None:
 
     completed_process = run_test(test_name, test_name)
 
-    # print(completed_process.stdout)
-    # print(completed_process.stderr)
-
     must_equal(0, completed_process.returncode)
 
     conditions = [
@@ -185,8 +176,8 @@ def %s() -> None:
 
 
 @Test.case
-def test_MockMissingFunctionError() -> None:
-    test_name = 'test_MockMissingFunctionError'
+def test_MockMissingFunctionOrClass() -> None:
+    test_name = 'test_MockMissingFunctionOrClass'
     content = '''
      
 @Mock.mock(None, returns=42)
@@ -202,7 +193,7 @@ def %s() -> None:
 
     conditions = [
         '| Test file load failures : 1',
-        'tini_test.misc.exceptions.MockMissingFunctionError: Mock function is missing.'
+        'tini_test.misc.exceptions.MockMissingFunctionOrClass: Mock can only be applied to functions or classes.'
     ]
     for line in completed_process.stdout.splitlines():
         for condition in conditions:
@@ -213,7 +204,7 @@ def %s() -> None:
     
     delete_test_dir(test_name)
 
-    test_name = 'test_MockMissingFunctionError'
+    test_name = 'test_MockMissingFunctionOrClass'
     content = '''
         
 @Mock.mock(returns=42)
@@ -229,7 +220,7 @@ def %s() -> None:
 
     conditions = [
         '| Test file load failures : 1',
-        'tini_test.misc.exceptions.MockMissingFunctionError: Mock function is missing.'
+        'tini_test.misc.exceptions.MockMissingFunctionOrClass: Mock can only be applied to functions or classes.'
     ]
     for line in completed_process.stdout.splitlines():
         for condition in conditions:
@@ -367,3 +358,42 @@ def test_MockCallDefinitionErrorArgsAndKwargsConflict():
 
     delete_test_dir(test_name)
 
+
+
+@Test.case
+def test_mock_class_doesnt_accept_returns() -> None:
+    test_name = 'test_mock_class_doesnt_accept_returns'
+    content = '''
+
+class MyClass:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def add(self):
+        return self.x + self.y
+
+@Mock.mock(MyClass, returns=MyClass(100, 100))
+@Test.case()
+def test_mock_class_doesnt_accept_returns():
+    ...
+'''
+    get_temp_file(content, test_name)
+
+    completed_process = run_test(test_name, test_name)
+
+    must_equal(0, completed_process.returncode)
+
+    conditions = [
+        '| Test file load failures : 1',
+        'Test files failed to load (1):',
+        'Reason: Mock class only accepts initialization arguments.'
+    ]
+    for line in completed_process.stdout.splitlines():
+        for condition in conditions:
+            if condition in line:
+                conditions.remove(condition)
+
+    must_equal(0, len(conditions))
+
+    delete_test_dir(test_name)

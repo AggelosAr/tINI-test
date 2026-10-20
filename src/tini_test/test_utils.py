@@ -5,12 +5,13 @@ from traceback import format_exc, format_tb
 from typing import Any, Callable, Mapping, Optional
 
 from tini_test._internals._registry import attach_state
-from tini_test.context_managers import (_thread_redirect_stdout, patch_mocks,
-                                        patch_shared, with_lock)
+from tini_test.context_managers import (_thread_redirect_stdout, coverage,
+                                        patch_mocks, patch_shared, with_lock)
 from tini_test.shared import SharedVar
 
 from .enums import Plugs, TestStatus, Verbosity
-from .misc.annotations import (CleanupCallable, IsolateWrappedObject,
+from .misc.annotations import (CleanupCallable, CoverageStore,
+                               IsolateWrappedObject,
                                MockDefinitionWrappedHolder, MockWrappedObject,
                                RealTest, SetupCallable, SharedDefinitionHolder,
                                SharedWrappedObject, StackTrace,
@@ -32,12 +33,18 @@ class TestStep:
                        | SetupCallable 
                        | RealTest
                        | CleanupCallable,
-                 success_status: TestStatus,
-                 fail_status: TestStatus,
-                 entry_status: Optional[TestStatus] = TestStatus.NO_OP,
-                 
+                 entry_status   : TestStatus,
+                 success_status : TestStatus,
+                 fail_status    : TestStatus,
+
+                 use_coverage   : bool,
+                 coverage_store : CoverageStore,
+
                  args: Optional[tuple] = None,
                  kwargs: Optional[Mapping[str, Any]] = None) -> None:
+
+        self.use_coverage = use_coverage
+        self.coverage_store = coverage_store
 
         self.entry_status = entry_status
         self.success_status = success_status
@@ -60,7 +67,9 @@ class TestStep:
             
             with _thread_redirect_stdout(buffer):
 
-                self.func(*self.args, **self.kwargs)
+                with coverage(self.use_coverage, self.coverage_store):
+
+                    self.func(*self.args, **self.kwargs)
 
         except ExpectedWasDifferentFromActual as e:
 
@@ -97,17 +106,19 @@ class _XTest:
                  args,
                  /,
                  verbosity: Verbosity,
-
+            
                  test: RealTest,
                  test_args: tuple,
                  test_kwargs: dict[str, Any],
 
-                 setup: Optional[SetupCallable] = None, 
-                 cleanup: Optional[CleanupCallable] = None,
+                 setup: SetupCallable | None,
+                 cleanup: CleanupCallable | None,
 
-                 mocks: Optional[list[MockDefinition]] = None,
-                 shared_vars: Optional[list[SharedVar]] = None,
-                 isolate: Optional[bool] = None) -> None:
+                 mocks: list[MockDefinition] | None,
+                 shared_vars: list[SharedVar] | None,
+                 isolate: bool | None,
+                 coverage: bool | None
+                 ) -> None:
 
         self.verbosity = verbosity
 
@@ -122,18 +133,27 @@ class _XTest:
         self.shared_vars = shared_vars or []
 
         self.isolate = isolate or False
-        
+
+        self.coverage_store: CoverageStore = {}
+
         self.steps = [
             TestStep(func=cleanup,
+                     use_coverage=coverage or False,
+                     coverage_store=self.coverage_store,
                      entry_status=TestStatus.BREAK_DOWN_ENTRY,
                      success_status=TestStatus.BREAK_DOWN_SUCCESS,
                      fail_status=TestStatus.BREAK_DOWN_FAIL),
             TestStep(func=test,
+                     use_coverage=coverage or False,
+                     coverage_store=self.coverage_store,
                      args=test_args,
                      kwargs=test_kwargs,
+                     entry_status=TestStatus.NO_OP,
                      success_status=TestStatus.NO_OP,
                      fail_status=TestStatus.FAIL),
             TestStep(func=setup,
+                     use_coverage=coverage or False,
+                     coverage_store=self.coverage_store,
                      entry_status=TestStatus.SET_UP_ENTRY,
                      success_status=TestStatus.SET_UP_SUCCESS,
                      fail_status=TestStatus.SET_UP_FAIL)
@@ -177,11 +197,12 @@ class _XTest:
                          ____test_func   : Optional[RealTest] = test_func,
                          ____mocks       : Optional[list[MockDefinition]] = None,
                          ____shared_vars : Optional[list[SharedVar]] = None,
-                         ____isolate     : Optional[bool] = False,
+                         ____isolate     : Optional[bool] = None,
+                         ____coverage    : Optional[bool] = None,
                          **kwargs        : Any) -> TestWrappedHolder:
 
                 assert ____test_func
-                
+
                 test_case = _XTest(_no_op,
                                    verbosity=____verbosity,
                                    test=____test_func,
@@ -191,7 +212,8 @@ class _XTest:
                                    cleanup=cleanup,
                                    mocks=____mocks,
                                    shared_vars=____shared_vars,
-                                   isolate=____isolate)
+                                   isolate=____isolate,
+                                   coverage=____coverage)
 
                 ____collector[____test_func.__name__ or test_func.__name__] = test_case
                 return _wrapper
