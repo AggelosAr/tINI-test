@@ -87,12 +87,17 @@ class AstParser:
     def extract_top_level_import_lines(self) -> set[int]:
         """Lines executed once at import time by every top level node.
 
-        Nodes with a nested block (def, class, if, try, ...) only contribute their header,
-        since the block itself may never run.
+        Nodes with a nested block (def, if, try, ...) only contribute their header, since the
+        block itself may never run. Class bodies run at definition time, so they are included
+        (methods still only contribute their header).
         """
         lines: set[int] = set()
+        self._collect_import_lines(self.root_node.body, lines)
+        return lines
 
-        for node in self.root_node.body:
+    @no_type_check
+    def _collect_import_lines(self, nodes: list[ast.stmt], lines: set[int]) -> None:
+        for node in nodes:
             start = min([node.lineno] + [d.lineno for d in getattr(node, 'decorator_list', [])])
 
             block = getattr(node, 'body', None) or getattr(node, 'cases', None)
@@ -101,10 +106,12 @@ class AstParser:
                 # match_case has no lineno of its own
                 end = getattr(first, 'lineno', None) or first.pattern.lineno
                 lines.update(range(start, max(end, node.lineno + 1)))
+
+                # A class body runs at definition time, unlike a function body.
+                if isinstance(node, ast.ClassDef):
+                    self._collect_import_lines(block, lines)
             else:
                 lines.update(range(start, (node.end_lineno or node.lineno) + 1))
-
-        return lines
 
     def get_top_level_functions(self) -> list[ast.FunctionDef]:
         return [node for node in self.root_node.body if isinstance(node, ast.FunctionDef)]

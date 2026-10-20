@@ -6,7 +6,7 @@ body {
     background: #0d0d0d;
     color: #eee;
     border-left: 2px solid #444;
-    font-size: 16px;
+    font-size: 15px;
 }
 
 .code-content {
@@ -46,13 +46,18 @@ body {
 
 
 .code-line:hover {
-    background: #1e1e1e;
-    user-select: none;
+    background-color: #1e1e1e;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.08));
 }
 
 .code-line:hover .line-number {
     color: #ff00ff;
-    background: #313131;
+    background-color: #1e1e1e;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.08));
+}
+
+.code-line:hover .line-content {
+    background-image: linear-gradient(rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.08));
 }
 
 .line-number {
@@ -140,14 +145,14 @@ body {
 .cov-toggle.empty.active    { background: #6b6b6b; color: #fff; }
 .cov-toggle.excluded.active { background: #3a6fd1; color: #fff; }
 
-.code-block.show-run .code-line.run           { background: rgba(164, 255, 175, 0.2); }
-.code-block.show-missing .code-line.missing   { background: rgba(255, 159, 168, 0.2); }
-.code-block.show-empty .code-line.empty       { background: rgba(160, 160, 160, 0.3); }
-.code-block.show-excluded .code-line.excluded { background: rgba(58, 111, 209, 0.3); }
+.code-block.show-run .code-line.run .line-content           { background-color: rgba(164, 255, 175, 0.2); }
+.code-block.show-missing .code-line.missing .line-content   { background-color: rgba(255, 159, 168, 0.2); }
+.code-block.show-empty .code-line.empty .line-content       { background-color: rgba(160, 160, 160, 0.3); }
+.code-block.show-excluded .code-line.excluded .line-content { background-color: rgba(58, 111, 209, 0.3); }
 
-.code-block.show-run .code-line.run.continuation           { background: rgba(164, 255, 175, 0.1); }
-.code-block.show-missing .code-line.missing.continuation   { background: rgba(255, 159, 168, 0.1); }
-.code-block.show-excluded .code-line.excluded.continuation { background: rgba(58, 111, 209, 0.15); }
+.code-block.show-run .code-line.run.continuation .line-content           { background-color: rgba(164, 255, 175, 0.1); }
+.code-block.show-missing .code-line.missing.continuation .line-content   { background-color: rgba(255, 159, 168, 0.1); }
+.code-block.show-excluded .code-line.excluded.continuation .line-content { background-color: rgba(58, 111, 209, 0.15); }
 
 .code-line.continuation .line-number::after { opacity: 0.4; }
 

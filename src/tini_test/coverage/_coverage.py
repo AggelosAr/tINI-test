@@ -1,3 +1,4 @@
+import html
 import json
 import os
 import shutil
@@ -42,7 +43,7 @@ class LineStats:
 
         child_two = HTMLNode(HTMLNodeType.SPAN)
         child_two.add_class({'class': 'line-content'})
-        child_two.set_content(self.line_content)
+        child_two.set_content(html.escape(self.line_content))
 
         main_node.add_children(child_one)
         main_node.add_children(child_two)
@@ -508,6 +509,7 @@ class CoverageTracker:
 
     def to_html(self) -> None:
         self.collect_files_from_source()
+        self.files = dict(sorted(self.files.items()))
 
         dest_dir = Path(os.path.join(os.getcwd(), STORE))
 
