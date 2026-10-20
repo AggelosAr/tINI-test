@@ -5,25 +5,24 @@ A lightweight Python test framework (hand-crafted and almost full type safe) foc
 
 The main utilities provided by the suite are:
 
-- Defining test cases with via _@Test.case_ decorators
-    - With optional setup/cleanup functionality per test
+- Defining test cases with via _@Test.case_ decorators (optional setup/cleanup)
 
-- Adding mocks via _@Mock.mock_ decorators
-    - Mock any function call or return or Class instantiation
+- Adding mocks via _@Mock.mock_ decorators (mock functions/classes)
 
 - Adding shared/context vars via _@Shared_ decorators
     - Variables defined will be usable in any part of the code reachable from the test.
 
 - Isolating a test via the _@Isolate_ decorators (*experimental*)
-    - Will force the test to run sequentially.
 
 - Validating exceptions via the _WillRaise_ context manager.
 
 - Asserting equality via the *must_equal* helper function.
 
+- Running coverage
+
 *These utilities can be combined in any way.*
 
-The framework was developed and tested using its' own test suite. It was also stress tested and profiled on around 10K tests to test db connections on a temp sqlite3 and management of globals. Currently the base tests that run to power the suite are ~5k (to cover almost all possible combinations) with ~400-600 unique cases. It also allows pretty prints inside the tests while running and the print verbocity modes should provide plenty of options.
+The framework was developed and tested using its' own test suite. It was also stress tested and profiled on around 10K tests to test db connections on a temp sqlite3 and management of globals. Currently the base tests that run to power the suite are ~5k (x2) (to cover almost all possible combinations) with ~400-600 unique cases. It also allows pretty prints inside the tests while running and the print verbocity modes should provide plenty of options.
 
 ## Installation
 
@@ -36,6 +35,30 @@ pip install tINI-test
 ```bash
 python3 -m tini_test [-r RUN MODE] [-v VERBOSITY] [-d DIRECTORY] [-f FILE] [-t TEST] [-h HELP]
 ```
+
+### For coverage
+
+Run the suite normally with the extra argments. 
+
+```bash
+python3 -m tini_test [--coverage] [--coverage-target] [--coverage-store]
+```
+
+Or merge multiple coverage reports into one.
+
+```bash
+python3 -m tini_test [--coverage-merge]
+```
+
+In order to generate the HTML report run this command and point it to the generate coverage file.
+
+```bash
+python3 -m tini_test [--coverage-generate-report] [--coverage-target] [--coverage-store]
+```
+
+#### NOTES:
+
+> `--coverage-target`, `--coverage-store` and `--coverage-merge` are all optional and accept both relative and absolute paths.
 
 ---
 

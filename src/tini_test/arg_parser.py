@@ -1,5 +1,5 @@
 from argparse import ArgumentParser, RawTextHelpFormatter
-from typing import NotRequired, TypedDict
+from typing import TypedDict
 
 from tini_test.coverage.consts import METADATA_FILE
 from tini_test.enums import Coverage, RunMode, Verbosity
