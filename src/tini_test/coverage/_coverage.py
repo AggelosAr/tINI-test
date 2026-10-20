@@ -14,9 +14,9 @@ from tini_test.coverage.consts import (_TOGGLE_SCRIPT, METADATA_FILE, STORE,
 from tini_test.coverage.enums import HTMLNodeType, LineCoverageStatus
 from tini_test.coverage.html import HTMLHyperLink, HTMLNode, HTMLTemplate
 from tini_test.misc.annotations import (CodeLineNumber, CoverageStore,
-                                        DirectoryPath, FileName, LineContent, StatementId)
+                                        DirectoryPath, FileName, LineContent,
+                                        StatementId)
 
-# XXX test coverage integration
 
 class LineStats:
     def __init__(self, 

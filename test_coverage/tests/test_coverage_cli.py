@@ -4,6 +4,7 @@ import re
 from tini_test import Test, must_equal
 from tini_test._internals._broken import (delete_test_dir, get_temp_file,
                                           run_test)
+from tini_test._internals._isolate import Isolate
 
 FOLDER = 'test_coverage_cli'
 
@@ -26,7 +27,7 @@ def _summary(stdout: str) -> dict[str, int]:
 
     return found
 
-
+@Isolate
 @Test.case
 def test_CoverageCliCasesPassInsideSubprocess() -> None:
     with open(CASES, 'r') as f:

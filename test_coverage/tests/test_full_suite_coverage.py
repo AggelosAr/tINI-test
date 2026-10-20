@@ -4,6 +4,7 @@ import re
 from tini_test import Test, must_equal
 from tini_test._internals._broken import (delete_test_dir, get_temp_file,
                                           run_test)
+from tini_test._internals._isolate import Isolate
 
 FOLDER = 'test_full_suite_coverage'
 
@@ -14,6 +15,7 @@ CASE = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                     '..', 'child_cases', 'full_suite_case.py')
 
 
+@Isolate
 @Test.case
 def test_FullSuiteRunsInSubprocessWithCoverage() -> None:
     if os.environ.get(NESTED_ENV):

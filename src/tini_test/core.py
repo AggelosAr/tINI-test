@@ -5,6 +5,8 @@ from itertools import repeat
 from time import perf_counter
 from typing import Optional
 
+from tini_test._internals.consts import _V2_COVERAGE
+from tini_test.context_managers import coverage
 from tini_test.coverage._coverage import CoverageTracker
 from tini_test.enums import Coverage, RunMode, Verbosity
 from tini_test.misc.annotations import (CoverageStore, DirectoryPath,
@@ -218,10 +220,7 @@ class TestSuite:
 
         shared_meta = MetaSharedVar.get_meta_var()
 
-        # XXX ???
-        # extreme case tests.dot_python_path is not unique inside nested sub dirs. 
-        # Just fail ASAP... is this even possible ?
-        # can't think of a way to replicate .... I think it's not possible XD
+        # XXX ??? extreme case tests.dot_python_path is not unique inside nested sub dirs.
         all_paths = set()
 
         for module_path, test_file in _from:
@@ -237,12 +236,14 @@ class TestSuite:
             all_paths.add(tests.dot_python_path)
             
             try:
+                # ! Top levels are gathered manually... XXX
+                with coverage(_V2_COVERAGE, self._coverage_total):
 
-                tests._import(single_func_name=self.test_function)
+                    tests._import(single_func_name=self.test_function)
+                    
+                    collected_tests = tests.gather_tests(single_func_name=self.test_function)
 
-                collected_tests = tests.gather_tests(single_func_name=self.test_function)
-
-                tests.raise_for_globals()
+                    tests.raise_for_globals()
                    
             except Exception as e:
 

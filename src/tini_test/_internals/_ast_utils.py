@@ -5,7 +5,6 @@ from typing import no_type_check
 
 from tini_test.misc.annotations import TestFunctionName
 
-
 # TODO 
 decorators = {'Test.case', 'Mock.mock', 'Shared', 'Isolate'}
 
@@ -56,13 +55,21 @@ class AstParser:
         statement_id = 0
 
         for node in statements:
-            start = min([first_node(node).lineno]
-                        + [d.lineno for d in getattr(node, 'decorator_list', [])])
+            # Every decorator is its own statement, the header then starts at the `def`/`class` line.
+            for decorator in getattr(node, 'decorator_list', []):
+                lines = [n for n in range(decorator.lineno, (decorator.end_lineno or decorator.lineno) + 1)
+                         if n not in line_to_statement]
+                if lines:
+                    statement_id += 1
+                    for line in lines:
+                        line_to_statement[line] = statement_id
 
+            start = first_node(node).lineno
             block = getattr(node, 'body', None) or getattr(node, 'cases', None)
             if block:
                 first = block[0]
-                first_line = first_node(first).lineno
+                first_line = min([first_node(first).lineno]
+                                 + [d.lineno for d in getattr(first, 'decorator_list', [])])
                 # An inline body (`def f(\n x): ...`) sits on the last header line, so it
                 # is part of the header, otherwise it would be a separate, never run, statement.
                 inline = hasattr(first, 'col_offset') and bool(
@@ -104,7 +111,8 @@ class AstParser:
             if block:
                 first = block[0]
                 # match_case has no lineno of its own
-                end = getattr(first, 'lineno', None) or first.pattern.lineno
+                end = min([getattr(first, 'lineno', None) or first.pattern.lineno]
+                          + [d.lineno for d in getattr(first, 'decorator_list', [])])
                 lines.update(range(start, max(end, node.lineno + 1)))
 
                 # A class body runs at definition time, unlike a function body.

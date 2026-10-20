@@ -6,7 +6,7 @@ from tini_test.coverage.enums import HTMLNodeType
 from tini_test.misc.annotations import HTML, HTMLContent
 
 
-class HTMLClass: # TODO FIX
+class HTMLClass: # XXX FIX
 
     def __init__(self, _class: dict[str, str] | None) -> None:
         self._class = _class
@@ -66,7 +66,7 @@ class HTMLNode:
             self.children.append(children)
 
     def to_html(self) -> HTMLContent:
-        class_content = ' '.join(map(lambda x: x.to_html(), map(HTMLClass, self.classes))) # TODO FIX
+        class_content = ' '.join(map(lambda x: x.to_html(), map(HTMLClass, self.classes))) # XXX FIX
         children_html = '\n'.join(child.to_html() for child in self.children)
         content = '%s%s' % (self.content, children_html)
         return self._type.value % (class_content, content)
