@@ -72,6 +72,8 @@ def run_test(folder_name: Optional[str] = None,
 
     python3 = '%s -m ' % _python3
 
+    run_tini_test_command = 'tini_test -d %s' % folder_name
+    
     if _USING_COVERAGE:
         if not os.path.exists(COVERAGE_ROOT):
             os.makedirs(COVERAGE_ROOT, exist_ok=True)
