@@ -248,3 +248,5 @@ test_stress_returns_5000.py
 test_broken_imports
 
 CoverageReport
+
+CoverageReport_*

@@ -129,7 +129,7 @@ class FileCoverage:
         for statement in self.statement_to_lines:
 
             status = LineCoverageStatus.MISSING
-            
+
             if statement in run_statements:
                 status = LineCoverageStatus.RUN
 
@@ -272,6 +272,7 @@ class CoverageTracker:
         coverage_file_names = set()
         _store: CoverageStore = {}
         skips = 0
+        merged_count = 0
         for root, _, files in os.walk(merge_path):
             for file in files:
                 # Skip files that do not match the coverage metadata file pattern.
@@ -288,6 +289,7 @@ class CoverageTracker:
                             if _cov_file_path not in _store:
                                 _store[_cov_file_path] = set()
                             _store[_cov_file_path].update(lines)
+                    merged_count += 1
                 except Exception as e:
                     skips += 1
 
@@ -307,7 +309,7 @@ class CoverageTracker:
         if skips > 0:
             print('Skipped <%d> coverage files due to errors.' % skips)
 
-        print('Merged coverage metadata saved to `%s`' % merged_file_path)
+        print('Merged <%d> coverage metadata saved to `%s`' % (merged_count, merged_file_path))
 
     @staticmethod
     def deserialize(store: DirectoryPath | FileName | None) -> CoverageStore:

@@ -416,7 +416,7 @@ def test_SmokeMergeEntryPoint() -> None:
                                        cwd=root, timeout=10, text=True, capture_output=True)
 
     must_equal(0, completed_process.returncode)
-    must_equal(True, 'Merged coverage metadata saved' in completed_process.stdout)
+    must_equal(True, 'coverage metadata saved to' in completed_process.stdout)
     must_equal([MERGED], _merged_files(root))
 
 
