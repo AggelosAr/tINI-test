@@ -317,5 +317,5 @@ class TestSuite:
         tracker = CoverageTracker(source=self.coverage_target, 
                                   runtime_covered_lines=self.get_covered_store(),
                                   metadata_save_path=self.store_coverage_at)
+        tracker.show_short_summary()
         tracker.serialize()
-        # tracker.to_html()

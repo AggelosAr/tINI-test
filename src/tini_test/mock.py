@@ -102,19 +102,20 @@ class MockCall(CreateMock):
 
         _proxy_x.__globals__.update(self.mock.__globals__)
         
-        new_spec = ('def _%s(*args, **kwargs): \n'\
-                    '    bound = globals()["%s"].__signature__.bind(*globals()["%s"], **globals()["%s"])\n'\
-                    '    bound.apply_defaults()\n'\
-                    '    return %s(*bound.args, **bound.kwargs)\n' 
-                    % 
-                        (
-                            _proxy_name,
-                            _proxy_x_name,
-                            _proxy_locals__args_name,
-                            _proxy_locals__kwargs_name,
-                            _proxy_x_name, 
-                        )
-                    )
+        new_spec = (
+            'def _%s(*args, **kwargs): \n'                                                           \
+            '    bound = globals()["%s"].__signature__.bind(*globals()["%s"], **globals()["%s"])\n'  \
+            '    bound.apply_defaults()\n'                                                           \
+            '    return %s(*bound.args, **bound.kwargs)\n'                                           \
+            % 
+                (
+                    _proxy_name,
+                    _proxy_x_name,
+                    _proxy_locals__args_name,
+                    _proxy_locals__kwargs_name,
+                    _proxy_x_name, 
+                )
+            )
         self._compile_mock(new_spec)
 
 
@@ -141,8 +142,7 @@ class MockReturn(CreateMock):
         new_spec = ('def _%s(*args, **kwargs): return globals()["%s"]' 
                     % 
                         (
-                            _proxy_name,
-                            _proxy_return_name, 
+                            _proxy_name, _proxy_return_name, 
                         )
                     )
         self._compile_mock(new_spec)
@@ -177,7 +177,7 @@ class MockDefinition:
         raise MockMissingFunctionOrClass
         
     @staticmethod
-    def validate_mock_definition_arguments(mock: MockedFunction | MockedClass,
+    def validate_mock_definition_arguments(mock: Any,
                                            returns: Any, 
                                            args: Any, 
                                            kwargs: Any

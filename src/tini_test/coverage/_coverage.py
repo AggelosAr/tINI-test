@@ -20,6 +20,7 @@ from tini_test.misc.annotations import (CodeLineNumber, CoverageStore,
 # TODO add someting for exclude
 # TODO maybe add custom exceptions
 
+
 class Line:
     def __init__(self, 
                  line_number: CodeLineNumber, 
@@ -31,35 +32,6 @@ class Line:
         self.status = status
         # Not the first line of a multi line statement.
         self.is_continuation = is_continuation
-
-    def get_html_node(self) -> HTMLNode:
-        main_node = HTMLNode(HTMLNodeType.DIV)
-        classes = 'code-line %s' % self.status
-        if self.is_continuation:
-            classes += ' continuation'
-        main_node.add_class({'class': classes})
-
-        child_one = HTMLNode(HTMLNodeType.SPAN)
-        child_one.add_class({'class': 'line-number'})
-        child_one.set_content('%d.' % self.line_number)
-
-
-        child_two = HTMLNode(HTMLNodeType.SPAN)
-
-        match self.status:
-            case LineStatus.COMMENT:
-                child_two.add_class({'class': 'line-content code-comment'})
-            case LineStatus.DOCSTRING:
-                child_two.add_class({'class': 'line-content code-docstring'})
-            case _:
-                child_two.add_class({'class': 'line-content'})
-
-        child_two.set_content(html.escape(self.line_content))
-
-        main_node.add_children(child_one)
-        main_node.add_children(child_two)
-
-        return main_node
 
 
 class FileCoverage:
@@ -215,74 +187,6 @@ class FileCoverage:
 
     def set_href(self, href: str) -> None:
         self.href = href      
-
-    def get_header_node(self, created_at: str) -> HTMLNode:
-        header = HTMLNode(HTMLNodeType.DIV)
-        header.add_class({'class': 'cov-header'})
-
-        title = HTMLNode(
-            HTMLNodeType.DIV, {'class': 'cov-title'}, 'Coverage report for ',
-            HTMLNode(HTMLNodeType.SPAN, {'class': 'cov-highlight-path'}, str(self.file_path))
-        )
-
-        total = HTMLNode(
-            HTMLNodeType.DIV, {'class': 'cov-total'}, 'Total statements: ',
-            HTMLNode(HTMLNodeType.SPAN, {'class': 'cov-highlight-total'}, str(self.total_statements))
-        )
-       
-        score = HTMLNode(
-            HTMLNodeType.DIV, {'class': 'cov-score'}, 'Coverage Score: ',
-            HTMLNode(HTMLNodeType.SPAN, {'class': 'cov-highlight-score'}, '%.1f%%' % self.score)
-        )
-
-        created = HTMLNode(HTMLNodeType.DIV, {'class': 'cov-created'}, 'Created at %s' % created_at)
-
-        header.add_children(title)
-        header.add_children(total)
-        header.add_children(score)
-        header.add_children(created)
-        return header
-
-    @staticmethod
-    def _toolbar_button(status: LineStatus, count: int) -> HTMLNode:
-        button = HTMLNode(HTMLNodeType.BUTTON)
-        button.add_class({'class': 'cov-toggle %s' % status, 'data-status': str(status)})
-        button.set_content('%d %s' % (count, status))
-        return button
-
-    def get_toolbar_node(self) -> HTMLNode:
-        toolbar = HTMLNode(HTMLNodeType.DIV, {'class': 'cov-toolbar'})
-
-        covered = self._toolbar_button(LineStatus.RUN, self.covered_statements)
-        missing = self._toolbar_button(LineStatus.MISSING, self.missing_statements)
-
-        excluded = self._toolbar_button(LineStatus.EXCLUDED, self.excluded_statements)
-
-        comment = self._toolbar_button(LineStatus.COMMENT, self.comment_lines)
-        docstring = self._toolbar_button(LineStatus.DOCSTRING, self.docstring_lines)
-        empty = self._toolbar_button(LineStatus.EMPTY, self.empty_lines)
-        
-
-        toolbar.add_children(covered)
-        toolbar.add_children(missing)
-        toolbar.add_children(excluded)
-        toolbar.add_children(comment)
-        toolbar.add_children(docstring)
-        toolbar.add_children(empty)
-        
-        return toolbar
-
-    def get_html_node(self) -> HTMLNode:
-        code_block = HTMLNode(HTMLNodeType.ARTICLE, {'class': 'code-block'})
-
-        code_content = HTMLNode(HTMLNodeType.DIV, {'class': 'code-content'})
-
-        for line in self.lines.values():
-            code_content.add_children(line.get_html_node())
-
-        code_block.add_children(code_content)
-
-        return code_block
       
 
 class CoverageTracker:
@@ -305,6 +209,29 @@ class CoverageTracker:
         script = HTMLNode(HTMLNodeType.SCRIPT)
         script.set_content(_TOGGLE_SCRIPT)
         return script
+
+    @cached_property
+    def total(self) -> int:
+        return sum(file_coverage.total_statements for file_coverage in self.files.values())
+
+    @cached_property
+    def covered(self) -> int:
+        return sum(file_coverage.covered_statements for file_coverage in self.files.values())
+
+    @cached_property
+    def missing(self) -> int:
+        return sum(file_coverage.missing_statements for file_coverage in self.files.values())
+
+    @cached_property
+    def excluded(self) -> int:
+        return sum(file_coverage.excluded_statements for file_coverage in self.files.values())
+
+    @cached_property
+    def total_score(self) -> float:
+        covered = self.covered
+        missing = self.missing
+        return 100.0 * covered / (covered + missing) if covered + missing else 100.0
+
 
     @classmethod
     def init_from_store(cls, 
@@ -416,14 +343,6 @@ class CoverageTracker:
         
         return partial(CoverageTracker.tracer, storage)
 
-    @staticmethod
-    def _score_class(score: float) -> str:
-        if score >= 80:
-            return 'score-good'
-        if score >= 50:
-            return 'score-ok'
-        return 'score-bad'
-
     def serialize(self) -> None:
         save_path = CoverageTracker.normalize_path(self._metadata_save_path)
 
@@ -470,20 +389,6 @@ class CoverageTracker:
                     store = self._store.get(file_path, set())
                     self.files[file_path] = FileCoverage(Path(file_path), store)
 
-    def init_store(self, dest_dir: Path) -> None:
-        if dest_dir.exists():
-            shutil.rmtree(dest_dir)
-
-        os.makedirs(dest_dir, exist_ok=True)
-        self.add_style(dest_dir)
-
-    def add_style(self, dest_dir: Path) -> None:
-        with open(os.path.join(os.path.dirname(__file__), STYLE_FILE), 'r') as f:
-            content = f.read()
-        
-        with open(os.path.join(dest_dir, STYLE_FILE), 'w') as f:
-            f.write(content)
-
     def get_hyper_links_and_update_coverage_hrefs(self) -> list[HTMLHyperLink]:
         links = []
 
@@ -501,35 +406,293 @@ class CoverageTracker:
 
         return links
 
-    def get_index_content(self) -> HTMLNode:
-        hyper_links = self.get_hyper_links_and_update_coverage_hrefs()
+    @staticmethod
+    def pad(s: str | int | float, width: int) -> str:
+        if isinstance(s, int):
+            return '%-*d' % (width, s)
+        
+        if isinstance(s, float):
+            return '%-*s' % (width, '%.1f' % s)
+        
+        return '%-*s' % (width, str(s))
 
-        files = list(self.files.values())
-        run = sum(c.covered_statements for c in files)
-        missing = sum(c.missing_statements for c in files)
-        total_score = 100.0 * run / (run + missing) if run + missing else 100.0
+    def show_short_summary(self, long: Optional[bool] = False) -> None:
+
+        self.collect_files_from_source()
+        self.files = dict(sorted(self.files.items()))
+        
+        titles = ('Total', 'Covered', 'Missing', 'Excluded', 'Score')
+
+        max_titles = max(len(title) for title in titles)
+        max_digits = max(len(str(self.total)), 
+                         len(str(self.covered)), 
+                         len(str(self.missing)), 
+                         len(str(self.excluded)), 
+                         len('100.0'))
+        _max = max(max_titles, max_digits)
+        
+
+        print(
+            'Coverage Summary\n'  \
+            '----------------\n'  \
+            '%s\n'                \
+            '\n'                  \
+            '%s\n'                \
+                % 
+                (
+                    '\t'.join(map(self.pad, titles, [_max]*len(titles))),
+                    '\t'.join([
+                        self.pad(self.total, _max), 
+                        self.pad(self.covered, _max), 
+                        self.pad(self.missing, _max), 
+                        self.pad(self.excluded, _max), 
+                        self.pad(self.total_score, _max)
+                    ])
+                )
+        )
+
+        # Do we want to show this on the normal run as well?
+        # Also in modes...
+        # For now skip it.
+        if not long:
+            return
+        
+        _titles = ('File', 'Statements', 'Run', 'Missing', 'Excluded', 'Score')
+
+        max_titles = max(len(title) for title in _titles)
+        max_digits = 0
+
+        for file_path, coverage in self.files.items():
+            max_digits = max(max_digits, len(str(coverage.total_statements)))
+            max_digits = max(max_digits, len(str(coverage.covered_statements)))
+            max_digits = max(max_digits, len(str(coverage.missing_statements)))
+            max_digits = max(max_digits, len(str(coverage.excluded_statements)))
+            max_digits = max(max_digits, len(str(coverage.score)))
+
+        _max = max(max_titles, max_digits)
+
+        print('\t'.join(map(self.pad, _titles, [_max]*len(_titles))))
+        print()
+
+        for file_path, coverage in self.files.items():
+            print()
+            print(file_path)
+            print(
+                '\t'.join([
+                    self.pad('', _max), 
+                    self.pad(coverage.total_statements, _max), 
+                    self.pad(coverage.covered_statements, _max), 
+                    self.pad(coverage.missing_statements, _max), 
+                    self.pad(coverage.excluded_statements, _max), 
+                    self.pad(coverage.score, _max)
+                ])
+            )
+        
+    def to_html(self) -> None:
+        return HTMLReport.to_html(self)
+
+
+####################################
+############ HTML representations
+####################################
+
+class HTMLLine:
+
+    @staticmethod
+    def get_html_node(line: Line) -> HTMLNode:
+        main_node = HTMLNode(HTMLNodeType.DIV)
+        classes = 'code-line %s' % line.status
+        if line.is_continuation:
+            classes += ' continuation'
+        main_node.add_class({'class': classes})
+
+        child_one = HTMLNode(HTMLNodeType.SPAN)
+        child_one.add_class({'class': 'line-number'})
+        child_one.set_content('%d.' % line.line_number)
+
+
+        child_two = HTMLNode(HTMLNodeType.SPAN)
+
+        match line.status:
+            case LineStatus.COMMENT:
+                child_two.add_class({'class': 'line-content code-comment'})
+            case LineStatus.DOCSTRING:
+                child_two.add_class({'class': 'line-content code-docstring'})
+            case _:
+                child_two.add_class({'class': 'line-content'})
+
+        child_two.set_content(html.escape(line.line_content))
+
+        main_node.add_children(child_one)
+        main_node.add_children(child_two)
+
+        return main_node
+
+
+
+class HTMLFileCoverage:
+
+    @staticmethod
+    def get_header_node(coverage: FileCoverage, created_at: str) -> HTMLNode:
+        header = HTMLNode(HTMLNodeType.DIV)
+        header.add_class({'class': 'cov-header'})
+
+        title = HTMLNode(
+            HTMLNodeType.DIV, {'class': 'cov-title'}, 
+                'Coverage report for ',
+
+            children=HTMLNode(HTMLNodeType.SPAN, {'class': 'cov-highlight-path'}, 
+                                str(coverage.file_path))
+        )
+
+        total = HTMLNode(
+            HTMLNodeType.DIV, {'class': 'cov-total'}, 
+                'Total statements: ',
+            
+            children=HTMLNode(HTMLNodeType.SPAN, {'class': 'cov-highlight-total'}, 
+                                str(coverage.total_statements))
+        )
+        
+        score = HTMLNode(
+            HTMLNodeType.DIV, {'class': 'cov-score'},
+                'Coverage Score: ',
+
+            children=HTMLNode(HTMLNodeType.SPAN, {'class': HTMLReport._score_class(coverage.score)}, 
+                                '%.1f%%' % coverage.score)
+        )
+
+        created = HTMLNode(
+            HTMLNodeType.DIV, {'class': 'cov-created'}, 
+                'Created at %s' % created_at
+        )
+
+        header.add_children(title)
+        header.add_children(total)
+        header.add_children(score)
+        header.add_children(created)
+        return header
+
+    @staticmethod
+    def _toolbar_button(status: LineStatus, count: int) -> HTMLNode:
+        button = HTMLNode(HTMLNodeType.BUTTON)
+        button.add_class({'class': 'cov-toggle %s' % status, 'data-status': str(status)})
+        button.set_content('%d %s' % (count, status))
+        return button
+
+    @staticmethod
+    def get_toolbar_node(coverage: FileCoverage) -> HTMLNode:
+        toolbar = HTMLNode(HTMLNodeType.DIV, {'class': 'cov-toolbar'})
+
+        covered = HTMLFileCoverage._toolbar_button(LineStatus.RUN, 
+                                                   coverage.covered_statements)
+        
+        missing = HTMLFileCoverage._toolbar_button(LineStatus.MISSING, 
+                                                   coverage.missing_statements)
+
+        excluded = HTMLFileCoverage._toolbar_button(LineStatus.EXCLUDED, 
+                                                    coverage.excluded_statements)
+
+        comment = HTMLFileCoverage._toolbar_button(LineStatus.COMMENT, 
+                                                   coverage.comment_lines)
+        
+        docstring = HTMLFileCoverage._toolbar_button(LineStatus.DOCSTRING, 
+                                                     coverage.docstring_lines)
+        
+        empty = HTMLFileCoverage._toolbar_button(LineStatus.EMPTY, 
+                                                 coverage.empty_lines)
+        
+        toolbar.add_children(covered)
+        toolbar.add_children(missing)
+        toolbar.add_children(excluded)
+        toolbar.add_children(comment)
+        toolbar.add_children(docstring)
+        toolbar.add_children(empty)
+        
+        return toolbar
+
+    @staticmethod
+    def get_html_node(coverage: FileCoverage) -> HTMLNode:
+        code_block = HTMLNode(HTMLNodeType.ARTICLE, {'class': 'code-block'})
+
+        code_content = HTMLNode(HTMLNodeType.DIV, {'class': 'code-content'})
+
+        for line in coverage.lines.values():
+            code_content.add_children(HTMLLine.get_html_node(line))
+
+        code_block.add_children(code_content)
+
+        return code_block
+
+
+class HTMLReport:
+
+    @staticmethod
+    def add_git_ignore(dest_dir: Path) -> None:
+        # Also generate a .gitignore file to ignore all generated HTML files.
+        with open(os.path.join(dest_dir, '.gitignore'), 'w', encoding='utf-8') as f:
+            f.write('*')
+
+    @staticmethod
+    def init_store() -> Path:
+        dest_dir = Path(os.path.join(os.getcwd(), STORE))
+
+        if dest_dir.exists():
+            shutil.rmtree(dest_dir)
+
+        os.makedirs(dest_dir, exist_ok=True)
+    
+        return dest_dir
+
+    @staticmethod
+    def add_style(dest_dir: Path) -> None:
+        with open(os.path.join(os.path.dirname(__file__), STYLE_FILE), 'r') as f:
+            content = f.read()
+        
+        with open(os.path.join(dest_dir, STYLE_FILE), 'w') as f:
+            f.write(content)
+
+    @staticmethod
+    def _score_class(score: float) -> str:
+        if score >= 80:
+            return 'score-good'
+        if score >= 50:
+            return 'score-ok'
+        return 'score-bad'
+    
+    @staticmethod
+    def get_index_content(tracker: CoverageTracker) -> HTMLNode:
+        hyper_links = tracker.get_hyper_links_and_update_coverage_hrefs()
 
         header = HTMLNode(HTMLNodeType.DIV, {'class': 'cov-header'})
         header.add_children([
-            HTMLNode(HTMLNodeType.DIV, {'class': 'cov-title'}, 'Coverage report'),
-            HTMLNode(HTMLNodeType.DIV, {'class': 'cov-total'}, '%d files' % len(self.files)),
-            HTMLNode(HTMLNodeType.DIV, {'class': 'cov-score %s' % self._score_class(total_score)},
-                     'Total coverage %.1f%%' % total_score),
-            HTMLNode(HTMLNodeType.DIV, {'class': 'cov-created'}, 'Created at %s' % self.created_at)
-        ])
 
+            HTMLNode(HTMLNodeType.DIV, {'class': 'cov-title'}, 
+                     'Coverage report'),
+
+            HTMLNode(HTMLNodeType.DIV, {'class': 'cov-total'}, 
+                     '%d files' % len(tracker.files)),
+
+            HTMLNode(HTMLNodeType.DIV, {'class': 'cov-score %s' % HTMLReport._score_class(tracker.total_score)},
+                     'Total coverage %.1f%%' % tracker.total_score),
+
+            HTMLNode(HTMLNodeType.DIV, {'class': 'cov-created'}, 
+                     'Created at %s' % tracker.created_at)
+        ])
 
         table = HTMLNode(HTMLNodeType.TABLE)
         table.add_class({'class': 'index-table'})
 
         head_row = HTMLNode(HTMLNodeType.TR)
+
         for title in ('File', 'Statements', 'Run', 'Missing', 'Excluded', 'Score'):
-            head_row.add_children(HTMLNode(HTMLNodeType.TH,
-                                           {'class': 'index-file' if title == 'File' else 'index-num'},
-                                           title))
+            title_node = HTMLNode(HTMLNodeType.TH,
+                                  {'class': 'index-file' if title == 'File' else 'index-num'},
+                                  title)
+            head_row.add_children(title_node)
+
         table.add_children(head_row)
         
-        for link, coverage in zip(hyper_links, self.files.values()):
+        for link, coverage in zip(hyper_links, tracker.files.values()):
             row = HTMLNode(HTMLNodeType.TR)
             row.add_children([
                 HTMLNode(HTMLNodeType.TD, {'class': 'index-file'}, link.to_html()),
@@ -539,7 +702,7 @@ class CoverageTracker:
                 HTMLNode(HTMLNodeType.TD, {'class': 'index-num'}, str(coverage.excluded_statements)),
             ])
             _score = HTMLNode(HTMLNodeType.TD)
-            _score.add_class({'class': 'index-num %s' % self._score_class(coverage.score)})
+            _score.add_class({'class': 'index-num %s' % HTMLReport._score_class(coverage.score)})
             _score.content = '%.1f%%' % coverage.score
 
             row.add_children(_score)
@@ -548,14 +711,14 @@ class CoverageTracker:
         total_row = HTMLNode(HTMLNodeType.TR)
         total_row.add_children([
             HTMLNode(HTMLNodeType.TD, {'class': 'index-file'}, 'Total'),
-            HTMLNode(HTMLNodeType.TD, {'class': 'index-num'}, str(sum(c.total_statements for c in files))),
-            HTMLNode(HTMLNodeType.TD, {'class': 'index-num'}, str(run)),
-            HTMLNode(HTMLNodeType.TD, {'class': 'index-num'}, str(missing)),
-            HTMLNode(HTMLNodeType.TD, {'class': 'index-num'}, str(sum(c.excluded_statements for c in files))),
+            HTMLNode(HTMLNodeType.TD, {'class': 'index-num'}, str(tracker.total)),
+            HTMLNode(HTMLNodeType.TD, {'class': 'index-num'}, str(tracker.covered)),
+            HTMLNode(HTMLNodeType.TD, {'class': 'index-num'}, str(tracker.missing)),
+            HTMLNode(HTMLNodeType.TD, {'class': 'index-num'}, str(tracker.excluded)),
         ])
         _total_score = HTMLNode(HTMLNodeType.TD)
-        _total_score.add_class({'class': 'index-num %s' % self._score_class(total_score)})
-        _total_score.content = '%.1f%%' % total_score
+        _total_score.add_class({'class': 'index-num %s' % HTMLReport._score_class(tracker.total_score)})
+        _total_score.content = '%.1f%%' % tracker.total_score
 
         total_row.add_children(_total_score)
         table.add_children(total_row)
@@ -563,35 +726,36 @@ class CoverageTracker:
         page = HTMLNode(HTMLNodeType.DIV)
         page.add_children(header)
         page.add_children(table)
+        
         return page
 
-    def to_html(self) -> None:
-        self.collect_files_from_source()
-        self.files = dict(sorted(self.files.items()))
+    @staticmethod
+    def to_html(tracker: CoverageTracker) -> None:
+        # XXX fallback behaviour?
+        tracker.collect_files_from_source()
+        tracker.files = dict(sorted(tracker.files.items()))
 
-        dest_dir = Path(os.path.join(os.getcwd(), STORE))
-
-        self.init_store(dest_dir)
+        dest_dir = HTMLReport.init_store()
+        HTMLReport.add_git_ignore(dest_dir)
+        HTMLReport.add_style(dest_dir)
     
         index = HTMLTemplate(file_path=Path(os.path.join(dest_dir, 'index.html')), 
-                             content=self.get_index_content().to_html())
+                             content=HTMLReport.get_index_content(tracker).to_html())
         index.write_to_file()
 
-        for coverage in self.files.values():
+        for coverage in tracker.files.values():
 
             coverage_path = Path(os.path.join(dest_dir, coverage.href))
 
             page = HTMLNode(HTMLNodeType.DIV)
-            page.add_children(coverage.get_header_node(self.created_at))
-            page.add_children(coverage.get_toolbar_node())
-            page.add_children(coverage.get_html_node())
-            page.add_children(self.coverage_script)
+            page.add_children(HTMLFileCoverage.get_header_node(coverage, tracker.created_at))
+            page.add_children(HTMLFileCoverage.get_toolbar_node(coverage))
+            page.add_children(HTMLFileCoverage.get_html_node(coverage))
+            page.add_children(tracker.coverage_script)
 
             tmpl = HTMLTemplate(file_path=coverage_path, content=page.to_html())
             tmpl.write_to_file()
 
-        # Also generate a .gitignore file to ignore all generated HTML files.
-        with open(os.path.join(dest_dir, '.gitignore'), 'w', encoding='utf-8') as f:
-            f.write('*')
-
         print('Coverage report generated at %s' % dest_dir)
+
+        tracker.show_short_summary(long=True)
