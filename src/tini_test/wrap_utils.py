@@ -2,6 +2,7 @@ from collections import deque
 from functools import partial
 from typing import Callable, Optional, no_type_check
 
+from tini_test._internals.consts import _I_DEC as decorators
 from tini_test.misc.annotations import (I_Reg, IsolateWrappedObject, M_Reg,
                                         MockDefinitionWrappedHolder, MockId,
                                         RealTest, S_Reg,
@@ -102,25 +103,13 @@ class DecoratedTestChain:
 
         return test_chain
     
-    # XXX remove magic strings.
     @classmethod
     def wrap_is_test(cls, bi_con: _ReverseWrapConnections, _func: WrapperInput) -> bool:
-        _func_repr = repr(_func)
-        return (
-            hex(id(_func)) in bi_con
-            and '_XMock.mock' not in _func_repr
-            and '_XTest.test' not in _func_repr
-            and '_XShared.shared' not in _func_repr
-            and '_XIsolate.isolate' not in _func_repr
-        )
+        return hex(id(_func)) in bi_con and not cls.wrap_is_wrap(repr(_func))
 
-    def wrap_is_wrap(self, _func_repr: str) -> bool:
-        return (
-                '_XMock.mock' in _func_repr
-            or '_XTest.test' in _func_repr
-            or '_XShared.shared' in _func_repr
-            or '_XIsolate.isolate' in _func_repr
-        )
+    @staticmethod
+    def wrap_is_wrap(_func_repr: str) -> bool:
+        return any(dec in _func_repr for dec in decorators)
     
     def add_test_wrap(self, test_wrap: TestWrappedHolder):
         self._test_wraps.append(test_wrap)

@@ -1,11 +1,11 @@
 import ast
 from importlib.machinery import ModuleSpec
 from pathlib import Path
+from typing import no_type_check
 
-from tini_test.misc.annotations import CodeLineNumber, StatementId, TestFunctionName
-
-# TODO 
-decorators = {'Test.case', 'Mock.mock', 'Shared', 'Isolate'}
+from tini_test._internals.consts import E_DEC as decorators
+from tini_test.misc.annotations import (CodeLineNumber, StatementId,
+                                        TestFunctionName)
 
 
 class AstParser:
@@ -27,23 +27,24 @@ class AstParser:
     def from_file_read(cls, data: str, filename: str = '<string>') -> 'AstParser':
         return cls(data, filename)
 
-    def extract_line_to_statement(self) -> dict[CodeLineNumber, StatementId]:
-        tree = ast.parse(self.root_node)
-        result: dict[CodeLineNumber, StatementId] = {}
-        statement_id = 0
+    # def extract_line_to_statement(self) -> dict[CodeLineNumber, StatementId]:
+    #     tree = ast.parse(self.root_node)
+    #     result: dict[CodeLineNumber, StatementId] = {}
+    #     statement_id = 0
 
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.stmt):
-                continue
+    #     for node in ast.walk(tree):
+    #         if not isinstance(node, ast.stmt):
+    #             continue
 
-            statement_id += 1
+    #         statement_id += 1
 
-            for line in range(node.lineno, node.end_lineno + 1):
-                result[line] = statement_id
+    #         for line in range(node.lineno, node.end_lineno + 1):
+    #             result[line] = statement_id
 
-        return result
+    #     return result
     
-    def extract_line_to_statement(self) -> dict[int, int]:
+    @no_type_check
+    def extract_line_to_statement(self) -> dict[CodeLineNumber, StatementId]:
         """Map every line to the id (starting at 1) of the statement that spans it.
 
         Compound statements (def, if, try, ...) only own their header, their bodies are
@@ -65,7 +66,7 @@ class AstParser:
 
         statements.sort(key=lambda n: (first_node(n).lineno, first_node(n).col_offset))
 
-        line_to_statement: dict[int, int] = {}
+        line_to_statement: dict[CodeLineNumber, StatementId] = {}
         statement_id = 0
 
         for node in statements:

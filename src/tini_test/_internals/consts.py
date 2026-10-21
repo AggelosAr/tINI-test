@@ -11,10 +11,10 @@ GENERATED_TESTS_ROOT = '/tmp/python/tini_test'
 # If we are running the Coverage in V2 mode
 # ** Assumes all tests are passing **
 # Used to track coverage over coverage
-_V2_COVERAGE = True
+_V2_COVERAGE = False
 
 
-_USING_COVERAGE = True
+_USING_COVERAGE = False
 _PROFILING = False
 
 
@@ -55,3 +55,6 @@ _M_REG = __M_REG
 _S_REG = __S_REG
 _I_REG = __I_REG
 _C_REG = __C_REG
+
+_I_DEC = ('_XMock.mock', '_XTest.test', '_XShared.shared', '_XIsolate.isolate') # XXX remove magic strings.
+E_DEC = {'Test.case', 'Mock.mock', 'Shared', 'Isolate'}

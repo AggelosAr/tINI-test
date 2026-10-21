@@ -11,18 +11,20 @@ from typing import Optional
 from tini_test._internals._ast_utils import AstParser
 from tini_test.coverage.consts import (_TOGGLE_SCRIPT, METADATA_FILE, STORE,
                                        STYLE_FILE)
-from tini_test.coverage.enums import HTMLNodeType, LineCoverageStatus
+from tini_test.coverage.enums import HTMLNodeType, LineStatus
 from tini_test.coverage.html import HTMLHyperLink, HTMLNode, HTMLTemplate
 from tini_test.misc.annotations import (CodeLineNumber, CoverageStore,
                                         DirectoryPath, FileName, LineContent,
                                         StatementId)
 
+# TODO add someting for exclude
+# TODO maybe add custom exceptions
 
-class LineStats:
+class Line:
     def __init__(self, 
                  line_number: CodeLineNumber, 
                  line_content: LineContent, 
-                 status: LineCoverageStatus,
+                 status: LineStatus,
                  is_continuation: Optional[bool] = False) -> None:
         self.line_number = line_number
         self.line_content = line_content
@@ -41,8 +43,17 @@ class LineStats:
         child_one.add_class({'class': 'line-number'})
         child_one.set_content('%d.' % self.line_number)
 
+
         child_two = HTMLNode(HTMLNodeType.SPAN)
-        child_two.add_class({'class': 'line-content'})
+
+        match self.status:
+            case LineStatus.COMMENT:
+                child_two.add_class({'class': 'line-content code-comment'})
+            case LineStatus.DOCSTRING:
+                child_two.add_class({'class': 'line-content code-docstring'})
+            case _:
+                child_two.add_class({'class': 'line-content'})
+
         child_two.set_content(html.escape(self.line_content))
 
         main_node.add_children(child_one)
@@ -57,19 +68,23 @@ class FileCoverage:
         self.href = ''
 
         self.file_path = file_path
+        self.lines: dict[CodeLineNumber, Line] = {}
 
         with open(self.file_path, 'r') as f:
             source = f.read()
 
-        data = source.splitlines()
+        self._statement_status: dict[StatementId, LineStatus] = {}
+        self._statement_counts: Counter[LineStatus] = Counter()
+
         self.parser = AstParser.from_file_read(source, str(self.file_path))
-
-        self.statement_counts: Counter[LineCoverageStatus] = Counter()
-        self.statement_status: dict[StatementId, LineCoverageStatus] = {}
-
         self.update_covered_statements(runtime_covered_lines)
-        self.lines: dict[CodeLineNumber, LineStats] = self.get_lines(data)
 
+        self.update_state(source.splitlines())
+
+    @staticmethod
+    def is_docstring_se(line: str) -> bool:
+        return line.startswith('"""') or line.startswith("'''") or line.endswith('"""') or line.endswith("'''")
+    
     @cached_property
     def line_to_statement(self) -> dict[CodeLineNumber, StatementId]:
         return self.parser.extract_line_to_statement()
@@ -93,19 +108,27 @@ class FileCoverage:
 
     @property
     def covered_statements(self) -> int:
-        return self.statement_counts[LineCoverageStatus.RUN]
+        return self._statement_counts[LineStatus.RUN]
 
     @property
     def missing_statements(self) -> int:
-        return self.statement_counts[LineCoverageStatus.MISSING]
+        return self._statement_counts[LineStatus.MISSING]
     
     @property
     def excluded_statements(self) -> int:
-        return self.statement_counts[LineCoverageStatus.EXCLUDED]
-    
+        return self._statement_counts[LineStatus.EXCLUDED]
+
+    @property
+    def comment_lines(self) -> int:
+        return self._statement_counts[LineStatus.COMMENT]
+
+    @property
+    def docstring_lines(self) -> int:
+        return self._statement_counts[LineStatus.DOCSTRING]
+
     @property
     def empty_lines(self) -> int:
-        return self.statement_counts[LineCoverageStatus.EMPTY]
+        return self._statement_counts[LineStatus.EMPTY]
 
     @property
     def score(self) -> float:
@@ -118,48 +141,77 @@ class FileCoverage:
 
         runtime_covered_lines.discard(0)
         
-        # Update covered statements based on runtime covered lines.
+        # Update covered statements based on runtime covered.
         for line in runtime_covered_lines:
             if line in self.line_to_statement:
                 run_statements.add(self.line_to_statement[line])
 
-        # Include top-level (import) statements as covered.
+        # Include top-level statements as covered.
         for line in self.top_levels:
             if line in self.line_to_statement:
                 run_statements.add(self.line_to_statement[line])
 
-        # TODO add someting for exclude
         for statement in self.statement_to_lines:
 
-            status = LineCoverageStatus.MISSING
+            status = LineStatus.MISSING
 
             if statement in run_statements:
-                status = LineCoverageStatus.RUN
+                status = LineStatus.RUN
 
-            self.statement_status[statement] = status
-            self.statement_counts[status] += 1
+            self._statement_status[statement] = status
+            self._statement_counts[status] += 1
+    
+    def update_state(self, data: list[str]) -> None:
+        # TODO this misses inline comments. @Comments
 
-    def get_lines(self, data: list[str]) -> dict[CodeLineNumber, LineStats]:
-        lines = {}
+        have_docstring_open = False
+        for l_no, l_cont in enumerate(data, start=1):
+            owner = self.line_to_statement.get(l_no)
+            stripped = l_cont.strip()
 
-        for line_number, line_content in enumerate(data, start=1):
-            owner = self.line_to_statement.get(line_number)
-            stripped = line_content.strip()
-
-            # Blank and comment lines inside a multi line statement are still empty lines. XXX
             if owner is None or not stripped or stripped.startswith('#'):
-                lines[line_number] = LineStats(line_number, line_content, LineCoverageStatus.EMPTY)
-                self.statement_counts[LineCoverageStatus.EMPTY] += 1
+
+                # Line is empty
+                if not stripped:
+                    if have_docstring_open:
+                        self.lines[l_no] = Line(l_no, l_cont, LineStatus.DOCSTRING)
+                    else:
+                        self.lines[l_no] = Line(l_no, l_cont, LineStatus.EMPTY)
+                        self._statement_counts[LineStatus.EMPTY] += 1
+
+                # Line is comment
+                elif stripped.startswith('#'):
+                    if have_docstring_open:
+                        self.lines[l_no] = Line(l_no, l_cont, LineStatus.DOCSTRING)
+                    else:
+                        self.lines[l_no] = Line(l_no, l_cont, LineStatus.COMMENT)
+                        self._statement_counts[LineStatus.COMMENT] += 1
+
+                # Line must be part of a docstring
+                else:
+                    # Else/finally blocks are skipped @extract_line_to_statement
+                    if stripped.startswith('else:') or stripped.startswith('finally:'):
+                        # @Comments are allowed here
+                        self.lines[l_no] = Line(l_no, l_cont, LineStatus.EMPTY)
+                        self._statement_counts[LineStatus.EMPTY] += 1
+                    else:
+                        self.lines[l_no] = Line(l_no, l_cont, LineStatus.DOCSTRING)
+                        
+                        # We are inside a valid syntaxed Python file.
+                        if self.is_docstring_se(stripped):
+
+                            match have_docstring_open:
+                                case False:
+                                    self._statement_counts[LineStatus.DOCSTRING] += 1
+                                    have_docstring_open = True
+                                case True:
+                                    # @Comments are allowed at the end of the docstring
+                                    have_docstring_open = False
             else:
 
-                is_continuation = line_number != self.statement_to_lines[owner][0]
-                
-                lines[line_number] = LineStats(line_number,
-                                               line_content,
-                                               self.statement_status[owner],
-                                               is_continuation)
-        
-        return lines
+                is_continuation = l_no != self.statement_to_lines[owner][0]
+                status = self._statement_status[owner]
+                self.lines[l_no] = Line(l_no, l_cont, status, is_continuation)
 
     def set_href(self, href: str) -> None:
         self.href = href      
@@ -192,7 +244,7 @@ class FileCoverage:
         return header
 
     @staticmethod
-    def _toolbar_button(status: LineCoverageStatus, count: int) -> HTMLNode:
+    def _toolbar_button(status: LineStatus, count: int) -> HTMLNode:
         button = HTMLNode(HTMLNodeType.BUTTON)
         button.add_class({'class': 'cov-toggle %s' % status, 'data-status': str(status)})
         button.set_content('%d %s' % (count, status))
@@ -201,16 +253,23 @@ class FileCoverage:
     def get_toolbar_node(self) -> HTMLNode:
         toolbar = HTMLNode(HTMLNodeType.DIV, {'class': 'cov-toolbar'})
 
-        covered = self._toolbar_button(LineCoverageStatus.RUN, self.covered_statements)
-        missing = self._toolbar_button(LineCoverageStatus.MISSING, self.missing_statements)
-        empty = self._toolbar_button(LineCoverageStatus.EMPTY, self.empty_lines)
-        excluded = self._toolbar_button(LineCoverageStatus.EXCLUDED, self.excluded_statements)
+        covered = self._toolbar_button(LineStatus.RUN, self.covered_statements)
+        missing = self._toolbar_button(LineStatus.MISSING, self.missing_statements)
+
+        excluded = self._toolbar_button(LineStatus.EXCLUDED, self.excluded_statements)
+
+        comment = self._toolbar_button(LineStatus.COMMENT, self.comment_lines)
+        docstring = self._toolbar_button(LineStatus.DOCSTRING, self.docstring_lines)
+        empty = self._toolbar_button(LineStatus.EMPTY, self.empty_lines)
+        
 
         toolbar.add_children(covered)
         toolbar.add_children(missing)
-        toolbar.add_children(empty)
         toolbar.add_children(excluded)
-
+        toolbar.add_children(comment)
+        toolbar.add_children(docstring)
+        toolbar.add_children(empty)
+        
         return toolbar
 
     def get_html_node(self) -> HTMLNode:
@@ -321,12 +380,13 @@ class CoverageTracker:
 
             coverage_files = list(store_path.glob('%s*' % METADATA_FILE))
             coverage_files = [f for f in coverage_files if f.is_file()]
+
             if not coverage_files:
-                # TODO add exception
                 raise FileNotFoundError('No coverage metadata file found in the current directory.')
+            
             if len(coverage_files) > 1:
-                # TODO add exception
                 raise ValueError('Multiple coverage metadata files found in the current directory. Please specify one explicitly.')
+            
             store_path = coverage_files[0]
 
         else:
@@ -334,7 +394,6 @@ class CoverageTracker:
 
         # Validate the requested file name follows the convention.
         if not store_path.name.startswith(METADATA_FILE):
-            # TODO add exception
             raise ValueError('The metadata file must start with "%s"' % METADATA_FILE)
         
         coverage_store = {}
@@ -373,7 +432,6 @@ class CoverageTracker:
             # Validate the path follows the convention.
             # It should start with <.coverage...>
             if not save_path.name.startswith(METADATA_FILE):
-                # TODO add exception
                 raise ValueError('The metadata file must start with "%s"' % METADATA_FILE)
 
             # If it exists, we will overwrite it.
@@ -400,6 +458,7 @@ class CoverageTracker:
                 print('Rejected: file not found or not a Python file.')
                 # TODO add exception here?
                 return
+            
             store = self._store.get(str(search_path), set())
             self.files[str(search_path)] = FileCoverage(search_path, store)
             return

@@ -1,11 +1,13 @@
 from enum import Enum
 
 
-class LineCoverageStatus(Enum):
-    EMPTY    = 'EMPTY'
-    RUN      = 'RUN'
-    MISSING  = 'MISSING'
-    EXCLUDED = 'EXCLUDED'
+class LineStatus(Enum):
+    RUN       = 'RUN'
+    MISSING   = 'MISSING'
+    EXCLUDED  = 'EXCLUDED'
+    COMMENT   = 'COMMENT'
+    DOCSTRING = 'DOCSTRING'
+    EMPTY     = 'EMPTY'
 
     def __str__(self) -> str:
         return self.value.lower()
