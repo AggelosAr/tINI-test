@@ -23,7 +23,7 @@ class LineStats:
                  line_number: CodeLineNumber, 
                  line_content: LineContent, 
                  status: LineCoverageStatus,
-                 is_continuation: bool = False) -> None:
+                 is_continuation: Optional[bool] = False) -> None:
         self.line_number = line_number
         self.line_content = line_content
         self.status = status
@@ -67,7 +67,8 @@ class FileCoverage:
         self.statement_counts: Counter[LineCoverageStatus] = Counter()
         self.statement_status: dict[StatementId, LineCoverageStatus] = {}
 
-        self.lines: dict[CodeLineNumber, LineStats] = self.parse_file(data, runtime_covered_lines)
+        self.update_covered_statements(runtime_covered_lines)
+        self.lines: dict[CodeLineNumber, LineStats] = self.get_lines(data)
 
     @cached_property
     def line_to_statement(self) -> dict[CodeLineNumber, StatementId]:
@@ -84,7 +85,7 @@ class FileCoverage:
     
     @property
     def top_levels(self) -> list[CodeLineNumber]:
-        return self.parser.extract_top_level_import_lines()
+        return self.parser.extract_top_level_lines()
     
     @property
     def total_statements(self) -> int:
@@ -115,13 +116,14 @@ class FileCoverage:
     def update_covered_statements(self, runtime_covered_lines: set[CodeLineNumber]) -> None:
         run_statements = set()
 
+        runtime_covered_lines.discard(0)
+        
         # Update covered statements based on runtime covered lines.
         for line in runtime_covered_lines:
             if line in self.line_to_statement:
                 run_statements.add(self.line_to_statement[line])
 
-        # Include top-level import statements as covered.
-        # This should also include most globals.
+        # Include top-level (import) statements as covered.
         for line in self.top_levels:
             if line in self.line_to_statement:
                 run_statements.add(self.line_to_statement[line])
@@ -137,27 +139,25 @@ class FileCoverage:
             self.statement_status[statement] = status
             self.statement_counts[status] += 1
 
-    def parse_file(self, data: list[str], runtime_covered_lines: set[CodeLineNumber]) -> dict[CodeLineNumber, LineStats]:
-        
-        self.update_covered_statements(runtime_covered_lines)
-        
+    def get_lines(self, data: list[str]) -> dict[CodeLineNumber, LineStats]:
         lines = {}
+
         for line_number, line_content in enumerate(data, start=1):
             owner = self.line_to_statement.get(line_number)
             stripped = line_content.strip()
 
-            # Blank and comment lines inside a multi line statement are still empty lines.
+            # Blank and comment lines inside a multi line statement are still empty lines. XXX
             if owner is None or not stripped or stripped.startswith('#'):
                 lines[line_number] = LineStats(line_number, line_content, LineCoverageStatus.EMPTY)
                 self.statement_counts[LineCoverageStatus.EMPTY] += 1
-                continue
+            else:
 
-            lines[line_number] = LineStats(
-                line_number,
-                line_content,
-                self.statement_status[owner],
-                is_continuation=line_number != self.statement_to_lines[owner][0],
-            )
+                is_continuation = line_number != self.statement_to_lines[owner][0]
+                
+                lines[line_number] = LineStats(line_number,
+                                               line_content,
+                                               self.statement_status[owner],
+                                               is_continuation)
         
         return lines
 
@@ -350,7 +350,7 @@ class CoverageTracker:
         file = code.co_filename
         file_no = frame.f_lineno
 
-        # Should we consider using the target in this context?
+        # Should we consider using the target in this context? XXX
         if file not in storage:
             storage[file] = set()
         storage[file].add(file_no)
@@ -413,7 +413,6 @@ class CoverageTracker:
 
     def init_store(self, dest_dir: Path) -> None:
         if dest_dir.exists():
-            # input('Will remove <%s>, press Enter to continue...' % dest_dir)
             shutil.rmtree(dest_dir)
 
         os.makedirs(dest_dir, exist_ok=True)
@@ -531,5 +530,9 @@ class CoverageTracker:
 
             tmpl = HTMLTemplate(file_path=coverage_path, content=page.to_html())
             tmpl.write_to_file()
-    
-        print('Coverage report generated at %s' % os.path.join(os.getcwd(), STORE))
+
+        # Also generate a .gitignore file to ignore all generated HTML files.
+        with open(os.path.join(dest_dir, '.gitignore'), 'w', encoding='utf-8') as f:
+            f.write('*')
+
+        print('Coverage report generated at %s' % dest_dir)

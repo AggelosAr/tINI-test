@@ -1,9 +1,8 @@
 import ast
 from importlib.machinery import ModuleSpec
 from pathlib import Path
-from typing import no_type_check
 
-from tini_test.misc.annotations import TestFunctionName
+from tini_test.misc.annotations import CodeLineNumber, StatementId, TestFunctionName
 
 # TODO 
 decorators = {'Test.case', 'Mock.mock', 'Shared', 'Isolate'}
@@ -27,8 +26,23 @@ class AstParser:
     @classmethod
     def from_file_read(cls, data: str, filename: str = '<string>') -> 'AstParser':
         return cls(data, filename)
+
+    def extract_line_to_statement(self) -> dict[CodeLineNumber, StatementId]:
+        tree = ast.parse(self.root_node)
+        result: dict[CodeLineNumber, StatementId] = {}
+        statement_id = 0
+
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.stmt):
+                continue
+
+            statement_id += 1
+
+            for line in range(node.lineno, node.end_lineno + 1):
+                result[line] = statement_id
+
+        return result
     
-    @no_type_check
     def extract_line_to_statement(self) -> dict[int, int]:
         """Map every line to the id (starting at 1) of the statement that spans it.
 
@@ -90,20 +104,12 @@ class AstParser:
 
         return line_to_statement
 
-    @no_type_check
-    def extract_top_level_import_lines(self) -> set[int]:
-        """Lines executed once at import time by every top level node.
+    def extract_top_level_lines(self) -> list[CodeLineNumber]:
+        lines: set[CodeLineNumber] = set()
+        self._extract_top_level_lines(self.root_node.body, lines)
+        return list(lines)
 
-        Nodes with a nested block (def, if, try, ...) only contribute their header, since the
-        block itself may never run. Class bodies run at definition time, so they are included
-        (methods still only contribute their header).
-        """
-        lines: set[int] = set()
-        self._collect_import_lines(self.root_node.body, lines)
-        return lines
-
-    @no_type_check
-    def _collect_import_lines(self, nodes: list[ast.stmt], lines: set[int]) -> None:
+    def _extract_top_level_lines(self, nodes: list[ast.stmt], lines: set[CodeLineNumber]) -> None:
         for node in nodes:
             start = min([node.lineno] + [d.lineno for d in getattr(node, 'decorator_list', [])])
 
@@ -113,13 +119,14 @@ class AstParser:
                 # match_case has no lineno of its own
                 end = min([getattr(first, 'lineno', None) or first.pattern.lineno]
                           + [d.lineno for d in getattr(first, 'decorator_list', [])])
-                lines.update(range(start, max(end, node.lineno + 1)))
+                
+                lines.update(*[range(start, max(end, node.lineno + 1))])
 
                 # A class body runs at definition time, unlike a function body.
                 if isinstance(node, ast.ClassDef):
-                    self._collect_import_lines(block, lines)
+                    self._extract_top_level_lines(block, lines)
             else:
-                lines.update(range(start, (node.end_lineno or node.lineno) + 1))
+                lines.update(*[range(start, (node.end_lineno or node.lineno) + 1)])
 
     def get_top_level_functions(self) -> list[ast.FunctionDef]:
         return [node for node in self.root_node.body if isinstance(node, ast.FunctionDef)]
