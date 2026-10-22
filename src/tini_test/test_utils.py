@@ -295,7 +295,6 @@ class _XTest:
                 break
     
     def run_for_cleanup_if_needed(self, _verbosity: Optional[Verbosity] = None) -> None:
-        # XXX What happens if user stops the program?
         # If test fails and there is a cleanup 
         # Attempt to run it
         
@@ -347,7 +346,6 @@ class _XTest:
 
     def box_test(self, _verbosity: Optional[Verbosity] = None) -> None:
 
-        # @ XXX 1 is this the most optimal way to do this ? probably not...
         with with_lock(self.should_lock):
 
             with patch_mocks(self.mocks):

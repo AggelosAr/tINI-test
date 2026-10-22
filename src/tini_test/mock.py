@@ -139,7 +139,7 @@ class MockReturn(CreateMock):
 
         self.mock.__globals__[_proxy_return_name] = self.return_value
 
-        new_spec = ('def _%s(*args, **kwargs): return globals()["%s"]' 
+        new_spec = ('def _%s(*args, **kwargs): return globals()["%s"]'
                     % 
                         (
                             _proxy_name, _proxy_return_name, 
