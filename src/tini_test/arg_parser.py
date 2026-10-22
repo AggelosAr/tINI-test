@@ -113,8 +113,6 @@ e.g. `%s...`
                               ''' % METADATA_FILE)
 
 
-    # TODO add --keep ? 
-    # TODO maybe also option for merge destination?
     parser.add_argument('--coverage-merge',
                         nargs='?',
                         const=True,

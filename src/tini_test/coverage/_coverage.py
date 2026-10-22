@@ -17,8 +17,12 @@ from tini_test.misc.annotations import (CodeLineNumber, CoverageStore,
                                         DirectoryPath, FileName, LineContent,
                                         StatementId)
 
-# TODO add someting for exclude
-# TODO maybe add custom exceptions
+# TODO
+# Add someting for exclude?
+# Maybe add custom exceptions?
+# Fall back behavior for to_html of report?
+# Top levels are gathered manually @core
+# Use target @tracer?
 
 
 class Line:
@@ -336,7 +340,6 @@ class CoverageTracker:
         file = code.co_filename
         file_no = frame.f_lineno
 
-        # Should we consider using the target in this context? XXX
         if file not in storage:
             storage[file] = set()
         storage[file].add(file_no)
@@ -529,7 +532,6 @@ class HTMLLine:
         return main_node
 
 
-
 class HTMLFileCoverage:
 
     @staticmethod
@@ -627,12 +629,6 @@ class HTMLFileCoverage:
 class HTMLReport:
 
     @staticmethod
-    def add_git_ignore(dest_dir: Path) -> None:
-        # Also generate a .gitignore file to ignore all generated HTML files.
-        with open(os.path.join(dest_dir, '.gitignore'), 'w', encoding='utf-8') as f:
-            f.write('*')
-
-    @staticmethod
     def init_store() -> Path:
         dest_dir = Path(os.path.join(os.getcwd(), STORE))
 
@@ -642,6 +638,12 @@ class HTMLReport:
         os.makedirs(dest_dir, exist_ok=True)
     
         return dest_dir
+
+    @staticmethod
+    def add_git_ignore(dest_dir: Path) -> None:
+        # Also generate a .gitignore file to ignore all generated HTML files.
+        with open(os.path.join(dest_dir, '.gitignore'), 'w', encoding='utf-8') as f:
+            f.write('*')
 
     @staticmethod
     def add_style(dest_dir: Path) -> None:
@@ -731,7 +733,6 @@ class HTMLReport:
 
     @staticmethod
     def to_html(tracker: CoverageTracker) -> None:
-        # XXX fallback behaviour?
         tracker.collect_files_from_source()
         tracker.files = dict(sorted(tracker.files.items()))
 

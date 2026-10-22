@@ -101,7 +101,6 @@ class Coverage(Enum):
 If passed, coverage tracking will be enabled.
 The report that will be generated, shows the coverage analysis of the code based on the collected data.
 The report will be generated in HTML format and will be stored inside the `%s` directory.
-TODO in order to generate the report the other command must be run.
 Use --coverage-target and --coverage-store to further configure the behavior of the coverage report.
                ''' % STORE
 

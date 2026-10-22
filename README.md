@@ -38,7 +38,7 @@ python3 -m tini_test [-r RUN MODE] [-v VERBOSITY] [-d DIRECTORY] [-f FILE] [-t T
 
 ### For coverage
 
-Run the suite normally with the extra argments. 
+Run the suite normally with the extra argments. A short summary for the coverage will also be generated on the terminal.
 
 ```bash
 python3 -m tini_test [--coverage] [--coverage-target] [--coverage-store]
@@ -444,7 +444,7 @@ Of course the above is somewhat cancelled because the algorithm tries to autocom
 * [ ] Add exclude dir arg.
 * [ ] Register tests into groups (group-level setup/cleanup).
 * [ ] Add global fail sort mode, not just per module.
-* [ ] Add support for global shared (xxx2).
+* [ ] Add support for global shared.
 * [ ] Async initialization of tests.
 * [ ] True Async support for mock/shared.
 * [ ] Fix terminal flickering on async ( minimal )
