@@ -220,9 +220,6 @@ class TestSuite:
 
         shared_meta = MetaSharedVar.get_meta_var()
 
-        # XXX ??? extreme case tests.dot_python_path is not unique inside nested sub dirs.
-        all_paths = set()
-
         for module_path, test_file in _from:
 
             tests = TestCollection(verbosity=self.verbosity,
@@ -230,13 +227,8 @@ class TestSuite:
                                    module_path=module_path,
                                    file=test_file,
                                    shared_meta=shared_meta)
-
-            if tests.dot_python_path in all_paths:
-                raise RuntimeError('Duplicate path detected: %s' % (tests.dot_python_path, ))
-            all_paths.add(tests.dot_python_path)
             
             try:
-                # ! Top levels are gathered manually... XXX
                 with coverage(_V2_COVERAGE, self._coverage_total):
 
                     tests._import(single_func_name=self.test_function)
@@ -308,7 +300,6 @@ class TestSuite:
 
     def pprint(self) -> None:
         print(self.get_summary())
-        # print('Errored files: ', self.errored_files)
 
     def get_coverage(self) -> None:
         if self.coverage == Coverage.DISABLED:
