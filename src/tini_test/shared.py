@@ -35,7 +35,7 @@ class SharedVar:
     def __new__(cls, *args, **kwargs) -> 'SharedVar':
         instance = super().__new__(cls)
         return instance
-    
+
     def __init__(self, _var: CellName) -> None:
         self._trace = traceback.extract_stack()
 
@@ -189,6 +189,7 @@ class MetaSharedVar:
             return shard.key.value
 
     def __setattr__(self, key: CellName, value: Any) -> None:
+        # TODO allow user to use these. else we raise Validation error.
         if key in ('_test_name', '_local_context', '_generating', '_maybe_globals'):
             object.__setattr__(self, key, value)
             return
