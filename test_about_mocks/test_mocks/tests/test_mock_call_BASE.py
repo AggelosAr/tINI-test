@@ -117,7 +117,7 @@ def test_mocking_my_data_class_and_method_returns_mocked_value():
 
 
 @Mock.mock(MyClass, args=(1, 2))
-@Mock.mock(MyClass.add_more, args=(MyClass, 1_000,))
+@Mock.mock(MyClass.add_more, args=(MyClass, 1_000,)) # XXX add test for classmethod and staticmethod ? 
 @Test.case()
 def test_mocking_my_class_method_args_mocked_value():
     instance = MyClass(10, 20)
@@ -128,6 +128,3 @@ def test_mocking_my_class_method_args_mocked_value():
     instance = MyClass()
     must_equal(1 + 2 + 1_000, instance.add_more(1_000_000))
     print('works')
-
-
-# TODO add test for classmethod and staticmethod ?

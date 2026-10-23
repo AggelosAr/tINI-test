@@ -269,7 +269,6 @@ class TestSuite:
             self.update_coverage_stores(test_collection)
 
     async def _arun_suite(self) -> None:
-        # @ XXX 1
 
         all_test_collections: list[TestCollection] = []
         for _, test_collection in self.container.items():

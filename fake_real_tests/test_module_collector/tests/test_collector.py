@@ -260,7 +260,7 @@ def test_test_module_will_not_collect_a_single_function_if_it_doesnt_exist() -> 
     must_equal(0, _.total_tests)
     must_equal(0, _.successes)
     must_equal(0, _.errors)
-    # must_equal(0, _.file_load_failures) XXX we can crop them
+    must_equal(0, _.file_load_failures)
 
 
 @Isolate

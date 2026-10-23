@@ -237,8 +237,34 @@ def test_mocking_my_class():
     must_equal(1 + 2, instance.add())
 
 ```
+
+
+```python
+# Mocking class methods.
+@Mock.mock(MyClass.add_more, args=(MyClass, 1_000,)) 
+```
+
+
 #### NOTES:
 > For mocking classes only the __init__ method is manipulated. So if custom logic exists in __new__ you may need a custom mock.
+
+> For now only mocking of initialization of a class is supported.
+
+
+### Mocks can be combined with shared
+
+This enables a dynamic like mocking behavior
+
+```python
+@Shared(var.aa)
+@Mock.mock(mocked_function, returns=(var.aa,))
+
+or
+
+@Shared(var.dd, var.ddd)
+@Mock.mock(MyClassForDynamic, args=(var.dd,), kwargs={'y': var.ddd})
+
+```
 
 
 Here is a more complex example. The function call of func_e during the test will be proxied to the Mock as a result it will receive as args the lambda and the 1 and as kwargs the function f. Also the the top and bottom Mock decorators are ignored.

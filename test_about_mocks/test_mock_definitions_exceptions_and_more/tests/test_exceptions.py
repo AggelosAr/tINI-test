@@ -362,6 +362,7 @@ def test_MockCallDefinitionErrorArgsAndKwargsConflict():
 
 @Test.case
 def test_mock_class_doesnt_accept_returns() -> None:
+    # XXX
     test_name = 'test_mock_class_doesnt_accept_returns'
     content = '''
 

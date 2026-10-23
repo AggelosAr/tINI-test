@@ -2,6 +2,7 @@ import inspect
 import secrets
 import textwrap
 from collections import deque
+from functools import partial
 from typing import Any, Callable, Optional
 
 from tini_test._internals._registry import attach_state
@@ -20,6 +21,7 @@ from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
                                        MockMissingFunctionOrClass)
 from tini_test.shared import SharedVar, var
 
+_container_types = (list, dict, set)
 
 class MockNone:
     __slots__ = ()
@@ -36,66 +38,68 @@ class CreateMock:
         self._mock_backup_store.__code__ = mock.__code__
 
     @staticmethod
-    def get_var(_var: SharedVar, from_var: bool) -> Any:
+    def get_var(from_var: bool, _var: SharedVar) -> Any:
         return var.__getattr__(_var.__key__) if from_var else _var
-    
+
     @staticmethod
-    def iter_vars(container: Any, 
-                  from_var: Optional[bool] = False) -> dict[CellName, list[SharedVar]]:
+    def iter_vars(item: Any, 
+                  found: dict[CellName, list[SharedVar]],
+                  replacer: Callable[[SharedVar], Any]) -> Any:
         # XXX this should cover all cases????????
+        # This fails in some cases. Like user has registered a class as iter? etc. etc. 
+        if isinstance(item, list):
+            new_list = []
+            for idx, el in enumerate(item):
+                item[idx] = CreateMock.iter_vars(el, found, replacer)
+                new_list.append(item[idx])
+            return new_list
+
+        elif isinstance(item, dict):
+            new_dict = {}
+            for key, value in item.items():
+                new_dict[key] = CreateMock.iter_vars(value, found, replacer)
+            return new_dict
+
+        elif isinstance(item, set):
+            # SharedVar -> not hashable and not iterable...
+            new_set = set()
+            for el in item:
+                new_set.add(CreateMock.iter_vars(el, found, replacer))
+            return new_set
         
-        seen: dict[CellName, list[SharedVar]] = {}
+        else:
+            if isinstance(item, SharedVar):
+                found.setdefault(item.__key__, []).append(item)
+                return replacer(item)
+            
+            elif isinstance(item, tuple):
+                new_tuple = []
 
-        if isinstance(container, list):
-            for i, item in enumerate(container):
-                if isinstance(item, SharedVar):
-                    seen.setdefault(item.__key__, []).append(item)
-                    container[i] = CreateMock.get_var(item, from_var)
+                for el in item:
+                    if isinstance(el, SharedVar):
+                        found.setdefault(el.__key__, []).append(el)
+                        new_tuple.append(replacer(el))
+                    elif isinstance(el, _container_types):
+                        new_tuple.append(CreateMock.iter_vars(el, found, replacer))
+                    else:
+                        new_tuple.append(el)
 
+                return tuple(new_tuple)
+            else:
+                return item
 
-                if isinstance(item, (list, dict, set)):
-                    seen.update(CreateMock.iter_vars(item, from_var))
-
-
-        elif isinstance(container, dict):
-            for key, value in container.items():
-                if isinstance(value, SharedVar):
-                    seen.setdefault(value.__key__, []).append(value)
-                    container[key] = CreateMock.get_var(value, from_var)
-
-
-                if isinstance(value, (list, dict, set)):
-                    seen.update(CreateMock.iter_vars(value, from_var))
-
-
-        elif isinstance(container, set):
-            for item in container:
-                if isinstance(item, SharedVar):
-                    seen.setdefault(item.__key__, []).append(item)
-
-                    container.remove(item)
-                    container.add(CreateMock.get_var(item, from_var))
-
-                if isinstance(item, (list, dict, set)):
-                    seen.update(CreateMock.iter_vars(item, from_var))
-
-        return seen
 
     @staticmethod
     def find_shared(item: Any) -> dict[CellName, list[SharedVar]]:
-        if isinstance(item, SharedVar): 
-            return {item.__key__: [item]}
-
-        return CreateMock.iter_vars(item)
+        found: dict[CellName, list[SharedVar]] = {}
+        replacer = partial(CreateMock.get_var, False)
+        _ = CreateMock.iter_vars(item, found, replacer)
+        return found
     
     @staticmethod
     def replace_shared(item: Any) -> Any:
-        if isinstance(item, SharedVar): 
-            return CreateMock.get_var(item, from_var=True)
-        
-        CreateMock.iter_vars(item, from_var=True)
-
-        return item
+        replacer = partial(CreateMock.get_var, True)
+        return CreateMock.iter_vars(item, found={}, replacer=replacer)
         
     def _proxy_generator(self) -> ProxyItem:
         
@@ -182,11 +186,11 @@ class MockCall(CreateMock):
         _proxy_x.__globals__.update(self.mock.__globals__)
         
         new_spec = (
-            'def _%s(*args, **kwargs): \n'                                          \
-            '    _args, kwargs = globals()["%s"](), globals()["%s"]()\n'            \
-            '    bound = globals()["%s"].__signature__.bind(*_args, **kwargs)\n'    \
-            '    bound.apply_defaults()\n'                                          \
-            '    return %s(*bound.args, **bound.kwargs)\n'                          \
+            'def _%s(*args, **kwargs):                                        \n'   \
+            '    _args, kwargs = globals()["%s"](), globals()["%s"]()         \n'   \
+            '    bound = globals()["%s"].__signature__.bind(*_args, **kwargs) \n'   \
+            '    bound.apply_defaults()                                       \n'   \
+            '    return %s(*bound.args, **bound.kwargs)                       \n'   \
             % 
                 (
                     _proxy_name,

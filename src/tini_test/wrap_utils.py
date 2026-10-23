@@ -164,7 +164,6 @@ class DecoratedTestChain:
                 raise IsolateWasUsedOnWithoutTestDecorator(self.test_func)  
     
     def validate_dependencies(self, test_name: TestFunctionName) -> None:
-        # XXX raise the exeption from the correct line. ?
         MockDefinition.validate_mocks(self.mocks, test_name)
         SharedVar.validate_duplicate_vars(self.shared_vars, test_name)
 

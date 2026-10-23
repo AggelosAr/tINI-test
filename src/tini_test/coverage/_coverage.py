@@ -23,7 +23,7 @@ from tini_test.misc.annotations import (CodeLineNumber, CoverageStore,
 # Fall back behavior for to_html of report?
 # Top levels are gathered manually @core
 # Use target @tracer?
-
+# @update_state this misses inline comments. @Comments
 
 class Line:
     def __init__(self, 
@@ -138,9 +138,8 @@ class FileCoverage:
             self._statement_counts[status] += 1
     
     def update_state(self, data: list[str]) -> None:
-        # TODO this misses inline comments. @Comments
-
         have_docstring_open = False
+
         for l_no, l_cont in enumerate(data, start=1):
             owner = self.line_to_statement.get(l_no)
             stripped = l_cont.strip()

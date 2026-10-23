@@ -81,7 +81,7 @@ _cases = [
 '''
 def mocked_function(): ...
 @Shared(var.a)
-@Mock.mock(mocked_function, returns=(var.a,))            # XXX 2
+@Mock.mock(mocked_function, returns=(var.aa,))
 @Test.case
 def a(): ...
 ''',
@@ -89,7 +89,7 @@ def a(): ...
 '''
 def mocked_function(args): ...
 @Shared(var.b)
-@Mock.mock(mocked_function, args=(var.b,))               # ^
+@Mock.mock(mocked_function, args=(var.bb,))
 @Test.case
 def b(): ...
 ''',
@@ -97,16 +97,26 @@ def b(): ...
 '''
 def mocked_function(args): ...
 @Shared(var.c)
-@Mock.mock(mocked_function, kwargs={'var_c': var.c})     # ^
+@Mock.mock(mocked_function, kwargs={'var_c': var.cc})
 @Test.case
 def c(): ...
+'''
+
+,
+
+'''
+def mocked_function(args): ...
+@Shared(var.d)
+@Mock.mock(mocked_function, kwargs={'var_d': set(var.dd)})
+@Test.case
+def d(): ...
 '''
 ]
 @Test.case
 def cases():
 
     folder_name = get_unique_folder_name()
-    names = ['a', 'b', 'c']
+    names = ['a', 'b', 'c', 'd']
     for test, name in zip(_cases, names):
         _ = get_temp_file(test, folder_name=os.path.join(folder_name, name))
 
@@ -122,16 +132,21 @@ def cases():
         '| Total registered tests  : 0',
         '| Total successes         : 0',
         '| Total errors            : 0',
-        '| Test file load failures : 3',
+        '| Test file load failures : 4',
 
-        'Reason: Global shared variable < a > is not supported.',
-        '@Mock.mock(mocked_function, returns=(var.a,))            # XXX 2',
+        'Reason: Global shared variable < aa > is not supported.',
+        '@Mock.mock(mocked_function, returns=(var.aa,))',
 
-        'Reason: Global shared variable < b > is not supported.',
-        '@Mock.mock(mocked_function, args=(var.b,))               # ^',
+        'Reason: Global shared variable < bb > is not supported.',
+        '@Mock.mock(mocked_function, args=(var.bb,))',
 
-        'Reason: Global shared variable < c > is not supported.',
-        "@Mock.mock(mocked_function, kwargs={'var_c': var.c})     # ^",
+        'Reason: Global shared variable < cc > is not supported.',
+        "@Mock.mock(mocked_function, kwargs={'var_c': var.cc})",
+
+        "Reason: 'SharedVar' object is not iterable",
+        "    @Mock.mock(mocked_function, kwargs={'var_d': set(var.dd)})",
+        '                                                 ^^^^^^^^^^^',
+        "TypeError: 'SharedVar' object is not iterable"
 
     ]
     conditions = set(c.strip() for c in conditions)
@@ -233,3 +248,110 @@ def empty_shared_stacked_2():
     res = mocker2(var.Z)[1][ 'var_c' ]()
     must_equal(NotInitialized, res)
 
+
+
+
+# dymanic shared
+
+def mocked_function(*args, **kwargs):
+    return args, kwargs
+
+@Shared(var.aa)
+@Mock.mock(mocked_function, returns=(var.aa,))
+@Test.case
+def dynamic_mocked_function_returns():
+    must_equal((NotInitialized, ), mocked_function())
+    must_equal((var.aa,), mocked_function())
+
+    var.aa = 100
+    must_equal((100,), mocked_function())
+
+    var.aa = 200
+    must_equal((200,), mocked_function())
+
+
+@Shared(var.aa)
+@Mock.mock(mocked_function, returns=var.aa)
+@Test.case
+def dynamic_mocked_function_returns_single_value():
+    must_equal(NotInitialized, mocked_function())
+    must_equal(var.aa, mocked_function())
+
+    var.aa = 100
+    must_equal(100, mocked_function())
+
+    var.aa = 200
+    must_equal(200, mocked_function())
+
+
+@Shared(var.bb)
+@Mock.mock(mocked_function, args=(var.bb,))
+@Test.case
+def dynamic_mocked_function_args():
+    must_equal(((NotInitialized, ), {}), mocked_function())
+    must_equal(((var.bb, ), {}), mocked_function())
+
+    var.bb = 100
+    must_equal(((100, ), {}), mocked_function())
+
+    var.bb = 200
+    must_equal(((200, ), {}), mocked_function())
+
+
+@Shared(var.cc)
+@Mock.mock(mocked_function, kwargs={'var_c': var.cc})
+@Test.case
+def dynamic_mocked_function_kwargs():
+    must_equal(((), {'var_c': NotInitialized}), mocked_function())
+    must_equal(((), {'var_c': var.cc}), mocked_function())
+
+    var.cc = 100
+    must_equal(((), {'var_c': 100}), mocked_function())
+
+    var.cc = 200
+    must_equal(((), {'var_c': 200}), mocked_function())
+
+
+@Shared(var.ccc)
+@Mock.mock(mocked_function, args=(var.ccc,), kwargs={'var_c': var.ccc})
+@Test.case
+def dynamic_mocked_function_args_kwargs():
+    must_equal(((NotInitialized,), {'var_c': NotInitialized}), mocked_function())
+    must_equal(((var.ccc,), {'var_c': var.ccc}), mocked_function())
+
+    var.ccc = 100
+    must_equal(((100,), {'var_c': 100}), mocked_function())
+
+    var.ccc = 200
+    must_equal(((200,), {'var_c': 200}), mocked_function())
+
+
+# dunamic for class
+
+class MyClassForDynamic:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def add(self):
+        return self.x + self.y
+
+@Shared(var.dd, var.ddd)
+@Mock.mock(MyClassForDynamic, args=(var.dd,), kwargs={'y': var.ddd})
+@Test.case
+def dynamic_mocked_class():
+    instance = MyClassForDynamic(1_000_000, 1_000_000)
+    must_equal(var.dd, instance.x)
+    must_equal(var.ddd, instance.y)
+
+    with WillRaise(TypeError) as context:
+        instance.add()
+    must_equal("unsupported operand type(s) for +: 'type' and 'type'", str(context.exception))
+
+    var.dd, var.ddd = 100, 200
+    instance = MyClassForDynamic(1_000_000, 1_000_000)
+    must_equal(300, instance.add())
+
+    var.dd, var.ddd = 1000, 2000
+    instance = MyClassForDynamic(1_000_000, 1_000_000)
+    must_equal(3000, instance.add())

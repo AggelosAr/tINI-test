@@ -1,4 +1,4 @@
-from tini_test import NotInitialized, Shared, Test, must_equal, var, WillRaise
+from tini_test import NotInitialized, Shared, Test, WillRaise, must_equal, var
 from tini_test.misc.exceptions import ExpectedWasDifferentFromActual
 
 
