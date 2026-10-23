@@ -186,8 +186,8 @@ class TestCollection:
                                                                        self.ISOLATE_REGISTRY)
 
                     test_chain.validate_dependencies(test_name)
-                    
-                    SharedVar.add_scope(test_chain.shared_vars, test_name)
+
+                    test_chain.add_scope(test_name)
 
                     if test_chain.mocks:
                         t_obj = partial(t_obj, _XTest____mocks=test_chain.mocks)
@@ -197,6 +197,7 @@ class TestCollection:
 
                     if test_chain.isolate:
                         t_obj = partial(t_obj, _XTest____isolate=test_chain.isolate)
+
 
             if single_func_name and test_name != single_func_name:
                 continue

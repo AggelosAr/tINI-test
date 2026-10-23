@@ -201,3 +201,16 @@ class DecoratedTestChain:
                 test_name = _registered_test.__name__
 
         return test_name, test_wrap
+
+    def add_scope(self, test_name: TestFunctionName) -> None:
+        SharedVar.add_scope(self.shared_vars, test_name)
+
+        available_vars = {_var.__key__ for _var in self.shared_vars}
+        ms_vars = []
+        for mock in self.mocks:
+
+            for _var, shard in mock._vars.items():
+                if _var in available_vars:
+                    ms_vars.extend(shard)
+
+        SharedVar.add_scope(ms_vars, test_name)

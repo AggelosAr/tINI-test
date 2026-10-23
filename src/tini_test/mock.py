@@ -6,7 +6,7 @@ from typing import Any, Callable, Optional
 
 from tini_test._internals._registry import attach_state
 from tini_test.enums import MockType, Plugs
-from tini_test.misc.annotations import (IsolateWrappedObject,
+from tini_test.misc.annotations import (CellName, IsolateWrappedObject,
                                         MockDefinitionWrappedHolder,
                                         MockedClass, MockedFunction,
                                         MockWrappedObject, ProxyItem, RealTest,
@@ -18,6 +18,7 @@ from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
                                        MockClassDefinitionError,
                                        MockDefinitionError,
                                        MockMissingFunctionOrClass)
+from tini_test.shared import SharedVar, var
 
 
 class MockNone:
@@ -33,7 +34,69 @@ class CreateMock:
 
         self._mock_backup_store = lambda: None
         self._mock_backup_store.__code__ = mock.__code__
+
+    @staticmethod
+    def get_var(_var: SharedVar, from_var: bool) -> Any:
+        return var.__getattr__(_var.__key__) if from_var else _var
     
+    @staticmethod
+    def iter_vars(container: Any, 
+                  from_var: Optional[bool] = False) -> dict[CellName, list[SharedVar]]:
+        # XXX this should cover all cases????????
+        
+        seen: dict[CellName, list[SharedVar]] = {}
+
+        if isinstance(container, list):
+            for i, item in enumerate(container):
+                if isinstance(item, SharedVar):
+                    seen.setdefault(item.__key__, []).append(item)
+                    container[i] = CreateMock.get_var(item, from_var)
+
+
+                if isinstance(item, (list, dict, set)):
+                    seen.update(CreateMock.iter_vars(item, from_var))
+
+
+        elif isinstance(container, dict):
+            for key, value in container.items():
+                if isinstance(value, SharedVar):
+                    seen.setdefault(value.__key__, []).append(value)
+                    container[key] = CreateMock.get_var(value, from_var)
+
+
+                if isinstance(value, (list, dict, set)):
+                    seen.update(CreateMock.iter_vars(value, from_var))
+
+
+        elif isinstance(container, set):
+            for item in container:
+                if isinstance(item, SharedVar):
+                    seen.setdefault(item.__key__, []).append(item)
+
+                    container.remove(item)
+                    container.add(CreateMock.get_var(item, from_var))
+
+                if isinstance(item, (list, dict, set)):
+                    seen.update(CreateMock.iter_vars(item, from_var))
+
+        return seen
+
+    @staticmethod
+    def find_shared(item: Any) -> dict[CellName, list[SharedVar]]:
+        if isinstance(item, SharedVar): 
+            return {item.__key__: [item]}
+
+        return CreateMock.iter_vars(item)
+    
+    @staticmethod
+    def replace_shared(item: Any) -> Any:
+        if isinstance(item, SharedVar): 
+            return CreateMock.get_var(item, from_var=True)
+        
+        CreateMock.iter_vars(item, from_var=True)
+
+        return item
+        
     def _proxy_generator(self) -> ProxyItem:
         
         def _proxy(*args, **kwargs): ...
@@ -66,6 +129,18 @@ class MockCall(CreateMock):
         
         super().__init__(mock)
 
+    @property
+    def _vars(self) -> dict[CellName, list[SharedVar]]:
+        res: dict[CellName, list[SharedVar]] = {}
+
+        for k, v in CreateMock.find_shared(self.args).items():
+            res.setdefault(k, []).extend(v)
+
+        for k, v in CreateMock.find_shared(self.kwargs).items():
+            res.setdefault(k, []).extend(v)
+
+        return res
+    
     @staticmethod
     def validate_call(args: Any, kwargs: Any) -> None:
         MockCall.validate_args(args)
@@ -97,22 +172,26 @@ class MockCall(CreateMock):
         _proxy_x.__code__ = self.mock.__code__
 
         self.mock.__globals__[_proxy_x_name] = _proxy_x
-        self.mock.__globals__[_proxy_locals__args_name] = self.args
-        self.mock.__globals__[_proxy_locals__kwargs_name] = self.kwargs
+
+        _args = lambda: CreateMock.replace_shared(self.args)
+        self.mock.__globals__[_proxy_locals__args_name] = _args
+
+        _kwargs = lambda: CreateMock.replace_shared(self.kwargs)
+        self.mock.__globals__[_proxy_locals__kwargs_name] = _kwargs
 
         _proxy_x.__globals__.update(self.mock.__globals__)
         
         new_spec = (
-            'def _%s(*args, **kwargs): \n'                                                           \
-            '    bound = globals()["%s"].__signature__.bind(*globals()["%s"], **globals()["%s"])\n'  \
-            '    bound.apply_defaults()\n'                                                           \
-            '    return %s(*bound.args, **bound.kwargs)\n'                                           \
+            'def _%s(*args, **kwargs): \n'                                          \
+            '    _args, kwargs = globals()["%s"](), globals()["%s"]()\n'            \
+            '    bound = globals()["%s"].__signature__.bind(*_args, **kwargs)\n'    \
+            '    bound.apply_defaults()\n'                                          \
+            '    return %s(*bound.args, **bound.kwargs)\n'                          \
             % 
                 (
                     _proxy_name,
+                    _proxy_locals__args_name, _proxy_locals__kwargs_name,
                     _proxy_x_name,
-                    _proxy_locals__args_name,
-                    _proxy_locals__kwargs_name,
                     _proxy_x_name, 
                 )
             )
@@ -130,6 +209,10 @@ class MockReturn(CreateMock):
 
         super().__init__(mock)
 
+    @property
+    def _vars(self) -> dict[CellName, list[SharedVar]]:
+        return CreateMock.find_shared(self.return_value)
+    
     def _patch(self) -> None:
         _, _proxy_name = self._proxy_generator()
         _, _proxy_return_name = self._proxy_generator()
@@ -137,9 +220,10 @@ class MockReturn(CreateMock):
         self._proxy_pool.add(_proxy_name)
         self._proxy_pool.add(_proxy_return_name)
 
-        self.mock.__globals__[_proxy_return_name] = self.return_value
+        _ = lambda: CreateMock.replace_shared(self.return_value)
+        self.mock.__globals__[_proxy_return_name] = _
 
-        new_spec = ('def _%s(*args, **kwargs): return globals()["%s"]'
+        new_spec = ('def _%s(*args, **kwargs): return globals()["%s"]()'
                     % 
                         (
                             _proxy_name, _proxy_return_name, 
@@ -156,6 +240,10 @@ class MockDefinition:
                  body: MockCall | MockReturn) -> None:
         self.mock = mock
         self.body = body
+
+    @property
+    def _vars(self) -> dict[CellName, list[SharedVar]]:
+        return self.body._vars
     
     @staticmethod
     def arg_exists(arg: Any) -> bool:
@@ -232,7 +320,7 @@ class MockDefinition:
             if mocked_function_name in unique_mocks:
                 raise DuplicateMockRegisteredOnTest(mock_name=mocked_function_name, test_name=test_name)
             unique_mocks.add(mocked_function_name)
-
+    
     def patch(self) -> None:
         self.body._patch()
 
