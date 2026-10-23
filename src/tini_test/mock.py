@@ -2,10 +2,12 @@ import inspect
 import secrets
 import textwrap
 from collections import deque
+from contextlib import contextmanager
 from functools import partial
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Generator, Optional, no_type_check
 
 from tini_test._internals._registry import attach_state
+from tini_test._internals.consts import _M_REG
 from tini_test.enums import MockType, Plugs
 from tini_test.misc.annotations import (CellName, IsolateWrappedObject,
                                         MockDefinitionWrappedHolder,
@@ -20,6 +22,18 @@ from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
                                        MockDefinitionError,
                                        MockMissingFunctionOrClass)
 from tini_test.shared import SharedVar, var
+
+# TODO @mocking move  @context_managers
+# @generate_anchor_name make the name better
+# Docstrings @Mock
+
+# XXX @_get_previous_mocks remove the registers at runtime 
+#   @test and replace them with the resolved dependencies?
+#   kinda no need since this is ready... maybe move this @wrap_utils
+# ---
+# @iter_vars this should cover all cases????????
+#   This fails in some cases. Like user has registered a class as iter? etc. etc. 
+
 
 _container_types = (list, dict, set)
 
@@ -37,6 +51,12 @@ class CreateMock:
         self._mock_backup_store = lambda: None
         self._mock_backup_store.__code__ = mock.__code__
 
+        # Used to keep track of the anchor name for this mock in the global namespace
+        # Changes after each mock are registered in the global namespace
+        # Gets erased when the mock is unregistered from the global namespace
+        # Follows the format '_proxy_<mock_name>_<unique_identifier:7>'
+        self._anchor: str = ''
+
     @staticmethod
     def get_var(from_var: bool, _var: SharedVar) -> Any:
         return var.__getattr__(_var.__key__) if from_var else _var
@@ -45,8 +65,7 @@ class CreateMock:
     def iter_vars(item: Any, 
                   found: dict[CellName, list[SharedVar]],
                   replacer: Callable[[SharedVar], Any]) -> Any:
-        # XXX this should cover all cases????????
-        # This fails in some cases. Like user has registered a class as iter? etc. etc. 
+        
         if isinstance(item, list):
             new_list = []
             for idx, el in enumerate(item):
@@ -62,10 +81,7 @@ class CreateMock:
 
         elif isinstance(item, set):
             # SharedVar -> not hashable and not iterable...
-            new_set = set()
-            for el in item:
-                new_set.add(CreateMock.iter_vars(el, found, replacer))
-            return new_set
+            return item
         
         else:
             if isinstance(item, SharedVar):
@@ -88,7 +104,6 @@ class CreateMock:
             else:
                 return item
 
-
     @staticmethod
     def find_shared(item: Any) -> dict[CellName, list[SharedVar]]:
         found: dict[CellName, list[SharedVar]] = {}
@@ -100,12 +115,37 @@ class CreateMock:
     def replace_shared(item: Any) -> Any:
         replacer = partial(CreateMock.get_var, True)
         return CreateMock.iter_vars(item, found={}, replacer=replacer)
+
+    @classmethod
+    @no_type_check
+    def _get_previous_mocks(cls, mock: 'MockDefinition') -> list['MockDefinition']:
+        # Find all mocks that have a similar signature in the current namespace
+        definitions = []
+
+        for wrap in mock.__globals__.get(_M_REG).values():
+            _, *_definition = wrap()
+
+            if _definition:
+                definition, *_ = _definition
+
+                if definition.mock == mock.mock:
+                    definitions.append(definition)
         
-    def _proxy_generator(self) -> ProxyItem:
+        return definitions
+
+    def generate_anchor_name(self) -> str:
+        name = self.mock.__name__
+        return name
+
+    def get_proxy_name(self, use_anchor: bool) -> str:
+        name = self.generate_anchor_name() if use_anchor else ''
+        return '_proxy_%s_%s' % (name, secrets.token_hex(7), )
+    
+    def _proxy_generator(self, use_anchor: Optional[bool] = False) -> ProxyItem:
         
         def _proxy(*args, **kwargs): ...
 
-        _proxy.__name__ = '_proxy_%s' % (secrets.token_hex(7), )
+        _proxy.__name__ = self.get_proxy_name(use_anchor)
 
         return ProxyItem(_proxy, _proxy.__name__)
 
@@ -118,6 +158,7 @@ class CreateMock:
         self.mock.__code__ = self._mock_backup_store.__code__
         deque(map(lambda x: self.mock.__globals__.pop(x, None), self._proxy_pool), maxlen=0)
         self._proxy_pool.clear()
+        self._anchor = ''
 
 
 class MockCall(CreateMock):
@@ -162,20 +203,22 @@ class MockCall(CreateMock):
 
     def _patch(self) -> None:
         _, _proxy_name = self._proxy_generator()
-        _proxy_x, _proxy_x_name = self._proxy_generator()
+        
+        anchor, self._anchor = self._proxy_generator(use_anchor=True)
+
         _, _proxy_locals__args_name = self._proxy_generator()
         _, _proxy_locals__kwargs_name = self._proxy_generator()
 
         self._proxy_pool.add(_proxy_name)
-        self._proxy_pool.add(_proxy_x_name)
+        self._proxy_pool.add(self._anchor)
         self._proxy_pool.add(_proxy_locals__args_name)
         self._proxy_pool.add(_proxy_locals__kwargs_name)
 
-        _proxy_x.__signature__ = inspect.signature(self.mock)
+        anchor.__signature__ = inspect.signature(self.mock)
 
-        _proxy_x.__code__ = self.mock.__code__
+        anchor.__code__ = self.mock.__code__
 
-        self.mock.__globals__[_proxy_x_name] = _proxy_x
+        self.mock.__globals__[self._anchor] = anchor
 
         _args = lambda: CreateMock.replace_shared(self.args)
         self.mock.__globals__[_proxy_locals__args_name] = _args
@@ -183,7 +226,7 @@ class MockCall(CreateMock):
         _kwargs = lambda: CreateMock.replace_shared(self.kwargs)
         self.mock.__globals__[_proxy_locals__kwargs_name] = _kwargs
 
-        _proxy_x.__globals__.update(self.mock.__globals__)
+        anchor.__globals__.update(self.mock.__globals__)
         
         new_spec = (
             'def _%s(*args, **kwargs):                                        \n'   \
@@ -195,8 +238,8 @@ class MockCall(CreateMock):
                 (
                     _proxy_name,
                     _proxy_locals__args_name, _proxy_locals__kwargs_name,
-                    _proxy_x_name,
-                    _proxy_x_name, 
+                    self._anchor,
+                    self._anchor, 
                 )
             )
         self._compile_mock(new_spec)
@@ -219,18 +262,18 @@ class MockReturn(CreateMock):
     
     def _patch(self) -> None:
         _, _proxy_name = self._proxy_generator()
-        _, _proxy_return_name = self._proxy_generator()
+        _, self._anchor = self._proxy_generator(use_anchor=True)
         
         self._proxy_pool.add(_proxy_name)
-        self._proxy_pool.add(_proxy_return_name)
+        self._proxy_pool.add(self._anchor)
 
         _ = lambda: CreateMock.replace_shared(self.return_value)
-        self.mock.__globals__[_proxy_return_name] = _
+        self.mock.__globals__[self._anchor] = _
 
         new_spec = ('def _%s(*args, **kwargs): return globals()["%s"]()'
                     % 
                         (
-                            _proxy_name, _proxy_return_name, 
+                            _proxy_name, self._anchor, 
                         )
                     )
         self._compile_mock(new_spec)
@@ -246,6 +289,14 @@ class MockDefinition:
         self.body = body
 
     @property
+    def __globals__(self) -> dict[str, Any]:
+        return self.body.mock.__globals__
+
+    @property
+    def _anchor(self) -> str:
+        return self.body._anchor
+
+    @property
     def _vars(self) -> dict[CellName, list[SharedVar]]:
         return self.body._vars
     
@@ -254,7 +305,7 @@ class MockDefinition:
         return type(arg) is not type or not issubclass(arg, MockNone)
 
     @staticmethod
-    def validate_mocked_item(mock: Any) -> MockType:
+    def get_mock_type(mock: Any) -> MockType:
         _mock_exists = MockDefinition.arg_exists(mock)
 
         if not _mock_exists:
@@ -269,12 +320,11 @@ class MockDefinition:
         raise MockMissingFunctionOrClass
         
     @staticmethod
-    def validate_mock_definition_arguments(mock: Any,
-                                           returns: Any, 
-                                           args: Any, 
-                                           kwargs: Any
-                                           ) -> MockCall | MockReturn:
-        mock_type = MockDefinition.validate_mocked_item(mock)
+    def validate_mock(mock: Any,
+                      returns: Any, 
+                      args: Any, 
+                      kwargs: Any) -> MockCall | MockReturn:
+        mock_type = MockDefinition.get_mock_type(mock)
 
         _returns_exist = MockDefinition.arg_exists(returns)
         _args_exist = MockDefinition.arg_exists(args)
@@ -317,7 +367,7 @@ class MockDefinition:
         raise MockDefinitionError
         
     @classmethod
-    def validate_mocks(cls, mocks: list['MockDefinition'], test_name: TestFunctionName) -> None:
+    def raise_for_duplicate_mocks(cls, mocks: list['MockDefinition'], test_name: TestFunctionName) -> None:
         unique_mocks = set()
         for mock in mocks:
             mocked_function_name = mock.mock.__name__
@@ -333,20 +383,43 @@ class MockDefinition:
 
 
 class Mock:
+    '''
+    A class providing utilities for mocking functions and classes within tests.
 
+    It supports both synchronous and asynchronous test modes, ensuring that
+    mocked objects do not interfere with the original implementations during
+    `async` mode when using the `mock` method. 
+    
+    The `mocking` context manager does not
+    provide such guarantees and should be used with caution.
+    '''
     @classmethod
     def mock(cls, *args, **kwargs):
+        '''
+        The object to be mocked can be passed positionally or with the `mock` keyword.
+
+        Args and Kwargs for the mock definition,
+        regardless of how they are passed, are accepted as is.
+        And are not validated against the function signature.
+
+        * During `async` mode, it is guaranteed that the mocked object will
+        not interfere with the original.
+        '''
         return _XMock.mock(*args, **kwargs)
+
+    @classmethod
+    def mocking(cls, *args, **kwargs):
+        '''
+        No guarantee is made that the mocked object will not intefere with the original
+        during `async` mode.
+
+        * Use the the `@Isolate` decorator to ensure isolation.
+        '''
+        return _XMock.mocking(*args, **kwargs)
 
 
 class _XMock:
-    """
-    The function to mock can be passed positionally or as the `mock` keyword.
-    Args and Kwargs for the mock definition.
-    Are accepted as is. And are not validated 
-    against the function signature.
-    """
-
+    
     @classmethod
     def mock(cls,
              func: None
@@ -410,8 +483,28 @@ class _XMock:
                 return wrapper(func)
             else:
                 mock = func
-                mock_body = MockDefinition.validate_mock_definition_arguments(mock, returns, args, kwargs)
+                mock_body = MockDefinition.validate_mock(mock, returns, args, kwargs)
         elif not is_empty:
-            mock_body = MockDefinition.validate_mock_definition_arguments(mock, returns, args, kwargs)
+            mock_body = MockDefinition.validate_mock(mock, returns, args, kwargs)
         
         return wrapper
+
+    @classmethod
+    @contextmanager
+    def mocking(cls, 
+                mock    : Optional[Any] = MockNone,
+                *,
+                returns : Optional[Any] = MockNone, 
+                args    : Optional[Any] = MockNone,
+                kwargs  : Optional[Any] = MockNone) -> Generator[None, None, None]:
+        mock_body = MockDefinition.validate_mock(mock, returns, args, kwargs)
+        _mock = MockDefinition(mock, body=mock_body)
+        # This mock is closer to the actual call site than the decorator-based mocks if any.
+        previous = CreateMock._get_previous_mocks(_mock)
+        try:
+            deque(map(lambda __mock: __mock.restore(), previous), maxlen=0)
+            _mock.patch()
+            yield
+        finally:
+            _mock.restore()
+            deque(map(lambda __mock: __mock.patch(), previous), maxlen=0)

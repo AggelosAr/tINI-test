@@ -94,9 +94,18 @@ class TestStep:
 
 
 class Test:
+    '''
+    The `@Test` decorator is used to define test cases within the testing framework.
 
+    It allows for the specification of setup and cleanup functions, 
+    mocks, shared variables, and other test configurations.
+    '''
     @classmethod
     def case(cls, *args, **kwargs):
+        '''
+        Defines a test case with the specified configuration, 
+        including setup and cleanup functions.
+        '''
         return _XTest.case(*args, **kwargs)
 
 

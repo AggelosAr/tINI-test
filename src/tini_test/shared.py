@@ -86,7 +86,7 @@ class SharedVar:
         return args
 
     @classmethod
-    def validate_duplicate_vars(cls, shared_vars: list['SharedVar'], test_name: TestFunctionName) -> None:
+    def raise_for_duplicate_vars(cls, shared_vars: list['SharedVar'], test_name: TestFunctionName) -> None:
         unique_shared_vars = set()
         for shared_var in shared_vars:
             if shared_var.__key__ in unique_shared_vars:
@@ -100,7 +100,13 @@ class SharedVar:
 
 
 class Shared:
-    
+    '''
+    The `@Shared` decorator is used to define shared variables that can be accessed
+    across the lifecycle of the test.
+
+    It ensures that the shared variables are properly scoped and prevents 
+    duplicate definitions within the same test.
+    '''
     def __new__(cls, *args: tuple[Any], **kwargs: Any):
 
         if kwargs:
@@ -269,3 +275,4 @@ class MetaSharedVar:
 
 NotInitialized = _NotInitialized
 var = MetaSharedVar()
+# TODO add docstring to var

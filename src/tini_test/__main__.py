@@ -7,6 +7,7 @@ from .arg_parser import (CoreArgsDict, CoverageGenerateReportArgsDict,
 from .initializer import initialize_test_suite
 from .misc.exceptions import CantFindRelativePathToRoot
 
+# TODO remove the checks for mode from here.
 
 @profiler(_PROFILING)
 def _tini_test(kwargs: CoreArgsDict | CoverageMergeArgsDict | CoverageGenerateReportArgsDict):

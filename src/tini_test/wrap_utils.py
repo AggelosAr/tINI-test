@@ -164,8 +164,8 @@ class DecoratedTestChain:
                 raise IsolateWasUsedOnWithoutTestDecorator(self.test_func)  
     
     def validate_dependencies(self, test_name: TestFunctionName) -> None:
-        MockDefinition.validate_mocks(self.mocks, test_name)
-        SharedVar.validate_duplicate_vars(self.shared_vars, test_name)
+        MockDefinition.raise_for_duplicate_mocks(self.mocks, test_name)
+        SharedVar.raise_for_duplicate_vars(self.shared_vars, test_name)
 
     @no_type_check
     def resolve_dependencies(self, 

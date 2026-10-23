@@ -17,13 +17,13 @@ from tini_test.enums import Coverage, RunMode, Verbosity
 from tini_test.initializer import initialize_test_suite
 from tini_test.misc.exceptions import CantFindRelativePathToRoot
 from tini_test.module_collector import ModuleCollector
-
+from tini_test._internals.consts import PROJECT_ROOT
 
 @Test.case
 def test_suite_run() -> None:
 
     command = ('cd %s && python3 -m tini_test -d test_must_equals -r sync' 
-               % ('/home/papaggalos/workspace/python_projects/tINI-test/', ))
+               % (PROJECT_ROOT, ))
 
     completed_process = subprocess.run(command, 
                                        timeout=10, 
@@ -44,48 +44,6 @@ def test_suite_run() -> None:
     # -------------------------------------------------------
     #   -------------------------------------------------------
 
-#     command = ('cd %s && python3 -m tini_test -d /not_there -r sync' 
-#                % ('/home/papaggalos/workspace/python_projects/tINI-test/', ))
-
-#     completed_process = subprocess.run(command, 
-#                                        timeout=10, 
-#                                        text=True, 
-#                                        capture_output=True,
-#                                        shell=True)
-    
-#     must_equal(1, completed_process.returncode)
-
-#     must_equal('''
-# Traceback (most recent call last):
-#   File "<frozen runpy>", line 198, in _run_module_as_main
-#   File "<frozen runpy>", line 88, in _run_code
-#   File "/home/papaggalos/workspace/python_projects/tINI-test/src/tini_test/__main__.py", line 10, in <module>
-#     test_suite = initialize_test_suite(**args)
-#                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#   File "/home/papaggalos/workspace/python_projects/tINI-test/src/tini_test/initializer.py", line 18, in initialize_test_suite
-#     test_collector = ModuleCollector(search_dir, file_name)
-#                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-#   File "/home/papaggalos/workspace/python_projects/tINI-test/src/tini_test/module_collector.py", line 46, in __init__
-#     raise CantFindRelativePathToRoot
-# tini_test.misc.exceptions.CantFindRelativePathToRoot: Can't find the requested relative path to root.
-# '''.strip()+'\n', completed_process.stderr)
-    
-#     #   -------------------------------------------------------
-#     # -------------------------------------------------------
-#     #   -------------------------------------------------------
-#     # -------------------------------------------------------
-#     #   -------------------------------------------------------
-
-#     command = ('cd %s && python3 -m tini_test -d . -r sync -t not_theressss.py' 
-#                % ('/home/papaggalos/workspace/python_projects/tINI-test/', ))
-
-#     completed_process = subprocess.run(command, 
-#                                        timeout=10, 
-#                                        text=True, 
-#                                        capture_output=True,
-#                                        shell=True)
-    
-#     must_equal(1, completed_process.returncode)
 
 
 

@@ -9,10 +9,17 @@ from tini_test.misc.annotations import (IsolateWrappedObject,
                                         SharedWrappedObject, TestWrappedHolder,
                                         TestWrappedObject, WrapperInput)
 
-# Experimental.
 
 class Isolate:
-    
+    '''
+    The `@Isolate` decorator can be used to isolate the execution of test cases.
+
+    This ensures that the state of the function or test case is separated from the
+    global state, preventing side effects from affecting other parts of the code.
+
+    It is enabled by default when the test case includes the 
+    `@Mock` or `@Shared` decorators.
+    '''
     def __new__(cls, *args: tuple[Any], **kwargs: Any):
 
         if kwargs:

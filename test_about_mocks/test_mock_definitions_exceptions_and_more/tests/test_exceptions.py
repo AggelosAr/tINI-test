@@ -323,8 +323,6 @@ def %s() -> None:
 
 
 
-
-
 @Test.case
 def test_MockCallDefinitionErrorArgsAndKwargsConflict() -> None:
     test_name = 'test_MockCallDefinitionErrorArgsAndKwargsConflict'

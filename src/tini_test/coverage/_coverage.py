@@ -10,7 +10,7 @@ from typing import Optional
 
 from tini_test._internals._ast_utils import AstParser
 from tini_test.coverage.consts import (_TOGGLE_SCRIPT, METADATA_FILE, STORE,
-                                       STYLE_FILE)
+                                       STYLE_FILE, SVG_FILE)
 from tini_test.coverage.enums import HTMLNodeType, LineStatus
 from tini_test.coverage.html import HTMLHyperLink, HTMLNode, HTMLTemplate
 from tini_test.misc.annotations import (CodeLineNumber, CoverageStore,
@@ -96,6 +96,7 @@ class FileCoverage:
 
     @property
     def comment_lines(self) -> int:
+        # comment are lines 
         return self._statement_counts[LineStatus.COMMENT]
 
     @property
@@ -104,6 +105,7 @@ class FileCoverage:
 
     @property
     def empty_lines(self) -> int:
+        # empty are lines 
         return self._statement_counts[LineStatus.EMPTY]
 
     @property
@@ -167,8 +169,8 @@ class FileCoverage:
                     # Else/finally blocks are skipped @extract_line_to_statement
                     if stripped.startswith('else:') or stripped.startswith('finally:'):
                         # @Comments are allowed here
-                        self.lines[l_no] = Line(l_no, l_cont, LineStatus.EMPTY)
-                        self._statement_counts[LineStatus.EMPTY] += 1
+                        self.lines[l_no] = Line(l_no, l_cont, LineStatus.EXCLUDED)
+                        self._statement_counts[LineStatus.EXCLUDED] += 1
                     else:
                         self.lines[l_no] = Line(l_no, l_cont, LineStatus.DOCSTRING)
                         
@@ -653,12 +655,39 @@ class HTMLReport:
             f.write(content)
 
     @staticmethod
+    def add_svg(dest_dir: Path, score: float) -> None:
+        color = HTMLReport._score_color(score)
+        #  f'<path d="M 2 2 55 2 55 12 2 12 2 2" stroke="black" fill="none" />'
+        #  f'<path d="M 55 2 100 2 100 12 55 12 55 2" stroke="black" fill="none" />'
+        svg = (
+            f'<svg width="100" height="13" xmlns="http://www.w3.org/2000/svg">'
+            f'<rect x="2" y="2" width="53" height="12" rx="3" stroke="black" stroke-width="1" fill="#ADD8E6" />'
+            f'<rect x="55" y="2" width="43" height="12" rx="3" stroke="black" stroke-width="1" fill="#90EE90" />'
+            f'<text x="28.5" y="10.5" font-size="7" text-anchor="middle" '
+            f'fill="black">Coverage</text>'
+            f'<text x="76.5" y="10.5" font-size="7" text-anchor="middle" '
+            f'fill="black">{score:.1f}%</text>'
+            f'</svg>'
+        )
+
+        with open(os.path.join(dest_dir, SVG_FILE), 'w') as f:
+            f.write(svg)
+
+    @staticmethod
     def _score_class(score: float) -> str:
         if score >= 80:
             return 'score-good'
         if score >= 50:
             return 'score-ok'
         return 'score-bad'
+
+    @staticmethod
+    def _score_color(score: float) -> str:
+        if score >= 80:
+            return 'green'
+        if score >= 50:
+            return 'orange'
+        return 'red'
     
     @staticmethod
     def get_index_content(tracker: CoverageTracker) -> HTMLNode:
@@ -756,6 +785,7 @@ class HTMLReport:
             tmpl = HTMLTemplate(file_path=coverage_path, content=page.to_html())
             tmpl.write_to_file()
 
-        print('Coverage report generated at %s' % dest_dir)
+        HTMLReport.add_svg(dest_dir, tracker.total_score)
 
+        print('Coverage report generated at %s\n' % dest_dir)
         tracker.show_short_summary(long=True)

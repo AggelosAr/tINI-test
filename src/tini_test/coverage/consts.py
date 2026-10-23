@@ -2,6 +2,7 @@
 STORE             = 'CoverageReport'
 METADATA_FILE     = '.coverage'
 STYLE_FILE        = 'style.css'
+SVG_FILE          = '.coverage.svg'
 
 
 _TOGGLE_SCRIPT = '''

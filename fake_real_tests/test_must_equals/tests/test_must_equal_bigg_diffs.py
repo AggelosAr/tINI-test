@@ -2,13 +2,14 @@ import json
 import os
 
 from tini_test import Test, WillRaise, must_equal
+from tini_test._internals.consts import PROJECT_ROOT
 from tini_test.misc.exceptions import ExpectedWasDifferentFromActual
 
 
 @Test.case
 def test_big_json_no_diff() -> None:
     
-    root_path = '/home/papaggalos/workspace/python_projects/tINI-test/fake_real_tests/test_must_equals/tests'
+    root_path = os.path.join(PROJECT_ROOT, 'fake_real_tests/test_must_equals/tests')
     
     with open(os.path.join(root_path, 'json_expected.json')) as f:
         expected = json.load(f)
@@ -23,7 +24,7 @@ def test_big_json_no_diff() -> None:
 @Test.case
 def test_big_json_diff() -> None:
     
-    root_path = '/home/papaggalos/workspace/python_projects/tINI-test/fake_real_tests/test_must_equals/tests'
+    root_path = os.path.join(PROJECT_ROOT, 'fake_real_tests/test_must_equals/tests')
     
     with open(os.path.join(root_path, 'json_expected.json')) as f:
         expected = json.load(f)
