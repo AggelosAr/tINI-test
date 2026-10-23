@@ -305,12 +305,19 @@ class Printer:
 
             for idx, test_case in enumerate(collection.collector.values(), start=1):
                 
-                print("[ %s / %s ]\n\tTEST\t—›  %s\n\t\t——› %s\n\n\n%s" 
-                    % (idx, 
-                        collection.total_tests, 
-                        collection.module_name,
-                        test_case.test_name, 
-                        str(test_case), ))
+                print(
+                    '[ %d / %d ]         \n'  \
+                    '\tTEST\t—› %s       \n'  \
+                    '\t\t——› %s      \n\n\n'  \
+                    '%s                    '  \
+                        % 
+                        (
+                            idx, collection.total_tests,
+                            collection.module_name,
+                            test_case.test_name, 
+                            str(test_case), 
+                        )
+                    )
 
 
                 failed_tests += test_case.is_fail
@@ -377,8 +384,14 @@ class Printer:
             return errors
         
         print('\nFinished running tests for < %s >\n' % (collection.file_name, ))
-        print('Tests passed: [ %d / %d ]\n' 
-            % (collection.total_tests - errors, collection.total_tests, ))
+        print(
+            'Tests passed: [ %d / %d ]\n' 
+                % 
+                (
+                    collection.total_tests - errors, 
+                    collection.total_tests,
+                )
+            )
         
         if not failed_tests:
             print('...\n')
@@ -397,7 +410,16 @@ class Printer:
         idx = 0
         for test, traces in zip(failed_tests, stacktraces):
             idx += 1
-            print('\nTEST\t—›  %s\n\t——› %s\n' % (collection.module_name, test, ))
+            print(
+                '              \n' \
+                'TEST\t—›  %s  \n' \
+                '\t——› %s      \n' \
+                    % 
+                    (
+                        collection.module_name, 
+                        test, 
+                    )
+                )
 
             for trace in traces:
 

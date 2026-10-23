@@ -185,22 +185,23 @@ class TestSuite:
                 ' ------------------------------------------', # <
                     '\n',
                     '\n',
-                        'Test files failed to load (%d):\n\n%s'
+                        'Test files failed to load (%d):\n\n' \
+                        '%s'                                  \
                             % 
                             (
                                 len(__r := self.failed_to_collect_test_files_reasons),
                                 (
-                                    '\n\n'\
-                                    '%s\n'\
-                                    '%s\n\n' 
+                                    '\n\n'   \
+                                    '%s\n'   \
+                                    '%s\n\n' \
                                         % 
                                         (
                                             ''.join(repeat('~', 40)), 
                                             ''.join(repeat('~', 40)), 
                                         )
                                 ).join(
-                                    '\t\t(%d). File: %s\n\n'\
-                                    '\t\t\tReason: %s' 
+                                    '\t\t(%d). File: %s\n\n' \
+                                    '\t\t\tReason: %s'       \
                                         % 
                                         (
                                             idx, 
