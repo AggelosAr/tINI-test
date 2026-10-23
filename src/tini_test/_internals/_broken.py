@@ -80,9 +80,9 @@ def run_test(folder_name: Optional[str] = None,
 
         if _V2:
             coverage_command = (
-                                '--coverage '\
-                                '--coverage-target %s '\
-                                '--coverage-store %s/.coverage_%s' 
+                                '--coverage '                      \
+                                '--coverage-target %s '            \
+                                '--coverage-store %s/.coverage_%s' \
                                     % 
                                     (   
                                         TINI_TEST_COVERAGE_SOURCE,
@@ -93,10 +93,10 @@ def run_test(folder_name: Optional[str] = None,
 
         else:
             coverage_command = (
-                                'coverage run '\
-                                '--source=%s '\
-                                '--data-file=%s.coverage.run_%s '\
-                                '-m '
+                                'coverage run '                   \
+                                '--source=%s '                    \
+                                '--data-file=%s.coverage.run_%s ' \
+                                '-m '                             \
                                     % 
                                     (
                                         TINI_TEST_COVERAGE_SOURCE, 
