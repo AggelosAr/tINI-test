@@ -162,6 +162,7 @@ def coverage(trace: bool, storage: CoverageStore) -> Generator[None, None, None]
         yield
 
 
+
 class Mock:
 
     @staticmethod
