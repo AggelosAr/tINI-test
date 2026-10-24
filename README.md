@@ -1,6 +1,5 @@
 # tINI test
 ![Coverage](.coverage.svg)
-![Coverage](coverage.svg)
 
 A lightweight Python test framework (hand-crafted and almost full type safe) focused on simple test discovery and execution from the command line with **zero dependencies**. 
 
