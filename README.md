@@ -1,28 +1,29 @@
 # tINI test
+![Coverage](.coverage.svg)
 ![Coverage](coverage.svg)
 
 A lightweight Python test framework (hand-crafted and almost full type safe) focused on simple test discovery and execution from the command line with **zero dependencies**. 
 
 The main utilities provided by the suite are:
 
-- Defining test cases with via _@Test.case_ decorators (optional setup/cleanup)
+- Defining test cases with via _@Test.case_ decorators (optional setup/cleanup).
 
-- Adding mocks via _@Mock.mock_ decorators (mock functions/classes)
+- Adding mocks via _@Mock.mock_ decorators (mock functions/classes) or with the _Mock.mocking_ context manager.
 
 - Adding shared/context vars via _@Shared_ decorators
     - Variables defined will be usable in any part of the code reachable from the test.
 
-- Isolating a test via the _@Isolate_ decorators (*experimental*)
+- Isolating a test via the _@Isolate_ decorators.
 
 - Validating exceptions via the _WillRaise_ context manager.
 
 - Asserting equality via the *must_equal* helper function.
 
-- Running coverage
+- Running coverage.
 
 *These utilities can be combined in any way.*
 
-The framework was developed and tested using its' own test suite. It was also stress tested and profiled on around 10K tests to test db connections on a temp sqlite3 and management of globals. Currently the base tests that run to power the suite are ~5k (x2) (to cover almost all possible combinations) with ~400-600 unique cases. It also allows pretty prints inside the tests while running and the print verbocity modes should provide plenty of options.
+The framework was developed and tested using its' own test suite. It was also stress tested and profiled on around 10K tests to test db connections on a temp sqlite3 and management of globals. Currently the base tests that run to power the suite are ~5k (x2) (to cover almost all possible combinations) with ~500-700 unique cases. It also allows pretty prints inside the tests while running and the print verbocity modes should provide plenty of options.
 
 ## Installation
 
@@ -38,7 +39,9 @@ python3 -m tini_test [-r RUN MODE] [-v VERBOSITY] [-d DIRECTORY] [-f FILE] [-t T
 
 ### For coverage
 
-Run the suite normally with the extra argments. A short summary for the coverage will also be generated on the terminal.
+Run the suite normally with the extra argments. 
+
+> A short summary for the coverage will also be generated on the terminal.
 
 ```bash
 python3 -m tini_test [--coverage] [--coverage-target] [--coverage-store]
@@ -50,8 +53,9 @@ Or merge multiple coverage reports into one.
 python3 -m tini_test [--coverage-merge]
 ```
 
-In order to generate the HTML report run this command and point it to the generate coverage file.
+In order to generate the HTML report, run this command and point it to the generated coverage file.
 
+This will also generate a coverage badge at the same directory with the HTML report.
 ```bash
 python3 -m tini_test [--coverage-generate-report] [--coverage-target] [--coverage-store]
 ```
@@ -188,7 +192,7 @@ def f1(x, a, b):
 
 @Mock.mock(f1, args=(1,), kwargs={'a': 8, 'b': 5})
 @Test.case
-def test_multiple_mocks_with_args():
+def test_mocks():
     must_equal(1 + 8 + 5, f1('?', a='?', b='?'))
                
 ```
@@ -198,7 +202,7 @@ The mocked function can also be supplied by keyword:
 ```python
 @Mock.mock(mock=f1, args=(1,), kwargs={'a': 8, 'b': 5})
 @Test.case
-def test_mock_function_by_keyword():
+def test_mocks():
     must_equal(1 + 8 + 5, f1('?', a='?', b='?'))
 ```
 
@@ -215,7 +219,7 @@ def func_g():
 
 @Mock.mock(func_g, returns=c_r)
 @Test.case()
-def test_mock_callable_in_returns():
+def test_mocks():
     print('Functions! WuW')
     must_equal(c_r, func_g())
     result = func_g()()
@@ -236,7 +240,7 @@ class MyClass:
 
 @Test.case
 @Mock.mock(MyClass, args=(1, 2))
-def test_mocking_my_class():
+def test_mocks():
     instance = MyClass(10, 20)
     must_equal(1 + 2, instance.add())
 
@@ -253,6 +257,44 @@ def test_mocking_my_class():
 > For mocking classes only the __init__ method is manipulated. So if custom logic exists in __new__ you may need a custom mock.
 
 > For now only mocking of initialization of a class is supported.
+
+### Mocks can be used as context managers as well
+
+```python
+@Isolate
+@Test.case
+@Shared(var.a, var.b, var.c, var.d)
+@Mock.mock(MyClass, args=('xyz', 'xyz'))
+def test_mocking_as_context_manager_with_shared_integration():
+
+    var.a, var.b = 1, 2
+    
+    with Mock.mocking(MyClass, args=(var.a, var.b)):
+        '''
+        .
+        .
+        <More mocking stacks>
+        .
+        .
+        '''
+        instance = MyClass('?', '?')
+        must_equal(1, instance.x)
+        must_equal(2, instance.y)
+    '''
+    ... <Maybe data manipulation on nested objects>
+    '''
+
+    instance = MyClass('?', '?')
+    must_equal('xyz', instance.x)
+    must_equal('xyz', instance.y)
+```
+
+#### NOTES:
+
+> The mocks can be stacked in arbitrary orders. _The closer it is, the mock, to the code block, his priority should be_.
+
+> The context manager version of _Mock_ does not make any guarantees about test pollution.
+> - *To mitigate this use the* _@Isolate_ *decorator*.
 
 
 ### Mocks can be combined with shared
@@ -325,8 +367,9 @@ def test_side_effects():
 
 @Shared(var.root)
 @Test.case(_make_dir, lambda: shutil.rmtree(var.root))
-def test_MergeDoesNotModifyOriginalsOrOverwriteMerged() -> None:
+def test_smth() -> None:
     root = var.root
+    ...
 
 ```
 
