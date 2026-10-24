@@ -159,6 +159,10 @@ I_ConstRegId = NewType('I_ConstRegId', str)
 C_ConstRegId = NewType('C_ConstRegId', str)
 
 
+R_M_ConstRegId = NewType('R_M_ConstRegId', str)
+type ResolvedMockDependencies[_MockDefinition] = dict[TestFunctionName, list[_MockDefinition]]
+
+
 class GlobalRegistry(dict[str, Any]):
 
     @overload
@@ -171,6 +175,10 @@ class GlobalRegistry(dict[str, Any]):
     def __getitem__(self, key: I_ConstRegId) -> I_Reg | None: ...
     @overload
     def __getitem__(self, key: C_ConstRegId) -> C_Reg | None: ...
+
+    @overload
+    def __getitem__(self, key: R_M_ConstRegId) -> ResolvedMockDependencies | None: ...
+
     @overload
     def __getitem__(self, key: str) -> Any: ...
     def __getitem__(self, key: str) -> Any: # pragma: no cover
@@ -186,6 +194,10 @@ class GlobalRegistry(dict[str, Any]):
     def get(self, key: I_ConstRegId, default: None = None, /) -> I_Reg | None: ...
     @overload
     def get(self, key: C_ConstRegId, default: None = None, /) -> C_Reg | None: ...
+
+    @overload
+    def get(self, key: R_M_ConstRegId, default: None = None, /) -> ResolvedMockDependencies | None: ...
+
     @overload
     def get(self, key: str, default: Any = None, /) -> Any: ...
     def get(self, key: str, default: Any = None, /) -> Any: # pragma: no cover
@@ -201,6 +213,10 @@ class GlobalRegistry(dict[str, Any]):
     def __setitem__(self, key: I_ConstRegId, value: I_Reg) -> None: ...
     @overload
     def __setitem__(self, key: C_ConstRegId, value: C_Reg) -> None: ...
+
+    @overload
+    def __setitem__(self, key: R_M_ConstRegId, value: ResolvedMockDependencies) -> None: ...
+
     @overload
     def __setitem__(self, key: str, value: Any) -> None: ...
     def __setitem__(self, key: str, value: Any) -> None: # pragma: no cover
@@ -217,12 +233,12 @@ _ReverseWrapConnections: TypeAlias = dict[RegisteredIds, set[RegisteredIds]]
 
 # -------------- MOCK SPECIFICS --------------
 MockedFunction: TypeAlias = Callable[..., Any]
-MockedClass: TypeAlias = type[Any] # is this correct? XXX
+MockedClass: TypeAlias = type[Any]
 
 
 class ProxyItem(NamedTuple):
-    proxy: Callable[..., None]
-    name: str
+    proxy : Callable[..., None]
+    name  : str
 # -------------- MOCK SPECIFICS --------------
 
 

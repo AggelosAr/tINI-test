@@ -156,7 +156,6 @@ def shared_raises_on_not_defined_variable_case_main_case_with_name() -> None:
 
     with WillRaise(SharedVarDoesNotExistInThisContext) as context:
         x = lambda: var.var_y
-        # XXX ? @ usage_of_non_declared_shared_variable_raises_main
         x()
                 
     must_equal(err, str(context.exception))

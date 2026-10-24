@@ -1,5 +1,6 @@
 from tini_test._internals.consts import _PROFILING
 from tini_test.coverage._coverage import CoverageTracker
+from tini_test.enums import TiniTestMode
 
 from ._internals._profiler import profiler
 from .arg_parser import (CoreArgsDict, CoverageGenerateReportArgsDict,
@@ -7,32 +8,35 @@ from .arg_parser import (CoreArgsDict, CoverageGenerateReportArgsDict,
 from .initializer import initialize_test_suite
 from .misc.exceptions import CantFindRelativePathToRoot
 
-# TODO remove the checks for mode from here.
 
 @profiler(_PROFILING)
-def _tini_test(kwargs: CoreArgsDict | CoverageMergeArgsDict | CoverageGenerateReportArgsDict):
+def _tini_test(kwargs: CoreArgsDict 
+                        | CoverageMergeArgsDict 
+                        | CoverageGenerateReportArgsDict,
+               mode: TiniTestMode):
 
-    if 'merge_directory' in kwargs:
-        CoverageTracker.merge(**kwargs)
+    match mode:
 
-    elif 'store' in kwargs:
-        CoverageTracker.init_from_store(**kwargs).to_html()
-    
-    else:
-        try:
-            test_suite = initialize_test_suite(**kwargs)
-            
-        except CantFindRelativePathToRoot:
-            raise
+        case TiniTestMode.MERGE:
+            CoverageTracker.merge(**kwargs)
 
-        else:
-            test_suite.runner()
-            test_suite.pprint()
+        case TiniTestMode.HTML_REPORT:
+            CoverageTracker.init_from_store(**kwargs).to_html()
+
+        case TiniTestMode.RUN:
+            try:
+                test_suite = initialize_test_suite(**kwargs)
+                
+            except CantFindRelativePathToRoot:
+                raise
+
+            else:
+                test_suite.runner()
+                test_suite.pprint()
 
 
-        test_suite.get_coverage()
+            test_suite.get_coverage()
 
 
 if __name__=='__main__':
-    
-    _tini_test(receive_args())
+    _tini_test(*receive_args())

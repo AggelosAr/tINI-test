@@ -146,6 +146,10 @@ def test_ints_dont_match() -> None:
         must_equal(a, b)
 
     must_equal('10 != 20', str(context.exception))
+    # Or to get the traceback
+    # import traceback as tb
+    # traceback = context.exc_traceback
+    # print(''.join(tb.format_tb(traceback)))
 
 ```
 
@@ -313,6 +317,16 @@ def test_side_effects():
     must_equal(NotInitialized, var.int)
     side_effect_function(456)
     must_equal(456, var.int)
+
+```
+
+
+```python
+
+@Shared(var.root)
+@Test.case(_make_dir, lambda: shutil.rmtree(var.root))
+def test_MergeDoesNotModifyOriginalsOrOverwriteMerged() -> None:
+    root = var.root
 
 ```
 

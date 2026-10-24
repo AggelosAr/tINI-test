@@ -13,13 +13,17 @@ from tini_test.coverage.consts import (_TOGGLE_SCRIPT, METADATA_FILE, STORE,
                                        STYLE_FILE, SVG_FILE)
 from tini_test.coverage.enums import HTMLNodeType, LineStatus
 from tini_test.coverage.html import HTMLHyperLink, HTMLNode, HTMLTemplate
+from tini_test.enums import Color, ScoreClass
 from tini_test.misc.annotations import (CodeLineNumber, CoverageStore,
                                         DirectoryPath, FileName, LineContent,
                                         StatementId)
+from tini_test.misc.exceptions import (CoverageDeserializationError,
+                                       CoverageDeserializationFileContentError,
+                                       CoverageDeserializationFileNameError,
+                                       CoverageRequestedForInvalidFile)
 
 # TODO
 # Add someting for exclude?
-# Maybe add custom exceptions?
 # Fall back behavior for to_html of report?
 # Top levels are gathered manually @core
 # Use target @tracer?
@@ -299,25 +303,32 @@ class CoverageTracker:
             json.dump({file: list(lines) for file, lines in _store.items()}, f)
 
         if skips > 0:
-            print('Skipped <%d> coverage files due to errors.' % skips)
+            print('[*] Skipped <%d> coverage files due to errors.\n' % skips)
 
-        print('Merged <%d> coverage metadata saved to `%s`' % (merged_count, merged_file_path))
+        print('Merged <%d> files starting with `%s`' % (merged_count, METADATA_FILE, ))
+        print('Merged coverage metadata saved to `%s`\n' % (merged_file_path, ))
 
     @staticmethod
     def deserialize(store: DirectoryPath | FileName | None) -> CoverageStore:
-        # If not path is specified. Attempt to search the current directory for the coverage metadata file.
-        # If we find more then one coverage metadata file, we should raise an exception to avoid ambiguity.
+        '''
+        Deserialize the coverage metadata from the specified store path.
+
+        If no store path is provided, the current directory is 
+        searched for a coverage metadata file.
+
+        Raises an exception if multiple coverage metadata files are 
+        found or if the file content is invalid.
+
+        Returns a CoverageStore containing the coverage data.
+        '''
         if not store:
             store_path = Path.cwd()
 
             coverage_files = list(store_path.glob('%s*' % METADATA_FILE))
             coverage_files = [f for f in coverage_files if f.is_file()]
-
-            if not coverage_files:
-                raise FileNotFoundError('No coverage metadata file found in the current directory.')
             
-            if len(coverage_files) > 1:
-                raise ValueError('Multiple coverage metadata files found in the current directory. Please specify one explicitly.')
+            if len(coverage_files) != 1:
+                raise CoverageDeserializationError(len(coverage_files))
             
             store_path = coverage_files[0]
 
@@ -326,13 +337,16 @@ class CoverageTracker:
 
         # Validate the requested file name follows the convention.
         if not store_path.name.startswith(METADATA_FILE):
-            raise ValueError('The metadata file must start with "%s"' % METADATA_FILE)
+            raise CoverageDeserializationFileNameError(store_path)
         
         coverage_store = {}
-        with open(store_path, 'r') as f:
-            data = json.load(f)
-            coverage_store = {file: set(lines) for file, lines in data.items()}
-
+        try:
+            with open(store_path, 'r') as f:
+                data = json.load(f)
+                coverage_store = {file: set(lines) for file, lines in data.items()}
+        except Exception as e:
+            raise CoverageDeserializationFileContentError(store_path) from e
+        
         return coverage_store
     
     @staticmethod
@@ -355,8 +369,8 @@ class CoverageTracker:
             # Validate the path follows the convention.
             # It should start with <.coverage...>
             if not save_path.name.startswith(METADATA_FILE):
-                raise ValueError('The metadata file must start with "%s"' % METADATA_FILE)
-
+                raise CoverageDeserializationFileNameError(save_path)
+              
             # If it exists, we will overwrite it.
             if save_path.exists(follow_symlinks=False):
                 ...
@@ -378,9 +392,8 @@ class CoverageTracker:
         if search_path.is_file():
             # Also validate the file exists and is a Python file
             if not search_path.exists(follow_symlinks=False) or not search_path.suffix == '.py':
-                print('Rejected: file not found or not a Python file.')
-                # TODO add exception here?
-                return
+                raise CoverageRequestedForInvalidFile(search_path)
+
             
             store = self._store.get(str(search_path), set())
             self.files[str(search_path)] = FileCoverage(search_path, store)
@@ -420,6 +433,22 @@ class CoverageTracker:
         
         return '%-*s' % (width, str(s))
 
+    @staticmethod
+    def _terminal_score_color(score: float) -> str:
+        # Black background with colored score text
+        match ScoreClass.get_score_category(score):
+
+            case ScoreClass.EXCELLENT:
+                color = Color.DARK_GREEN.value
+
+            case ScoreClass.AVERAGE:
+                color = Color.DARK_ORANGE.value
+
+            case ScoreClass.POOR:
+                color = Color.DARK_RED.value
+
+        return '\033[48;2;0;0;0m%s%*.1f%% \033[0m' % (color, 7, score)
+
     def show_short_summary(self, long: Optional[bool] = False) -> None:
 
         self.collect_files_from_source()
@@ -450,7 +479,7 @@ class CoverageTracker:
                         self.pad(self.covered, _max), 
                         self.pad(self.missing, _max), 
                         self.pad(self.excluded, _max), 
-                        self.pad(self.total_score, _max)
+                        self.pad(self._terminal_score_color(self.total_score), _max)
                     ])
                 )
         )
@@ -488,7 +517,7 @@ class CoverageTracker:
                     self.pad(coverage.covered_statements, _max), 
                     self.pad(coverage.missing_statements, _max), 
                     self.pad(coverage.excluded_statements, _max), 
-                    self.pad(coverage.score, _max)
+                    self.pad(self._terminal_score_color(coverage.score), _max)
                 ])
             )
         
@@ -560,7 +589,7 @@ class HTMLFileCoverage:
             HTMLNodeType.DIV, {'class': 'cov-score'},
                 'Coverage Score: ',
 
-            children=HTMLNode(HTMLNodeType.SPAN, {'class': HTMLReport._score_class(coverage.score)}, 
+            children=HTMLNode(HTMLNodeType.SPAN, {'class': HTMLReport._css_score_class(coverage.score)}, 
                                 '%.1f%%' % coverage.score)
         )
 
@@ -656,38 +685,49 @@ class HTMLReport:
 
     @staticmethod
     def add_svg(dest_dir: Path, score: float) -> None:
-        color = HTMLReport._score_color(score)
-        #  f'<path d="M 2 2 55 2 55 12 2 12 2 2" stroke="black" fill="none" />'
-        #  f'<path d="M 55 2 100 2 100 12 55 12 55 2" stroke="black" fill="none" />'
-        svg = (
-            f'<svg width="100" height="13" xmlns="http://www.w3.org/2000/svg">'
-            f'<rect x="2" y="2" width="53" height="12" rx="3" stroke="black" stroke-width="1" fill="#ADD8E6" />'
-            f'<rect x="55" y="2" width="43" height="12" rx="3" stroke="black" stroke-width="1" fill="#90EE90" />'
-            f'<text x="28.5" y="10.5" font-size="7" text-anchor="middle" '
-            f'fill="black">Coverage</text>'
-            f'<text x="76.5" y="10.5" font-size="7" text-anchor="middle" '
-            f'fill="black">{score:.1f}%</text>'
-            f'</svg>'
-        )
+        color = HTMLReport._svg_score_gradient(score)
+        with open(os.path.join(os.path.dirname(__file__), SVG_FILE), 'r') as f:
+            svg = f.read()
+
+        svg = svg.replace('url(#greenGradient)', 'url(#%s)' % color)
+
+        _score = '%0.1f' % score
+
+        if _score.endswith('.0'):
+            svg = svg.replace('-1%', '%s%%' % _score.replace('.0', ''))
+        else:
+            svg = svg.replace('-1%', '%0.1f%%' % score)
 
         with open(os.path.join(dest_dir, SVG_FILE), 'w') as f:
             f.write(svg)
 
     @staticmethod
-    def _score_class(score: float) -> str:
-        if score >= 80:
-            return 'score-good'
-        if score >= 50:
-            return 'score-ok'
-        return 'score-bad'
+    def _css_score_class(score: float) -> str:
+        match ScoreClass.get_score_category(score):
+
+            case ScoreClass.EXCELLENT:
+                return 'score-good'
+            
+            case ScoreClass.AVERAGE:
+                return 'score-ok'
+            
+            case ScoreClass.POOR:
+                return 'score-bad'
+
 
     @staticmethod
-    def _score_color(score: float) -> str:
-        if score >= 80:
-            return 'green'
-        if score >= 50:
-            return 'orange'
-        return 'red'
+    def _svg_score_gradient(score: float) -> str:
+        match ScoreClass.get_score_category(score):
+
+            case ScoreClass.EXCELLENT:
+                return 'greenGradient'
+            
+            case ScoreClass.AVERAGE:
+
+                return 'orangeGradient'
+            case ScoreClass.POOR:
+
+                return 'redGradient'
     
     @staticmethod
     def get_index_content(tracker: CoverageTracker) -> HTMLNode:
@@ -702,7 +742,7 @@ class HTMLReport:
             HTMLNode(HTMLNodeType.DIV, {'class': 'cov-total'}, 
                      '%d files' % len(tracker.files)),
 
-            HTMLNode(HTMLNodeType.DIV, {'class': 'cov-score %s' % HTMLReport._score_class(tracker.total_score)},
+            HTMLNode(HTMLNodeType.DIV, {'class': 'cov-score %s' % HTMLReport._css_score_class(tracker.total_score)},
                      'Total coverage %.1f%%' % tracker.total_score),
 
             HTMLNode(HTMLNodeType.DIV, {'class': 'cov-created'}, 
@@ -732,7 +772,7 @@ class HTMLReport:
                 HTMLNode(HTMLNodeType.TD, {'class': 'index-num'}, str(coverage.excluded_statements)),
             ])
             _score = HTMLNode(HTMLNodeType.TD)
-            _score.add_class({'class': 'index-num %s' % HTMLReport._score_class(coverage.score)})
+            _score.add_class({'class': 'index-num %s' % HTMLReport._css_score_class(coverage.score)})
             _score.content = '%.1f%%' % coverage.score
 
             row.add_children(_score)
@@ -747,7 +787,7 @@ class HTMLReport:
             HTMLNode(HTMLNodeType.TD, {'class': 'index-num'}, str(tracker.excluded)),
         ])
         _total_score = HTMLNode(HTMLNodeType.TD)
-        _total_score.add_class({'class': 'index-num %s' % HTMLReport._score_class(tracker.total_score)})
+        _total_score.add_class({'class': 'index-num %s' % HTMLReport._css_score_class(tracker.total_score)})
         _total_score.content = '%.1f%%' % tracker.total_score
 
         total_row.add_children(_total_score)

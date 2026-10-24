@@ -106,19 +106,22 @@ Use --coverage-target and --coverage-store to further configure the behavior of 
 
 
 class Color(Enum):
-
     RED = '\033[91m'     
-    #RED = "\x1b[103m"
+    DARK_RED = '\033[31m'
 
     GREEN = '\033[92m'
+    DARK_GREEN = '\033[32m'
+
     YELLOW = '\033[93m'
     BLUE = '\033[94m'
     MAGENTA = '\033[95m'
     WHITE = '\033[97m'
 
+    ORANGE = '\033[38;5;208m'
+    DARK_ORANGE = '\033[38;5;166m'
+
 
 class TestStatus(Enum):
-
     NO_OP = 'NO_OP'
 
     SUCCESS = 'SUCCESS'
@@ -166,6 +169,28 @@ class Plugs(Enum):
 class MockType(Enum):
     FUNCTION = 'FUNCTION'
     CLASS = 'CLASS'
+
+
+class ScoreClass(Enum):
+    EXCELLENT = 'EXCELLENT'
+    AVERAGE = 'AVERAGE'
+    POOR = 'POOR'
+
+    @classmethod
+    def get_score_category(cls, score: float) -> 'ScoreClass':
+        if score >= 80:
+            return ScoreClass.EXCELLENT
+        
+        if score >= 50:
+            return ScoreClass.AVERAGE
+        
+        return ScoreClass.POOR
+
+
+class TiniTestMode(Enum):
+    MERGE = 'MERGE'
+    HTML_REPORT = 'HTML_REPORT'
+    RUN = 'RUN'
 
 
 CONFIG: Mapping[TestStatus, ColorValue] = {

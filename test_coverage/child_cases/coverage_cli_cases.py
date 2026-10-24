@@ -10,6 +10,10 @@ from tini_test.__main__ import _tini_test
 from tini_test.arg_parser import receive_args
 from tini_test.coverage._coverage import CoverageTracker
 from tini_test.coverage.consts import METADATA_FILE, STORE
+from tini_test.enums import TiniTestMode
+from tini_test.misc.exceptions import (CoverageDeserializationError,
+                                       CoverageDeserializationFileContentError,
+                                       CoverageDeserializationFileNameError)
 
 # This file is not a test file by itself. test_coverage_cli.py copies it into a
 # generated test dir and runs tini_test on it in a subprocess, with coverage enabled.
@@ -41,8 +45,9 @@ def _cli(args: list[str], cwd: str | None = None) -> dict:
         sys.argv = ['tini_test', *args]
 
         kwargs = receive_args()
-        _tini_test(kwargs)
-        return dict(kwargs)
+
+        _tini_test(*kwargs)
+        return dict(kwargs[0])
     finally:
         sys.argv = old_argv
         os.chdir(old_cwd)
@@ -377,9 +382,11 @@ def test_GenerateReportCountsMultiLineStatementOnce() -> None:
 def test_GenerateReportNonExistingStore() -> None:
     root = var.root
 
-    with WillRaise(FileNotFoundError):
+    with WillRaise(CoverageDeserializationFileContentError) as context:
         _cli(['--coverage-generate-report',
               '--coverage-store', '%s_missing' % METADATA_FILE], cwd=root)
+
+    must_equal(True, 'has invalid content' in str(context.exception))
 
 
 @Shared(var.root)
@@ -387,9 +394,13 @@ def test_GenerateReportNonExistingStore() -> None:
 def test_GenerateReportStoreMustFollowNamingConvention() -> None:
     root = var.root
 
-    with WillRaise(ValueError):
+    with WillRaise(CoverageDeserializationFileNameError) as context:
         _cli(['--coverage-generate-report',
               '--coverage-store', os.path.join(root, 'src/pkg_a.py')], cwd=root)
+        
+    msg = 'The metadata file <...> must start with ".coverage"'
+    must_equal(True, 'The metadata file' in str(context.exception))
+    must_equal(True, 'must start with ".coverage"' in str(context.exception))
 
 
 @Shared(var.root)
@@ -399,8 +410,10 @@ def test_GenerateReportNoStoreInCurrentDirectory() -> None:
     empty = os.path.join(root, 'empty')
     os.makedirs(empty)
 
-    with WillRaise(FileNotFoundError):
+    with WillRaise(CoverageDeserializationError) as context:
         _cli(['--coverage-generate-report'], cwd=empty)
+
+    must_equal(True, 'No coverage metadata file found in the current directory.' in str(context.exception))
 
 
 # Smoke tests: the real entry point, as a user would run it.

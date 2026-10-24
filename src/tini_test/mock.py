@@ -2,12 +2,11 @@ import inspect
 import secrets
 import textwrap
 from collections import deque
-from contextlib import contextmanager
 from functools import partial
-from typing import Any, Callable, Generator, Optional, no_type_check
+from typing import Any, Callable, Optional, no_type_check
 
 from tini_test._internals._registry import attach_state
-from tini_test._internals.consts import _M_REG
+from tini_test._internals.consts import _R_M_REG, SALT
 from tini_test.enums import MockType, Plugs
 from tini_test.misc.annotations import (CellName, IsolateWrappedObject,
                                         MockDefinitionWrappedHolder,
@@ -23,19 +22,8 @@ from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
                                        MockMissingFunctionOrClass)
 from tini_test.shared import SharedVar, var
 
-# TODO @mocking move  @context_managers
-# @generate_anchor_name make the name better
-# Docstrings @Mock
-
-# XXX @_get_previous_mocks remove the registers at runtime 
-#   @test and replace them with the resolved dependencies?
-#   kinda no need since this is ready... maybe move this @wrap_utils
-# ---
-# @iter_vars this should cover all cases????????
-#   This fails in some cases. Like user has registered a class as iter? etc. etc. 
-
-
 _container_types = (list, dict, set)
+
 
 class MockNone:
     __slots__ = ()
@@ -43,7 +31,7 @@ class MockNone:
 
 class CreateMock:
 
-    def __init__(self, mock: MockedFunction | MockedClass) -> None:
+    def __init__(self, mock: MockedFunction | MockedClass, prefix: str = '') -> None:
         self.mock = mock
 
         self._proxy_pool: set[str] = set()
@@ -54,8 +42,12 @@ class CreateMock:
         # Used to keep track of the anchor name for this mock in the global namespace
         # Changes after each mock are registered in the global namespace
         # Gets erased when the mock is unregistered from the global namespace
-        # Follows the format '_proxy_<mock_name>_<unique_identifier:7>'
+        # Follows the format '_proxy_<mock_name>_<unique_identifier:SALT>'
         self._anchor: str = ''
+
+        # Used in combination with the anchor to provide better 
+        # identification of the mock in the global namespace
+        self._prefix: str = prefix
 
     @staticmethod
     def get_var(from_var: bool, _var: SharedVar) -> Any:
@@ -65,7 +57,9 @@ class CreateMock:
     def iter_vars(item: Any, 
                   found: dict[CellName, list[SharedVar]],
                   replacer: Callable[[SharedVar], Any]) -> Any:
-        
+        # XXX 
+        # this should cover all cases????????
+        #   This fails in some cases? Like user has registered a class as iter? etc. etc. 
         if isinstance(item, list):
             new_list = []
             for idx, el in enumerate(item):
@@ -116,36 +110,21 @@ class CreateMock:
         replacer = partial(CreateMock.get_var, True)
         return CreateMock.iter_vars(item, found={}, replacer=replacer)
 
-    @classmethod
-    @no_type_check
-    def _get_previous_mocks(cls, mock: 'MockDefinition') -> list['MockDefinition']:
-        # Find all mocks that have a similar signature in the current namespace
-        definitions = []
-
-        for wrap in mock.__globals__.get(_M_REG).values():
-            _, *_definition = wrap()
-
-            if _definition:
-                definition, *_ = _definition
-
-                if definition.mock == mock.mock:
-                    definitions.append(definition)
-        
-        return definitions
-
     def generate_anchor_name(self) -> str:
         name = self.mock.__name__
+        if self._prefix:
+            name = '%s_%s' % (self._prefix, name, )
         return name
 
     def get_proxy_name(self, use_anchor: bool) -> str:
         name = self.generate_anchor_name() if use_anchor else ''
-        return '_proxy_%s_%s' % (name, secrets.token_hex(7), )
+        return '_proxy_%s_%s' % (name, secrets.token_hex(SALT), )
     
-    def _proxy_generator(self, use_anchor: Optional[bool] = False) -> ProxyItem:
+    def _proxy_generator(self, use_anchor: Optional[bool] = None) -> ProxyItem:
         
         def _proxy(*args, **kwargs): ...
 
-        _proxy.__name__ = self.get_proxy_name(use_anchor)
+        _proxy.__name__ = self.get_proxy_name(use_anchor if use_anchor is not None else False)
 
         return ProxyItem(_proxy, _proxy.__name__)
 
@@ -165,6 +144,7 @@ class MockCall(CreateMock):
 
     def __init__(self,
                  mock: MockedFunction | MockedClass,
+                 prefix: str = '',
                  args: Optional[tuple] = None, 
                  kwargs: Optional[dict] = None) -> None:
         self.mock = mock
@@ -172,7 +152,7 @@ class MockCall(CreateMock):
         self.args = args or ()
         self.kwargs = kwargs or {}
         
-        super().__init__(mock)
+        super().__init__(mock, prefix)
 
     @property
     def _vars(self) -> dict[CellName, list[SharedVar]]:
@@ -202,14 +182,14 @@ class MockCall(CreateMock):
             raise MockCallDefinitionError('Keyword arguments should be of type dict.')
 
     def _patch(self) -> None:
-        _, _proxy_name = self._proxy_generator()
+        _, _view_name = self._proxy_generator(use_anchor=True)
         
         anchor, self._anchor = self._proxy_generator(use_anchor=True)
 
         _, _proxy_locals__args_name = self._proxy_generator()
         _, _proxy_locals__kwargs_name = self._proxy_generator()
 
-        self._proxy_pool.add(_proxy_name)
+        self._proxy_pool.add(_view_name)
         self._proxy_pool.add(self._anchor)
         self._proxy_pool.add(_proxy_locals__args_name)
         self._proxy_pool.add(_proxy_locals__kwargs_name)
@@ -229,14 +209,14 @@ class MockCall(CreateMock):
         anchor.__globals__.update(self.mock.__globals__)
         
         new_spec = (
-            'def _%s(*args, **kwargs):                                        \n'   \
+            'def %s(*args, **kwargs):                                         \n'   \
             '    _args, kwargs = globals()["%s"](), globals()["%s"]()         \n'   \
             '    bound = globals()["%s"].__signature__.bind(*_args, **kwargs) \n'   \
             '    bound.apply_defaults()                                       \n'   \
             '    return %s(*bound.args, **bound.kwargs)                       \n'   \
             % 
                 (
-                    _proxy_name,
+                    _view_name,
                     _proxy_locals__args_name, _proxy_locals__kwargs_name,
                     self._anchor,
                     self._anchor, 
@@ -261,19 +241,19 @@ class MockReturn(CreateMock):
         return CreateMock.find_shared(self.return_value)
     
     def _patch(self) -> None:
-        _, _proxy_name = self._proxy_generator()
+        _, _view_name = self._proxy_generator(use_anchor=True)
         _, self._anchor = self._proxy_generator(use_anchor=True)
         
-        self._proxy_pool.add(_proxy_name)
+        self._proxy_pool.add(_view_name)
         self._proxy_pool.add(self._anchor)
 
         _ = lambda: CreateMock.replace_shared(self.return_value)
         self.mock.__globals__[self._anchor] = _
 
-        new_spec = ('def _%s(*args, **kwargs): return globals()["%s"]()'
+        new_spec = ('def %s(*args, **kwargs): return globals()["%s"]()'
                     % 
                         (
-                            _proxy_name, self._anchor, 
+                            _view_name, self._anchor, 
                         )
                     )
         self._compile_mock(new_spec)
@@ -287,6 +267,16 @@ class MockDefinition:
                  body: MockCall | MockReturn) -> None:
         self.mock = mock
         self.body = body
+
+        self._test_name = ''
+
+    @property
+    def test_name(self) -> TestFunctionName:
+        return self._test_name
+
+    @test_name.setter
+    def test_name(self, value: TestFunctionName) -> None:
+        self._test_name = value
 
     @property
     def __globals__(self) -> dict[str, Any]:
@@ -342,6 +332,7 @@ class MockDefinition:
 
             MockCall.validate_call(args, kwargs)
 
+            prefix = ''
             match mock_type:
 
                 case MockType.FUNCTION:
@@ -349,9 +340,11 @@ class MockDefinition:
 
                 case MockType.CLASS:
                     args = (mock, *args, )
+                    prefix = mock.__name__
                     mock = mock.__init__
+                    print('PREFIX:', prefix)
 
-            return MockCall(mock, args=args, kwargs=kwargs)
+            return MockCall(mock, prefix, args=args, kwargs=kwargs)
 
         if _returns_exist:
     
@@ -374,6 +367,25 @@ class MockDefinition:
             if mocked_function_name in unique_mocks:
                 raise DuplicateMockRegisteredOnTest(mock_name=mocked_function_name, test_name=test_name)
             unique_mocks.add(mocked_function_name)
+
+    @classmethod
+    @no_type_check
+    def _get_previous_mocks(cls, mock: 'MockDefinition') -> list['MockDefinition']:
+        # Find all mocks that have a similar signature in the current namespace
+        all_test_mocks = mock.__globals__.get(_R_M_REG, {}).get(mock.test_name, [])
+        return list(filter(lambda m: m.mock == mock.mock, all_test_mocks)) # <
+
+    @classmethod
+    @no_type_check
+    def register(self, mock: 'MockDefinition') -> None:
+        mock.__globals__.setdefault(_R_M_REG, {}).setdefault(mock.test_name, []).append(mock)
+
+    @classmethod
+    @no_type_check
+    def unregister(cls, mock: 'MockDefinition') -> None:
+        mocks = mock.__globals__.get(_R_M_REG).get(mock.test_name)
+        new_mocks = list(filter(lambda m: hex(id(m)) != hex(id(mock)), mocks))
+        mock.__globals__[_R_M_REG][mock.test_name] = new_mocks
     
     def patch(self) -> None:
         self.body._patch()
@@ -406,16 +418,6 @@ class Mock:
         not interfere with the original.
         '''
         return _XMock.mock(*args, **kwargs)
-
-    @classmethod
-    def mocking(cls, *args, **kwargs):
-        '''
-        No guarantee is made that the mocked object will not intefere with the original
-        during `async` mode.
-
-        * Use the the `@Isolate` decorator to ensure isolation.
-        '''
-        return _XMock.mocking(*args, **kwargs)
 
 
 class _XMock:
@@ -488,23 +490,3 @@ class _XMock:
             mock_body = MockDefinition.validate_mock(mock, returns, args, kwargs)
         
         return wrapper
-
-    @classmethod
-    @contextmanager
-    def mocking(cls, 
-                mock    : Optional[Any] = MockNone,
-                *,
-                returns : Optional[Any] = MockNone, 
-                args    : Optional[Any] = MockNone,
-                kwargs  : Optional[Any] = MockNone) -> Generator[None, None, None]:
-        mock_body = MockDefinition.validate_mock(mock, returns, args, kwargs)
-        _mock = MockDefinition(mock, body=mock_body)
-        # This mock is closer to the actual call site than the decorator-based mocks if any.
-        previous = CreateMock._get_previous_mocks(_mock)
-        try:
-            deque(map(lambda __mock: __mock.restore(), previous), maxlen=0)
-            _mock.patch()
-            yield
-        finally:
-            _mock.restore()
-            deque(map(lambda __mock: __mock.patch(), previous), maxlen=0)

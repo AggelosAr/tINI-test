@@ -1,8 +1,10 @@
 import traceback
+from pathlib import Path
 from traceback import StackSummary
 from typing import Any, Optional
 
 from tini_test._internals.consts import _RESET, capture_flag
+from tini_test.coverage.consts import METADATA_FILE
 from tini_test.misc.annotations import (CellName, RealTest, StackTrace,
                                         TestFunctionName)
 
@@ -229,4 +231,38 @@ class DuplicateTestFound(Exception):
 
     def __init__(self, test_names: list[TestFunctionName]) -> None:
         msg = 'Duplicate test(s) found: < %s >' % (', '.join(test_names), )
+        super().__init__(msg)
+
+
+class CoverageDeserializationError(Exception):
+
+    def __init__(self, files: int) -> None:
+
+        if files == 0:
+            msg = 'No coverage metadata file found in the current directory.'
+           
+        if files > 1:
+            msg = 'Multiple coverage metadata files found in the current directory. Please specify one explicitly.'
+
+        super().__init__(msg)
+
+
+class CoverageDeserializationFileNameError(Exception):
+
+    def __init__(self, file_path: Path) -> None:
+        msg = 'The metadata file <%s> must start with "%s"' % (file_path, METADATA_FILE)
+        super().__init__(msg)
+
+
+class CoverageDeserializationFileContentError(Exception):
+
+    def __init__(self, file_path: Path) -> None:
+        msg = 'The coverage metadata file <%s> has invalid content.' % (file_path, )
+        super().__init__(msg)
+
+
+class CoverageRequestedForInvalidFile(Exception):
+
+    def __init__(self, file_path: Path) -> None:
+        msg = 'Coverage requested for an invalid file <%s>.' % (file_path, )
         super().__init__(msg)

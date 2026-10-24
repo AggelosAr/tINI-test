@@ -5,11 +5,11 @@ from typing import Callable, Optional, no_type_check
 from tini_test._internals.consts import _I_DEC as decorators
 from tini_test.misc.annotations import (I_Reg, IsolateWrappedObject, M_Reg,
                                         MockDefinitionWrappedHolder, MockId,
-                                        RealTest, S_Reg,
-                                        SharedDefinitionHolder, SharedId,
-                                        T_Reg, TestFunctionName, TestId,
-                                        TestWrappedHolder, WrapperInput,
-                                        _ReverseWrapConnections)
+                                        RealTest, ResolvedMockDependencies,
+                                        S_Reg, SharedDefinitionHolder,
+                                        SharedId, T_Reg, TestFunctionName,
+                                        TestId, TestWrappedHolder,
+                                        WrapperInput, _ReverseWrapConnections)
 from tini_test.misc.exceptions import (IsolateWasUsedOnWithoutTestDecorator,
                                        MockWasUsedOnWithoutTestDecorator,
                                        SharedWasUsedOnWithoutTestDecorator,
@@ -202,6 +202,7 @@ class DecoratedTestChain:
         return test_name, test_wrap
 
     def add_scope(self, test_name: TestFunctionName) -> None:
+        # Add shared scope for the test function
         SharedVar.add_scope(self.shared_vars, test_name)
 
         available_vars = {_var.__key__ for _var in self.shared_vars}
@@ -213,3 +214,17 @@ class DecoratedTestChain:
                     ms_vars.extend(shard)
 
         SharedVar.add_scope(ms_vars, test_name)
+
+        # Add mock scope for the test function
+        for mock in self.mocks:
+            mock.test_name = test_name
+
+    def update_resolved_registries(self, 
+                                   test_name: TestFunctionName,
+                                   RESOLVED_MOCK_REGISTRY: ResolvedMockDependencies[MockDefinition]) -> None:
+        if self.mocks:
+            if test_name not in RESOLVED_MOCK_REGISTRY:
+                RESOLVED_MOCK_REGISTRY[test_name] = []
+
+        for mock in self.mocks:
+            RESOLVED_MOCK_REGISTRY[test_name].append(mock)

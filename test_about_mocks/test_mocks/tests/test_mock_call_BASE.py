@@ -97,6 +97,14 @@ class MyDataClass:
     def add(self):
         return self.x + self.y
 
+    @classmethod
+    def create(cls, x, y):
+        return cls(x, y)
+
+    @staticmethod
+    def create_static(x, y):
+        return MyDataClass(x, y)
+
     
 @Mock.mock(MyDataClass, args=(1, 2))
 @Mock.mock(MyDataClass.add, returns=1_000)
@@ -117,7 +125,7 @@ def test_mocking_my_data_class_and_method_returns_mocked_value():
 
 
 @Mock.mock(MyClass, args=(1, 2))
-@Mock.mock(MyClass.add_more, args=(MyClass, 1_000,)) # XXX add test for classmethod and staticmethod ? 
+@Mock.mock(MyClass.add_more, args=(MyClass, 1_000,)) 
 @Test.case()
 def test_mocking_my_class_method_args_mocked_value():
     instance = MyClass(10, 20)
@@ -128,3 +136,21 @@ def test_mocking_my_class_method_args_mocked_value():
     instance = MyClass()
     must_equal(1 + 2 + 1_000, instance.add_more(1_000_000))
     print('works')
+
+
+# This is not allowed by the Python interpreter.
+# @Test.case
+# @Mock.mock(MyClass.create, args=(MyClass, 1, 1))
+# def test_mocking_my_class_method_with_class_and_instance_args():
+#     instance = MyClass.create(1, 1)
+#     must_equal(1, instance.x)
+#     must_equal(1, instance.y)
+
+
+# @Test.case
+# @Mock.mock(MyClass.create_static, args=(MyClass, 1, 1))
+# def test_mocking_my_class_static_method():
+#     instance = MyClass.create_static(1, 1)
+#     must_equal(1, instance.x)
+#     must_equal(1, instance.y)
+#     print('works')

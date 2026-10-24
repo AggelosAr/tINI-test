@@ -272,7 +272,6 @@ class MetaSharedVar:
                         raise SharedVarDoesNotExistInThisContext(key, self._test_name)
     
 
-
 NotInitialized = _NotInitialized
 var = MetaSharedVar()
 # TODO add docstring to var

@@ -11,13 +11,14 @@ from tini_test import Isolate, Test, must_equal
 from tini_test.__main__ import _tini_test
 from tini_test._internals._broken import (delete_test_dir, get_temp_file,
                                           get_unique_folder_name, run_test)
+from tini_test._internals.consts import PROJECT_ROOT
 from tini_test.context_managers import WillRaise, _ThreadLocalStdout
 from tini_test.core import TestSuite
-from tini_test.enums import Coverage, RunMode, Verbosity
+from tini_test.enums import Coverage, RunMode, TiniTestMode, Verbosity
 from tini_test.initializer import initialize_test_suite
 from tini_test.misc.exceptions import CantFindRelativePathToRoot
 from tini_test.module_collector import ModuleCollector
-from tini_test._internals.consts import PROJECT_ROOT
+
 
 @Test.case
 def test_suite_run() -> None:
@@ -58,7 +59,7 @@ def crash_main() -> None:
                     'store_coverage_at': None,
                     'search_dir': '././././where_is?',
                     'file_name': 'None',
-                    'test_function': None})
+                    'test_function': None}, TiniTestMode.RUN)
 
 
 

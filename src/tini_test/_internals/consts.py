@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from tini_test._internals._dynamic_reg_ids import (__C_REG, __I_REG, __M_REG,
-                                                   __S_REG, __T_REG)
+                                                   __R_M_REG, __S_REG, __T_REG)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
@@ -51,12 +51,18 @@ SKIP_DIRS = frozenset({
 
 capture_flag = ('<frozen importlib._bootstrap>', '_call_with_frames_removed', )
 
+SALT = 5
 
-_T_REG = __T_REG
-_M_REG = __M_REG
-_S_REG = __S_REG
-_I_REG = __I_REG
-_C_REG = __C_REG
+
+_T_REG = __T_REG(SALT)
+_M_REG = __M_REG(SALT)
+_S_REG = __S_REG(SALT)
+_I_REG = __I_REG(SALT)
+_C_REG = __C_REG(SALT)
+
+
+_R_M_REG = __R_M_REG(SALT)
+
 
 _I_DEC = ('_XMock.mock', '_XTest.test', '_XShared.shared', '_XIsolate.isolate') # XXX remove magic strings.
 E_DEC  = frozenset({'Test.case', 'Mock.mock', 'Shared', 'Isolate'})

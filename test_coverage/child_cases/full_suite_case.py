@@ -29,7 +29,7 @@ def test_FullSuiteRunsFromCli() -> None:
         sys.argv = ['tini_test', '--coverage',
                     '--coverage-target', os.path.join(PROJECT_ROOT, 'src'),
                     '--coverage-store', store]
-        _tini_test(receive_args())
+        _tini_test(*receive_args())
     finally:
         sys.argv = old_argv
         sys.path[:] = old_path

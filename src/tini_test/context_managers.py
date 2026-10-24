@@ -1,3 +1,4 @@
+import inspect
 import sys
 import threading
 from collections import deque
@@ -5,11 +6,11 @@ from contextlib import contextmanager
 from functools import partial
 from io import StringIO
 from threading import Lock
-from typing import Generator, Optional
+from typing import Any, Generator, Optional
 
 from tini_test.coverage._coverage import CoverageTracker
 from tini_test.misc.annotations import CoverageStore, TestCallable
-from tini_test.mock import MockDefinition
+from tini_test.mock import MockDefinition, MockNone
 from tini_test.shared import MetaSharedVar, SharedVar
 
 from .misc.exceptions import (ExceptionWasNotRaised,
@@ -159,3 +160,46 @@ def coverage(trace: bool, storage: CoverageStore) -> Generator[None, None, None]
             sys.settrace(previous)
     else:
         yield
+
+
+class Mock:
+
+    @staticmethod
+    @contextmanager
+    def mocking(mock    : Optional[Any] = MockNone,
+                *,
+                returns : Optional[Any] = MockNone, 
+                args    : Optional[Any] = MockNone,
+                kwargs  : Optional[Any] = MockNone) -> Generator[None, None, None]:
+        '''
+        No guarantee is made that the mocked object will not intefere with the original
+        during `async` mode. @inspect
+
+        * Use the the `@Isolate` decorator to ensure isolation.
+
+        Should only be used inside a `@Test.case` decorated function.
+        '''
+        mock_body = MockDefinition.validate_mock(mock, returns, args, kwargs)
+        _mock = MockDefinition(mock, body=mock_body)
+        
+        # @inspect
+        frame = inspect.currentframe().f_back.f_back
+        test_name = frame.f_code.co_name
+
+        _mock.test_name = test_name
+
+        # This mock is closer to the actual call site than the decorator-based mocks if any.
+        # This mock is also closer to any local mocks that may exist in the current scope.
+        relevant_mocks = MockDefinition._get_previous_mocks(_mock)
+        if not relevant_mocks:
+            MockDefinition.register(_mock)
+        
+        try:
+            deque(map(lambda __mock: __mock.restore(), relevant_mocks), maxlen=0)
+            _mock.patch()
+            yield
+        finally:
+            _mock.restore()
+            if not relevant_mocks:
+                MockDefinition.unregister(_mock)
+            deque(map(lambda __mock: __mock.patch(), relevant_mocks), maxlen=0)

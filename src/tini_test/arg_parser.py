@@ -2,7 +2,7 @@ from argparse import ArgumentParser, RawTextHelpFormatter
 from typing import TypedDict
 
 from tini_test.coverage.consts import METADATA_FILE
-from tini_test.enums import Coverage, RunMode, Verbosity
+from tini_test.enums import Coverage, RunMode, TiniTestMode, Verbosity
 from tini_test.misc.annotations import (DirectoryPath, FileName,
                                         TestFunctionName)
 
@@ -29,7 +29,9 @@ class CoverageGenerateReportArgsDict(TypedDict):
     store: DirectoryPath | FileName | None
 
 
-def receive_args() -> CoreArgsDict | CoverageMergeArgsDict | CoverageGenerateReportArgsDict:
+def receive_args() -> tuple[CoreArgsDict 
+                            | CoverageMergeArgsDict 
+                            | CoverageGenerateReportArgsDict, TiniTestMode]:
 
     parser = ArgumentParser(
         description='tINI-test', formatter_class=RawTextHelpFormatter
@@ -157,21 +159,21 @@ for the source files and for the coverage metadata file.
     args = parser.parse_args()
 
     if args.coverage_merge:
-        return {
+        return ({
             'merge_directory': args.coverage_merge if not isinstance(args.coverage_merge, bool) else None
-        }
+        }, TiniTestMode.MERGE, )
 
     if args.coverage_generate_report:
-        return {
+        return ({
             'source': args.coverage_target,
             'store': args.coverage_store,
-        }
+        }, TiniTestMode.HTML_REPORT, )
 
     if args.coverage == Coverage.DISABLED:
         if args.coverage_target or args.coverage_store:
             parser.error('--coverage-target and --coverage-store require --coverage.')
 
-    return {
+    return ({
         'run_mode': args.run_mode,
         'verbosity': args.verbosity,
 
@@ -182,4 +184,4 @@ for the source files and for the coverage metadata file.
         'search_dir': args.directory,
         'file_name': args.file,
         'test_function': args.test
-    }
+    }, TiniTestMode.RUN, )
