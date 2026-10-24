@@ -89,7 +89,6 @@ sys.stdout = _ThreadLocalStdout(sys.stdout)
 
 @contextmanager
 def _thread_redirect_stdout(stream: StringIO):
-    # XXX add match on enum to discard output and exception traces in minimal modes ( which ones? )
     previous = getattr(_local_thread, 'stream', None)
     _local_thread.stream = stream
     try:

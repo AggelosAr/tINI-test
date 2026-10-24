@@ -326,7 +326,7 @@ def dynamic_mocked_function_args_kwargs():
     must_equal(((200,), {'var_c': 200}), mocked_function())
 
 
-# dunamic for class
+# dynamic for class
 
 class MyClassForDynamic:
     def __init__(self, x, y):

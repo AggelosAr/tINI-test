@@ -13,3 +13,11 @@ python -m tini_test --coverage-generate-report --coverage-target src --coverage-
 
 ----
 
+
+@test_mocking_as_context_manager_maintains_state_of_shared maybe implement
+
+Maybe update how mocking class methods is handled.
+
+Discard stdin/out for minimals?
+
+add docstring to var

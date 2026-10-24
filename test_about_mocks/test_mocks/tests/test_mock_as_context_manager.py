@@ -307,7 +307,6 @@ def test_mocking_as_context_manager_with_shared_integration():
     print('works')
 
 
-# TODO implement
 # @Isolate
 # @Test.case
 # @Shared(var.a, var.b, var.c, var.d)

@@ -28,7 +28,6 @@ def test_mock_my_class_init_proxy_name():
 
 
 
-# TODO maybe update how this is handled.
 @Test.case
 @Mock.mock(MyClass.my_method, args=(MyClass, 'xyz', 'xyz', 'a'))
 def test_mock_my_class_method_proxy_name():
@@ -50,7 +49,7 @@ def test_mock_my_function_proxy_name():
     with WillRaise(TypeError) as context:
         my_function('xyz', 'xyz')
 
-    # TODO this prints in the start we fail to collect it 
+    # XXX this prints in the start we fail to collect it 
     # import traceback
     # traceback.print_tb(context.exception.__traceback__)
 
