@@ -1,5 +1,6 @@
 import traceback
 from contextlib import contextmanager
+from functools import partial
 from traceback import FrameSummary
 from typing import Any, Callable, Generator, Literal, Optional
 
@@ -36,13 +37,13 @@ class SharedVar:
         instance = super().__new__(cls)
         return instance
 
-    def __init__(self, _var: CellName) -> None:
+    def __init__(self, key: CellName) -> None:
         self._trace = traceback.extract_stack()
 
-        self._stored_key = _var
+        self._stored_key = key
         self._scope = None
 
-        setattr(self, _var, Cell())
+        self._stored_value = Cell()
 
     def __key__(self) -> CellName:
         return object.__getattribute__(self, '_stored_key')
@@ -72,8 +73,8 @@ class SharedVar:
                 return object.__getattribute__(self, '_stored_key')
 
             case _:
-                stored_key = object.__getattribute__(self, '_stored_key')
-                return object.__getattribute__(self, stored_key)
+                stored_value = object.__getattribute__(self, '_stored_value')
+                return stored_value
     
     @classmethod
     def validate(cls, args: Any) -> tuple['SharedVar']:
@@ -172,6 +173,15 @@ class _XShared:
         return wrapper
 
 
+@contextmanager
+def direct_access(obj: 'MetaSharedVar') -> Generator['MetaSharedVar', None, None]:
+    object.__setattr__(obj, '_direct_mode', True)
+    try:
+        yield obj
+    finally:
+        object.__setattr__(obj, '_direct_mode', False)
+
+
 class MetaSharedVar:
     '''
     Dynamic namespaces for shared variables.
@@ -179,29 +189,43 @@ class MetaSharedVar:
     def __init__(self, 
                  test_name: Optional[TestFunctionName] ='', 
                  _local_context: Optional[LocalSharedScope[SharedVar]] = None) -> None:
-        self._generating = True
-        self._maybe_globals: list[SharedVar] = []
-
-        self._test_name = test_name
-        self._local_context = _local_context
+        object.__setattr__(self, '_generating', True)
+        object.__setattr__(self, '_maybe_globals', [])
+        object.__setattr__(self, '_test_name', test_name)
+        object.__setattr__(self, '_local_context', _local_context)
+    
+    def __generating(self) -> bool:
+        return object.__getattribute__(self, '_generating')
+    
+    def __maybe_globals(self) -> list[SharedVar]:
+        return object.__getattribute__(self, '_maybe_globals')
+    
+    def __test_name(self) -> TestFunctionName:
+        return object.__getattribute__(self, '_test_name')
+    
+    def __local_context(self) -> LocalSharedScope[SharedVar] | None:
+        return object.__getattribute__(self, '_local_context')
+    
+    def __getattribute__(self, name):
+        if object.__getattribute__(self, '_direct_mode'):
+            return object.__getattribute__(self, name)
+        
+        return object.__getattr__(self, name)
         
     def __getattr__(self, key: CellName) -> SharedVar | CellValue:
-        if self._generating:
-            _new = SharedVar(key)
-            self._maybe_globals.append(_new)
-            return _new
+        with direct_access(self) as _self:
+            if _self.__generating():
+                _new = SharedVar(key)
+                _self.__maybe_globals().append(_new)
+                return _new
         
-        with self.with_lock(key) as shard:
-            return shard.key.value
+            with _self.with_lock(key) as shard:
+                return shard.key.value
 
     def __setattr__(self, key: CellName, value: Any) -> None:
-        # TODO allow user to use these. else we raise Validation error.
-        if key in ('_test_name', '_local_context', '_generating', '_maybe_globals'):
-            object.__setattr__(self, key, value)
-            return
-
-        with self.with_lock(key) as shard:
-            shard.key.value = value
+        with direct_access(self) as _self:
+            with _self.with_lock(key) as shard:
+                shard.key.value = value
 
     @classmethod
     def get_meta_var(cls) -> 'MetaSharedVar':
@@ -214,63 +238,63 @@ class MetaSharedVar:
     @contextmanager
     def with_lock(self, key: CellName) -> Generator[SharedVar, None, None]:
         try:
+
             shard = self.access_shard(key)
-            
-            if shard._scope != self._test_name:
-                raise SharedVarDoesNotExistInThisContext(key, self._test_name) # ! 
-            
+        
+            if shard._scope != self.__test_name():
+                raise SharedVarDoesNotExistInThisContext(key, self.__test_name())
+        
             yield shard
 
         finally:
             ...
-
+        
     def raise_for_globals(self) -> None:
-        for shard in self._maybe_globals:
+        for shard in self.__maybe_globals():
             if shard._scope is None:
                 _args = (shard.__key__, shard._trace)
                 raise GlobalSharedVarsAreNotSupported(*_args)
     
     def reset(self) -> None:
-        self._generating = True
-        self._maybe_globals = []
+        object.__setattr__(self, '_generating', True)
+        object.__setattr__(self, '_maybe_globals', [])
 
     def block(self) -> None:
-        self._generating = False
+        object.__setattr__(self, '_generating', False)
 
     def update_local_context(self, 
                              test_name: TestFunctionName, 
                              context: LocalSharedScope[SharedVar]) -> None:
-        self._test_name = test_name
-        self._local_context = context
+        object.__setattr__(self, '_test_name', test_name)
+        object.__setattr__(self, '_local_context', context)
 
     def test_reset(self) -> None:
-        self._test_name = ''
-        self._local_context = None
+        object.__setattr__(self, '_test_name', '')
+        object.__setattr__(self, '_local_context', None)
 
     def access_shard(self, key: CellName) -> SharedVar:
 
-        match self._local_context:
+        match self.__local_context():
         
             case None:
-                raise SharedVarDoesNotExistInThisContext(key, self._test_name)
+                raise SharedVarDoesNotExistInThisContext(key, self.__test_name())
             
             case _:
-                match key in self._local_context:
+                match key in self.__local_context():
                 
                     case True:
-                        shard = self._local_context.get(key)
+                        shard = self.__local_context().get(key)
 
                         match shard:
                             
                             case None:
-                                raise SharedVarDoesNotExistInThisContext(key, self._test_name)
+                                raise SharedVarDoesNotExistInThisContext(key, self.__test_name())
                             
                             case _:
                                 return shard        
                     
                     case False:
-                        raise SharedVarDoesNotExistInThisContext(key, self._test_name)
-    
+                        raise SharedVarDoesNotExistInThisContext(key, self.__test_name())
 
 
 NotInitialized = _NotInitialized

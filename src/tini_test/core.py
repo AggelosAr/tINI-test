@@ -236,7 +236,7 @@ class TestSuite:
                     
                     collected_tests = tests.gather_tests(single_func_name=self.test_function)
 
-                    tests.raise_for_globals()
+                    tests.raise_for_shared_globals()
                    
             except Exception as e:
 

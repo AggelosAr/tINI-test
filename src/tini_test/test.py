@@ -19,7 +19,7 @@ from tini_test.misc.annotations import (C_Reg, DirectoryPath, DotPythonPath,
                                         _ReverseWrapConnections)
 from tini_test.misc.exceptions import DuplicateTestFound
 from tini_test.mock import MockDefinition
-from tini_test.shared import MetaSharedVar, SharedVar
+from tini_test.shared import MetaSharedVar, SharedVar, direct_access
 from tini_test.test_utils import _XTest
 from tini_test.wrap_utils import DecoratedTestChain
 
@@ -131,10 +131,12 @@ class TestCollection:
             raise DuplicateTestFound(list(duplicates))
         
     def reset_shared_meta(self) -> None:
-        self.shared_meta.reset()
+        with direct_access(self.shared_meta) as meta:
+            meta.reset()
 
-    def raise_for_globals(self) -> None:
-        self.shared_meta.raise_for_globals()
+    def raise_for_shared_globals(self) -> None:
+        with direct_access(self.shared_meta) as meta:
+            meta.raise_for_globals()
 
     def reverse_connections(self) -> _ReverseWrapConnections:
         bi_con: _ReverseWrapConnections = {}
@@ -160,6 +162,7 @@ class TestCollection:
 
             if isinstance(g_obj, MetaSharedVar):
                 self.shared_meta = g_obj
+                continue
           
             if not isinstance(g_obj, FunctionType):
                 continue 
@@ -281,7 +284,8 @@ class TestCollection:
 
         self.populate_tests()
         # Disallow generation during runtime.
-        self.shared_meta.block()
+        with direct_access(self.shared_meta) as meta:
+            meta.block()
 
     def __cleanup(self) -> Errors:
         if self.verbosity == Verbosity.SORT:

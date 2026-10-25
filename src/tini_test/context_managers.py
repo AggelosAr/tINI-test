@@ -11,7 +11,7 @@ from typing import Any, Generator, Optional
 from tini_test.coverage._coverage import CoverageTracker
 from tini_test.misc.annotations import CoverageStore, TestCallable
 from tini_test.mock import MockDefinition, MockNone
-from tini_test.shared import MetaSharedVar, SharedVar
+from tini_test.shared import MetaSharedVar, SharedVar, direct_access
 
 from .misc.exceptions import (ExceptionWasNotRaised,
                               WillRaiseReceivedNotAnException)
@@ -129,19 +129,22 @@ def patch_mocks(mocks: list[MockDefinition]) -> Generator[None, None, None]:
 @contextmanager
 def patch_shared(patching: TestCallable, shared_vars: list[SharedVar]) -> Generator[None, None, None]:
     if shared_vars:
+
+        meta = MetaSharedVar.get_meta_var()
        
         try:
-            _meta = MetaSharedVar.get_meta_var()
-
-            local_context = _meta.get_context_from_shards(shared_vars)
-            
-            test_name = patching.__name__
-            _meta.update_local_context(test_name=test_name, context=local_context)
+            with direct_access(meta) as _meta:
+                local_context = _meta.get_context_from_shards(shared_vars)
+                
+                test_name = patching.__name__
+                _meta.update_local_context(test_name=test_name, context=local_context)
 
             yield
 
         finally:
-            _meta.test_reset()
+
+            with direct_access(meta) as _meta:
+                _meta.test_reset()
 
     else:
         yield

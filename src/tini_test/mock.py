@@ -20,9 +20,12 @@ from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
                                        MockClassDefinitionError,
                                        MockDefinitionError,
                                        MockMissingFunctionOrClass)
-from tini_test.shared import SharedVar, var
+from tini_test.shared import MetaSharedVar, SharedVar, direct_access
+
 
 _container_types = (list, dict, set)
+
+_meta = MetaSharedVar.get_meta_var()
 
 
 class MockNone:
@@ -51,7 +54,8 @@ class CreateMock:
 
     @staticmethod
     def get_var(from_var: bool, _var: SharedVar) -> Any:
-        return var.__getattr__(_var.__key__) if from_var else _var
+        with direct_access(_meta) as meta:
+            return meta.__getattr__(_var.__key__) if from_var else _var
 
     @staticmethod
     def iter_vars(item: Any, 

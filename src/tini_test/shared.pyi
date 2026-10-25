@@ -1,7 +1,8 @@
+from contextlib import contextmanager
 from traceback import FrameSummary
-from typing import Optional
+from typing import Generator, Optional
 
-from tini_test.misc.annotations import (CellName, LocalSharedScope,
+from tini_test.misc.annotations import (CellName, CellValue, LocalSharedScope,
                                         TestFunctionName)
 
 class Cell: ...
@@ -23,6 +24,8 @@ class SharedVar:
     def add_scope(cls, shared_vars: list['SharedVar'], scope: TestFunctionName) -> None: ...
     
 
+@contextmanager
+def direct_access(obj: MetaSharedVar) -> Generator[MetaSharedVar, None, None]: ...
 
 
 class MetaSharedVar:
@@ -32,6 +35,8 @@ class MetaSharedVar:
 
     _generating: bool
     _maybe_globals: list[SharedVar]
+
+    def __getattr__(self, name: CellName) -> SharedVar | CellValue: ...
 
     @classmethod
     def get_meta_var(cls) -> MetaSharedVar: ...
