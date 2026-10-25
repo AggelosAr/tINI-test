@@ -342,7 +342,6 @@ class MockDefinition:
                     args = (mock, *args, )
                     prefix = mock.__name__
                     mock = mock.__init__
-                    print('PREFIX:', prefix)
 
             return MockCall(mock, prefix, args=args, kwargs=kwargs)
 

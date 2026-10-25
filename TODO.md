@@ -21,3 +21,5 @@ Maybe update how mocking class methods is handled.
 Discard stdin/out for minimals?
 
 add docstring to var
+
+Maybe udate isolate to take a snapshot for true isolation

@@ -57,5 +57,3 @@ def test_mock_my_function_proxy_name():
     must_equal('too many positional arguments', str(context.exception))
     must_equal(True, '_proxy_my_function_' in ''.join(tb.format_tb(traceback)))
 
-
-
