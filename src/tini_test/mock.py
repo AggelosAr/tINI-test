@@ -178,7 +178,7 @@ class MockCall(CreateMock):
     @staticmethod
     def validate_args(args: Any) -> None:
         if not isinstance(args, tuple):
-            raise MockCallDefinitionError('Arguments should be of type tuple.')
+            raise MockCallDefinitionError('Arguments should be of type tuple. Maybe you forgot a comma?')
 
     @staticmethod
     def validate_kwargs(kwargs: Any) -> None:

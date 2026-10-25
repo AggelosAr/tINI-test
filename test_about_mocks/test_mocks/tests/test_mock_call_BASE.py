@@ -24,14 +24,14 @@ def test_mock_passing_keywords():
 @Mock.mock(add_args_function1, args=(1, 2))
 @Test.case
 def test_passing_positional_arguments_to_add_args_function():
-    must_equal(3, add_args_function1(1_000, 1_000, k_val_1=1_000, k_val_2=1_000))
+    must_equal(3, add_args_function1('?'))
     print('works')
 
 
 @Mock.mock(add_args_function2, args=(1, 2), kwargs={'k_val_1': 10, 'k_val_2': 20})
 @Test.case
 def test_passing_both_positional_and_keyword_arguments_to_add_args_function():
-    must_equal(1+2+10+20, add_args_function2(1_000, 1_000, k_val_1=1_000, k_val_2=1_000))
+    must_equal(1+2+10+20, add_args_function2('?'))
     print('works')
 
 
@@ -39,7 +39,21 @@ def test_passing_both_positional_and_keyword_arguments_to_add_args_function():
 @Mock.mock(mock=add_args_function, kwargs={'k_val_1': 10, 'k_val_2': 20})
 @Test.case
 def test_positional_mock_passing_keywords():
-    must_equal(30, add_args_function(k_val_1=1_000, k_val_2=1_000))
+    must_equal(30, add_args_function('?'))
+    print('works')
+
+
+# !!!!!!!!! THIS IS NOT A TUPLE
+# @Mock.mock(mock=add_args_function1, args=(1 ))
+# @Test.case
+# def test_mock_accepts_tuple_of_length_one_no_comma():
+#     must_equal(1, add_args_function1('?'))
+#     print('works')
+
+@Mock.mock(mock=add_args_function1, args=(1, ))
+@Test.case
+def test_mock_accepts_tuple_of_length_one_comma():
+    must_equal(1, add_args_function1('?'))
     print('works')
 
 

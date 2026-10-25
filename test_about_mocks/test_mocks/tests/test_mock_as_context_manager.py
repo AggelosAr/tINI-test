@@ -396,3 +396,32 @@ def test_exceptions():
             MyClass('?')
 
     must_equal('Mock class only accepts initialization arguments.', str(context.exception))
+
+
+# Test mocking in outside function
+
+def test_mocked_function(*args, **kwargs):
+    return sum(args) + sum(kwargs.values())
+
+
+def test_mocking_in_outside_function(*args, **kwargs):
+    with Mock.mocking(test_mocked_function, args=(5, 5), kwargs={'k_val_1': 5}):
+        result = test_mocked_function('?')
+    must_equal(15, result)
+    return result
+
+
+@Isolate
+@Test.case
+def test_mocking_in_outside_function_isolated():
+    must_equal(15, test_mocking_in_outside_function('?'))
+
+
+# Test mocking in imported function
+
+@Isolate
+@Test.case
+def test_mocking_in_outside_imported_function_isolated():
+    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import ___test_mocking_in_outside_function
+    must_equal(15, ___test_mocking_in_outside_function('?'))
+
