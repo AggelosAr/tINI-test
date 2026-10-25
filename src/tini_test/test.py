@@ -189,17 +189,18 @@ class TestCollection:
             match test_chain.has_not_dependencies:
 
                 case True:
-                    test_wrap = test_chain.test_wrap
-                    test_name, t_obj = str(test_wrap.__closure__[-1].cell_contents.__name__), test_wrap # type: ignore[index]
+                    test_chain.test_func = test_chain.test_wrap.__closure__[-1].cell_contents # type: ignore[index]
+                    t_obj = test_chain.test_wrap 
+                    
                 case False:
-                    test_name, t_obj = test_chain.resolve_dependencies(self.MOCK_REGISTRY,
-                                                                       self.SHARED_REGISTRY,
-                                                                       self.ISOLATE_REGISTRY)
+                    t_obj = test_chain.resolve_dependencies(self.MOCK_REGISTRY,
+                                                            self.SHARED_REGISTRY,
+                                                            self.ISOLATE_REGISTRY)
 
-                    test_chain.validate_dependencies(test_name)
+                    test_chain.validate_dependencies()
 
-                    test_chain.add_scope(test_name)
-                    test_chain.update_resolved_registries(test_name, self.RESOLVED_MOCK_REGISTRY)
+                    test_chain.add_scope()
+                    test_chain.update_resolved_registries(self.RESOLVED_MOCK_REGISTRY)
                     
                     if test_chain.mocks:
                         t_obj = partial(t_obj, _XTest____mocks=test_chain.mocks)
@@ -212,7 +213,7 @@ class TestCollection:
 
 
             # can this please be removed?
-            if single_func_name and test_name != single_func_name:
+            if single_func_name and test_chain.test_name != single_func_name:
                 continue
 
 
@@ -223,7 +224,7 @@ class TestCollection:
                                _XTest____collector=self.collector,
                                _XTest____verbosity=self.verbosity)
 
-            test_names.add(test_name)
+            test_names.add(test_chain.test_name)
             self.decorated_tests.append(test_obj)
         
         return list(test_names)

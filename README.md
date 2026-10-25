@@ -178,6 +178,9 @@ def test_must_equal_alien_object_with_eq() -> None:
 
 The mocking machine accepts the function to be mocked as the first argument or via the `mock` keyword, along with up to 2 keyword arguments.
 Either the `returns` or a combination of `args` and `kwargs`. _Args_ must be a tuple of anything and _Kwargs_ a dict of anything.
+
+> The mocked object gets reverted back to the original state at the end of the test.
+
 Mocking a function call or return is as easy as:
 
 

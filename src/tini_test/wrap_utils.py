@@ -34,6 +34,10 @@ class DecoratedTestChain:
         self._is_isolate_decorated = False
 
     @property
+    def test_name(self) -> TestFunctionName:
+        return self.test_func.__name__
+    
+    @property
     def has_not_dependencies(self) -> bool:
         return (
             (len(self.mocks) == 0 and not self._is_mock_decorated)
@@ -163,15 +167,15 @@ class DecoratedTestChain:
             if self._is_isolate_decorated:
                 raise IsolateWasUsedOnWithoutTestDecorator(self.test_func)  
     
-    def validate_dependencies(self, test_name: TestFunctionName) -> None:
-        MockDefinition.raise_for_duplicate_mocks(self.mocks, test_name)
-        SharedVar.raise_for_duplicate_vars(self.shared_vars, test_name)
+    def validate_dependencies(self) -> None:
+        MockDefinition.raise_for_duplicate_mocks(self.mocks, self.test_name)
+        SharedVar.raise_for_duplicate_vars(self.shared_vars, self.test_name)
 
     @no_type_check
     def resolve_dependencies(self, 
                              MOCK_REGISTRY: M_Reg, 
                              SHARED_REGISTRY: S_Reg, 
-                             ISOLATE_REGISTRY: I_Reg) -> tuple[TestFunctionName, TestWrappedHolder]:
+                             ISOLATE_REGISTRY: I_Reg) -> TestWrappedHolder:
 
         test_func = self.test_func
         test_wrap = self.test_wrap
@@ -188,22 +192,21 @@ class DecoratedTestChain:
                 or _id in ISOLATE_REGISTRY):
 
                 test_wrap = partial(test_wrap, _XTest____test_func=test_func)
-                test_name = test_func.__name__
             
             else:
                 test_wrap.__closure__[-1].cell_contents.__code__ = test_func.__code__
-                test_name = str(test_wrap.__closure__[-1].cell_contents.__name__)
+                self.test_func = test_wrap.__closure__[-1].cell_contents
         
         else:
             # We need to see if the test is already attached
             if _registered_test == test_func.__closure__[-1].cell_contents:
-                test_name = _registered_test.__name__
+                self.test_func = _registered_test
 
-        return test_name, test_wrap
+        return test_wrap
 
-    def add_scope(self, test_name: TestFunctionName) -> None:
+    def add_scope(self) -> None:
         # Add shared scope for the test function
-        SharedVar.add_scope(self.shared_vars, test_name)
+        SharedVar.add_scope(self.shared_vars, self.test_name)
 
         available_vars = {_var.__key__ for _var in self.shared_vars}
         ms_vars = []
@@ -213,18 +216,17 @@ class DecoratedTestChain:
                 if _var in available_vars:
                     ms_vars.extend(shard)
 
-        SharedVar.add_scope(ms_vars, test_name)
+        SharedVar.add_scope(ms_vars, self.test_name)
 
         # Add mock scope for the test function
         for mock in self.mocks:
-            mock.test_name = test_name
+            mock.test_name = self.test_name
 
-    def update_resolved_registries(self, 
-                                   test_name: TestFunctionName,
+    def update_resolved_registries(self,
                                    RESOLVED_MOCK_REGISTRY: ResolvedMockDependencies[MockDefinition]) -> None:
         if self.mocks:
-            if test_name not in RESOLVED_MOCK_REGISTRY:
-                RESOLVED_MOCK_REGISTRY[test_name] = []
+            if self.test_name not in RESOLVED_MOCK_REGISTRY:
+                RESOLVED_MOCK_REGISTRY[self.test_name] = []
 
         for mock in self.mocks:
-            RESOLVED_MOCK_REGISTRY[test_name].append(mock)
+            RESOLVED_MOCK_REGISTRY[self.test_name].append(mock)
