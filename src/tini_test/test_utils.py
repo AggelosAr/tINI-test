@@ -100,8 +100,8 @@ class Test:
     It allows for the specification of setup and cleanup functions, 
     mocks, shared variables, and other test configurations.
     '''
-    @classmethod
-    def case(cls, *args, **kwargs):
+    @staticmethod
+    def case(*args, **kwargs):
         '''
         Defines a test case with the specified configuration, 
         including setup and cleanup functions.
@@ -172,6 +172,36 @@ class _XTest:
     
     def __str__(self) -> str:
         return '\n'.join(filter(lambda l: l != str(), map(str, self.operation_states)))
+
+    @cached_property
+    def is_fail(self) -> bool:
+        return any(TestStatus.is_fail_cause(op.status) for op in self.operation_states)
+    
+    @property
+    def test_name(self) -> str:
+        return self.test.__name__
+
+    @property
+    def should_lock(self) -> bool:
+        has_mocks = len(self.mocks) > 0
+        has_shared_vars = len(self.shared_vars) > 0
+        return has_mocks or has_shared_vars or self.isolate
+    
+    @property
+    def fail_state(self) -> TestStatus:
+        return self._fail_state
+
+    @fail_state.setter
+    def fail_state(self, new_state: TestStatus) -> None:
+        self._fail_state = new_state
+
+    @property
+    def fail_reasons(self) -> list[StackTrace]:
+        return self._fail_reasons
+
+    @fail_reasons.setter
+    def fail_reasons(self, reason: StackTrace) -> None:
+        self._fail_reasons.append(reason)
 
     @classmethod
     def case(cls,
@@ -260,36 +290,6 @@ class _XTest:
             raise TestArgumentsShouldBeCallables
         
         return wrapper
-    
-    @cached_property
-    def is_fail(self) -> bool:
-        return any(TestStatus.is_fail_cause(op.status) for op in self.operation_states)
-    
-    @property
-    def test_name(self) -> str:
-        return self.test.__name__
-
-    @property
-    def should_lock(self) -> bool:
-        has_mocks = len(self.mocks) > 0
-        has_shared_vars = len(self.shared_vars) > 0
-        return has_mocks or has_shared_vars or self.isolate
-    
-    @property
-    def fail_state(self) -> TestStatus:
-        return self._fail_state
-
-    @fail_state.setter
-    def fail_state(self, new_state: TestStatus) -> None:
-        self._fail_state = new_state
-
-    @property
-    def fail_reasons(self) -> list[StackTrace]:
-        return self._fail_reasons
-
-    @fail_reasons.setter
-    def fail_reasons(self, reason: StackTrace) -> None:
-        self._fail_reasons.append(reason)
 
     def run_steps(self, _verbosity: Optional[Verbosity] = None) -> None:
         

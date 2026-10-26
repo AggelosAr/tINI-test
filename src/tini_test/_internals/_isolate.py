@@ -30,9 +30,8 @@ class Isolate:
 
 class _XIsolate:
 
-    @classmethod
-    def isolate(cls,
-                func: None
+    @staticmethod
+    def isolate(func: None
                       | RealTest 
 
                       | TestWrappedObject

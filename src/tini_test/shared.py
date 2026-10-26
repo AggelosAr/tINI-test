@@ -121,9 +121,8 @@ class Shared:
 
 class _XShared:
 
-    @classmethod
-    def shared(cls,
-               func: None
+    @staticmethod
+    def shared(func: None
                      | RealTest 
 
                      | TestWrappedObject

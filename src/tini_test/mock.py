@@ -485,8 +485,8 @@ class Mock:
     The `mocking` context manager does not
     provide such guarantees and should be used with caution.
     '''
-    @classmethod
-    def mock(cls, *args, **kwargs):
+    @staticmethod
+    def mock(*args, **kwargs):
         '''
         The object to be mocked can be passed positionally or with the `mock` keyword.
 
@@ -502,9 +502,8 @@ class Mock:
 
 class _XMock:
     
-    @classmethod
-    def mock(cls,
-             func: None
+    @staticmethod
+    def mock(func: None
                    | RealTest
                    | MockedFunction
                    | MockedClass
