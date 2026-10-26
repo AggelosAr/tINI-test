@@ -1,6 +1,5 @@
 import traceback
 from contextlib import contextmanager
-from functools import partial
 from traceback import FrameSummary
 from typing import Any, Callable, Generator, Literal, Optional
 
@@ -78,8 +77,8 @@ class SharedVar:
     
     @classmethod
     def validate(cls, args: Any) -> tuple['SharedVar']:
-
         args_types = tuple(type(arg) for arg in args)
+
         for _type in args_types:
             if not issubclass(_type, SharedVar):
                 raise SharedAcceptedInvalidArguments
@@ -89,6 +88,7 @@ class SharedVar:
     @classmethod
     def raise_for_duplicate_vars(cls, shared_vars: list['SharedVar'], test_name: TestFunctionName) -> None:
         unique_shared_vars = set()
+        
         for shared_var in shared_vars:
             if shared_var.__key__ in unique_shared_vars:
                 raise SharedVarAlreadyDefined(var_name=shared_var.__key__, test_name=test_name)

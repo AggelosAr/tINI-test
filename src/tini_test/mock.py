@@ -47,7 +47,7 @@ class CreateMock:
             self._mock_backup_store.__code__ = self.mock.__code__
 
         # Used to keep track of the anchor name for this mock in the global namespace
-        # Changes after each mock are registered in the global namespace
+        # Changes after each mock is registered in the global namespace
         # Gets erased when the mock is unregistered from the global namespace
         # Follows the format '_proxy_<mock_name>_<unique_identifier:SALT>'
         self._anchor: str = ''
