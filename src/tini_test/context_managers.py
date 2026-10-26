@@ -220,10 +220,13 @@ class Mock:
         
         try:
             deque(map(lambda __mock: __mock.restore(), relevant_mocks), maxlen=0)
+
             _mock.patch()
+
             yield
         finally:
             _mock.restore()
             if not relevant_mocks:
                 MockDefinition.unregister(_mock)
+
             deque(map(lambda __mock: __mock.patch(), relevant_mocks), maxlen=0)

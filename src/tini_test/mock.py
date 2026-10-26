@@ -155,7 +155,7 @@ class MockCall(CreateMock):
 
     def __init__(self,
                  mock: MockedFunction | MockedClass,
-                 prefix: str = '',
+                 prefix: str,
                  args: Optional[tuple] = None, 
                  kwargs: Optional[dict] = None) -> None:
         self.mock = mock
