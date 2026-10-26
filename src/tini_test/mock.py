@@ -10,8 +10,9 @@ from tini_test._internals.consts import _R_M_REG, _R_T_REG, SALT
 from tini_test.enums import MockType, Plugs
 from tini_test.misc.annotations import (CellName, IsolateWrappedObject,
                                         MockDefinitionWrappedHolder,
-                                        MockedClass, MockedFunction,
-                                        MockWrappedObject, ProxyItem, RealTest,
+                                        MockedCBuiltin, MockedClass,
+                                        MockedFunction, MockWrappedObject,
+                                        ProxyItem, RealTest,
                                         SharedDefinitionHolder,
                                         SharedWrappedObject, TestFunctionName,
                                         TestWrappedHolder, TestWrappedObject)
@@ -33,17 +34,20 @@ class MockNone:
 
 class CreateMock:
 
-    def __init__(self, mock: MockedFunction | MockedClass, prefix: str = '') -> None:
+    def __init__(self, mock: MockedFunction 
+                             | MockedClass
+                             | MockedCBuiltin, prefix: str = '') -> None:
         self.mock = mock
         self._proxy_pool: set[str] = set()
 
         self._isbuiltin = inspect.isbuiltin(mock)
 
-        self._mock_backup_store = lambda: None
-
+        
         if self._isbuiltin:
-            ...
+            self._mock_backup_store = mock
+            ... # XXX Update prefix for built-in mocks if necessary
         else:
+            self._mock_backup_store = lambda: None
             self._mock_backup_store.__code__ = self.mock.__code__
 
         # Used to keep track of the anchor name for this mock in the global namespace
@@ -56,6 +60,24 @@ class CreateMock:
         # identification of the mock in the global namespace
         self._prefix: str = prefix
 
+        # This is the closer we can get to the globals of the test.
+        # Should't be a problem since at this point we don't need the 
+        # real tests globals but `some` globals.
+        # XXX Maybe rename this
+        self._test: RealTest = lambda: None
+
+    @property
+    def test(self) -> RealTest:
+        return self._test
+    
+    @test.setter
+    def test(self, value: RealTest) -> None:
+        self._test = value
+
+    @property
+    def __globals__(self) -> dict[str, Any]:
+        return self.test.__globals__
+    
     @staticmethod
     def get_var(from_var: bool, _var: SharedVar) -> Any:
         with direct_access(_meta) as meta:
@@ -142,10 +164,14 @@ class CreateMock:
                                     'exec').co_consts[0]
 
     def _restore(self) -> None:
-        if self._isbuiltin:
-            return
+        match self._isbuiltin:
+
+            case True:
+                self.__globals__[self.mock.__name__] = self._mock_backup_store
+            
+            case False:
+                self.mock.__code__ = self._mock_backup_store.__code__
         
-        self.mock.__code__ = self._mock_backup_store.__code__
         deque(map(lambda x: self.mock.__globals__.pop(x, None), self._proxy_pool), maxlen=0)
         self._proxy_pool.clear()
         self._anchor = ''
@@ -193,6 +219,14 @@ class MockCall(CreateMock):
             raise MockCallDefinitionError('Keyword arguments should be of type dict.')
 
     def _patch(self) -> None:
+        if self._isbuiltin:
+            _partial = partial(self.mock, 
+                               *CreateMock.replace_shared(self.args), 
+                               **CreateMock.replace_shared(self.kwargs))
+            replacement = lambda *args, **kwargs: _partial()
+            self.__globals__[self.mock.__name__] = replacement
+            return
+        
         _, _view_name = self._proxy_generator(use_anchor=True)
         
         anchor, self._anchor = self._proxy_generator(use_anchor=True)
@@ -253,7 +287,8 @@ class MockReturn(CreateMock):
     
     def _patch(self) -> None:
         if self._isbuiltin:
-            self.mock.__globals__[self.mock.__name__] = lambda: self.return_value
+            replacement = lambda *args, **kwargs: CreateMock.replace_shared(self.return_value)
+            self.__globals__[self.mock.__name__] = lambda *args, **kwargs: replacement
             return
         
         _, _view_name = self._proxy_generator(use_anchor=True)
@@ -292,6 +327,7 @@ class MockDefinition:
     @test.setter
     def test(self, value: RealTest) -> None:
         self._test = value
+        self.body.test = value
 
     @property
     def test_name(self) -> TestFunctionName:

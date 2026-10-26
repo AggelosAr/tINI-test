@@ -246,6 +246,7 @@ _ReverseWrapConnections: TypeAlias = dict[RegisteredIds, set[RegisteredIds]]
 # -------------- MOCK SPECIFICS --------------
 MockedFunction: TypeAlias = Callable[..., Any]
 MockedClass: TypeAlias = type[Any]
+MockedCBuiltin: TypeAlias = Callable[..., Any]
 
 
 class ProxyItem(NamedTuple):
