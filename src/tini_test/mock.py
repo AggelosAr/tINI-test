@@ -9,7 +9,7 @@ from typing import Any, Callable, Optional, Self, Union, cast
 from tini_test._internals._registry import attach_state
 from tini_test._internals.consts import _R_M_REG, _R_T_REG, SALT
 from tini_test.enums import MockType, Plugs
-from tini_test.misc.annotations import (CellName, GlobalRegistry,
+from tini_test.misc.annotations import (CellName, GlobalRegistry, HexStr,
                                         IsolateWrappedObject, MaybeRealTest,
                                         MockDefinitionWrappedHolder,
                                         MockedCBuiltin, MockedClass,
@@ -215,13 +215,13 @@ class MockCall(CreateMock):
         if not isinstance(kwargs, dict):
             raise MockCallDefinitionError('Keyword arguments should be of type dict.')
 
-    def _patch(self) -> None:
+    def _patch(self) -> HexStr | None:
         if self._isbuiltin:
             _args = lambda: CreateMock.replace_shared(self.args)
             _kwargs = lambda: CreateMock.replace_shared(self.kwargs)
             replacement = lambda *args, **kwargs: self.mock(*_args(), **_kwargs())
             self.__globals__[self.mock.__name__] = replacement
-            return
+            return hex(id(replacement))
         
         _, _view_name = self._proxy_generator(use_anchor=True)
         
@@ -282,11 +282,11 @@ class MockReturn(CreateMock):
     def _vars(self) -> dict[CellName, list[SharedVar]]:
         return CreateMock.find_shared(self.return_value)
     
-    def _patch(self) -> None:
+    def _patch(self) -> HexStr | None:
         if self._isbuiltin:
             replacement = lambda *args, **kwargs: CreateMock.replace_shared(self.return_value)
             self.__globals__[self.mock.__name__] = replacement
-            return
+            return hex(id(replacement))
         
         _, _view_name = self._proxy_generator(use_anchor=True)
         _, self._anchor = self._proxy_generator(use_anchor=True)
@@ -417,12 +417,25 @@ class MockDefinition:
         unique_mocks = set()
         for mock in mocks:
             mocked_function_name = mock.body._view_name
-            
+
             if mocked_function_name in unique_mocks:
                 raise DuplicateMockRegisteredOnTest(mock_name=mocked_function_name, test_name=test_name)
             
             unique_mocks.add(mocked_function_name)
 
+    @classmethod
+    def add_scope(cls, 
+                  mocks: Union['MockDefinition', list['MockDefinition']],
+                  test: RealTest | MaybeRealTest) -> None:
+        if not isinstance(mocks, list):
+            mocks = [mocks]
+
+        for mock in mocks:
+            mock.test = test
+
+    ####################################
+    # Mocking utils for context manager
+    ####################################
     @classmethod
     def _cx_get_globals(cls, frame: FrameType) -> GlobalRegistry['MockDefinition', SharedVar]:
         _reg = frame.f_globals
@@ -442,16 +455,6 @@ class MockDefinition:
         
         return real_test
     
-    @classmethod
-    def add_scope(cls, 
-                  mocks: Union['MockDefinition', list['MockDefinition']],
-                  test: RealTest | MaybeRealTest) -> None:
-        if not isinstance(mocks, list):
-            mocks = [mocks]
-
-        for mock in mocks:
-            mock.test = test
-
     def _cx_cmp_mock_body(_cx_mock: Self, other: 'MockDefinition') -> bool:
         return hex(id(_cx_mock.body.mock)) == hex(id(other.body.mock))
 
@@ -470,9 +473,10 @@ class MockDefinition:
         mocks = _cx_mock.__globals__[_R_M_REG][_cx_mock.test_name]
         new_mocks = list(filter(lambda m: not _cx_mock._cx_cmp_mock(m), mocks))
         _cx_mock.__globals__[_R_M_REG][_cx_mock.test_name] = new_mocks
+    ####################################
 
-    def patch(self) -> None:
-        self.body._patch()
+    def patch(self) -> HexStr | None:
+        return self.body._patch()
 
     def restore(self) -> None:
         self.body._restore()

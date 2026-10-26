@@ -165,6 +165,12 @@ def coverage(trace: bool, storage: CoverageStore) -> Generator[None, None, None]
         yield
 
 
+# XXX move this somewhere else ... or refactor the resolved mock registration mechanism
+# id of original -> built-in object
+PATCHED_BUILTINS = {}
+# id of patched object -> id of original
+CURRENTLY_PATCHING = {}
+
 
 class Mock:
 
@@ -177,15 +183,28 @@ class Mock:
                 kwargs  : Optional[Any] = MockNone) -> Generator[None, None, None]:
         '''
         No guarantee is made that the mocked object will not intefere with the original
-        during `async` mode. @inspect
+        during `async` mode.
 
         * Use the the `@Isolate` decorator to ensure isolation. TODO fix isolate...
 
-        maybe (Should only be used inside a `@Test.case` decorated function.)
+        * (Should only be used inside a `@Test.case` decorated function.)
         '''
+        # In case of a built-in *ONLY* , since we are replacing direcly
+        # the global reference to it. We may receive it again as a patched object.
+        print('MOCK IS : ', mock)
+        o_id = hex(id(mock))
+        
+        if inspect.isbuiltin(mock):
+            PATCHED_BUILTINS[o_id] = mock
+
+        if o_id in CURRENTLY_PATCHING:
+            mock = PATCHED_BUILTINS[CURRENTLY_PATCHING[o_id]]
+
+
         mock_body = MockDefinition.validate_definition(mock, returns, args, kwargs)
         _mock = MockDefinition(mock_body)
-        
+
+
         frame = inspect.currentframe()
 
         previous = frame
@@ -198,7 +217,8 @@ class Mock:
 
 
         real_test = MockDefinition._cx_get_real_test(frame)
-        
+
+        print('real_test:', real_test)
         MockDefinition.add_scope(_mock, real_test)
       
         # This mock is closer to the actual call site than the decorator-based mocks if any.
@@ -211,7 +231,10 @@ class Mock:
         try:
             deque(map(lambda __mock: __mock.restore(), relevant_mocks), maxlen=0)
 
-            _mock.patch()
+            p_id = _mock.patch()
+
+            # The only problem is in built-ins, as a result this is OK!
+            CURRENTLY_PATCHING[p_id] = o_id
 
             yield
         finally:

@@ -525,6 +525,58 @@ def test_nesting_mockings_with_top_level_with_local_item_test_test():
     test()
 
 
+
+######################################################################################
+######################################################################################
+
+
+@Isolate
+@Test.case
+def test_one_function():
+
+    def test():
+
+        def my_function(x, y):
+            return x + y
+            
+        with Mock.mocking(my_function, args=(100, 200)):
+
+            with Mock.mocking(my_function, args=(1_000, 2_000)):
+                result = my_function('?', '?')
+
+                must_equal(1_000 + 2_000, result)
+
+            result = my_function('?', '?')
+
+            must_equal(100 + 200, result)
+
+        must_equal(2, my_function(1, 1))
+
+        with Mock.mocking(my_function, args=(100, 200)):
+        
+            with Mock.mocking(my_function, args=(1_000, 2_000)):
+
+                with Mock.mocking(my_function, args=(1_000_000, 2_000_000)):
+
+                    with Mock.mocking(my_function, args=(1_000_000_000, 2_000_000_000)):
+                        result = my_function('?', '?')
+
+                        must_equal(1_000_000_000 + 2_000_000_000, result)
+
+                result = my_function('?', '?')
+
+                must_equal(1_000 + 2_000, result)
+
+            result = my_function('?', '?')
+
+            must_equal(100 + 200, result)
+
+        must_equal(2, my_function(1, 1))
+
+    test()
+    test()
+
+
 ######################################################################################
 ######################################################################################
 
