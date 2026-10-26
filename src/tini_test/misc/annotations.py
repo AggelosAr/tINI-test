@@ -170,6 +170,8 @@ R_T_ConstRegId = NewType('R_T_ConstRegId', str)
 ResolvedTestDependencies: TypeAlias = dict[TestFunctionName, RealTest]
 
 
+SimpleGlobalRegistry: TypeAlias = dict[str, Any]
+
 class GlobalRegistry(dict[str, Any]):
 
     @overload
@@ -184,9 +186,9 @@ class GlobalRegistry(dict[str, Any]):
     def __getitem__(self, key: C_ConstRegId) -> C_Reg | None: ...
 
     @overload
-    def __getitem__(self, key: R_M_ConstRegId) -> ResolvedMockDependencies | None: ...
+    def __getitem__(self, key: R_M_ConstRegId) -> ResolvedMockDependencies: ...
     @overload
-    def __getitem__(self, key: R_T_ConstRegId) -> ResolvedTestDependencies | None: ...
+    def __getitem__(self, key: R_T_ConstRegId) -> ResolvedTestDependencies: ...
 
     @overload
     def __getitem__(self, key: str) -> Any: ...
@@ -205,9 +207,9 @@ class GlobalRegistry(dict[str, Any]):
     def get(self, key: C_ConstRegId, default: None = None, /) -> C_Reg | None: ...
 
     @overload
-    def get(self, key: R_M_ConstRegId, default: None = None, /) -> ResolvedMockDependencies | None: ...
+    def get(self, key: R_M_ConstRegId, default: None = None, /) -> ResolvedMockDependencies: ...
     @overload
-    def get(self, key: R_T_ConstRegId, default: None = None, /) -> ResolvedTestDependencies | None: ...
+    def get(self, key: R_T_ConstRegId, default: None = None, /) -> ResolvedTestDependencies: ...
 
     @overload
     def get(self, key: str, default: Any = None, /) -> Any: ...
@@ -235,8 +237,6 @@ class GlobalRegistry(dict[str, Any]):
     def __setitem__(self, key: str, value: Any) -> None: # pragma: no cover
         super().__setitem__(key, value)
 
-
-SimpleGlobalRegistry: TypeAlias = dict[str, Any]
 
 _ReverseWrapConnections: TypeAlias = dict[RegisteredIds, set[RegisteredIds]]
 # -------------- REGISTERS --------------
