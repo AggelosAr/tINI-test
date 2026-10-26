@@ -186,67 +186,27 @@ class Mock:
         mock_body = MockDefinition.validate_definition(mock, returns, args, kwargs)
         _mock = MockDefinition(mock_body)
         
-        # Go back two frames to find the caller of the context manager
-        # one frame is for the __enter__ method of the context manager
-        # the second frame is for the caller of the context manager
         frame = inspect.currentframe()
-        steps = 0
 
-        if frame is not None:
+        previous = frame
+        # Go back two frames to find the `run_step` ... bad but necessary, breaks on async I suppose
+        while frame and frame.f_code.co_name != 'run_step':
+            previous = frame
             frame = frame.f_back
-            steps += 1
-            # Assert this frame is indeed the __enter__ method of the context manager
-            # TODO this is wrong since the context manager may be nested.
-            if frame is None:
-                raise RuntimeError('Failed to locate the __enter__ method of the context manager.')
-            
-            if frame.f_code.co_name != '__enter__':
-                raise RuntimeError('Expected the __enter__ method of the context manager.')
-            
-            if frame is not None:
-                frame = frame.f_back
-                steps += 1
+ 
+        frame = previous
 
-        # frame = frame.f_back
-        # frame = frame.f_back
-        if steps != 2 or frame is None:
-            raise RuntimeError('Failed to locate the caller of the context manager.')
-        
 
-        test_name = frame.f_code.co_name
-        test = frame.f_globals.get(test_name)
-
-        look_at = None
-
-        if _R_T_REG in frame.f_globals:
-            look_at = frame.f_globals
-
-        if look_at is None:
-            if _R_T_REG in _mock.body.mock.__globals__:
-                look_at = _mock.body.mock.__globals__
-
-        if look_at is None:
-            if _R_T_REG in _mock.__globals__:
-                look_at = _mock.__globals__
-        
-
-        # If the context manager is used outside the test
-        # We don't have access to the test name .... XXX look_at is None
-        # We patch it correctly but the test name that will appear in the proxy is wrong.
-        # In a way it is correct since it is closer to the caller.
-        # Then the attribute at the mock should change to reflect the actual call site.
-        # And the add_scope will add scope to callables and not real tests....
-    
-        real_test = MockDefinition.get_real_test(look_at, test, test_name)
+        real_test = MockDefinition._cx_get_real_test(frame)
         
         MockDefinition.add_scope(_mock, real_test)
-        
+      
         # This mock is closer to the actual call site than the decorator-based mocks if any.
         # This mock is also closer to any local mocks that may exist in the current scope.
-        relevant_mocks = MockDefinition._get_previous_mocks(_mock)
+        relevant_mocks = _mock._cx_get_previous_mocks()
 
         if not relevant_mocks:
-            MockDefinition.register(_mock)
+            _mock._cx_register()
         
         try:
             deque(map(lambda __mock: __mock.restore(), relevant_mocks), maxlen=0)
@@ -257,6 +217,6 @@ class Mock:
         finally:
             _mock.restore()
             if not relevant_mocks:
-                MockDefinition.unregister(_mock)
+                _mock._cx_unregister()
 
             deque(map(lambda __mock: __mock.patch(), relevant_mocks), maxlen=0)

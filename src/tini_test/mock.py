@@ -3,22 +3,21 @@ import secrets
 import textwrap
 from collections import deque
 from functools import partial
-from typing import Any, Callable, Optional, Union, no_type_check
+from types import FrameType
+from typing import Any, Callable, Optional, Self, Union, cast
 
 from tini_test._internals._registry import attach_state
 from tini_test._internals.consts import _R_M_REG, _R_T_REG, SALT
 from tini_test.enums import MockType, Plugs
 from tini_test.misc.annotations import (CellName, GlobalRegistry,
                                         IsolateWrappedObject, MaybeRealTest,
-                                        MaybeTestFunctionName,
                                         MockDefinitionWrappedHolder,
                                         MockedCBuiltin, MockedClass,
                                         MockedClassInit, MockedFunction,
                                         MockedItem, MockedRawItem,
                                         MockWrappedObject, ProxyItem, RealTest,
                                         SharedDefinitionHolder,
-                                        SharedWrappedObject,
-                                        SimpleGlobalRegistry, TestFunctionName,
+                                        SharedWrappedObject, TestFunctionName,
                                         TestWrappedHolder, TestWrappedObject)
 from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
                                        MockCallDefinitionError,
@@ -60,10 +59,11 @@ class CreateMock:
         # Follows the format '_proxy_<mock_name>_<unique_identifier:SALT>'
         self._anchor: str = ''
 
-        # This is the closer we can get to the globals of the test.
-        # Should't be a problem since at this point we don't need the 
-        # real tests globals but `some` globals.
-        # * This happens since we introduced mocking as context manager.
+        # Test is registered later, hence the <MaybeRealTest>
+        # This refers to the context of the test that this mock is associated with.
+        # The test doesn't exit until we unwrap the dependency chain,
+        # or find it from the globals in the case of the context manager.
+        # TODO Consider initializing the test context properly to avoid relying on a lambda placeholder.
         self._lambda_context: RealTest | MaybeRealTest = lambda: None
 
     @property
@@ -71,16 +71,16 @@ class CreateMock:
         return self._type == MockType.BUILTIN
     
     @property
-    def test(self) -> RealTest | MaybeRealTest:
+    def test(self) -> RealTest:
         return self._lambda_context
     
     @test.setter
-    def test(self, value: RealTest | MaybeRealTest) -> None:
+    def test(self, value: RealTest) -> None:
         self._lambda_context = value
 
     @property
-    def __globals__(self) -> SimpleGlobalRegistry | GlobalRegistry:
-        return self._lambda_context.__globals__
+    def __globals__(self) -> GlobalRegistry['MockDefinition', SharedVar]:
+        return cast(GlobalRegistry['MockDefinition', SharedVar], self._lambda_context.__globals__)
     
     @staticmethod
     def get_var(from_var: bool, _var: SharedVar) -> Any:
@@ -311,24 +311,21 @@ class MockDefinition:
     def __init__(self, body: MockCall | MockReturn) -> None:
         self.body = body
 
-        self._test: RealTest | MaybeRealTest = lambda: None
-
     @property
-    def test(self) -> RealTest | MaybeRealTest:
-        return self._test
+    def test(self) -> RealTest:
+        return self.body.test
 
     @test.setter
-    def test(self, value: RealTest | MaybeRealTest) -> None:
-        self._test = value
+    def test(self, value: RealTest) -> None:
         self.body.test = value
 
     @property
-    def test_name(self) -> TestFunctionName | MaybeTestFunctionName:
+    def test_name(self) -> TestFunctionName:
         return self.test.__name__
 
     @property
-    def __globals__(self) -> SimpleGlobalRegistry | GlobalRegistry:
-        return self.test.__globals__
+    def __globals__(self) -> GlobalRegistry['MockDefinition', SharedVar]:
+        return self.body.__globals__
 
     @property
     def _anchor(self) -> str:
@@ -420,42 +417,31 @@ class MockDefinition:
         unique_mocks = set()
         for mock in mocks:
             mocked_function_name = mock.body._view_name
+            
             if mocked_function_name in unique_mocks:
                 raise DuplicateMockRegisteredOnTest(mock_name=mocked_function_name, test_name=test_name)
+            
             unique_mocks.add(mocked_function_name)
 
-    # TODO move these @wrap_utils? and refactor...
-    ############################################################################################################
-    ############################################################################################################
     @classmethod
-    @no_type_check
-    def _get_previous_mocks(cls, mock: 'MockDefinition') -> list['MockDefinition']:
-        # Find all mocks that have a similar signature in the current namespace
-        all_test_mocks = mock.__globals__.get(_R_M_REG, {}).get(mock.test_name, [])
-        return list(filter(lambda m: m.body.mock == mock.body.mock, all_test_mocks)) # <
-
+    def _cx_get_globals(cls, frame: FrameType) -> GlobalRegistry['MockDefinition', SharedVar]:
+        _reg = frame.f_globals
+        if _R_M_REG not in _reg:
+            raise RuntimeError('Global registry for mocks not found') # TODO Exception
+        return cast(GlobalRegistry['MockDefinition', SharedVar], _reg)
+    
     @classmethod
-    @no_type_check
-    def register(self, mock: 'MockDefinition') -> None:
-        mock.__globals__.setdefault(_R_M_REG, {}).setdefault(mock.test_name, []).append(mock)
+    def _cx_get_real_test(cls, frame: FrameType | None) -> RealTest:
+        if frame is None:
+            raise RuntimeError('Frame is None') # TODO Exception
 
-    @classmethod
-    @no_type_check
-    def unregister(cls, mock: 'MockDefinition') -> None:
-        mocks = mock.__globals__.get(_R_M_REG).get(mock.test_name)
-        new_mocks = list(filter(lambda m: hex(id(m)) != hex(id(mock)), mocks))
-        mock.__globals__[_R_M_REG][mock.test_name] = new_mocks
+        real_test = cls._cx_get_globals(frame).get(_R_T_REG).get(frame.f_code.co_name)
 
-    @classmethod
-    @no_type_check
-    def get_real_test(cls, 
-                      _from: dict[str, Any], 
-                      test: RealTest | MaybeRealTest,
-                      test_name: TestFunctionName | MaybeTestFunctionName) -> RealTest | MaybeRealTest:
-        return _from.get(_R_T_REG, {}).setdefault(test_name, test)
-    ############################################################################################################
-    ############################################################################################################
-
+        if real_test is None:
+            raise RuntimeError('Real test not found') # TODO Exception
+        
+        return real_test
+    
     @classmethod
     def add_scope(cls, 
                   mocks: Union['MockDefinition', list['MockDefinition']],
@@ -465,6 +451,25 @@ class MockDefinition:
 
         for mock in mocks:
             mock.test = test
+
+    def _cx_cmp_mock_body(_cx_mock: Self, other: 'MockDefinition') -> bool:
+        return hex(id(_cx_mock.body.mock)) == hex(id(other.body.mock))
+
+    def _cx_cmp_mock(_cx_mock: Self, other: 'MockDefinition') -> bool:
+        return hex(id(_cx_mock)) == hex(id(other))
+    
+    def _cx_get_previous_mocks(_cx_mock: Self) -> list['MockDefinition']:
+        # Find all mocks that have a similar signature in the current namespace
+        relevant_mocks = _cx_mock.__globals__[_R_M_REG][_cx_mock.test_name]
+        return list(filter(lambda m: _cx_mock._cx_cmp_mock_body(m), relevant_mocks))
+
+    def _cx_register(_cx_mock: Self) -> None:
+        _cx_mock.__globals__[_R_M_REG][_cx_mock.test_name].append(_cx_mock)
+
+    def _cx_unregister(_cx_mock: Self) -> None:
+        mocks = _cx_mock.__globals__[_R_M_REG][_cx_mock.test_name]
+        new_mocks = list(filter(lambda m: not _cx_mock._cx_cmp_mock(m), mocks))
+        _cx_mock.__globals__[_R_M_REG][_cx_mock.test_name] = new_mocks
 
     def patch(self) -> None:
         self.body._patch()

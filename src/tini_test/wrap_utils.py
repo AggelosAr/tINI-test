@@ -226,9 +226,8 @@ class DecoratedTestChain:
     def update_resolved_registries(self,
                                    RESOLVED_MOCK_REGISTRY: ResolvedMockDependencies[MockDefinition],
                                    RESOLVED_TEST_REGISTRY: ResolvedTestDependencies,) -> None:
-        if self.mocks:
-            if self.test_name not in RESOLVED_MOCK_REGISTRY:
-                RESOLVED_MOCK_REGISTRY[self.test_name] = []
+        
+        RESOLVED_MOCK_REGISTRY.setdefault(self.test_name, [])
 
         for mock in self.mocks:
             RESOLVED_MOCK_REGISTRY[self.test_name].append(mock)
