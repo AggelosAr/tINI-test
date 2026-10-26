@@ -8,13 +8,17 @@ from typing import Any, Callable, Optional, Union, no_type_check
 from tini_test._internals._registry import attach_state
 from tini_test._internals.consts import _R_M_REG, _R_T_REG, SALT
 from tini_test.enums import MockType, Plugs
-from tini_test.misc.annotations import (CellName, IsolateWrappedObject,
+from tini_test.misc.annotations import (CellName, GlobalRegistry,
+                                        IsolateWrappedObject, MaybeRealTest,
+                                        MaybeTestFunctionName,
                                         MockDefinitionWrappedHolder,
                                         MockedCBuiltin, MockedClass,
-                                        MockedFunction, MockWrappedObject,
-                                        ProxyItem, RealTest,
+                                        MockedClassInit, MockedFunction,
+                                        MockedItem, MockedRawItem,
+                                        MockWrappedObject, ProxyItem, RealTest,
                                         SharedDefinitionHolder,
-                                        SharedWrappedObject, TestFunctionName,
+                                        SharedWrappedObject,
+                                        SimpleGlobalRegistry, TestFunctionName,
                                         TestWrappedHolder, TestWrappedObject)
 from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
                                        MockCallDefinitionError,
@@ -34,18 +38,18 @@ class MockNone:
 
 class CreateMock:
 
-    def __init__(self, mock: MockedFunction 
-                             | MockedClass
-                             | MockedCBuiltin, prefix: str = '') -> None:
+    def __init__(self, _type: MockType, mock: MockedItem, view_name: str) -> None:
+        self._type = _type
         self.mock = mock
+        # Used in combination with the anchor to provide better 
+        # identification of the mock in the global namespace
+        self._view_name = view_name
+
+
         self._proxy_pool: set[str] = set()
 
-        self._isbuiltin = inspect.isbuiltin(mock)
-
-        
         if self._isbuiltin:
             self._mock_backup_store = mock
-            ... # XXX Update prefix for built-in mocks if necessary
         else:
             self._mock_backup_store = lambda: None
             self._mock_backup_store.__code__ = self.mock.__code__
@@ -56,27 +60,27 @@ class CreateMock:
         # Follows the format '_proxy_<mock_name>_<unique_identifier:SALT>'
         self._anchor: str = ''
 
-        # Used in combination with the anchor to provide better 
-        # identification of the mock in the global namespace
-        self._prefix: str = prefix
-
         # This is the closer we can get to the globals of the test.
         # Should't be a problem since at this point we don't need the 
         # real tests globals but `some` globals.
-        # XXX Maybe rename this
-        self._test: RealTest = lambda: None
+        # * This happens since we introduced mocking as context manager.
+        self._lambda_context: RealTest | MaybeRealTest = lambda: None
 
     @property
-    def test(self) -> RealTest:
-        return self._test
+    def _isbuiltin(self) -> bool:
+        return self._type == MockType.BUILTIN
+    
+    @property
+    def test(self) -> RealTest | MaybeRealTest:
+        return self._lambda_context
     
     @test.setter
-    def test(self, value: RealTest) -> None:
-        self._test = value
+    def test(self, value: RealTest | MaybeRealTest) -> None:
+        self._lambda_context = value
 
     @property
-    def __globals__(self) -> dict[str, Any]:
-        return self.test.__globals__
+    def __globals__(self) -> SimpleGlobalRegistry | GlobalRegistry:
+        return self._lambda_context.__globals__
     
     @staticmethod
     def get_var(from_var: bool, _var: SharedVar) -> Any:
@@ -140,14 +144,8 @@ class CreateMock:
         replacer = partial(CreateMock.get_var, True)
         return CreateMock.iter_vars(item, found={}, replacer=replacer)
 
-    def generate_anchor_name(self) -> str:
-        name = self.mock.__name__
-        if self._prefix:
-            name = '%s_%s' % (self._prefix, name, )
-        return name
-
     def get_proxy_name(self, use_anchor: bool) -> str:
-        name = self.generate_anchor_name() if use_anchor else ''
+        name = self._view_name if use_anchor else ''
         return '_proxy_%s_%s' % (name, secrets.token_hex(SALT), )
     
     def _proxy_generator(self, use_anchor: Optional[bool] = None) -> ProxyItem:
@@ -159,9 +157,7 @@ class CreateMock:
         return ProxyItem(_proxy, _proxy.__name__)
 
     def _compile_mock(self, source: str) -> None:
-        self.mock.__code__ = compile(textwrap.dedent(source), 
-                                    '<string>', 
-                                    'exec').co_consts[0]
+        self.mock.__code__ = compile(textwrap.dedent(source), '<string>', 'exec').co_consts[0]
 
     def _restore(self) -> None:
         match self._isbuiltin:
@@ -180,16 +176,16 @@ class CreateMock:
 class MockCall(CreateMock):
 
     def __init__(self,
-                 mock: MockedFunction | MockedClass,
-                 prefix: str,
-                 args: Optional[tuple] = None, 
-                 kwargs: Optional[dict] = None) -> None:
-        self.mock = mock
-
-        self.args = args or ()
-        self.kwargs = kwargs or {}
+                 _type: MockType,
+                 mock: MockedCBuiltin | MockedClassInit | MockedFunction,
+                 view_name: str,
+                 args: tuple, 
+                 kwargs: dict) -> None:
         
-        super().__init__(mock, prefix)
+        self.args = args
+        self.kwargs = kwargs
+        
+        super().__init__(_type, mock, view_name)
 
     @property
     def _vars(self) -> dict[CellName, list[SharedVar]]:
@@ -204,9 +200,10 @@ class MockCall(CreateMock):
         return res
     
     @staticmethod
-    def validate_call(args: Any, kwargs: Any) -> None:
+    def validate_call(args: Any, kwargs: Any) -> tuple[tuple, dict]:
         MockCall.validate_args(args)
         MockCall.validate_kwargs(kwargs)
+        return args, kwargs
 
     @staticmethod
     def validate_args(args: Any) -> None:
@@ -272,14 +269,15 @@ class MockCall(CreateMock):
 
 class MockReturn(CreateMock):
 
-    def __init__(self, 
-                 mock: MockedFunction | MockedClass,
+    def __init__(self,
+                 _type: MockType,
+                 mock: MockedCBuiltin | MockedClassInit | MockedFunction,
+                 view_name: str,
                  return_value: Any) -> None:
-        self.mock = mock
-
+        
         self.return_value = return_value
 
-        super().__init__(mock)
+        super().__init__(_type, mock, view_name)
 
     @property
     def _vars(self) -> dict[CellName, list[SharedVar]]:
@@ -311,30 +309,26 @@ class MockReturn(CreateMock):
     
 class MockDefinition:
     
-    def __init__(self,
-                 mock: MockedFunction | MockedClass,
-                 *,
-                 body: MockCall | MockReturn) -> None:
-        self.mock = mock
+    def __init__(self, body: MockCall | MockReturn) -> None:
         self.body = body
 
-        self._test: RealTest = lambda: None
+        self._test: RealTest | MaybeRealTest = lambda: None
 
     @property
-    def test(self) -> RealTest:
+    def test(self) -> RealTest | MaybeRealTest:
         return self._test
 
     @test.setter
-    def test(self, value: RealTest) -> None:
+    def test(self, value: RealTest | MaybeRealTest) -> None:
         self._test = value
         self.body.test = value
 
     @property
-    def test_name(self) -> TestFunctionName:
+    def test_name(self) -> TestFunctionName | MaybeTestFunctionName:
         return self.test.__name__
 
     @property
-    def __globals__(self) -> dict[str, Any]:
+    def __globals__(self) -> SimpleGlobalRegistry | GlobalRegistry:
         return self.test.__globals__
 
     @property
@@ -350,26 +344,45 @@ class MockDefinition:
         return type(arg) is not type or not issubclass(arg, MockNone)
 
     @staticmethod
-    def get_mock_type(mock: Any) -> MockType:
+    def align_mock(mock_type: MockType, mock: MockedRawItem) -> tuple[MockedItem, str]:
+        match mock_type:
+
+            case MockType.BUILTIN:
+                return mock, mock.__name__
+            
+            case MockType.CLASS:
+                # TODO overrides __new__ ?
+                return mock.__init__, '%s_%s' % (mock.__name__, mock.__init__.__name__)
+            
+            case MockType.FUNCTION:
+                return mock, mock.__name__
+            
+            case _:
+                # classmethods and staticmethods are not supported by this Python < 3.12 >.
+                raise MockDefinitionError
+            
+    @staticmethod
+    def validate_mock(mock: Any) -> tuple[MockType, MockedItem, str]:
         _mock_exists = MockDefinition.arg_exists(mock)
 
         if not _mock_exists:
             raise MockMissingFunctionOrClass
 
-        if inspect.isclass(mock):
-            return MockType.CLASS
-        
-        if callable(mock):
-            return MockType.FUNCTION
+        _type, _mock = MockType.get_type(mock)
+        if _type and _mock:
+
+            __mock, view_name = MockDefinition.align_mock(_type, _mock)
+            return _type, __mock, view_name
         
         raise MockMissingFunctionOrClass
-        
+
+
     @staticmethod
-    def validate_mock(mock: Any,
-                      returns: Any, 
-                      args: Any, 
-                      kwargs: Any) -> MockCall | MockReturn:
-        mock_type = MockDefinition.get_mock_type(mock)
+    def validate_definition(mock: Any,
+                            returns: Any, 
+                            args: Any, 
+                            kwargs: Any) -> MockCall | MockReturn:
+        mock_type, _mock, view_name = MockDefinition.validate_mock(mock)
 
         _returns_exist = MockDefinition.arg_exists(returns)
         _args_exist = MockDefinition.arg_exists(args)
@@ -380,44 +393,34 @@ class MockDefinition:
             if _returns_exist:
                 raise MockDefinitionError
         
-            if not _args_exist:
-                args = ()
-            if not _kwargs_exist:
-                kwargs = {}
+            _args, _kwargs = MockCall.validate_call(() if not _args_exist else args, 
+                                                    {} if not _kwargs_exist else kwargs)
 
-            MockCall.validate_call(args, kwargs)
+            if mock_type == MockType.CLASS:
+                _args = (mock, *_args)
 
-            prefix = ''
-            match mock_type:
-
-                case MockType.FUNCTION:
-                    ...
-
-                case MockType.CLASS:
-                    args = (mock, *args, )
-                    prefix = mock.__name__
-                    mock = mock.__init__
-
-            return MockCall(mock, prefix, args=args, kwargs=kwargs)
-
+            return MockCall(mock_type, _mock, view_name, _args, _kwargs)
+        
         if _returns_exist:
     
-            match mock_type:
-                case MockType.FUNCTION:
-                    ...
-                case MockType.CLASS:
-                    raise MockClassDefinitionError
+            if mock_type == MockType.CLASS:
+                # TODO implement class ?
+                raise MockClassDefinitionError
 
             # Ignore returns since we can't validate it. It can be an arbitrary value.
-            return MockReturn(mock, return_value=returns)
+            return MockReturn(mock_type, _mock, view_name, returns)
 
         raise MockDefinitionError
         
     @classmethod
     def raise_for_duplicate_mocks(cls, mocks: list['MockDefinition'], test_name: TestFunctionName) -> None:
+        '''
+        Raise an error if there are duplicate mocks registered for the same test.
+        In case of mocking as context manager, such checks are not done.
+        '''
         unique_mocks = set()
         for mock in mocks:
-            mocked_function_name = mock.mock.__name__
+            mocked_function_name = mock.body._view_name
             if mocked_function_name in unique_mocks:
                 raise DuplicateMockRegisteredOnTest(mock_name=mocked_function_name, test_name=test_name)
             unique_mocks.add(mocked_function_name)
@@ -430,7 +433,7 @@ class MockDefinition:
     def _get_previous_mocks(cls, mock: 'MockDefinition') -> list['MockDefinition']:
         # Find all mocks that have a similar signature in the current namespace
         all_test_mocks = mock.__globals__.get(_R_M_REG, {}).get(mock.test_name, [])
-        return list(filter(lambda m: m.mock == mock.mock, all_test_mocks)) # <
+        return list(filter(lambda m: m.body.mock == mock.body.mock, all_test_mocks)) # <
 
     @classmethod
     @no_type_check
@@ -448,8 +451,8 @@ class MockDefinition:
     @no_type_check
     def get_real_test(cls, 
                       _from: dict[str, Any], 
-                      test: RealTest,
-                      test_name: TestFunctionName) -> RealTest:
+                      test: RealTest | MaybeRealTest,
+                      test_name: TestFunctionName | MaybeTestFunctionName) -> RealTest | MaybeRealTest:
         return _from.get(_R_T_REG, {}).setdefault(test_name, test)
     ############################################################################################################
     ############################################################################################################
@@ -457,7 +460,7 @@ class MockDefinition:
     @classmethod
     def add_scope(cls, 
                   mocks: Union['MockDefinition', list['MockDefinition']],
-                  test: RealTest) -> None:
+                  test: RealTest | MaybeRealTest) -> None:
         if not isinstance(mocks, list):
             mocks = [mocks]
 
@@ -518,9 +521,9 @@ class _XMock:
              /,
              mock    : Optional[Any] = MockNone,
              *,
-             returns : Optional[Any]            = MockNone, # better safe than sorry, assign MockNone in any case
-             args    : Optional[tuple[Any]]     = MockNone, # type: ignore[assignment] 
-             kwargs  : Optional[dict[Any, Any]] = MockNone  # type: ignore[assignment] 
+             returns : Optional[Any] = MockNone,
+             args    : Optional[Any] = MockNone,
+             kwargs  : Optional[Any] = MockNone
 
              ) ->  Callable[..., 
                             Callable[..., 
@@ -538,7 +541,7 @@ class _XMock:
             def _wrapper(*args, **kwargs) -> MockDefinitionWrappedHolder[MockDefinition]:
                 
                 if mock_body:
-                    return (func, MockDefinition(mock, body=mock_body), )
+                    return (func, MockDefinition(mock_body), )
 
                 return (func, )
             
@@ -562,8 +565,8 @@ class _XMock:
                 return wrapper(func)
             else:
                 mock = func
-                mock_body = MockDefinition.validate_mock(mock, returns, args, kwargs)
+                mock_body = MockDefinition.validate_definition(mock, returns, args, kwargs)
         elif not is_empty:
-            mock_body = MockDefinition.validate_mock(mock, returns, args, kwargs)
+            mock_body = MockDefinition.validate_definition(mock, returns, args, kwargs)
         
         return wrapper

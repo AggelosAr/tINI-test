@@ -14,7 +14,7 @@ def _tini_test(kwargs: CoreArgsDict
                         | CoverageMergeArgsDict 
                         | CoverageGenerateReportArgsDict,
                mode: TiniTestMode):
-
+    
     match mode:
 
         case TiniTestMode.MERGE:
@@ -33,7 +33,6 @@ def _tini_test(kwargs: CoreArgsDict
             else:
                 test_suite.runner()
                 test_suite.pprint()
-
 
             test_suite.get_coverage()
 

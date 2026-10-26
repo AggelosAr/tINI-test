@@ -27,19 +27,20 @@ CoverageStore: TypeAlias = dict[DirectoryPath, set[CodeLineNumber]]
 
 
 # -------------- GENERAL -------------- < UPDATE
-ColorValue: TypeAlias = str
+ColorValue              : TypeAlias = str
 
 
-TestFunctionName: TypeAlias = str
+TestFunctionName        : TypeAlias = str
+MaybeTestFunctionName   : TypeAlias = str
 
 
 MappedDirectoryToTestFiles: TypeAlias = dict[DirectoryPath, list[FileName]]
 
-FileFailReason: TypeAlias = str
-StackTrace: TypeAlias = str
-DiffMessage: TypeAlias = str
+FileFailReason  : TypeAlias = str
+StackTrace      : TypeAlias = str
+DiffMessage     : TypeAlias = str
 
-Comperator: TypeAlias = Callable[..., Any] # !!!!!
+Comperator      : TypeAlias = Callable[..., Any] # !!!!!
 # -------------- GENERAL --------------
 
 
@@ -73,18 +74,18 @@ FileLoadFailures: TypeAlias = int
 
 
 # ---------------- SOME CALLABLES ----------------
-RealTest: TypeAlias = Callable[..., Any]
+RealTest        : TypeAlias = Callable[..., Any]
+MaybeRealTest   : TypeAlias = Callable[..., Any]
 
-SetupCallable: TypeAlias = Callable[..., Any] 
-CleanupCallable: TypeAlias = Callable[..., Any]
+SetupCallable   : TypeAlias = Callable[..., Any] 
+CleanupCallable : TypeAlias = Callable[..., Any]
 
-TestCallable: TypeAlias = RealTest | SetupCallable | CleanupCallable
+TestCallable    : TypeAlias = RealTest | SetupCallable | CleanupCallable
 
-_NoOp: TypeAlias = Callable[..., Any]
+_NoOp           : TypeAlias = Callable[..., Any]
 
 
-
-PartialObject: TypeAlias = Callable[..., Any] #!!!!!!!!!!!!!
+PartialObject   : TypeAlias = Callable[..., Any] #!!!!!!!!!!!!!
 # ---------------- SOME CALLABLES ----------------
 
 
@@ -244,9 +245,15 @@ _ReverseWrapConnections: TypeAlias = dict[RegisteredIds, set[RegisteredIds]]
 
 
 # -------------- MOCK SPECIFICS --------------
-MockedFunction: TypeAlias = Callable[..., Any]
-MockedClass: TypeAlias = type[Any]
-MockedCBuiltin: TypeAlias = Callable[..., Any]
+MockedClass     : TypeAlias = type[Any]
+
+
+MockedCBuiltin  : TypeAlias = Callable[..., Any]
+MockedClassInit : TypeAlias = Callable[..., Any]
+MockedFunction  : TypeAlias = Callable[..., Any]
+
+MockedRawItem   : TypeAlias = MockedCBuiltin  | MockedClass      | MockedFunction
+MockedItem      : TypeAlias = MockedCBuiltin  | MockedClassInit  | MockedFunction
 
 
 class ProxyItem(NamedTuple):

@@ -17,7 +17,7 @@ def initialize_test_suite(run_mode: RunMode,
                           file_name: Optional[FileName] = None, 
                           test_function: Optional[TestFunctionName] = None
                           ) -> TestSuite:
-
+    
     test_collector = ModuleCollector(search_dir, file_name)
 
     test_collector.walk_and_collect_test_files(test_collector.root)

@@ -6,6 +6,7 @@ from collections import Counter
 from datetime import datetime
 from functools import cached_property, partial
 from pathlib import Path
+from types import FrameType
 from typing import Optional
 
 from tini_test._internals._ast_utils import AstParser
@@ -182,14 +183,15 @@ class FileCoverage:
                         if self.is_docstring_se(stripped):
 
                             match have_docstring_open:
+
                                 case False:
                                     self._statement_counts[LineStatus.DOCSTRING] += 1
                                     have_docstring_open = True
+
                                 case True:
                                     # @Comments are allowed at the end of the docstring
                                     have_docstring_open = False
             else:
-
                 is_continuation = l_no != self.statement_to_lines[owner][0]
                 status = self._statement_status[owner]
                 self.lines[l_no] = Line(l_no, l_cont, status, is_continuation)
@@ -213,12 +215,6 @@ class CoverageTracker:
     def created_at(self) -> str:
         return datetime.now().strftime('%A, %d %B %Y, %H:%M:%S')
     
-    @cached_property
-    def coverage_script(self) -> HTMLNode:
-        script = HTMLNode(HTMLNodeType.SCRIPT)
-        script.set_content(_TOGGLE_SCRIPT)
-        return script
-
     @cached_property
     def total(self) -> int:
         return sum(file_coverage.total_statements for file_coverage in self.files.values())
@@ -350,7 +346,7 @@ class CoverageTracker:
         return coverage_store
     
     @staticmethod
-    def tracer(storage: CoverageStore, frame, *args, **kwargs):
+    def tracer(storage: CoverageStore, frame: FrameType, *args, **kwargs):
         code = frame.f_code
         file = code.co_filename
         file_no = frame.f_lineno
@@ -405,23 +401,6 @@ class CoverageTracker:
                     file_path = os.path.join(root, file)
                     store = self._store.get(file_path, set())
                     self.files[file_path] = FileCoverage(Path(file_path), store)
-
-    def get_hyper_links_and_update_coverage_hrefs(self) -> list[HTMLHyperLink]:
-        links = []
-
-        for idx, (file_path, coverage) in enumerate(self.files.items()):
-            href = ('%d_%s.html' 
-                        % 
-                        (
-                            idx, 
-                            Path(file_path).stem, 
-                        )
-                   )
-            coverage.set_href(href)
-
-            links.append(HTMLHyperLink(href=href, text=file_path))
-
-        return links
 
     @staticmethod
     def pad(s: str | int | float, width: int) -> str:
@@ -684,6 +663,12 @@ class HTMLReport:
             f.write(content)
 
     @staticmethod
+    def coverage_script() -> HTMLNode:
+        script = HTMLNode(HTMLNodeType.SCRIPT)
+        script.set_content(_TOGGLE_SCRIPT)
+        return script
+    
+    @staticmethod
     def add_svg(dest_dir: Path, score: float) -> None:
         color = HTMLReport._svg_score_gradient(score)
         with open(os.path.join(os.path.dirname(__file__), SVG_FILE), 'r') as f:
@@ -714,7 +699,6 @@ class HTMLReport:
             case ScoreClass.POOR:
                 return 'score-bad'
 
-
     @staticmethod
     def _svg_score_gradient(score: float) -> str:
         match ScoreClass.get_score_category(score):
@@ -723,15 +707,32 @@ class HTMLReport:
                 return 'greenGradient'
             
             case ScoreClass.AVERAGE:
-
                 return 'orangeGradient'
+            
             case ScoreClass.POOR:
-
                 return 'redGradient'
+            
+    @staticmethod
+    def get_hyper_links_and_update_coverage_hrefs(tracker: CoverageTracker) -> list[HTMLHyperLink]:
+        links = []
+
+        for idx, (file_path, coverage) in enumerate(tracker.files.items()):
+            href = ('%d_%s.html' 
+                        % 
+                        (
+                            idx, 
+                            Path(file_path).stem, 
+                        )
+                    )
+            coverage.set_href(href)
+
+            links.append(HTMLHyperLink(href=href, text=file_path))
+
+        return links
     
     @staticmethod
     def get_index_content(tracker: CoverageTracker) -> HTMLNode:
-        hyper_links = tracker.get_hyper_links_and_update_coverage_hrefs()
+        hyper_links = HTMLReport.get_hyper_links_and_update_coverage_hrefs(tracker)
 
         header = HTMLNode(HTMLNodeType.DIV, {'class': 'cov-header'})
         header.add_children([
@@ -820,7 +821,7 @@ class HTMLReport:
             page.add_children(HTMLFileCoverage.get_header_node(coverage, tracker.created_at))
             page.add_children(HTMLFileCoverage.get_toolbar_node(coverage))
             page.add_children(HTMLFileCoverage.get_html_node(coverage))
-            page.add_children(tracker.coverage_script)
+            page.add_children(HTMLReport.coverage_script())
 
             tmpl = HTMLTemplate(file_path=coverage_path, content=page.to_html())
             tmpl.write_to_file()

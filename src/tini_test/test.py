@@ -117,7 +117,7 @@ class TestCollection:
         if single_func_name and single_func_name not in self.unique_test_names:
             return
 
-        self.validate_duplicate_tests(spec)
+        self.raise_for_duplicate_tests(spec)
 
         self.update_globals(module)
         
@@ -127,19 +127,19 @@ class TestCollection:
             raise RuntimeError('Cannot load module named %s' % (self.dot_python_path, ))
         spec.loader.exec_module(module)
 
-    def validate_duplicate_tests(self, spec: ModuleSpec) -> None:
+    def raise_for_duplicate_tests(self, spec: ModuleSpec) -> None:
         names = Counter(self.unique_test_names)
         duplicates = {n for n in names if names[n] > 1}
         if duplicates:
             raise DuplicateTestFound(list(duplicates))
-        
-    def reset_shared_meta(self) -> None:
-        with direct_access(self.shared_meta) as meta:
-            meta.reset()
 
     def raise_for_shared_globals(self) -> None:
         with direct_access(self.shared_meta) as meta:
             meta.raise_for_globals()
+
+    def reset_shared_meta(self) -> None:
+        with direct_access(self.shared_meta) as meta:
+            meta.reset()
 
     def reverse_connections(self) -> _ReverseWrapConnections:
         bi_con: _ReverseWrapConnections = {}

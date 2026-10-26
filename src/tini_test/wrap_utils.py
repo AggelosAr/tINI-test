@@ -1,6 +1,6 @@
 from collections import deque
 from functools import partial
-from typing import Callable, Optional, no_type_check
+from typing import Callable, no_type_check
 
 from tini_test._internals.consts import _I_DEC as decorators
 from tini_test.misc.annotations import (I_Reg, IsolateWrappedObject, M_Reg,
@@ -23,7 +23,7 @@ class DecoratedTestChain:
 
     def __init__(self) -> None:
         self._test_wraps: list[TestWrappedHolder] = []
-        self.test_func: Optional[RealTest] = None
+        self.test_func: RealTest = lambda: None
 
         self.mocks: list[MockDefinition] = []
         self._is_mock_decorated = False

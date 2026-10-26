@@ -1,18 +1,25 @@
+import inspect
 from enum import Enum
 from functools import lru_cache
-from typing import Mapping
+from typing import Any, Mapping
 
 from tini_test.coverage.consts import STORE
 from tini_test.misc.exceptions import (NotSupportedRunMode,
                                        NotSupportedVerbosity)
 
-from .misc.annotations import ColorValue
+from .misc.annotations import ColorValue, MockedRawItem
+
+
+class TiniTestMode(Enum):
+    MERGE           = 'MERGE'
+    HTML_REPORT     = 'HTML_REPORT'
+    RUN             = 'RUN'
 
 
 class RunMode(Enum):
     
-    SYNC = 'SYNC'
-    ASYNC = 'ASYNC'
+    SYNC            = 'SYNC'
+    ASYNC           = 'ASYNC'
 
     @classmethod
     def supported_modes_help_msg(cls) -> str:
@@ -41,12 +48,12 @@ Run all tests in async mode.
     
 
 class Verbosity(Enum):
-    
-    NORMAL = 'NORMAL'
-    SORT = 'SORT'
-    MINIMAL = 'MINIMAL'
+
+    NORMAL           = 'NORMAL'
+    SORT             = 'SORT'
+    MINIMAL          = 'MINIMAL'
     MINIMAL_NO_STACK = 'MINIMAL_NO_STACK'
-    SUPER_MINIMAL = 'SUPER_MINIMAL'
+    SUPER_MINIMAL    = 'SUPER_MINIMAL'
 
     @classmethod
     def supported_modes_help_msg(cls) -> str:
@@ -90,8 +97,8 @@ Same as `MINIMAL_NO_STACK` but less verbose.
 
 
 class Coverage(Enum):
-    ENABLED = 'ENABLED'
-    DISABLED = 'DISABLED'
+    ENABLED     = 'ENABLED'
+    DISABLED    = 'DISABLED'
 
     @classmethod
     def arg_parser_info(cls) -> str:
@@ -105,20 +112,20 @@ Use --coverage-target and --coverage-store to further configure the behavior of 
                ''' % STORE
 
 
-class Color(Enum):
-    RED = '\033[91m'     
-    DARK_RED = '\033[31m'
+class ScoreClass(Enum):
+    EXCELLENT   = 'EXCELLENT'
+    AVERAGE     = 'AVERAGE'
+    POOR        = 'POOR'
 
-    GREEN = '\033[92m'
-    DARK_GREEN = '\033[32m'
-
-    YELLOW = '\033[93m'
-    BLUE = '\033[94m'
-    MAGENTA = '\033[95m'
-    WHITE = '\033[97m'
-
-    ORANGE = '\033[38;5;208m'
-    DARK_ORANGE = '\033[38;5;166m'
+    @classmethod
+    def get_score_category(cls, score: float) -> 'ScoreClass':
+        if score >= 80:
+            return ScoreClass.EXCELLENT
+        
+        if score >= 50:
+            return ScoreClass.AVERAGE
+        
+        return ScoreClass.POOR
 
 
 class TestStatus(Enum):
@@ -160,37 +167,45 @@ class TestStatus(Enum):
 
 
 class Plugs(Enum):
-    TEST = 'TEST'
-    MOCK = 'MOCK'
-    SHARED = 'SHARED'
-    ISOLATE = 'ISOLATE'
+    TEST        = 'TEST'
+    MOCK        = 'MOCK'
+    SHARED      = 'SHARED'
+    ISOLATE     = 'ISOLATE'
 
 
 class MockType(Enum):
-    FUNCTION = 'FUNCTION'
-    CLASS = 'CLASS'
-
-
-class ScoreClass(Enum):
-    EXCELLENT = 'EXCELLENT'
-    AVERAGE = 'AVERAGE'
-    POOR = 'POOR'
+    BUILTIN     = 'BUILTIN'
+    CLASS       = 'CLASS'
+    FUNCTION    = 'FUNCTION'
 
     @classmethod
-    def get_score_category(cls, score: float) -> 'ScoreClass':
-        if score >= 80:
-            return ScoreClass.EXCELLENT
+    def get_type(cls, mock: Any) -> tuple['MockType', MockedRawItem] | tuple[None, None]:
+        if inspect.isbuiltin(mock):
+            return MockType.BUILTIN, mock
         
-        if score >= 50:
-            return ScoreClass.AVERAGE
+        if inspect.isclass(mock):
+            return MockType.CLASS, mock
         
-        return ScoreClass.POOR
+        if callable(mock):
+            return MockType.FUNCTION, mock
+
+        return None, None
 
 
-class TiniTestMode(Enum):
-    MERGE = 'MERGE'
-    HTML_REPORT = 'HTML_REPORT'
-    RUN = 'RUN'
+class Color(Enum):
+    RED         = '\033[91m'     
+    DARK_RED    = '\033[31m'
+
+    GREEN       = '\033[92m'
+    DARK_GREEN  = '\033[32m'
+
+    YELLOW      = '\033[93m'
+    BLUE        = '\033[94m'
+    MAGENTA     = '\033[95m'
+    WHITE       = '\033[97m'
+
+    ORANGE      = '\033[38;5;208m'
+    DARK_ORANGE = '\033[38;5;166m'
 
 
 CONFIG: Mapping[TestStatus, ColorValue] = {

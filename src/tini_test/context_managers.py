@@ -179,26 +179,54 @@ class Mock:
         No guarantee is made that the mocked object will not intefere with the original
         during `async` mode. @inspect
 
-        * Use the the `@Isolate` decorator to ensure isolation.
+        * Use the the `@Isolate` decorator to ensure isolation. TODO fix isolate...
 
         maybe (Should only be used inside a `@Test.case` decorated function.)
         '''
-        mock_body = MockDefinition.validate_mock(mock, returns, args, kwargs)
-        _mock = MockDefinition(mock, body=mock_body)
+        mock_body = MockDefinition.validate_definition(mock, returns, args, kwargs)
+        _mock = MockDefinition(mock_body)
         
-        # @inspect
-        frame = inspect.currentframe().f_back.f_back
+        # Go back two frames to find the caller of the context manager
+        # one frame is for the __enter__ method of the context manager
+        # the second frame is for the caller of the context manager
+        frame = inspect.currentframe()
+        steps = 0
 
+        if frame is not None:
+            frame = frame.f_back
+            steps += 1
+            # Assert this frame is indeed the __enter__ method of the context manager
+            # TODO this is wrong since the context manager may be nested.
+            if frame is None:
+                raise RuntimeError('Failed to locate the __enter__ method of the context manager.')
+            
+            if frame.f_code.co_name != '__enter__':
+                raise RuntimeError('Expected the __enter__ method of the context manager.')
+            
+            if frame is not None:
+                frame = frame.f_back
+                steps += 1
+
+        if steps != 2 or frame is None:
+            raise RuntimeError('Failed to locate the caller of the context manager.')
         
+
         test_name = frame.f_code.co_name
-
         test = frame.f_globals.get(test_name)
 
         look_at = None
+
         if _R_T_REG in frame.f_globals:
             look_at = frame.f_globals
-        if _R_T_REG in _mock.__globals__:
-            look_at = _mock.__globals__
+
+        if look_at is None:
+            if _R_T_REG in _mock.body.mock.__globals__:
+                look_at = _mock.body.mock.__globals__
+
+        if look_at is None:
+            if _R_T_REG in _mock.__globals__:
+                look_at = _mock.__globals__
+        
 
         # If the context manager is used outside the test
         # We don't have access to the test name .... XXX look_at is None
@@ -207,7 +235,7 @@ class Mock:
         # Then the attribute at the mock should change to reflect the actual call site.
         # And the add_scope will add scope to callables and not real tests....
     
-        real_test = MockDefinition.get_real_test(look_at or _mock.body.mock.__globals__, test, test_name)
+        real_test = MockDefinition.get_real_test(look_at, test, test_name)
         
         MockDefinition.add_scope(_mock, real_test)
         

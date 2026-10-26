@@ -233,7 +233,7 @@ class TestSuite:
                 with coverage(_V2_COVERAGE, self._coverage_total):
 
                     tests._import(single_func_name=self.test_function)
-                    
+    
                     collected_tests = tests.gather_tests(single_func_name=self.test_function)
 
                     tests.raise_for_shared_globals()
@@ -252,15 +252,14 @@ class TestSuite:
                 if not tests.has_tests:
                     continue
 
-
             if self.searching_single_test:
 
                 if self.test_function in collected_tests:
 
                     self.container[tests.dot_python_path] = tests
                     break
-            
-            self.container[tests.dot_python_path] = tests
+            else:
+                self.container[tests.dot_python_path] = tests
 
     def run_suite(self) -> None:
         for _, test_collection in self.container.items():
@@ -270,8 +269,8 @@ class TestSuite:
             self.update_coverage_stores(test_collection)
 
     async def _arun_suite(self) -> None:
-
         all_test_collections: list[TestCollection] = []
+
         for _, test_collection in self.container.items():
             all_test_collections.append(test_collection)
         
@@ -279,6 +278,7 @@ class TestSuite:
             *[test_collection.arun_tests() for test_collection in all_test_collections],
             return_exceptions=True
         )
+        
         for test_collection, current_errors in zip(all_test_collections, results):
             assert isinstance(current_errors, int)
 
