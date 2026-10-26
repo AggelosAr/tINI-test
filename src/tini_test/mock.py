@@ -288,7 +288,7 @@ class MockReturn(CreateMock):
     def _patch(self) -> None:
         if self._isbuiltin:
             replacement = lambda *args, **kwargs: CreateMock.replace_shared(self.return_value)
-            self.__globals__[self.mock.__name__] = lambda *args, **kwargs: replacement
+            self.__globals__[self.mock.__name__] = replacement
             return
         
         _, _view_name = self._proxy_generator(use_anchor=True)
