@@ -217,10 +217,9 @@ class MockCall(CreateMock):
 
     def _patch(self) -> None:
         if self._isbuiltin:
-            _partial = partial(self.mock, 
-                               *CreateMock.replace_shared(self.args), 
-                               **CreateMock.replace_shared(self.kwargs))
-            replacement = lambda *args, **kwargs: _partial()
+            _args = lambda: CreateMock.replace_shared(self.args)
+            _kwargs = lambda: CreateMock.replace_shared(self.kwargs)
+            replacement = lambda *args, **kwargs: self.mock(*_args(), **_kwargs())
             self.__globals__[self.mock.__name__] = replacement
             return
         

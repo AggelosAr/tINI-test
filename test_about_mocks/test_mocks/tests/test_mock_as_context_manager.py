@@ -61,6 +61,56 @@ def test_mocking_as_context_manager():
     print('works')
 
 
+@Isolate
+@Test.case()
+def test_mocking_as_context_manager_test_test():
+    def test():
+        with Mock.mocking(MyClass, args=(1, 2)):
+            instance = MyClass('?', '?')
+            must_equal(1, instance.x)
+            must_equal(2, instance.y)
+    
+        instance = MyClass('?', '?')
+        must_equal('?', instance.x)
+        must_equal('?', instance.y)
+    
+        with Mock.mocking(MyClass, args=(1,), kwargs={'y': 2}):
+            instance = MyClass('?', '?')
+            must_equal(1, instance.x)
+            must_equal(2, instance.y)
+    
+        with Mock.mocking(MyClass, kwargs={'x': 1, 'y': 2}):
+            instance = MyClass('?', '?')
+            must_equal(1, instance.x)
+            must_equal(2, instance.y)
+    
+        with Mock.mocking(MyClass.add_more, args=(MyClass, 1_000,)):
+            must_equal(1 + 2 + 1_000, instance.add_more('?'))
+    
+        with Mock.mocking(MyClass.add_more, args=(MyClass,), kwargs={'z': 1_000}):
+            must_equal(1 + 2 + 1_000, instance.add_more('?'))
+    
+        with Mock.mocking(MyClass.add_more, kwargs={'self': MyClass, 'z': 1_000}):
+            must_equal(1 + 2 + 1_000, instance.add_more('?'))
+    
+        with Mock.mocking(MyClass, args=(3, 4)):
+            with Mock.mocking(MyClass.add_more, args=(MyClass, 1_000_000,)):
+                instance = MyClass('?', '?')
+                must_equal(3, instance.x)
+                must_equal(4, instance.y)
+                must_equal(3 + 4 + 1_000_000, instance.add_more('?'))
+                print('works')
+    
+        print('works')
+
+    test()
+    test()
+
+
+######################################################################################
+######################################################################################
+
+
 
 @Isolate
 @Test.case
@@ -95,6 +145,48 @@ def test_nesting_mockings():
     must_equal('?', instance.x)
     must_equal('?', instance.y)
 
+
+@Isolate
+@Test.case
+def test_nesting_mockings_test_test():
+    def test():
+
+        with Mock.mocking(MyClass, args=(100, 200)):
+        
+            with Mock.mocking(MyClass, args=(1_000, 2_000)):
+                instance = MyClass('?', '?')
+                must_equal(1_000, instance.x)
+                must_equal(2_000, instance.y)
+    
+            instance = MyClass('?', '?')
+            must_equal(100, instance.x)
+            must_equal(200, instance.y)
+    
+        instance = MyClass('?', '?')
+        must_equal('?', instance.x)
+        must_equal('?', instance.y)
+    
+        with Mock.mocking(MyClass, args=(100, 200)):
+        
+            with Mock.mocking(MyClass, args=(1_000, 2_000)):
+                instance = MyClass('?', '?')
+                must_equal(1_000, instance.x)
+                must_equal(2_000, instance.y)
+    
+            instance = MyClass('?', '?')
+            must_equal(100, instance.x)
+            must_equal(200, instance.y)
+    
+        instance = MyClass('?', '?')
+        must_equal('?', instance.x)
+        must_equal('?', instance.y)
+
+    test()
+    test()
+
+
+######################################################################################
+######################################################################################
 
 
 # Validate low level mocking overrides higher level mocking
@@ -150,6 +242,65 @@ def test_mocking_order():
 
 
 
+@Isolate
+@Mock.mock(MyClass, args=('xyz', 'xyz'))
+@Mock.mock(MyClass2, args=('xyz', 'xyz'))
+@Mock.mock(MyClass.add_more, args=('xyz', 'xyz',))
+@Test.case()
+def test_mocking_order_test_test():
+
+    def test():
+        with Mock.mocking(MyClass, args=(1, 2)):
+            instance = MyClass('?', '?')
+            print('instance x:', instance.x)
+            print('instance y:', instance.y)
+    
+            must_equal(1, instance.x)
+            must_equal(2, instance.y)
+    
+            # Validate wrong items are not overridden by the low-level mock
+            instance2 = MyClass2('?', '?')
+            must_equal('xyz', instance2.x)
+            must_equal('xyz', instance2.y)
+    
+        with Mock.mocking(MyClass, args=(1,), kwargs={'y': 2}):
+            instance = MyClass('?', '?')
+            must_equal(1, instance.x)
+            must_equal(2, instance.y)
+    
+        with Mock.mocking(MyClass, kwargs={'x': 1, 'y': 2}):
+            instance = MyClass('?', '?')
+            must_equal(1, instance.x)
+            must_equal(2, instance.y)
+    
+        with Mock.mocking(MyClass.add_more, args=(MyClass, 1_000,)):
+            must_equal(1 + 2 + 1_000, instance.add_more('?'))
+    
+        with Mock.mocking(MyClass.add_more, args=(MyClass,), kwargs={'z': 1_000}):
+            must_equal(1 + 2 + 1_000, instance.add_more('?'))
+    
+        with Mock.mocking(MyClass.add_more, kwargs={'self': MyClass, 'z': 1_000}):
+            must_equal(1 + 2 + 1_000, instance.add_more('?'))
+    
+        with Mock.mocking(MyClass, args=(3, 4)):
+            with Mock.mocking(MyClass.add_more, args=(MyClass, 1_000_000,)):
+                instance = MyClass('?', '?')
+                must_equal(3, instance.x)
+                must_equal(4, instance.y)
+                must_equal(3 + 4 + 1_000_000, instance.add_more('?'))
+                print('works')
+    
+        print('works')
+
+    test()
+    test()
+
+
+######################################################################################
+######################################################################################
+
+
+
 # Test for nesting mockings with top level
 
 @Isolate
@@ -192,6 +343,59 @@ def test_nesting_mockings_with_top_level():
     must_equal('xyz', instance.x)
     must_equal('xyz', instance.y)
 
+
+
+@Isolate
+@Test.case
+@Mock.mock(MyClass, args=('xyz', 'xyz'))
+def test_nesting_mockings_with_top_level_test_test():
+
+    def test():
+        with Mock.mocking(MyClass, args=(100, 200)):
+
+            with Mock.mocking(MyClass, args=(1_000, 2_000)):
+                instance = MyClass('?', '?')
+        
+                must_equal(1_000, instance.x)
+                must_equal(2_000, instance.y)
+
+            instance = MyClass('?', '?')
+
+            must_equal(100, instance.x)
+            must_equal(200, instance.y)
+
+        instance = MyClass('?', '?')
+        
+        must_equal('xyz', instance.x)
+        must_equal('xyz', instance.y)
+
+        with Mock.mocking(MyClass, args=(100, 200)):
+        
+            with Mock.mocking(MyClass, args=(1_000, 2_000)):
+                instance = MyClass('?', '?')
+        
+                must_equal(1_000, instance.x)
+                must_equal(2_000, instance.y)
+
+            instance = MyClass('?', '?')
+
+            must_equal(100, instance.x)
+            must_equal(200, instance.y)
+
+        instance = MyClass('?', '?')
+        
+        must_equal('xyz', instance.x)
+        must_equal('xyz', instance.y)
+
+
+    test()
+    test()
+
+
+
+
+######################################################################################
+######################################################################################
 
 
 @Isolate
@@ -255,6 +459,76 @@ def test_nesting_mockings_with_top_level_with_local_item():
     must_equal('?', instance.y)
 
 
+
+@Isolate
+@Test.case
+def test_nesting_mockings_with_top_level_with_local_item_test_test():
+
+    def test():
+        class MyClass3:
+            def __init__(self, x, y):
+                self.x = x
+                self.y = y
+
+            def add_more(self, z):
+                return self.x + self.y + z
+            
+        with Mock.mocking(MyClass3, args=(100, 200)):
+
+            with Mock.mocking(MyClass3, args=(1_000, 2_000)):
+                instance = MyClass3('?', '?')
+        
+                must_equal(1_000, instance.x)
+                must_equal(2_000, instance.y)
+
+            instance = MyClass3('?', '?')
+
+            must_equal(100, instance.x)
+            must_equal(200, instance.y)
+
+        instance = MyClass3('?', '?')
+        
+        must_equal('?', instance.x)
+        must_equal('?', instance.y)
+
+        with Mock.mocking(MyClass3, args=(100, 200)):
+        
+            with Mock.mocking(MyClass3, args=(1_000, 2_000)):
+
+                with Mock.mocking(MyClass3, args=(1_000_000, 2_000_000)):
+
+                    with Mock.mocking(MyClass3, args=(1_000_000_000, 2_000_000_000)):
+                        instance = MyClass3('?', '?')
+
+                        print(instance.x)
+                        print(instance.y)
+                        must_equal(1_000_000_000, instance.x)
+                        must_equal(2_000_000_000, instance.y)
+                
+                
+                instance = MyClass3('?', '?')
+        
+                must_equal(1_000, instance.x)
+                must_equal(2_000, instance.y)
+
+            instance = MyClass3('?', '?')
+
+            must_equal(100, instance.x)
+            must_equal(200, instance.y)
+
+        instance = MyClass3('?', '?')
+        
+        must_equal('?', instance.x)
+        must_equal('?', instance.y)
+
+    test()
+    test()
+
+
+######################################################################################
+######################################################################################
+
+
 # Test shared integration
 
 @Isolate
@@ -305,6 +579,67 @@ def test_mocking_as_context_manager_with_shared_integration():
             print('works')
 
     print('works')
+
+
+
+
+@Isolate
+@Test.case
+@Shared(var.a, var.b, var.c, var.d)
+def test_mocking_as_context_manager_with_shared_integration_test_test():
+
+    def test():
+        var.a, var.b = 1, 2
+        
+        with Mock.mocking(MyClass, args=(var.a, var.b)):
+            instance = MyClass('?', '?')
+            must_equal(1, instance.x)
+            must_equal(2, instance.y)
+
+        with Mock.mocking(MyClass, args=(var.a,), kwargs={'y': var.b}):
+            instance = MyClass('?', '?')
+            must_equal(1, instance.x)
+            must_equal(2, instance.y)
+
+        with Mock.mocking(MyClass, kwargs={'x': var.a, 'y': var.b}):
+            instance = MyClass('?', '?')
+            must_equal(1, instance.x)
+            must_equal(2, instance.y)
+
+
+        var.c = 1_000
+
+        with Mock.mocking(MyClass.add_more, args=(MyClass, var.c,)):
+            must_equal(1 + 2 + 1_000, instance.add_more('?'))
+
+        with Mock.mocking(MyClass.add_more, args=(MyClass,), kwargs={'z': var.c}):
+            must_equal(1 + 2 + 1_000, instance.add_more('?'))
+
+        with Mock.mocking(MyClass.add_more, kwargs={'self': MyClass, 'z': var.c}):
+            must_equal(1 + 2 + 1_000, instance.add_more('?'))
+
+
+        var.a, var.b = 3, 4
+        var.c = 1_000_000
+        var.d = MyClass
+
+        with Mock.mocking(MyClass, args=(var.a, var.b)):
+            with Mock.mocking(MyClass.add_more, args=(var.d, var.c,)):
+                instance = MyClass('?', '?')
+                must_equal(3, instance.x)
+                must_equal(4, instance.y)
+                must_equal(3 + 4 + 1_000_000, instance.add_more('?'))
+                print('works')
+
+        print('works')
+
+    test()
+    test()
+
+
+######################################################################################
+######################################################################################
+
 
 
 # @Isolate
@@ -368,6 +703,10 @@ def test_mocking_as_context_manager_with_shared_integration():
 #     must_equal('?', instance.y)
 
 
+######################################################################################
+######################################################################################
+
+
 
 # Test mocking exceptions
 @Isolate
@@ -398,6 +737,12 @@ def test_exceptions():
     must_equal('Mock class only accepts initialization arguments.', str(context.exception))
 
 
+
+######################################################################################
+######################################################################################
+
+
+
 # Test mocking in outside function
 
 def test_mocked_function(*args, **kwargs):
@@ -415,6 +760,14 @@ def test_mocking_in_outside_function(*args, **kwargs):
 @Test.case
 def test_mocking_in_outside_function_isolated():
     must_equal(15, test_mocking_in_outside_function('?'))
+    must_equal(15, test_mocking_in_outside_function('?'))
+
+
+# TODO add test for mocking on top of outside function
+
+######################################################################################
+######################################################################################
+
 
 
 # Test mocking in imported function
@@ -425,4 +778,9 @@ def test_mocking_in_outside_imported_function_isolated():
     from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import \
         ___test_mocking_in_outside_function
     must_equal(15, ___test_mocking_in_outside_function('?'))
+    must_equal(15, ___test_mocking_in_outside_function('?'))
+
+
+
+# TODO add test for mocking on top of imported function
 
