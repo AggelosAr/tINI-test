@@ -8,6 +8,7 @@ from io import StringIO
 from threading import Lock
 from typing import Any, Generator, Optional
 
+from tini_test._internals.consts import _R_T_REG
 from tini_test.coverage._coverage import CoverageTracker
 from tini_test.misc.annotations import CoverageStore, TestCallable
 from tini_test.mock import MockDefinition, MockNone
@@ -180,20 +181,40 @@ class Mock:
 
         * Use the the `@Isolate` decorator to ensure isolation.
 
-        Should only be used inside a `@Test.case` decorated function.
+        maybe (Should only be used inside a `@Test.case` decorated function.)
         '''
         mock_body = MockDefinition.validate_mock(mock, returns, args, kwargs)
         _mock = MockDefinition(mock, body=mock_body)
         
         # @inspect
         frame = inspect.currentframe().f_back.f_back
+
+        
         test_name = frame.f_code.co_name
 
-        _mock.test_name = test_name
+        test = frame.f_globals.get(test_name)
 
+        look_at = None
+        if _R_T_REG in frame.f_globals:
+            look_at = frame.f_globals
+        if _R_T_REG in _mock.__globals__:
+            look_at = _mock.__globals__
+
+        # If the context manager is used outside the test
+        # We don't have access to the test name .... XXX look_at is None
+        # We patch it correctly but the test name that will appear in the proxy is wrong.
+        # In a way it is correct since it is closer to the caller.
+        # Then the attribute at the mock should change to reflect the actual call site.
+        # And the add_scope will add scope to callables and not real tests....
+    
+        real_test = MockDefinition.get_real_test(look_at or _mock.body.mock.__globals__, test, test_name)
+        
+        MockDefinition.add_scope(_mock, real_test)
+        
         # This mock is closer to the actual call site than the decorator-based mocks if any.
         # This mock is also closer to any local mocks that may exist in the current scope.
         relevant_mocks = MockDefinition._get_previous_mocks(_mock)
+
         if not relevant_mocks:
             MockDefinition.register(_mock)
         

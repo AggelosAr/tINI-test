@@ -3,10 +3,10 @@ import secrets
 import textwrap
 from collections import deque
 from functools import partial
-from typing import Any, Callable, Optional, no_type_check
+from typing import Any, Callable, Optional, Union, no_type_check
 
 from tini_test._internals._registry import attach_state
-from tini_test._internals.consts import _R_M_REG, SALT
+from tini_test._internals.consts import _R_M_REG, _R_T_REG, SALT
 from tini_test.enums import MockType, Plugs
 from tini_test.misc.annotations import (CellName, IsolateWrappedObject,
                                         MockDefinitionWrappedHolder,
@@ -22,7 +22,6 @@ from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
                                        MockMissingFunctionOrClass)
 from tini_test.shared import MetaSharedVar, SharedVar, direct_access
 
-
 _container_types = (list, dict, set)
 
 _meta = MetaSharedVar.get_meta_var()
@@ -36,11 +35,16 @@ class CreateMock:
 
     def __init__(self, mock: MockedFunction | MockedClass, prefix: str = '') -> None:
         self.mock = mock
-
         self._proxy_pool: set[str] = set()
 
+        self._isbuiltin = inspect.isbuiltin(mock)
+
         self._mock_backup_store = lambda: None
-        self._mock_backup_store.__code__ = mock.__code__
+
+        if self._isbuiltin:
+            ...
+        else:
+            self._mock_backup_store.__code__ = self.mock.__code__
 
         # Used to keep track of the anchor name for this mock in the global namespace
         # Changes after each mock are registered in the global namespace
@@ -138,6 +142,9 @@ class CreateMock:
                                     'exec').co_consts[0]
 
     def _restore(self) -> None:
+        if self._isbuiltin:
+            return
+        
         self.mock.__code__ = self._mock_backup_store.__code__
         deque(map(lambda x: self.mock.__globals__.pop(x, None), self._proxy_pool), maxlen=0)
         self._proxy_pool.clear()
@@ -245,6 +252,10 @@ class MockReturn(CreateMock):
         return CreateMock.find_shared(self.return_value)
     
     def _patch(self) -> None:
+        if self._isbuiltin:
+            self.mock.__globals__[self.mock.__name__] = lambda: self.return_value
+            return
+        
         _, _view_name = self._proxy_generator(use_anchor=True)
         _, self._anchor = self._proxy_generator(use_anchor=True)
         
@@ -272,19 +283,23 @@ class MockDefinition:
         self.mock = mock
         self.body = body
 
-        self._test_name = ''
+        self._test: RealTest = lambda: None
+
+    @property
+    def test(self) -> RealTest:
+        return self._test
+
+    @test.setter
+    def test(self, value: RealTest) -> None:
+        self._test = value
 
     @property
     def test_name(self) -> TestFunctionName:
-        return self._test_name
-
-    @test_name.setter
-    def test_name(self, value: TestFunctionName) -> None:
-        self._test_name = value
+        return self.test.__name__
 
     @property
     def __globals__(self) -> dict[str, Any]:
-        return self.body.mock.__globals__
+        return self.test.__globals__
 
     @property
     def _anchor(self) -> str:
@@ -371,6 +386,9 @@ class MockDefinition:
                 raise DuplicateMockRegisteredOnTest(mock_name=mocked_function_name, test_name=test_name)
             unique_mocks.add(mocked_function_name)
 
+    # TODO move these @wrap_utils? and refactor...
+    ############################################################################################################
+    ############################################################################################################
     @classmethod
     @no_type_check
     def _get_previous_mocks(cls, mock: 'MockDefinition') -> list['MockDefinition']:
@@ -389,7 +407,27 @@ class MockDefinition:
         mocks = mock.__globals__.get(_R_M_REG).get(mock.test_name)
         new_mocks = list(filter(lambda m: hex(id(m)) != hex(id(mock)), mocks))
         mock.__globals__[_R_M_REG][mock.test_name] = new_mocks
-    
+
+    @classmethod
+    @no_type_check
+    def get_real_test(cls, 
+                      _from: dict[str, Any], 
+                      test: RealTest,
+                      test_name: TestFunctionName) -> RealTest:
+        return _from.get(_R_T_REG, {}).setdefault(test_name, test)
+    ############################################################################################################
+    ############################################################################################################
+
+    @classmethod
+    def add_scope(cls, 
+                  mocks: Union['MockDefinition', list['MockDefinition']],
+                  test: RealTest) -> None:
+        if not isinstance(mocks, list):
+            mocks = [mocks]
+
+        for mock in mocks:
+            mock.test = test
+
     def patch(self) -> None:
         self.body._patch()
 

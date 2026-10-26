@@ -1,6 +1,9 @@
+import io
+
 from test_about_mocks.test_mocks.tests.test_imports import (add_args_function,
                                                             f1, f2)
 from tini_test import Mock, Test, WillRaise, must_equal
+from tini_test._internals._isolate import Isolate
 from tini_test.misc.exceptions import ExpectedWasDifferentFromActual
 
 
@@ -295,3 +298,14 @@ def test_mock_correclty_replaces_args_as_kwargs_2():
     print('works')
     must_equal(1 + 2 + 1000 + 4, func_rx(1/0.1))
 
+
+# mock builtins file open
+
+# @Isolate
+# @Test.case
+# @Mock.mock(open, returns=io.StringIO('mocked content'))
+# def test_mock_file_open():
+#     with open('file.txt', 'r') as f:
+#         content = f.read()
+#     print(content)
+#     must_equal('mocked content', content)

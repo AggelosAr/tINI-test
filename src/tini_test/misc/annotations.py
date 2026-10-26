@@ -159,8 +159,14 @@ I_ConstRegId = NewType('I_ConstRegId', str)
 C_ConstRegId = NewType('C_ConstRegId', str)
 
 
+# Resolved Dependencies
+# For now we only need the list of the MockDefinitions
 R_M_ConstRegId = NewType('R_M_ConstRegId', str)
 type ResolvedMockDependencies[_MockDefinition] = dict[TestFunctionName, list[_MockDefinition]]
+
+# For now we need just the RealTest
+R_T_ConstRegId = NewType('R_T_ConstRegId', str)
+ResolvedTestDependencies: TypeAlias = dict[TestFunctionName, RealTest]
 
 
 class GlobalRegistry(dict[str, Any]):
@@ -178,6 +184,8 @@ class GlobalRegistry(dict[str, Any]):
 
     @overload
     def __getitem__(self, key: R_M_ConstRegId) -> ResolvedMockDependencies | None: ...
+    @overload
+    def __getitem__(self, key: R_T_ConstRegId) -> ResolvedTestDependencies | None: ...
 
     @overload
     def __getitem__(self, key: str) -> Any: ...
@@ -197,6 +205,8 @@ class GlobalRegistry(dict[str, Any]):
 
     @overload
     def get(self, key: R_M_ConstRegId, default: None = None, /) -> ResolvedMockDependencies | None: ...
+    @overload
+    def get(self, key: R_T_ConstRegId, default: None = None, /) -> ResolvedTestDependencies | None: ...
 
     @overload
     def get(self, key: str, default: Any = None, /) -> Any: ...
@@ -216,6 +226,8 @@ class GlobalRegistry(dict[str, Any]):
 
     @overload
     def __setitem__(self, key: R_M_ConstRegId, value: ResolvedMockDependencies) -> None: ...
+    @overload
+    def __setitem__(self, key: R_T_ConstRegId, value: ResolvedTestDependencies) -> None: ...
 
     @overload
     def __setitem__(self, key: str, value: Any) -> None: ...

@@ -8,13 +8,14 @@ from typing import Callable, Counter, Optional
 
 from tini_test._internals._ast_utils import AstParser
 from tini_test._internals.consts import (_C_REG, _I_REG, _LINE_CLEAR, _LINE_UP,
-                                         _M_REG, _R_M_REG, _RESET, _S_REG,
-                                         _T_REG)
+                                         _M_REG, _R_M_REG, _R_T_REG, _RESET,
+                                         _S_REG, _T_REG)
 from tini_test.enums import Color, Coverage, RunMode, Verbosity
 from tini_test.misc.annotations import (C_Reg, DirectoryPath, DotPythonPath,
                                         Errors, FileName, I_Reg, M_Reg,
                                         PartialObject,
-                                        ResolvedMockDependencies, S_Reg, T_Reg,
+                                        ResolvedMockDependencies,
+                                        ResolvedTestDependencies, S_Reg, T_Reg,
                                         TestCollectionSize, TestFunctionName,
                                         _ReverseWrapConnections)
 from tini_test.misc.exceptions import DuplicateTestFound
@@ -50,6 +51,7 @@ class TestCollection:
         self.CONNECTION_REGISTRY : C_Reg = {}
 
         self.RESOLVED_MOCK_REGISTRY : ResolvedMockDependencies[MockDefinition] = {}
+        self.RESOLVED_TEST_REGISTRY : ResolvedTestDependencies = {}
 
         self.module: Optional[ModuleType] = None
         
@@ -100,6 +102,7 @@ class TestCollection:
             _C_REG : self.CONNECTION_REGISTRY,
 
             _R_M_REG : self.RESOLVED_MOCK_REGISTRY,
+            _R_T_REG : self.RESOLVED_TEST_REGISTRY,
         }
         module.__dict__.update(context)
 
@@ -200,7 +203,8 @@ class TestCollection:
                     test_chain.validate_dependencies()
 
                     test_chain.add_scope()
-                    test_chain.update_resolved_registries(self.RESOLVED_MOCK_REGISTRY)
+                    test_chain.update_resolved_registries(self.RESOLVED_MOCK_REGISTRY,
+                                                          self.RESOLVED_TEST_REGISTRY)
                     
                     if test_chain.mocks:
                         t_obj = partial(t_obj, _XTest____mocks=test_chain.mocks)

@@ -422,6 +422,7 @@ def test_mocking_in_outside_function_isolated():
 @Isolate
 @Test.case
 def test_mocking_in_outside_imported_function_isolated():
-    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import ___test_mocking_in_outside_function
+    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import \
+        ___test_mocking_in_outside_function
     must_equal(15, ___test_mocking_in_outside_function('?'))
 
