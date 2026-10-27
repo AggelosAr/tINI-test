@@ -259,38 +259,6 @@ def test_mock_mocking_with_context_manager():
 
 # Test imports
 
-# XXX 
-# Very important test 
-# Add tests for returns and functions. Test closure transfer... Move it to a seperate file.?
-
-@Isolate
-@Test.case
-def sanity_check():
-    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import test_imported_x_function
-
-    must_equal(1 + 100, test_imported_x_function(1, use_mock=True))
-
-    must_equal(2 + 200, test_imported_x_function(2, use_mock=False))
-
-    # ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    # ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    def test():
-        from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import test_imported_x_function
-    
-        must_equal(1 + 100, test_imported_x_function(1, use_mock=True))
-    
-        must_equal(2 + 200, test_imported_x_function(2, use_mock=False))
-
-    test()
-    test()
-
-    # ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    # ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-
-# TODO are we updating the wrong globals ???????? 
 
 @Isolate
 @Test.case
@@ -337,9 +305,11 @@ def test_imported_builtin_open():
 
 
 
-# TODO add  a test like the previous with Mock.mock to test globals 
 
 
 
 # names?
 # TODO test builtints?
+
+
+# TODO are we updating the wrong globals ???????? 
