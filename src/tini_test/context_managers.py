@@ -1,7 +1,7 @@
 import inspect
 import sys
 import threading
-from collections import deque
+from collections import Counter, deque
 from contextlib import contextmanager
 from functools import partial
 from io import StringIO
@@ -164,6 +164,11 @@ def coverage(trace: bool, storage: CoverageStore) -> Generator[None, None, None]
         yield
 
 
+
+
+
+
+
 class Mock:
 
     @staticmethod
@@ -184,12 +189,38 @@ class Mock:
         # print('MOCK IS : ', mock)
         frame = inspect.currentframe()
         previous = frame
-        
+
+        globals_to_update = []
+
+        # found_enter = 0
+        # gatherins_globals = True
         # Go back ~two frames to find the `run_step` ... bad but necessary, breaks on async I suppose
         while frame and frame.f_code.co_name != 'run_step':
             previous = frame
             frame = frame.f_back
-    
+            # In case of built-in we must update the globals of the immediate exit.
+            # Can we know what that is ?
+            # for now take all globals 
+            # We must only update the globals relevant following the immediate exit, also wrong ? if there are multiple
+            # mockings there ? 
+
+            # if found_enter == 2:
+            #     gatherins_globals = False
+
+            # if gatherins_globals:
+            #     globals_to_update.append(previous.f_globals or {})
+
+            # if found_enter >= 1:
+            #     found_enter += 1
+
+
+            # if previous.f_code.co_name == '__enter__':
+            #     found_enter += 1
+
+            globals_to_update.append(previous.f_globals or {})
+
+            
+            
         frame = previous
 
         real_test = MockDefinition._cx_get_real_test(frame)
@@ -221,11 +252,12 @@ class Mock:
         try:
             deque(map(lambda __mock: __mock.restore(), relevant_mocks), maxlen=0)
 
-            _mock.patch()
+            _mock.patch(globals_to_update)
 
             yield
         finally:
             _mock.restore()
+
             if not relevant_mocks:
                 _mock._cx_unregister()
 

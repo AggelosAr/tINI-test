@@ -35,6 +35,13 @@ PATCHED_BUILTINS = {}
 CURRENTLY_PATCHING = {}
 
 
+# We must keep track of all globals in the current test 
+# Built ins sould be patched EVERYWHERE.
+# Test to list of globals that need to be updated with mocks
+_CreateMock__GLOBALS = {}
+
+
+
 
 _container_types = (list, dict, set)
 
@@ -115,6 +122,10 @@ class CreateMock:
     @property
     def test(self) -> RealTest:
         return self._lambda_context
+
+    @property
+    def test_name(self) -> str:
+        return self.test.__name__
     
     @test.setter
     def test(self, value: RealTest) -> None:
@@ -207,6 +218,10 @@ class CreateMock:
         match self._isbuiltin:
 
             case True:
+               
+                for _global in _CreateMock__GLOBALS[self.test_name]:
+                    _global[self.mock.__name__] = self._mock_backup_store
+
                 self.__globals__[self.mock.__name__] = self._mock_backup_store
             
             case False:
@@ -264,6 +279,10 @@ class MockCall(CreateMock):
             _args = lambda: CreateMock.replace_shared(self.args)
             _kwargs = lambda: CreateMock.replace_shared(self.kwargs)
             replacement = lambda *args, **kwargs: self.mock(*_args(), **_kwargs())
+
+            for _global in _CreateMock__GLOBALS[self.test_name]:
+                _global[self.mock.__name__] = replacement
+
             self.__globals__[self.mock.__name__] = replacement
             return hex(id(replacement))
         
@@ -330,6 +349,10 @@ class MockReturn(CreateMock):
     def _patch(self) -> HexStr | None:
         if self._isbuiltin:
             replacement = lambda *args, **kwargs: CreateMock.replace_shared(self.return_value)
+
+            for _global in _CreateMock__GLOBALS[self.test_name]:
+                _global[self.mock.__name__] = replacement
+
             self.__globals__[self.mock.__name__] = replacement
             return hex(id(replacement))
         
@@ -519,7 +542,12 @@ class MockDefinition:
         _cx_mock.__globals__[_R_M_REG][_cx_mock.test_name] = new_mocks
     ####################################
 
-    def patch(self) -> None:
+    def patch(self, _at: list[dict] = None) -> None:
+
+        if _at is None:
+            _at = []
+        _CreateMock__GLOBALS.setdefault(self.test_name, []).extend(_at)
+
         _id = self.body._patch()
 
         # The only problem is in cx built-ins, as a result this is OK! XXX
