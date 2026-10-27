@@ -382,15 +382,17 @@ def test_MOCK_ABC():
         must_equal('inside C', C_open())
 
 
-    with WillRaise(TypeError):
-        A_open()
+    var.root = os.path.join(os.path.dirname(__file__), 'txts', 'b.txt')
+    must_equal('inside B', A_open())
+    must_equal('inside B', B_open())
+    must_equal('inside B', C_open())
 
-    with WillRaise(TypeError):
-        B_open()
+    var.root = os.path.join(os.path.dirname(__file__), 'txts', 'a.txt')
+    must_equal('inside A', A_open())
+    must_equal('inside A', B_open())
+    must_equal('inside A', C_open())
 
-    with WillRaise(TypeError):
-        C_open()
-
+    
 # Test updating built-in open with Mocking
 # On various places.
 

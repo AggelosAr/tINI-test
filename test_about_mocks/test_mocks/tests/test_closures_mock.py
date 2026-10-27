@@ -364,7 +364,7 @@ def imported_test_closure_modify_global():
 def imported_test_closure_modify_global_Y():
     must_equal(100, imported_closure_modify_global_Y())
     from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.closure_mock_utils import \
-        u
+        UPDATED as u # did this break isort? who knows ....
     must_equal(True, 'Y' in u)
 
 

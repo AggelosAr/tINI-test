@@ -12,6 +12,18 @@ def ___test_mocked_function(*args, **kwargs):
 
 
 
+#////////////////////////////////////
+def ___test_mocking_in_outside_function(*args, **kwargs):
+    from tini_test import Mock, must_equal, var
+    with Mock.mocking(___test_mocked_function, args=(5, 5), kwargs={'k_val_1': 5}):
+        result = ___test_mocked_function('?')
+    must_equal(15, result)
+    return result
+#////////////////////////////////////
+
+
+
+
 
 def C_open(*args, **kwargs):
     with open('?') as f:

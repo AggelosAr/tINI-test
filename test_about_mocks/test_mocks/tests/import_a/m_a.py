@@ -13,7 +13,6 @@ def A_open(*args, **kwargs):
     # for k, v in globals().items():
     #     print(k)
 
-    print('--------------------')
     with open('?') as f:
         return f.read()
 

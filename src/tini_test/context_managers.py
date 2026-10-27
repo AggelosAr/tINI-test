@@ -1,7 +1,7 @@
+from collections import deque
 import inspect
 import sys
 import threading
-from collections import deque
 from contextlib import contextmanager
 from functools import partial
 from io import StringIO
@@ -11,8 +11,7 @@ from typing import Any, Generator, Optional
 from tini_test.coverage._coverage import CoverageTracker
 from tini_test.misc.annotations import (CoverageStore, DirectoryPath,
                                         TestCallable)
-from tini_test.mock import (CURRENTLY_PATCHING, PATCHED_BUILTINS,
-                            BuiltInArtifact, CreateMock, MockDefinition,
+from tini_test.mock import (BuiltInArtifact, CreateMock, MockDefinition,
                             MockNone)
 from tini_test.shared import MetaSharedVar, SharedVar, direct_access
 
@@ -120,7 +119,7 @@ def with_lock(use: bool) -> Generator[None, None, None]:
 @contextmanager
 def patch_built_ins(apply_at: DirectoryPath):
     previous = sys.gettrace()
-    sys.settrace(partial(CreateMock.built_in_replacer, apply_at))
+    sys.settrace(partial(BuiltInArtifact.built_in_replacer, apply_at))
     try:
         yield
     finally:
@@ -132,13 +131,11 @@ def patch_built_ins(apply_at: DirectoryPath):
 def patch_mocks(mocks: list[MockDefinition], replace_at: DirectoryPath) -> Generator[None, None, None]:
     if mocks:
         try:
-
             MockDefinition.patch_all(mocks)
 
             with patch_built_ins(replace_at):
 
                 yield
-
 
         finally:
             MockDefinition.restore_all(mocks)
@@ -205,77 +202,51 @@ class Mock:
 
         * (Should only be used inside a `@Test.case` decorated function.)
         '''
-        # print('MOCK IS : ', mock)
         frame = inspect.currentframe()
         previous = frame
 
-
-        # found_enter = 0
-        # gatherins_globals = True
         # Go back ~two frames to find the `run_step` ... bad but necessary, breaks on async I suppose
         while frame and frame.f_code.co_name != 'run_step':
             previous = frame
             frame = frame.f_back
-            # In case of built-in we must update the globals of the immediate exit.
-            # Can we know what that is ?
-            # for now take all globals 
-            # We must only update the globals relevant following the immediate exit, also wrong ? if there are multiple
-            # mockings there ? 
-
-            # if found_enter == 2:
-            #     gatherins_globals = False
-
-            # if gatherins_globals:
-            #     globals_to_update.append(previous.f_globals or {})
-
-            # if found_enter >= 1:
-            #     found_enter += 1
-
-
-            # if previous.f_code.co_name == '__enter__':
-            #     found_enter += 1
-
-            
-            
+         
         frame = previous
 
+
         real_test = MockDefinition._cx_get_real_test(frame)
-        # print('REAL TEST IS : ', real_test)
 
-        # In case of a built-in *ONLY* , since we are replacing direcly
-        # the global reference to it. We may receive it again as a patched object.
-        _id = hex(id(mock))
-        
-        if inspect.isbuiltin(mock):
-            PATCHED_BUILTINS[_id] = mock
-
-        if _id in CURRENTLY_PATCHING:
-            mock = PATCHED_BUILTINS[CURRENTLY_PATCHING[_id]]
-
+        mock = BuiltInArtifact.get_original_if_exists(mock)
 
         mock_body = MockDefinition.validate_definition(mock, returns, args, kwargs)
         _mock = MockDefinition(mock_body)
 
         MockDefinition.add_scope(_mock, real_test)
-      
+
         # This mock is closer to the actual call site than the decorator-based mocks if any.
         # This mock is also closer to any local mocks that may exist in the current scope.
         relevant_mocks = _mock._cx_get_previous_mocks()
+
 
         if not relevant_mocks:
             _mock._cx_register()
         
         try:
-            deque(map(lambda __mock: __mock.restore(), relevant_mocks), maxlen=0)
-            #BuiltInArtifact.restore()
+            deque(map(lambda mock: mock.restore(), relevant_mocks), maxlen=0)
 
             _mock.patch()
 
-            yield
+            with patch_built_ins('/home/papaggalos/workspace/python_projects/tINI-test'):
+
+                yield
+
         finally:
             _mock.restore()
+
+            # Here we need 
 
             if not relevant_mocks:
                 _mock._cx_unregister()
 
-            deque(map(lambda __mock: __mock.patch(), relevant_mocks), maxlen=0)
+            MockDefinition.patch_all(relevant_mocks)
+            # In this case we need to reapply the previously restored mocks for built ins.
+

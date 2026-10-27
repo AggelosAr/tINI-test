@@ -29,16 +29,11 @@ from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
                                        MockMissingFunctionOrClass)
 from tini_test.shared import MetaSharedVar, SharedVar, direct_access
 
-# XXX move this somewhere else ... or refactor the resolved mock registration mechanism
-# id of original -> built-in object
-PATCHED_BUILTINS = {}
-# id of patched object -> id of original
-CURRENTLY_PATCHING = {}
 
 # File to globals 
 TRACKING_GLOBALS = {}
 
-ARTIFACT_TRACKER = []
+ARTIFACT_TRACKER: list[Union['BuiltInArtifact']] = []
 
 
 _container_types = (list, dict, set)
@@ -56,16 +51,56 @@ class BuiltInArtifact:
         self._name = mock.mock.__name__
         self.original = original
         self.replacement = replacement
+
+        self.applied_at: list[dict] = []
         
     @property
     def __name__(self) -> str:
         return self._name
 
     @classmethod
+    def get_original_if_exists(cls, obj: Any) -> Callable:
+        # In case of a built-in *ONLY* , since we are replacing direcly
+        # the global reference to it. We may receive it again as a patched object.
+        for artifact in ARTIFACT_TRACKER:
+            if hex(id(artifact.replacement)) == hex(id(obj)):
+                return artifact.original
+        return obj
+
+    @classmethod
     def restore(cls) -> None:
-        for files_globals in TRACKING_GLOBALS.values():
-            for artifact in ARTIFACT_TRACKER:
+        for artifact in ARTIFACT_TRACKER:
+            for files_globals in artifact.applied_at:
                 files_globals[artifact.__name__] = artifact.original
+
+        TRACKING_GLOBALS.clear()
+
+    # TODO maybe apply similar logic to the coverage tracker ? 
+    # Also merge them into one.
+    @staticmethod
+    def built_in_replacer(apply_at: DirectoryPath, frame: FrameType, event: str, *args):
+        _return = partial(BuiltInArtifact.built_in_replacer, apply_at)
+
+        if event != 'call':
+            return _return
+        
+        filename = os.path.abspath(frame.f_code.co_filename)
+
+        # Minor inconveniences ...
+        if not filename.startswith(apply_at) or not filename.endswith('.py') or 'site-packages' in filename:
+            return _return
+
+        globals_dict = frame.f_globals
+        
+        if filename not in TRACKING_GLOBALS:
+            
+            TRACKING_GLOBALS[filename] = globals_dict
+
+            for _artifact in ARTIFACT_TRACKER:
+                globals_dict[_artifact.__name__] = _artifact.replacement
+                _artifact.applied_at.append(frame.f_globals)
+
+        return _return
 
 
 class CreateMock:
@@ -145,33 +180,6 @@ class CreateMock:
                 target.__defaults__,
                 cells or None,
             )
-        
-    # TODO maybe apply similar logic to the coverage tracker ? 
-    # Also merge them into one.
-    @staticmethod
-    def built_in_replacer(apply_at: DirectoryPath, frame: FrameType, event: str, *args):
-        _return = partial(CreateMock.built_in_replacer, apply_at)
-
-        if event != 'call':
-            return _return
-        
-        filename = os.path.abspath(frame.f_code.co_filename)
-
-        # Minor inconveniences ...
-        if not filename.startswith(apply_at) or not filename.endswith('.py') or 'site-packages' in filename:
-            return _return
-
-        globals_dict = frame.f_globals
-        
-        if filename not in TRACKING_GLOBALS:
-            # print('FOUND NEW FILE:', filename)
-            
-            TRACKING_GLOBALS[filename] = globals_dict
-
-            for _artifact in ARTIFACT_TRACKER:
-                globals_dict[_artifact.__name__] = _artifact.replacement
-
-        return _return
     
     @staticmethod
     def get_var(from_var: bool, _var: SharedVar) -> Any:
@@ -375,7 +383,7 @@ class MockReturn(CreateMock):
     def _patch(self) -> BuiltInArtifact | None:
         if self._isbuiltin:
             replacement = lambda *args, **kwargs: CreateMock.replace_shared(self.return_value)
-            return BuiltInArtifact(self, replacement)
+            return BuiltInArtifact(self, self.mock, replacement)
         
         _, _view_name = self._proxy_generator(use_anchor=True)
         _, self._anchor = self._proxy_generator(use_anchor=True)
@@ -571,13 +579,8 @@ class MockDefinition:
 
         artifact = self.body._patch()
 
-        _id = hex(id(artifact.replacement))
-        # The only problem is in cx built-ins, as a result this is OK! XXX
-        if self.body._isbuiltin:
-            PATCHED_BUILTINS[hex(id(self.body.mock))] = self.body.mock
-        CURRENTLY_PATCHING[_id] = hex(id(self.body.mock))
-
-        ARTIFACT_TRACKER.append(artifact)
+        if artifact:
+            ARTIFACT_TRACKER.append(artifact)
 
     def restore(self) -> None:
         self.body._restore()
@@ -585,12 +588,15 @@ class MockDefinition:
     @classmethod
     def patch_all(cls, mocks: list['MockDefinition']) -> None:
         deque(map(lambda mock: mock.patch(), mocks), maxlen=0)
-        #ARTIFACT_TRACKER.append(object)
-
+        
     @classmethod
     def restore_all(cls, mocks: list['MockDefinition']) -> None:
         deque(map(lambda mock: mock.restore(), mocks), maxlen=0)
         BuiltInArtifact.restore()
+
+        # Here we must return what built ins we restored for the context manager so we can reapply thyem .
+
+        
 
 
 class Mock:
