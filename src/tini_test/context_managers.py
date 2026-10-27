@@ -8,10 +8,9 @@ from io import StringIO
 from threading import Lock
 from typing import Any, Generator, Optional
 
-from tini_test._internals.consts import _R_T_REG
 from tini_test.coverage._coverage import CoverageTracker
 from tini_test.misc.annotations import CoverageStore, TestCallable
-from tini_test.mock import MockDefinition, MockNone
+from tini_test.mock import CURRENTLY_PATCHING, PATCHED_BUILTINS, MockDefinition, MockNone
 from tini_test.shared import MetaSharedVar, SharedVar, direct_access
 
 from .misc.exceptions import (ExceptionWasNotRaised,
@@ -165,13 +164,6 @@ def coverage(trace: bool, storage: CoverageStore) -> Generator[None, None, None]
         yield
 
 
-# XXX move this somewhere else ... or refactor the resolved mock registration mechanism
-# id of original -> built-in object
-PATCHED_BUILTINS = {}
-# id of patched object -> id of original
-CURRENTLY_PATCHING = {}
-
-
 class Mock:
 
     @staticmethod
@@ -189,36 +181,34 @@ class Mock:
 
         * (Should only be used inside a `@Test.case` decorated function.)
         '''
+        # print('MOCK IS : ', mock)
+        frame = inspect.currentframe()
+        previous = frame
+        
+        # Go back ~two frames to find the `run_step` ... bad but necessary, breaks on async I suppose
+        while frame and frame.f_code.co_name != 'run_step':
+            previous = frame
+            frame = frame.f_back
+    
+        frame = previous
+
+        real_test = MockDefinition._cx_get_real_test(frame)
+        # print('REAL TEST IS : ', real_test)
+
         # In case of a built-in *ONLY* , since we are replacing direcly
         # the global reference to it. We may receive it again as a patched object.
-        print('MOCK IS : ', mock)
-        o_id = hex(id(mock))
+        _id = hex(id(mock))
         
         if inspect.isbuiltin(mock):
-            PATCHED_BUILTINS[o_id] = mock
+            PATCHED_BUILTINS[_id] = mock
 
-        if o_id in CURRENTLY_PATCHING:
-            mock = PATCHED_BUILTINS[CURRENTLY_PATCHING[o_id]]
+        if _id in CURRENTLY_PATCHING:
+            mock = PATCHED_BUILTINS[CURRENTLY_PATCHING[_id]]
 
 
         mock_body = MockDefinition.validate_definition(mock, returns, args, kwargs)
         _mock = MockDefinition(mock_body)
 
-
-        frame = inspect.currentframe()
-
-        previous = frame
-        # Go back two frames to find the `run_step` ... bad but necessary, breaks on async I suppose
-        while frame and frame.f_code.co_name != 'run_step':
-            previous = frame
-            frame = frame.f_back
- 
-        frame = previous
-
-
-        real_test = MockDefinition._cx_get_real_test(frame)
-
-        print('real_test:', real_test)
         MockDefinition.add_scope(_mock, real_test)
       
         # This mock is closer to the actual call site than the decorator-based mocks if any.
@@ -231,10 +221,7 @@ class Mock:
         try:
             deque(map(lambda __mock: __mock.restore(), relevant_mocks), maxlen=0)
 
-            p_id = _mock.patch()
-
-            # The only problem is in built-ins, as a result this is OK!
-            CURRENTLY_PATCHING[p_id] = o_id
+            _mock.patch()
 
             yield
         finally:

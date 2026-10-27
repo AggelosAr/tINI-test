@@ -2,24 +2,25 @@ from typing import (Any, Callable, NamedTuple, NewType, TypeAlias, TypeVar,
                     overload)
 
 # -------------- PATHS --------------
-DirectoryPath: TypeAlias = str
-FileName: TypeAlias = str
+DirectoryPath   : TypeAlias = str
+FileName        : TypeAlias = str
 
-DotPythonPath: TypeAlias = str
+DotPythonPath   : TypeAlias = str
 # -------------- PATHS --------------
 
 
 
 # -------------- COVERAGE --------------
-CodeLineNumber: TypeAlias = int
-LineContent: TypeAlias = str
+CodeLineNumber  : TypeAlias = int
+LineContent     : TypeAlias = str
 
-StatementId: TypeAlias = int
+StatementId     : TypeAlias = int
 
 
-HTML: TypeAlias = str
+HTML        : TypeAlias = str
 
-HTMLContent: TypeAlias = str
+HTMLContent : TypeAlias = str
+
 
 CoverageStore: TypeAlias = dict[DirectoryPath, set[CodeLineNumber]]
 # -------------- COVERAGE --------------
@@ -47,27 +48,27 @@ Comperator      : TypeAlias = Callable[..., Any] # !!!!!
 
 
 # -------------- TIMERS --------------
-TimeTakenForTestDiscovery: TypeAlias = float
-TimeTakenForSuiteInitialization: TypeAlias = float
-TimeTakenForTestCollection: TypeAlias = float
+TimeTakenForTestDiscovery       : TypeAlias = float
+TimeTakenForSuiteInitialization : TypeAlias = float
+TimeTakenForTestCollection      : TypeAlias = float
 
-TimeTakenForTest: TypeAlias = float
+TimeTakenForTest    : TypeAlias = float
 
-TimeTakenToRunSuite: TypeAlias = float
+TimeTakenToRunSuite : TypeAlias = float
 # -------------- TIMERS -----------------
 
 
 
 
 # -------------- SUMMARY STATS --------------
-SuiteSize: TypeAlias = int
-TestCollectionSize: TypeAlias = int
+SuiteSize           : TypeAlias = int
+TestCollectionSize  : TypeAlias = int
 
-Successes: TypeAlias = int
+Successes           : TypeAlias = int
 
-Errors: TypeAlias = int
+Errors              : TypeAlias = int
 
-FileLoadFailures: TypeAlias = int
+FileLoadFailures    : TypeAlias = int
 # -------------- SUMMARY STATS --------------
 
 
@@ -270,8 +271,8 @@ type SharedVars[_SharedVar] = dict[SharedId, _SharedVar]
 TestPart: TypeAlias = HexStr
 type LocalSharedScope[_SharedVar] = dict[TestPart, SharedVars[_SharedVar]]
 
-CellName: TypeAlias = str
-CellValue: TypeAlias = Any
+CellName    : TypeAlias = str
+CellValue   : TypeAlias = Any
 # -------------- SHARED SPECIFICS --------------
 
 

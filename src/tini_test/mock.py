@@ -4,6 +4,7 @@ import textwrap
 from collections import deque
 from functools import partial
 from types import FrameType
+import types
 from typing import Any, Callable, Optional, Self, Union, cast
 
 from tini_test._internals._registry import attach_state
@@ -26,6 +27,15 @@ from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
                                        MockMissingFunctionOrClass)
 from tini_test.shared import MetaSharedVar, SharedVar, direct_access
 
+
+# XXX move this somewhere else ... or refactor the resolved mock registration mechanism
+# id of original -> built-in object
+PATCHED_BUILTINS = {}
+# id of patched object -> id of original
+CURRENTLY_PATCHING = {}
+
+
+
 _container_types = (list, dict, set)
 
 _meta = MetaSharedVar.get_meta_var()
@@ -33,6 +43,34 @@ _meta = MetaSharedVar.get_meta_var()
 
 class MockNone:
     __slots__ = ()
+
+
+def transfer_closure(target, source, is_code=False):
+    cells = source.__closure__ or ()
+    names = source.__code__.co_freevars
+
+    # if targer is alredy code object, we just replace the freevars
+    if is_code:
+        target = target.replace(co_freevars=names)
+        code = target
+        return types.FunctionType(
+            code,
+            {},
+            target.co_name,
+            None,
+            cells or None,
+        )
+    else:
+        code = target.__code__.replace(co_freevars=names)
+
+
+        return types.FunctionType(
+            code,
+            target.__globals__,
+            target.__name__,
+            target.__defaults__,
+            cells or None,
+        )
 
 
 class CreateMock:
@@ -51,6 +89,7 @@ class CreateMock:
             self._mock_backup_store = mock
         else:
             self._mock_backup_store = lambda: None
+            self._mock_backup_store = transfer_closure(self._mock_backup_store, self.mock)
             self._mock_backup_store.__code__ = self.mock.__code__
 
         # Used to keep track of the anchor name for this mock in the global namespace
@@ -65,6 +104,9 @@ class CreateMock:
         # or find it from the globals in the case of the context manager.
         # TODO Consider initializing the test context properly to avoid relying on a lambda placeholder.
         self._lambda_context: RealTest | MaybeRealTest = lambda: None
+
+        # TODO in case of builint we must apply the patch to the current globals.
+        # also in the tests's globals ? 
 
     @property
     def _isbuiltin(self) -> bool:
@@ -157,7 +199,9 @@ class CreateMock:
         return ProxyItem(_proxy, _proxy.__name__)
 
     def _compile_mock(self, source: str) -> None:
-        self.mock.__code__ = compile(textwrap.dedent(source), '<string>', 'exec').co_consts[0]
+        new_code = compile(textwrap.dedent(source), '<string>', 'exec').co_consts[0]
+        new_code = transfer_closure(new_code, self.mock, True)
+        self.mock.__code__ = new_code.__code__
 
     def _restore(self) -> None:
         match self._isbuiltin:
@@ -226,7 +270,8 @@ class MockCall(CreateMock):
         _, _view_name = self._proxy_generator(use_anchor=True)
         
         anchor, self._anchor = self._proxy_generator(use_anchor=True)
-
+        anchor = transfer_closure(anchor, self.mock)
+        
         _, _proxy_locals__args_name = self._proxy_generator()
         _, _proxy_locals__kwargs_name = self._proxy_generator()
 
@@ -372,7 +417,6 @@ class MockDefinition:
         
         raise MockMissingFunctionOrClass
 
-
     @staticmethod
     def validate_definition(mock: Any,
                             returns: Any, 
@@ -475,8 +519,13 @@ class MockDefinition:
         _cx_mock.__globals__[_R_M_REG][_cx_mock.test_name] = new_mocks
     ####################################
 
-    def patch(self) -> HexStr | None:
-        return self.body._patch()
+    def patch(self) -> None:
+        _id = self.body._patch()
+
+        # The only problem is in cx built-ins, as a result this is OK! XXX
+        if self.body._isbuiltin:
+            PATCHED_BUILTINS[hex(id(self.body.mock))] = self.body.mock
+        CURRENTLY_PATCHING[_id] = hex(id(self.body.mock))
 
     def restore(self) -> None:
         self.body._restore()

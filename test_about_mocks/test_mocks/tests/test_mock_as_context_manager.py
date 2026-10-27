@@ -1,3 +1,4 @@
+from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import ___test_mocking_in_outside_function
 from tini_test import Isolate, Mock, Shared, Test, WillRaise, must_equal, var
 from tini_test.misc.exceptions import MockClassDefinitionError
 
@@ -815,7 +816,13 @@ def test_mocking_in_outside_function_isolated():
     must_equal(15, test_mocking_in_outside_function('?'))
 
 
-# TODO add test for mocking on top of outside function
+# test for mocking on top of outside function, AKA ignore context
+@Isolate
+@Test.case
+@Mock.mock(test_mocking_in_outside_function, args=('?', '?'), kwargs={'k_val_1': '?'})
+def test_mocking_on_top_of_outside_function_isolated():
+    must_equal(15, test_mocking_in_outside_function('?'))
+    must_equal(15, test_mocking_in_outside_function('?'))
 
 ######################################################################################
 ######################################################################################
@@ -834,5 +841,13 @@ def test_mocking_in_outside_imported_function_isolated():
 
 
 
-# TODO add test for mocking on top of imported function
+# test for mocking on top of imported function, AKA ignore context
 
+@Isolate
+@Test.case
+@Mock.mock(___test_mocking_in_outside_function, args=('?', '?'), kwargs={'k_val_1': '?'})
+def test_mocking_on_top_of_imported_function_isolated():
+    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import \
+        ___test_mocking_in_outside_function
+    must_equal(15, ___test_mocking_in_outside_function('?'))
+    must_equal(15, ___test_mocking_in_outside_function('?'))

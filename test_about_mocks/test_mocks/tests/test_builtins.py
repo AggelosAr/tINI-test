@@ -235,6 +235,70 @@ def test_mock_mocking_with_context_manager():
 
 # Test imports
 
+# XXX 
+# Very important test 
+# Add tests for returns and functions. 
+
+@Isolate
+@Test.case
+def sanity_check():
+    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import test_imported_x_function
+
+    must_equal(1 + 100, test_imported_x_function(1, use_mock=True))
+
+    must_equal(2 + 200, test_imported_x_function(2, use_mock=False))
+
+    # ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    # ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    def test():
+        from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import test_imported_x_function
+    
+        must_equal(1 + 100, test_imported_x_function(1, use_mock=True))
+    
+        must_equal(2 + 200, test_imported_x_function(2, use_mock=False))
+
+    test()
+    test()
+    # ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    # ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+# TODO are we updating the wrong globals ????????
+
+@Isolate
+@Test.case
+@Shared(var.root)
+def test_imported_builtin_open():
+    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import test_imported_builtin_open
+    var.root = os.path.dirname(__file__)
+
+    must_equal('Hello from the void.', test_imported_builtin_open('not_extisting.txt', use_mock=True))
+
+    must_equal('Hello from the void.', test_imported_builtin_open('also_here.txt', use_mock=False))
+
+    with Mock.mocking(open, args=(os.path.join(var.root, 'here.txt'), 'r')):
+        must_equal('Hello there!', test_imported_builtin_open('?', use_mock=False))
+
+    # ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    # ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    def test():
+        from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import test_imported_builtin_open
+        var.root = os.path.dirname(__file__)
+    
+        must_equal('Hello from the void.', test_imported_builtin_open('not_extisting.txt', use_mock=True))
+    
+        must_equal('Hello from the void.', test_imported_builtin_open('also_here.txt', use_mock=False))
+    
+        with Mock.mocking(open, args=(os.path.join(var.root, 'here.txt'), 'r')):
+            must_equal('Hello there!', test_imported_builtin_open('?', use_mock=False))
+
+    test()
+    test()
+    # ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    # ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 # names?
 # TODO test builtints?
