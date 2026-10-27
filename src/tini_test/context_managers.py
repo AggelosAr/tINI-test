@@ -1,7 +1,7 @@
 import inspect
 import sys
 import threading
-from collections import Counter, deque
+from collections import deque
 from contextlib import contextmanager
 from functools import partial
 from io import StringIO
@@ -9,8 +9,11 @@ from threading import Lock
 from typing import Any, Generator, Optional
 
 from tini_test.coverage._coverage import CoverageTracker
-from tini_test.misc.annotations import CoverageStore, TestCallable
-from tini_test.mock import CURRENTLY_PATCHING, PATCHED_BUILTINS, MockDefinition, MockNone
+from tini_test.misc.annotations import (CoverageStore, DirectoryPath,
+                                        TestCallable)
+from tini_test.mock import (CURRENTLY_PATCHING, PATCHED_BUILTINS,
+                            BuiltInArtifact, CreateMock, MockDefinition,
+                            MockNone)
 from tini_test.shared import MetaSharedVar, SharedVar, direct_access
 
 from .misc.exceptions import (ExceptionWasNotRaised,
@@ -113,16 +116,36 @@ def with_lock(use: bool) -> Generator[None, None, None]:
 
 
 
+
 @contextmanager
-def patch_mocks(mocks: list[MockDefinition]) -> Generator[None, None, None]:
+def patch_built_ins(apply_at: DirectoryPath):
+    previous = sys.gettrace()
+    sys.settrace(partial(CreateMock.built_in_replacer, apply_at))
+    try:
+        yield
+    finally:
+        sys.settrace(previous)
+
+
+
+@contextmanager
+def patch_mocks(mocks: list[MockDefinition], replace_at: DirectoryPath) -> Generator[None, None, None]:
     if mocks:
         try:
-            deque(map(lambda mock: mock.patch(), mocks), maxlen=0)
-            yield
+
+            MockDefinition.patch_all(mocks)
+
+            with patch_built_ins(replace_at):
+
+                yield
+
+
         finally:
-            deque(map(lambda mock: mock.restore(), mocks), maxlen=0)
+            MockDefinition.restore_all(mocks)
+            
     else:
         yield
+
 
 
 
@@ -165,10 +188,6 @@ def coverage(trace: bool, storage: CoverageStore) -> Generator[None, None, None]
 
 
 
-
-
-
-
 class Mock:
 
     @staticmethod
@@ -190,7 +209,6 @@ class Mock:
         frame = inspect.currentframe()
         previous = frame
 
-        globals_to_update = []
 
         # found_enter = 0
         # gatherins_globals = True
@@ -216,8 +234,6 @@ class Mock:
 
             # if previous.f_code.co_name == '__enter__':
             #     found_enter += 1
-
-            globals_to_update.append(previous.f_globals or {})
 
             
             
@@ -251,8 +267,9 @@ class Mock:
         
         try:
             deque(map(lambda __mock: __mock.restore(), relevant_mocks), maxlen=0)
+            #BuiltInArtifact.restore()
 
-            _mock.patch(globals_to_update)
+            _mock.patch()
 
             yield
         finally:

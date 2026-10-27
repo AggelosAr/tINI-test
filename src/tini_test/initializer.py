@@ -25,7 +25,8 @@ def initialize_test_suite(run_mode: RunMode,
     test_collector.discovery_time = perf_counter()
 
 
-    test_suite = TestSuite(run_mode=run_mode,
+    test_suite = TestSuite(root=search_dir,
+                           run_mode=run_mode,
                            verbosity=verbosity,
                            coverage=coverage,
                            coverage_target=coverage_target,

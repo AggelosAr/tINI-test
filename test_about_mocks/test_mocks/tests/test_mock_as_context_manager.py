@@ -1,4 +1,5 @@
-from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import ___test_mocking_in_outside_function
+from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import \
+    ___test_mocking_in_outside_function
 from tini_test import Isolate, Mock, Shared, Test, WillRaise, must_equal, var
 from tini_test.misc.exceptions import MockClassDefinitionError
 

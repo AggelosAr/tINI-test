@@ -264,7 +264,8 @@ def test_mock_mocking_with_context_manager():
 @Test.case
 @Shared(var.root)
 def test_imported_builtin_open():
-    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.closure_mocking_utils import test_imported_builtin_open
+    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.closure_mocking_utils import \
+        test_imported_builtin_open
     var.root = os.path.dirname(__file__)
 
     with WillRaise(FileNotFoundError) as context:
@@ -282,7 +283,8 @@ def test_imported_builtin_open():
     # ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     def test():
-        from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.closure_mocking_utils import test_imported_builtin_open
+        from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.closure_mocking_utils import \
+            test_imported_builtin_open
         var.root = os.path.dirname(__file__)
 
         with WillRaise(FileNotFoundError) as context:
@@ -335,7 +337,8 @@ def MOCK_B_OPEN():
 @Mock.mock(open, args=(var.root, 'r'))
 def MOCK_C_OPEN():
     var.root = os.path.join(os.path.dirname(__file__), 'txts', 'c.txt')
-    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import C_open
+    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import \
+        C_open
     must_equal('inside C', C_open())
 
 
@@ -352,23 +355,28 @@ def test_MOCK_ABC():
     from test_about_mocks.test_mocks.tests.import_a.import_b.m_b import B_open
     must_equal('inside A', B_open())
 
-    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import C_open
+    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import \
+        C_open
     must_equal('inside A', C_open())
 
     var.root = os.path.join(os.path.dirname(__file__), 'txts', 'b.txt')
     with Mock.mocking(open, args=(var.root, 'r')) as f:
+        from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import \
+            C_open
+        from test_about_mocks.test_mocks.tests.import_a.import_b.m_b import \
+            B_open
         from test_about_mocks.test_mocks.tests.import_a.m_a import A_open
-        from test_about_mocks.test_mocks.tests.import_a.import_b.m_b import B_open
-        from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import C_open
         must_equal('inside B', A_open())
         must_equal('inside B', B_open())
         must_equal('inside B', C_open())
 
     var.root = os.path.join(os.path.dirname(__file__), 'txts', 'c.txt')
     with Mock.mocking(open, args=(var.root, 'r')) as f:
+        from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import \
+            C_open
+        from test_about_mocks.test_mocks.tests.import_a.import_b.m_b import \
+            B_open
         from test_about_mocks.test_mocks.tests.import_a.m_a import A_open
-        from test_about_mocks.test_mocks.tests.import_a.import_b.m_b import B_open
-        from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import C_open
         must_equal('inside C', A_open())
         must_equal('inside C', B_open())
         must_equal('inside C', C_open())
@@ -400,7 +408,8 @@ def MOCKING_A_OPEN():
 @Shared(var.root)
 def MOCKING_B_OPEN():
     var.root = os.path.join(os.path.dirname(__file__), 'txts', 'b.txt')
-    from test_about_mocks.test_mocks.tests.import_a.import_b.m_b import B_open_MOCKING
+    from test_about_mocks.test_mocks.tests.import_a.import_b.m_b import \
+        B_open_MOCKING
     must_equal('inside B', B_open_MOCKING())
 
 
@@ -410,7 +419,8 @@ def MOCKING_B_OPEN():
 @Shared(var.root)
 def MOCKING_C_OPEN():
     var.root = os.path.join(os.path.dirname(__file__), 'txts', 'c.txt')
-    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import C_open_MOCKING
+    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import \
+        C_open_MOCKING
     must_equal('inside C', C_open_MOCKING())
 
 
@@ -424,9 +434,11 @@ def test_MOCKING_ABC():
     var.root = os.path.join(os.path.dirname(__file__), 'txts', 'a.txt')
 
     with Mock.mocking(open, args=(var.root, 'r')) as f:
+        from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import \
+            C_open
+        from test_about_mocks.test_mocks.tests.import_a.import_b.m_b import \
+            B_open
         from test_about_mocks.test_mocks.tests.import_a.m_a import A_open
-        from test_about_mocks.test_mocks.tests.import_a.import_b.m_b import B_open
-        from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import C_open
         must_equal('inside A', A_open())
         must_equal('inside A', B_open())
         must_equal('inside A', C_open())
@@ -437,12 +449,14 @@ def test_MOCKING_ABC():
     print('[--------- A PASSED ---------]')
 
     
-    from test_about_mocks.test_mocks.tests.import_a.import_b.m_b import B_open_MOCKING
+    from test_about_mocks.test_mocks.tests.import_a.import_b.m_b import \
+        B_open_MOCKING
     var.root = os.path.join(os.path.dirname(__file__), 'txts', 'b.txt')
     must_equal('inside B', B_open_MOCKING())
     print('[--------- B PASSED ---------]')
 
-    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import C_open_MOCKING
+    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import \
+        C_open_MOCKING
     var.root = os.path.join(os.path.dirname(__file__), 'txts', 'c.txt')
     must_equal('inside C', C_open_MOCKING())
     print('[--------- C PASSED ---------]')

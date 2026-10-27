@@ -1,6 +1,5 @@
 from test_about_mocks.test_mocks.tests.import_a.import_b.m_b import func_b
-
-from tini_test import Mock, var, must_equal
+from tini_test import Mock, must_equal, var
 
 
 def func_a(*args, **kwargs):
@@ -11,6 +10,10 @@ def func_a(*args, **kwargs):
 
 
 def A_open(*args, **kwargs):
+    # for k, v in globals().items():
+    #     print(k)
+
+    print('--------------------')
     with open('?') as f:
         return f.read()
 

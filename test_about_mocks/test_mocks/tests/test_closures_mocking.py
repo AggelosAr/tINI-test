@@ -1,7 +1,7 @@
+from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.closure_mocking_utils import \
+    test_imported_x_function
 from tini_test import Isolate, Mock, Test, must_equal
-from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.closure_mocking_utils import test_imported_x_function
 from tini_test.shared import Shared, var
-
 
 X = 10
 Y = 10
@@ -121,7 +121,8 @@ def sanity_check():
     # ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     def test():
-        from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.closure_mocking_utils import test_imported_x_function
+        from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.closure_mocking_utils import \
+            test_imported_x_function
     
         must_equal(1 + 100, test_imported_x_function(1, use_mock=True))
     
@@ -217,10 +218,11 @@ def test_closure_with_class():
 
 
 ################# IMPORTED 
-from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.closure_mocking_utils import imported_closure_with_namny_args, imported_closure_with_global_defined, imported_closure_with_global, imported_combination_closure, imported_closure_with_free_var, imported_closure_modify_global_X, imported_closure_modify_global_Y, imported_closure_with_class
-
-
-
+from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.closure_mocking_utils import (
+    imported_closure_modify_global_X, imported_closure_modify_global_Y,
+    imported_closure_with_class, imported_closure_with_free_var,
+    imported_closure_with_global, imported_closure_with_global_defined,
+    imported_closure_with_namny_args, imported_combination_closure)
 
 
 @Isolate
@@ -275,7 +277,8 @@ def imported_test_closure_with_free_var():
 @Isolate
 @Test.case
 def imported_test_closure_modify_global():
-    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.closure_mocking_utils import UPDATED as u
+    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.closure_mocking_utils import \
+        UPDATED as u
     imported_closure_modify_global_X()
     must_equal(True, 'X' in u)
 
@@ -284,7 +287,8 @@ def imported_test_closure_modify_global():
 @Isolate
 @Test.case
 def imported_test_closure_modify_global_Y():
-    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.closure_mocking_utils import UPDATED as u
+    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.closure_mocking_utils import \
+        UPDATED as u
     imported_closure_modify_global_Y()
     must_equal(False, 'Y' in u)
 
@@ -368,5 +372,6 @@ def nesting_closure_with_class():
 @Shared(var.a)
 def test_nesting_closure_with_class():
     nesting_closure_with_class()
-    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.closure_mocking_utils import imported_nesting_closure_with_class
+    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.closure_mocking_utils import \
+        imported_nesting_closure_with_class
     imported_nesting_closure_with_class()

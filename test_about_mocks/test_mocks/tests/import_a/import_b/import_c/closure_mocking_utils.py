@@ -1,7 +1,8 @@
-from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import ___test_mocked_function
-from tini_test import Mock, must_equal, var
-import os 
+import os
 
+from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import \
+    ___test_mocked_function
+from tini_test import Mock, must_equal, var
 
 
 def ___test_mocking_in_outside_function(*args, **kwargs):

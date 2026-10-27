@@ -1,4 +1,5 @@
 import asyncio
+import os
 import traceback
 from functools import cached_property
 from itertools import repeat
@@ -25,6 +26,7 @@ from tini_test.test import TestCollection
 class TestSuite:
     
     def __init__(self,
+                 root: DirectoryPath,
                  run_mode: RunMode,
                  verbosity: Verbosity,
                  coverage: Coverage,
@@ -32,7 +34,8 @@ class TestSuite:
                  store_coverage_at: DirectoryPath | FileName | None,
                  test_function: Optional[TestFunctionName] = None
                  ) -> None:
-        
+        self.root = root if root != '.' else os.getcwd()
+
         self.run_mode = run_mode
         self.verbosity = verbosity
 
@@ -263,7 +266,7 @@ class TestSuite:
 
     def run_suite(self) -> None:
         for _, test_collection in self.container.items():
-            current_errors = test_collection.run_tests()
+            current_errors = test_collection.run_tests(self.root)
 
             self.update_summary_stats(total_tests=test_collection.total_tests, new_errors=current_errors)
             self.update_coverage_stores(test_collection)
@@ -275,7 +278,7 @@ class TestSuite:
             all_test_collections.append(test_collection)
         
         results = await asyncio.gather(
-            *[test_collection.arun_tests() for test_collection in all_test_collections],
+            *[test_collection.arun_tests(self.root) for test_collection in all_test_collections],
             return_exceptions=True
         )
         

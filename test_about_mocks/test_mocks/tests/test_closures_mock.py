@@ -1,6 +1,5 @@
 from tini_test import Isolate, Mock, Test, must_equal
 
-
 X = 10
 Y = 10
 UPDATED = {'X', 'Y'}
@@ -234,8 +233,12 @@ def test_closure_with_class():
 
 
 ################# IMPORTED 
-from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.closure_mock_utils import imported_closure_as_function, imported_closure_with_namny_args, imported_closure_with_global_defined, imported_closure_with_global, imported_combination_closure, imported_closure_with_free_var, imported_closure_modify_global_X, imported_closure_modify_global_Y, imported_closure_with_class
-
+from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.closure_mock_utils import (
+    imported_closure_as_function, imported_closure_modify_global_X,
+    imported_closure_modify_global_Y, imported_closure_with_class,
+    imported_closure_with_free_var, imported_closure_with_global,
+    imported_closure_with_global_defined, imported_closure_with_namny_args,
+    imported_combination_closure)
 
 
 @Isolate
@@ -348,7 +351,8 @@ def imported_test_closure_with_free_var():
 @Test.case
 @Mock.mock(imported_closure_modify_global_X, args=())
 def imported_test_closure_modify_global():
-    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.closure_mock_utils import UPDATED as u
+    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.closure_mock_utils import \
+        UPDATED as u
     imported_closure_modify_global_X()
     must_equal(False, 'X' in u)
 
@@ -359,7 +363,8 @@ def imported_test_closure_modify_global():
 @Mock.mock(imported_closure_modify_global_Y, returns=100)
 def imported_test_closure_modify_global_Y():
     must_equal(100, imported_closure_modify_global_Y())
-    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.closure_mock_utils import u
+    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.closure_mock_utils import \
+        u
     must_equal(True, 'Y' in u)
 
 

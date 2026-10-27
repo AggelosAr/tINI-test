@@ -10,7 +10,7 @@ from tini_test.context_managers import (_thread_redirect_stdout, coverage,
 from tini_test.shared import SharedVar
 
 from .enums import Plugs, TestStatus, Verbosity
-from .misc.annotations import (CleanupCallable, CoverageStore,
+from .misc.annotations import (CleanupCallable, CoverageStore, DirectoryPath,
                                IsolateWrappedObject,
                                MockDefinitionWrappedHolder, MockWrappedObject,
                                RealTest, SetupCallable, SharedDefinitionHolder,
@@ -22,8 +22,6 @@ from .mock import MockDefinition
 from .state.state import OperationState
 
 _minimals_discard = {Verbosity.MINIMAL_NO_STACK, Verbosity.SUPER_MINIMAL}
-
-
 
 
 class TestStep:
@@ -39,12 +37,15 @@ class TestStep:
 
                  use_coverage   : bool,
                  coverage_store : CoverageStore,
+                 mocks          : list[MockDefinition],
 
                  args: Optional[tuple] = None,
                  kwargs: Optional[Mapping[str, Any]] = None) -> None:
 
         self.use_coverage = use_coverage
         self.coverage_store = coverage_store
+
+        self.mocks = mocks
 
         self.entry_status = entry_status
         self.success_status = success_status
@@ -54,7 +55,7 @@ class TestStep:
         self.args = args or ()
         self.kwargs = kwargs or {}
 
-    def run_step(self, verbosity: Verbosity) -> OperationState:
+    def run_step(self, root: DirectoryPath, verbosity: Verbosity) -> OperationState:
         
         if self.func is None:
             return OperationState(status=TestStatus.NO_OP)
@@ -67,9 +68,12 @@ class TestStep:
             
             with _thread_redirect_stdout(buffer):
 
+                # TODO concat the 2 tracers into one ...
                 with coverage(self.use_coverage, self.coverage_store):
 
-                    self.func(*self.args, **self.kwargs)
+                    with patch_mocks(self.mocks, replace_at=root):
+
+                        self.func(*self.args, **self.kwargs)
 
         except ExpectedWasDifferentFromActual as e:
 
@@ -148,12 +152,14 @@ class _XTest:
         self.steps = [
             TestStep(func=cleanup,
                      use_coverage=coverage or False,
+                     mocks=self.mocks,
                      coverage_store=self.coverage_store,
                      entry_status=TestStatus.BREAK_DOWN_ENTRY,
                      success_status=TestStatus.BREAK_DOWN_SUCCESS,
                      fail_status=TestStatus.BREAK_DOWN_FAIL),
             TestStep(func=test,
                      use_coverage=coverage or False,
+                     mocks=self.mocks,
                      coverage_store=self.coverage_store,
                      args=test_args,
                      kwargs=test_kwargs,
@@ -162,6 +168,7 @@ class _XTest:
                      fail_status=TestStatus.FAIL),
             TestStep(func=setup,
                      use_coverage=coverage or False,
+                     mocks=self.mocks,
                      coverage_store=self.coverage_store,
                      entry_status=TestStatus.SET_UP_ENTRY,
                      success_status=TestStatus.SET_UP_SUCCESS,
@@ -291,11 +298,11 @@ class _XTest:
         
         return wrapper
 
-    def run_steps(self, _verbosity: Optional[Verbosity] = None) -> None:
+    def run_steps(self, root: DirectoryPath) -> None:
         
         while self.steps:
 
-            step_state = self.steps.pop().run_step(self.verbosity)
+            step_state = self.steps.pop().run_step(root, self.verbosity)
             self.operation_states.append(step_state)
             
             if TestStatus.is_fail_cause(status=step_state.status):
@@ -303,7 +310,7 @@ class _XTest:
                 self.fail_reasons.append(step_state.exception_trace)
                 break
     
-    def run_for_cleanup_if_needed(self, _verbosity: Optional[Verbosity] = None) -> None:
+    def run_for_cleanup_if_needed(self, root: DirectoryPath) -> None:
         # If test fails and there is a cleanup 
         # Attempt to run it
         
@@ -325,7 +332,7 @@ class _XTest:
         cleanup_step.success_status=TestStatus.ATTEMPT_BREAK_DOWN_SUCCESS
         cleanup_step.fail_status=TestStatus.ATTEMPT_BREAK_DOWN_FAIL
         
-        cleanup_op = cleanup_step.run_step(self.verbosity)
+        cleanup_op = cleanup_step.run_step(root, self.verbosity)
 
         # Put back the states in the correct order
         self.operation_states.append(failed_op)
@@ -353,16 +360,14 @@ class _XTest:
         end_state.exit_msg = OperationState.get_end_seperator()
         self.operation_states.append(end_state)
 
-    def box_test(self, _verbosity: Optional[Verbosity] = None) -> None:
+    def box_test(self, root: DirectoryPath) -> None:
 
         with with_lock(self.should_lock):
 
-            with patch_mocks(self.mocks):
-
                 with patch_shared(self.test, self.shared_vars):
 
-                    self.run_steps()
-                    self.run_for_cleanup_if_needed()
+                    self.run_steps(root)
+                    self.run_for_cleanup_if_needed(root)
 
         self.attach_end_state()
         self.close_state()
@@ -373,5 +378,5 @@ class _XTest:
             with redirect_stdout(StringIO()):
                 self._no_op.__call__()
 
-    async def abox_test(self, _verbosity: Optional[Verbosity] = None) -> None:
-        await asyncio.to_thread(self.box_test)
+    async def abox_test(self, root: DirectoryPath) -> None:
+        await asyncio.to_thread(self.box_test, root)

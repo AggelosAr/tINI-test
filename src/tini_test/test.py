@@ -125,6 +125,13 @@ class TestCollection:
 
         if spec.loader is None:
             raise RuntimeError('Cannot load module named %s' % (self.dot_python_path, ))
+
+        # We must build a map from file -> [files]
+        # Ideally we need a reference to the globals of the files being imported to the current file 
+        # When we run the test -> we iterate all the globals and we update the specific built in.
+        # If it is mocking we need to update only the downstream globals 
+        # If it is mock we need to update all the  the globals that reference it.
+        # We need that map to keep track of built-in  ????
         spec.loader.exec_module(module)
 
     def raise_for_duplicate_tests(self, spec: ModuleSpec) -> None:
@@ -239,11 +246,11 @@ class TestCollection:
     def sort_tests(self) -> None:
         self.collector = dict(sorted(self.collector.items(), key=lambda kv: kv[1].is_fail))
     
-    def box_tests(self) -> None:
-        deque(map(lambda test_case: test_case.box_test(self.verbosity), self.collector.values()))
+    def box_tests(self, root: DirectoryPath) -> None:
+        deque(map(lambda test_case: test_case.box_test(root), self.collector.values()))
 
-    async def abox_tests(self) -> None:
-        tasks = [test_case.abox_test(self.verbosity) for test_case in self.collector.values()]
+    async def abox_tests(self, root: DirectoryPath) -> None:
+        tasks = [test_case.abox_test(root) for test_case in self.collector.values()]
         await asyncio.gather(*tasks)
 
     def sort_tests_based_on_source(self) -> None:
@@ -263,7 +270,7 @@ class TestCollection:
                         def ____wrapper() -> Errors:
 
                             self.__setup()
-                            runner(self)
+                            runner(self, *args, **kwargs)
                             return self.__cleanup()
                         
                         ___wrapper = ____wrapper()
@@ -273,7 +280,7 @@ class TestCollection:
                         async def ____wrapper() -> Errors: # type: ignore[misc]
 
                             self.__setup()
-                            await runner(self)
+                            await runner(self, *args, **kwargs)
                             return self.__cleanup()
 
                         ___wrapper = ____wrapper()
@@ -308,12 +315,12 @@ class TestCollection:
         return errors
     
     @_pprint(RunMode.SYNC)
-    def run_tests(self):
-        self.box_tests()
+    def run_tests(self, root: DirectoryPath):
+        self.box_tests(root)
         
     @_pprint(RunMode.ASYNC)
-    async def arun_tests(self):
-        await self.abox_tests()
+    async def arun_tests(self, root: DirectoryPath):
+        await self.abox_tests(root)
 
 
 class Printer:

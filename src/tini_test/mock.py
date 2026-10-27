@@ -1,16 +1,18 @@
 import inspect
+import os
 import secrets
 import textwrap
+import types
 from collections import deque
 from functools import partial
 from types import FrameType
-import types
 from typing import Any, Callable, Optional, Self, Union, cast
 
 from tini_test._internals._registry import attach_state
 from tini_test._internals.consts import _R_M_REG, _R_T_REG, SALT
 from tini_test.enums import MockType, Plugs
-from tini_test.misc.annotations import (CellName, GlobalRegistry, HexStr,
+from tini_test.misc.annotations import (CellName, DirectoryPath,
+                                        GlobalRegistry, HexStr,
                                         IsolateWrappedObject, MaybeRealTest,
                                         MockDefinitionWrappedHolder,
                                         MockedCBuiltin, MockedClass,
@@ -27,20 +29,16 @@ from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
                                        MockMissingFunctionOrClass)
 from tini_test.shared import MetaSharedVar, SharedVar, direct_access
 
-
 # XXX move this somewhere else ... or refactor the resolved mock registration mechanism
 # id of original -> built-in object
 PATCHED_BUILTINS = {}
 # id of patched object -> id of original
 CURRENTLY_PATCHING = {}
 
+# File to globals 
+TRACKING_GLOBALS = {}
 
-# We must keep track of all globals in the current test 
-# Built ins sould be patched EVERYWHERE.
-# Test to list of globals that need to be updated with mocks
-_CreateMock__GLOBALS = {}
-
-
+ARTIFACT_TRACKER = []
 
 
 _container_types = (list, dict, set)
@@ -52,32 +50,22 @@ class MockNone:
     __slots__ = ()
 
 
-def transfer_closure(target, source, is_code=False):
-    cells = source.__closure__ or ()
-    names = source.__code__.co_freevars
+class BuiltInArtifact:
 
-    # if targer is alredy code object, we just replace the freevars
-    if is_code:
-        target = target.replace(co_freevars=names)
-        code = target
-        return types.FunctionType(
-            code,
-            {},
-            target.co_name,
-            None,
-            cells or None,
-        )
-    else:
-        code = target.__code__.replace(co_freevars=names)
+    def __init__(self, mock: Union['MockCall', 'MockReturn'], original: Any, replacement: Any) -> None:
+        self._name = mock.mock.__name__
+        self.original = original
+        self.replacement = replacement
+        
+    @property
+    def __name__(self) -> str:
+        return self._name
 
-
-        return types.FunctionType(
-            code,
-            target.__globals__,
-            target.__name__,
-            target.__defaults__,
-            cells or None,
-        )
+    @classmethod
+    def restore(cls) -> None:
+        for files_globals in TRACKING_GLOBALS.values():
+            for artifact in ARTIFACT_TRACKER:
+                files_globals[artifact.__name__] = artifact.original
 
 
 class CreateMock:
@@ -92,11 +80,9 @@ class CreateMock:
 
         self._proxy_pool: set[str] = set()
 
-        if self._isbuiltin:
-            self._mock_backup_store = mock
-        else:
+        if not self._isbuiltin:
             self._mock_backup_store = lambda: None
-            self._mock_backup_store = transfer_closure(self._mock_backup_store, self.mock)
+            self._mock_backup_store = CreateMock.transfer_closure(self._mock_backup_store, self.mock)
             self._mock_backup_store.__code__ = self.mock.__code__
 
         # Used to keep track of the anchor name for this mock in the global namespace
@@ -112,28 +98,80 @@ class CreateMock:
         # TODO Consider initializing the test context properly to avoid relying on a lambda placeholder.
         self._lambda_context: RealTest | MaybeRealTest = lambda: None
 
-        # TODO in case of builint we must apply the patch to the current globals.
-        # also in the tests's globals ? 
+    @property
+    def test(self) -> RealTest:
+        return self._lambda_context
+
+    @test.setter
+    def test(self, value: RealTest) -> None:
+        self._lambda_context = value
 
     @property
     def _isbuiltin(self) -> bool:
         return self._type == MockType.BUILTIN
     
     @property
-    def test(self) -> RealTest:
-        return self._lambda_context
-
-    @property
     def test_name(self) -> str:
         return self.test.__name__
-    
-    @test.setter
-    def test(self, value: RealTest) -> None:
-        self._lambda_context = value
 
     @property
     def __globals__(self) -> GlobalRegistry['MockDefinition', SharedVar]:
         return cast(GlobalRegistry['MockDefinition', SharedVar], self._lambda_context.__globals__)
+
+    @staticmethod
+    def transfer_closure(target: Callable, source: Callable | types.CodeType, is_code: bool = False) -> Callable:
+        cells = source.__closure__ or ()
+        names = source.__code__.co_freevars
+
+        # if targer is alredy code object, we just replace the freevars
+        if is_code:
+            target = target.replace(co_freevars=names)
+            code = target
+            return types.FunctionType(
+                code,
+                {},
+                target.co_name,
+                None,
+                cells or None,
+            )
+        else:
+            code = target.__code__.replace(co_freevars=names)
+
+
+            return types.FunctionType(
+                code,
+                target.__globals__,
+                target.__name__,
+                target.__defaults__,
+                cells or None,
+            )
+        
+    # TODO maybe apply similar logic to the coverage tracker ? 
+    # Also merge them into one.
+    @staticmethod
+    def built_in_replacer(apply_at: DirectoryPath, frame: FrameType, event: str, *args):
+        _return = partial(CreateMock.built_in_replacer, apply_at)
+
+        if event != 'call':
+            return _return
+        
+        filename = os.path.abspath(frame.f_code.co_filename)
+
+        # Minor inconveniences ...
+        if not filename.startswith(apply_at) or not filename.endswith('.py') or 'site-packages' in filename:
+            return _return
+
+        globals_dict = frame.f_globals
+        
+        if filename not in TRACKING_GLOBALS:
+            # print('FOUND NEW FILE:', filename)
+            
+            TRACKING_GLOBALS[filename] = globals_dict
+
+            for _artifact in ARTIFACT_TRACKER:
+                globals_dict[_artifact.__name__] = _artifact.replacement
+
+        return _return
     
     @staticmethod
     def get_var(from_var: bool, _var: SharedVar) -> Any:
@@ -211,21 +249,14 @@ class CreateMock:
 
     def _compile_mock(self, source: str) -> None:
         new_code = compile(textwrap.dedent(source), '<string>', 'exec').co_consts[0]
-        new_code = transfer_closure(new_code, self.mock, True)
+        new_code = CreateMock.transfer_closure(new_code, self.mock, True)
         self.mock.__code__ = new_code.__code__
 
     def _restore(self) -> None:
-        match self._isbuiltin:
-
-            case True:
-               
-                for _global in _CreateMock__GLOBALS[self.test_name]:
-                    _global[self.mock.__name__] = self._mock_backup_store
-
-                self.__globals__[self.mock.__name__] = self._mock_backup_store
-            
-            case False:
-                self.mock.__code__ = self._mock_backup_store.__code__
+        if self._isbuiltin:
+            return
+        
+        self.mock.__code__ = self._mock_backup_store.__code__
         
         deque(map(lambda x: self.mock.__globals__.pop(x, None), self._proxy_pool), maxlen=0)
         self._proxy_pool.clear()
@@ -274,22 +305,17 @@ class MockCall(CreateMock):
         if not isinstance(kwargs, dict):
             raise MockCallDefinitionError('Keyword arguments should be of type dict.')
 
-    def _patch(self) -> HexStr | None:
+    def _patch(self) -> BuiltInArtifact | None:
         if self._isbuiltin:
             _args = lambda: CreateMock.replace_shared(self.args)
             _kwargs = lambda: CreateMock.replace_shared(self.kwargs)
             replacement = lambda *args, **kwargs: self.mock(*_args(), **_kwargs())
-
-            for _global in _CreateMock__GLOBALS[self.test_name]:
-                _global[self.mock.__name__] = replacement
-
-            self.__globals__[self.mock.__name__] = replacement
-            return hex(id(replacement))
+            return BuiltInArtifact(self, self.mock, replacement)
         
         _, _view_name = self._proxy_generator(use_anchor=True)
         
         anchor, self._anchor = self._proxy_generator(use_anchor=True)
-        anchor = transfer_closure(anchor, self.mock)
+        anchor = CreateMock.transfer_closure(anchor, self.mock)
         
         _, _proxy_locals__args_name = self._proxy_generator()
         _, _proxy_locals__kwargs_name = self._proxy_generator()
@@ -346,15 +372,10 @@ class MockReturn(CreateMock):
     def _vars(self) -> dict[CellName, list[SharedVar]]:
         return CreateMock.find_shared(self.return_value)
     
-    def _patch(self) -> HexStr | None:
+    def _patch(self) -> BuiltInArtifact | None:
         if self._isbuiltin:
             replacement = lambda *args, **kwargs: CreateMock.replace_shared(self.return_value)
-
-            for _global in _CreateMock__GLOBALS[self.test_name]:
-                _global[self.mock.__name__] = replacement
-
-            self.__globals__[self.mock.__name__] = replacement
-            return hex(id(replacement))
+            return BuiltInArtifact(self, replacement)
         
         _, _view_name = self._proxy_generator(use_anchor=True)
         _, self._anchor = self._proxy_generator(use_anchor=True)
@@ -379,6 +400,10 @@ class MockDefinition:
     def __init__(self, body: MockCall | MockReturn) -> None:
         self.body = body
 
+    @property
+    def _isbuiltin(self) -> bool:
+        return self.body._isbuiltin
+    
     @property
     def test(self) -> RealTest:
         return self.body.test
@@ -542,21 +567,30 @@ class MockDefinition:
         _cx_mock.__globals__[_R_M_REG][_cx_mock.test_name] = new_mocks
     ####################################
 
-    def patch(self, _at: list[dict] = None) -> None:
+    def patch(self) -> None:
 
-        if _at is None:
-            _at = []
-        _CreateMock__GLOBALS.setdefault(self.test_name, []).extend(_at)
+        artifact = self.body._patch()
 
-        _id = self.body._patch()
-
+        _id = hex(id(artifact.replacement))
         # The only problem is in cx built-ins, as a result this is OK! XXX
         if self.body._isbuiltin:
             PATCHED_BUILTINS[hex(id(self.body.mock))] = self.body.mock
         CURRENTLY_PATCHING[_id] = hex(id(self.body.mock))
 
+        ARTIFACT_TRACKER.append(artifact)
+
     def restore(self) -> None:
         self.body._restore()
+
+    @classmethod
+    def patch_all(cls, mocks: list['MockDefinition']) -> None:
+        deque(map(lambda mock: mock.patch(), mocks), maxlen=0)
+        #ARTIFACT_TRACKER.append(object)
+
+    @classmethod
+    def restore_all(cls, mocks: list['MockDefinition']) -> None:
+        deque(map(lambda mock: mock.restore(), mocks), maxlen=0)
+        BuiltInArtifact.restore()
 
 
 class Mock:

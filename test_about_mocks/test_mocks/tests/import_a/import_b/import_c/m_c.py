@@ -19,7 +19,7 @@ def C_open(*args, **kwargs):
 
 
 def C_open_MOCKING(*args, **kwargs):
-    from tini_test import Mock, var, must_equal
+    from tini_test import Mock, must_equal, var
 
     with open(var.root, 'r') as f:
         must_equal('inside C', f.read())
