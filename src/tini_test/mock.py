@@ -83,19 +83,39 @@ class BuiltInArtifact:
         return obj
 
     @classmethod
-    def _CX_PATCH_INITIAL(cls, files, frames, frame) -> None:
-        current_frame_file = os.path.abspath(frame.f_code.co_filename)
-        
+    def _CX_PATCH_INITIAL(cls, frames: list[FrameType]) -> None:
         last_artifact = ARTIFACT_TRACKER[-1]
 
-        TRACKING_GLOBALS.add(current_frame_file)
-
-        for file_name, frame in zip(files, frames):
+        for frame in frames:
+            file_name = os.path.abspath(frame.f_code.co_filename)
             TRACKING_GLOBALS.add(file_name)
             frame.f_globals[last_artifact.__name__] = last_artifact.replacement
             last_artifact.applied_at.append(frame.f_globals)
-        
 
+    @classmethod
+    def _CX_MAYBE_RE_PATCH_LEVEL(cls) -> None:
+        while ARTIFACT_TRACKER:
+            artifact = ARTIFACT_TRACKER.pop()
+
+            if artifact is _SETNINEL:
+                break
+
+            for global_dict in artifact.applied_at:
+                global_dict[artifact.__name__] = artifact.original
+
+        to_add = []
+        while ARTIFACT_TRACKER:
+            artifact = ARTIFACT_TRACKER.pop()
+            to_add.append(artifact)
+
+            if artifact is _SETNINEL:
+                break
+
+            for global_dict in artifact.applied_at:
+                global_dict[artifact.__name__] = artifact.replacement
+
+        ARTIFACT_TRACKER.extend(reversed(to_add))
+        
     @classmethod
     def full_restore(cls) -> int:
         updates = 0

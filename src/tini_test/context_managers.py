@@ -200,20 +200,19 @@ class Mock:
         No guarantee is made that the mocked object will not intefere with the original
         during `async` mode.
 
-        * Use the the `@Isolate` decorator to ensure isolation. TODO fix isolate... ~1 / 1_000_000+? error rate ?
+        * Use the the `@Isolate` decorator to ensure isolation.
 
         * (Should only be used inside a `@Test.case` decorated function.)
         '''
+        # TODO fix isolate... ~1 / 1_000_000+? error rate ?
         ARTIFACT_TRACKER.append(_SETNINEL)
 
         frame = inspect.currentframe()
         previous = frame
 
-
         # In case of built-in mocks, we need to manually track the frames 
         # Until we reach the entry point ...................
         frames = []
-        files = []
 
         # Go back ~two frames to find the `run_step` ... bad but necessary
         while frame and frame.f_code.co_name != 'run_step':
@@ -221,14 +220,9 @@ class Mock:
             frame = frame.f_back
 
             frames.append(frame)
-            files.append(os.path.abspath(frame.f_code.co_filename))
 
         # frames.pop()
-        # files.pop()
-
         # Last frame and first needs to be filtered .... TODO 
-
-         
         frame = previous
 
     
@@ -255,45 +249,21 @@ class Mock:
             _mock.patch()
 
             if _mock._isbuiltin:
-                BuiltInArtifact._CX_PATCH_INITIAL(files, frames, frame)
+                BuiltInArtifact._CX_PATCH_INITIAL(frames)
                
-           
             with patch_built_ins(*_ROOT):
-
                 yield
-
 
         finally:
             TRACKING_GLOBALS.clear()
+
             _mock.restore()
 
-            
             if not relevant_mocks:
                 _mock._cx_unregister()
 
             MockDefinition.patch_all(relevant_mocks)
 
             if _mock._isbuiltin:
-
-                while ARTIFACT_TRACKER:
-                    artifact = ARTIFACT_TRACKER.pop()
-
-                    if artifact is _SETNINEL:
-                        break
-
-                    for global_dict in artifact.applied_at:
-                        global_dict[artifact.__name__] = artifact.original
-
-                to_add = []
-                while ARTIFACT_TRACKER:
-                    artifact = ARTIFACT_TRACKER.pop()
-                    to_add.append(artifact)
-
-                    if artifact is _SETNINEL:
-                        break
-
-                    for global_dict in artifact.applied_at:
-                        global_dict[artifact.__name__] = artifact.replacement
-
-                ARTIFACT_TRACKER.extend(reversed(to_add))
-
+                BuiltInArtifact._CX_MAYBE_RE_PATCH_LEVEL()
+                
