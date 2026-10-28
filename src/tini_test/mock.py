@@ -1,4 +1,5 @@
 import inspect
+import io
 import os
 import secrets
 import textwrap
@@ -7,13 +8,14 @@ from collections import deque
 from functools import partial
 from types import FrameType
 from typing import Any, Callable, Iterable, Optional, Self, Union, cast
+from unittest import mock
 
 from tini_test._internals._registry import attach_state
 from tini_test._internals.consts import _R_M_REG, _R_T_REG, _SETNINEL, SALT
 from tini_test.enums import MockType, Plugs
 from tini_test.misc.annotations import (BuiltIn, CellName, DirectoryPath,
-                                        GlobalRegistry,
-                                        IsolateWrappedObject, MaybeRealTest,
+                                        GlobalRegistry, IsolateWrappedObject,
+                                        MaybeRealTest,
                                         MockDefinitionWrappedHolder,
                                         MockedCBuiltin, MockedClass,
                                         MockedClassInit, MockedFunction,
@@ -68,7 +70,7 @@ class BuiltInArtifact:
         return self._name
 
     @classmethod
-    def get_original_if_exists(cls, obj: Any) -> Any | Callable | BuiltIn | MockProxyObject:
+    def _CX_get_original_if_exists(cls, obj: Any) -> Any | Callable | BuiltIn | MockProxyObject:
         '''
         In case of cx mocking there is a case where the object we receive might already be a patched version.
         This method helps retrieve the original object if it exists.
@@ -83,7 +85,12 @@ class BuiltInArtifact:
         return obj
 
     @classmethod
-    def _CX_PATCH_INITIAL(cls, frames: Iterable[FrameType]) -> None:
+    def _CX_patch_initial(cls, frames: Iterable[FrameType]) -> None:
+        '''
+        Applies the last built-in artifact to the given frames.
+        This is used in the context of cx mocking to ensure that the replacement 
+        is applied to the correct frames.
+        '''
         last_artifact = ARTIFACT_TRACKER[-1]
 
         for frame in frames:
@@ -93,7 +100,7 @@ class BuiltInArtifact:
             last_artifact.applied_at.append(frame.f_globals)
 
     @classmethod
-    def _CX_MAYBE_RE_PATCH_LEVEL(cls) -> None:
+    def _CX_maybe_re_patch_level(cls) -> None:
         while ARTIFACT_TRACKER:
             artifact = ARTIFACT_TRACKER.pop()
 
@@ -142,8 +149,14 @@ class BuiltInArtifact:
         
         filename = os.path.abspath(frame.f_code.co_filename)
 
+        # TODO maybe add this to tracer. also time it.
         # Minor inconveniences ...
         if not filename.startswith(apply_at) or not filename.endswith('.py') or 'site-packages' in filename:
+            return _return
+
+        # If the file is inside the tini-test directory, we must not patch built-ins for it
+        # Since we are already using them...
+        if 'tINI-test/src' in filename:
             return _return
 
         globals_dict = frame.f_globals
@@ -155,6 +168,7 @@ class BuiltInArtifact:
 
             for _artifact in ARTIFACT_TRACKER:
 
+                # TODO at this point shouldn't only after the Sentinel be applied?
                 if _artifact is _SETNINEL:
                     continue
 
@@ -439,11 +453,25 @@ class MockReturn(CreateMock):
     @property
     def _vars(self) -> dict[CellName, list[SharedVar]]:
         return CreateMock.find_shared(self.return_value)
+
+    @classmethod
+    def go_rebuild_yourself(cls, anchor: Callable, target: str) -> Any:
+        value = anchor()
+
+        if isinstance(value, io.StringIO):
+            value = io.StringIO(value.getvalue())
+
+        next_update = partial(MockReturn.go_rebuild_yourself, anchor, target)
+        anchor.__globals__[target] = next_update
+
+        return CreateMock.replace_shared(value)
     
     def _patch(self) -> None:
         if self._isbuiltin:
-            replacement = lambda *args, **kwargs: CreateMock.replace_shared(self.return_value)
-
+            replacement = (
+                lambda *args, **kwargs: 
+                    MockReturn.go_rebuild_yourself(lambda: self.return_value, self.mock.__name__)
+            )
             ARTIFACT_TRACKER.append(BuiltInArtifact(self, self.mock, replacement))
             return 
         
@@ -599,41 +627,41 @@ class MockDefinition:
     # Mocking utils for context manager
     ####################################
     @classmethod
-    def _cx_get_globals(cls, frame: FrameType) -> GlobalRegistry['MockDefinition', SharedVar]:
+    def _CX_get_globals(cls, frame: FrameType) -> GlobalRegistry['MockDefinition', SharedVar]:
         _reg = frame.f_globals
         if _R_M_REG not in _reg:
             raise RuntimeError('Global registry for mocks not found') # TODO Exception
         return cast(GlobalRegistry['MockDefinition', SharedVar], _reg)
     
     @classmethod
-    def _cx_get_real_test(cls, frame: FrameType | None) -> RealTest:
+    def _CX_get_real_test(cls, frame: FrameType | None) -> RealTest:
         if frame is None:
             raise RuntimeError('Frame is None') # TODO Exception
 
-        real_test = cls._cx_get_globals(frame).get(_R_T_REG).get(frame.f_code.co_name)
+        real_test = cls._CX_get_globals(frame).get(_R_T_REG).get(frame.f_code.co_name)
 
         if real_test is None:
             raise RuntimeError('Real test not found') # TODO Exception
         
         return real_test
     
-    def _cx_cmp_mock_body(_cx_mock: Self, other: 'MockDefinition') -> bool:
+    def _CX_cmp_mock_body(_cx_mock: Self, other: 'MockDefinition') -> bool:
         return hex(id(_cx_mock.body.mock)) == hex(id(other.body.mock))
 
-    def _cx_cmp_mock(_cx_mock: Self, other: 'MockDefinition') -> bool:
+    def _CX_cmp_mock(_cx_mock: Self, other: 'MockDefinition') -> bool:
         return hex(id(_cx_mock)) == hex(id(other))
     
-    def _cx_get_previous_mocks(_cx_mock: Self) -> list['MockDefinition']:
+    def _CX_get_previous_mocks(_cx_mock: Self) -> list['MockDefinition']:
         # Find all mocks that have a similar signature in the current namespace
         relevant_mocks = _cx_mock.__globals__[_R_M_REG][_cx_mock.test_name]
-        return list(filter(lambda m: _cx_mock._cx_cmp_mock_body(m), relevant_mocks))
+        return list(filter(lambda m: _cx_mock._CX_cmp_mock_body(m), relevant_mocks))
 
-    def _cx_register(_cx_mock: Self) -> None:
+    def _CX_register(_cx_mock: Self) -> None:
         _cx_mock.__globals__[_R_M_REG][_cx_mock.test_name].append(_cx_mock)
 
-    def _cx_unregister(_cx_mock: Self) -> None:
+    def _CX_unregister(_cx_mock: Self) -> None:
         mocks = _cx_mock.__globals__[_R_M_REG][_cx_mock.test_name]
-        new_mocks = list(filter(lambda m: not _cx_mock._cx_cmp_mock(m), mocks))
+        new_mocks = list(filter(lambda m: not _cx_mock._CX_cmp_mock(m), mocks))
         _cx_mock.__globals__[_R_M_REG][_cx_mock.test_name] = new_mocks
     ####################################
 

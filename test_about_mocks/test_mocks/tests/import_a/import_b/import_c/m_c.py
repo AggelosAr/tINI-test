@@ -44,3 +44,12 @@ def C_open_MOCKING(*args, **kwargs):
         must_equal('inside C', f.read())
 
     return res
+
+
+
+
+#////////////////////////////////////
+
+
+def _len(*args, **kwargs):
+    return len(args) + len(kwargs)

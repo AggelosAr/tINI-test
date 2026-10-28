@@ -30,3 +30,4 @@ def A_open_MOCKING(*args, **kwargs):
         must_equal('inside A', f.read())
 
     return res
+

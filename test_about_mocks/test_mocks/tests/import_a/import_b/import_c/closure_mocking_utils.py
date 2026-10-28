@@ -193,9 +193,17 @@ def imported_nesting_closure_with_class():
             must_equal(22, inst._value_a)
             must_equal(2, inst._value_b)
 
+            inst = inner('?')
+            must_equal(22, inst._value_a)
+            must_equal(2, inst._value_b)
+
             with Mock.mocking(inner, args=(3,)):
 
                 var.a = 33
+                inst = inner('?')
+                must_equal(33, inst._value_a)
+                must_equal(3, inst._value_b)
+
                 inst = inner('?')
                 must_equal(33, inst._value_a)
                 must_equal(3, inst._value_b)
@@ -206,9 +214,17 @@ def imported_nesting_closure_with_class():
                     inst = inner('?')
                     must_equal(44, inst._value_a)
                     must_equal(4, inst._value_b)
+
+                    inst = inner('?')
+                    must_equal(44, inst._value_a)
+                    must_equal(4, inst._value_b)
         
 
                 var.a = 33
+                inst = inner('?')
+                must_equal(33, inst._value_a)
+                must_equal(3, inst._value_b)
+
                 inst = inner('?')
                 must_equal(33, inst._value_a)
                 must_equal(3, inst._value_b)
@@ -218,7 +234,16 @@ def imported_nesting_closure_with_class():
             must_equal(22, inst._value_a)
             must_equal(2, inst._value_b)
 
+            inst = inner('?')
+            must_equal(22, inst._value_a)
+            must_equal(2, inst._value_b)
+
         var.a = 11
         inst = inner('?')
         must_equal(11, inst._value_a)
         must_equal(1, inst._value_b)
+
+        inst = inner('?')
+        must_equal(11, inst._value_a)
+        must_equal(1, inst._value_b)
+

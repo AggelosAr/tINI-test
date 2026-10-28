@@ -230,9 +230,9 @@ class Mock:
         frame = previous
 
     
-        real_test = MockDefinition._cx_get_real_test(frame)
+        real_test = MockDefinition._CX_get_real_test(frame)
 
-        mock = BuiltInArtifact.get_original_if_exists(mock)
+        mock = BuiltInArtifact._CX_get_original_if_exists(mock)
 
         mock_body = MockDefinition.validate_definition(mock, returns, args, kwargs)
         _mock = MockDefinition(mock_body)
@@ -241,11 +241,11 @@ class Mock:
 
         # This mock is closer to the actual call site than the decorator-based mocks if any.
         # This mock is also closer to any local mocks that may exist in the current scope.
-        relevant_mocks = _mock._cx_get_previous_mocks()
+        relevant_mocks = _mock._CX_get_previous_mocks()
 
         
         if not relevant_mocks:
-            _mock._cx_register()
+            _mock._CX_register()
         
         try:
             deque(map(lambda mock: mock.restore(), relevant_mocks), maxlen=0)
@@ -253,7 +253,7 @@ class Mock:
             _mock.patch()
 
             if _mock._isbuiltin:
-                BuiltInArtifact._CX_PATCH_INITIAL(filter(None, frames))
+                BuiltInArtifact._CX_patch_initial(filter(None, frames))
                
             with patch_built_ins(*_ROOT):
                 yield
@@ -264,10 +264,10 @@ class Mock:
             _mock.restore()
 
             if not relevant_mocks:
-                _mock._cx_unregister()
+                _mock._CX_unregister()
 
             MockDefinition.patch_all(relevant_mocks)
 
             if _mock._isbuiltin:
-                BuiltInArtifact._CX_MAYBE_RE_PATCH_LEVEL()
+                BuiltInArtifact._CX_maybe_re_patch_level()
                 

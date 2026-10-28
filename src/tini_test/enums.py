@@ -1,3 +1,4 @@
+import builtins
 import inspect
 from enum import Enum
 from functools import lru_cache
@@ -180,7 +181,12 @@ class MockType(Enum):
 
     @classmethod
     def get_type(cls, mock: Any) -> tuple['MockType', MockedRawItem] | tuple[None, None]:
+        # Builtin method
         if inspect.isbuiltin(mock):
+            return MockType.BUILTIN, mock
+
+        # Builtin class/type
+        if getattr(builtins, mock.__name__, None):
             return MockType.BUILTIN, mock
         
         if inspect.isclass(mock):

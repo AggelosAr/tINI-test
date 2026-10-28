@@ -375,3 +375,4 @@ def test_nesting_closure_with_class():
     from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.closure_mocking_utils import \
         imported_nesting_closure_with_class
     imported_nesting_closure_with_class()
+    imported_nesting_closure_with_class()
