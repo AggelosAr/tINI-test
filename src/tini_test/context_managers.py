@@ -220,9 +220,13 @@ class Mock:
             frame = frame.f_back
 
             frames.append(frame)
-
-        # frames.pop()
-        # Last frame and first needs to be filtered .... TODO 
+        # XXX TODO maybe filter based on root?
+        if frames and 'test_utils.py' in frames[-1].f_code.co_filename:
+            frames.pop()
+        if frames and 'contextlib.py' in frames[0].f_code.co_filename:
+            frames.pop(0)
+        # print(frames)
+        
         frame = previous
 
     
