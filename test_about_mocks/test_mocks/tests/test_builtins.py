@@ -144,9 +144,11 @@ def test_mocking_with_context_manager_more_nest():
 
             must_equal('Hello there!', content)
 
+        
         with WillRaise(FileNotFoundError) as context:
             with open('?') as f:
-                ...
+                res = f.read()
+                print('CONTENT IS : ', res)
 
         must_equal("[Errno 2] No such file or directory: '?'", str(context.exception))
 
@@ -464,13 +466,13 @@ def test_MOCKING_ABC():
     print('[--------- C PASSED ---------]')
 
 
-    with WillRaise(TypeError):
-        A_open()
+    with WillRaise(FileNotFoundError):
+        res = A_open()
 
-    with WillRaise(TypeError):
+    with WillRaise(FileNotFoundError):
         B_open()
 
-    with WillRaise(TypeError):
+    with WillRaise(FileNotFoundError):
         C_open()
 
 

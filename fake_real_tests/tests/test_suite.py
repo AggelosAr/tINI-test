@@ -80,6 +80,7 @@ def test_suite_run_solved_failing_tests_for_coverage() -> None:
     test_suite = TestSuite(run_mode=RunMode.ASYNC,
                            verbosity=Verbosity.NORMAL,
                            coverage=Coverage.DISABLED,
+                           root='.',
                            coverage_target=None,
                            store_coverage_at=None)
     
@@ -121,6 +122,7 @@ def test_suite_run_solved_failing_tests_for_coverage() -> None:
     test_suite = TestSuite(run_mode=RunMode.SYNC,
                            verbosity=Verbosity.MINIMAL,
                            coverage=Coverage.DISABLED,
+                           root='.',
                            coverage_target=None,
                            store_coverage_at=None)
     
@@ -160,6 +162,7 @@ def test_suite_run_solved_failing_tests_for_coverage() -> None:
     test_suite = TestSuite(run_mode=RunMode.SYNC,
                            verbosity=Verbosity.MINIMAL_NO_STACK,
                            coverage=Coverage.DISABLED,
+                           root='.',
                            coverage_target=None,
                            store_coverage_at=None)
     

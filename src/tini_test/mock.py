@@ -31,9 +31,16 @@ from tini_test.shared import MetaSharedVar, SharedVar, direct_access
 
 
 # File to globals 
-TRACKING_GLOBALS = {}
+TRACKING_GLOBALS = set()
 
-ARTIFACT_TRACKER: list[Union['BuiltInArtifact']] = []
+ARTIFACT_TRACKER: list['BuiltInArtifact'] = []
+
+
+# We need a map from file -> globals
+
+# We need to append to the globals the current applied artifacts 
+# Then we need to pop the last one 
+# And see if we need to reapply the last remaining .
 
 
 _container_types = (list, dict, set)
@@ -52,6 +59,8 @@ class BuiltInArtifact:
         self.original = original
         self.replacement = replacement
 
+        self.mock_anchor = hex(id(mock))
+
         self.applied_at: list[dict] = []
         
     @property
@@ -63,6 +72,8 @@ class BuiltInArtifact:
         # In case of a built-in *ONLY* , since we are replacing direcly
         # the global reference to it. We may receive it again as a patched object.
         for artifact in ARTIFACT_TRACKER:
+            if artifact == 'X':
+                continue
             if hex(id(artifact.replacement)) == hex(id(obj)):
                 return artifact.original
         return obj
@@ -70,10 +81,13 @@ class BuiltInArtifact:
     @classmethod
     def restore(cls) -> None:
         for artifact in ARTIFACT_TRACKER:
+            if artifact == 'X':
+                continue
             for files_globals in artifact.applied_at:
                 files_globals[artifact.__name__] = artifact.original
 
         TRACKING_GLOBALS.clear()
+        ARTIFACT_TRACKER.clear()
 
     # TODO maybe apply similar logic to the coverage tracker ? 
     # Also merge them into one.
@@ -91,14 +105,19 @@ class BuiltInArtifact:
             return _return
 
         globals_dict = frame.f_globals
+
         
         if filename not in TRACKING_GLOBALS:
-            
-            TRACKING_GLOBALS[filename] = globals_dict
+
+            # print('Tracking new file for built-in artifacts:', filename)
+            TRACKING_GLOBALS.add(filename)
 
             for _artifact in ARTIFACT_TRACKER:
-                globals_dict[_artifact.__name__] = _artifact.replacement
-                _artifact.applied_at.append(frame.f_globals)
+
+                if _artifact != 'X':
+                    globals_dict[_artifact.__name__] = _artifact.replacement
+                    _artifact.applied_at.append(frame.f_globals)
+
 
         return _return
 

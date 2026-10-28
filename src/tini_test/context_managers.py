@@ -1,5 +1,7 @@
+import builtins
 from collections import deque
 import inspect
+import os
 import sys
 import threading
 from contextlib import contextmanager
@@ -11,7 +13,7 @@ from typing import Any, Generator, Optional
 from tini_test.coverage._coverage import CoverageTracker
 from tini_test.misc.annotations import (CoverageStore, DirectoryPath,
                                         TestCallable)
-from tini_test.mock import (BuiltInArtifact, CreateMock, MockDefinition,
+from tini_test.mock import (ARTIFACT_TRACKER, TRACKING_GLOBALS, BuiltInArtifact, MockDefinition,
                             MockNone)
 from tini_test.shared import MetaSharedVar, SharedVar, direct_access
 
@@ -205,14 +207,29 @@ class Mock:
         frame = inspect.currentframe()
         previous = frame
 
+
+        # In case of built-in mocks, we need to manually track the frames 
+        # Untill we reach the entry point ...................
+        frames = []
+        files = []
+
         # Go back ~two frames to find the `run_step` ... bad but necessary, breaks on async I suppose
         while frame and frame.f_code.co_name != 'run_step':
             previous = frame
             frame = frame.f_back
+
+            frames.append(frame)
+            files.append(os.path.abspath(frame.f_code.co_filename))
+
+        # frames.pop()
+        # files.pop()
+
+        # Last frame and first needs to be filtered .... TODO 
+
          
         frame = previous
 
-
+    
         real_test = MockDefinition._cx_get_real_test(frame)
 
         mock = BuiltInArtifact.get_original_if_exists(mock)
@@ -226,7 +243,8 @@ class Mock:
         # This mock is also closer to any local mocks that may exist in the current scope.
         relevant_mocks = _mock._cx_get_previous_mocks()
 
-
+        ARTIFACT_TRACKER.append('X')
+        
         if not relevant_mocks:
             _mock._cx_register()
         
@@ -235,18 +253,69 @@ class Mock:
 
             _mock.patch()
 
+            if _mock._isbuiltin:
+
+                
+                current_frame_file = os.path.abspath(frame.f_code.co_filename)
+
+                last_artifact = ARTIFACT_TRACKER[-1]
+
+                TRACKING_GLOBALS.add(current_frame_file)
+
+                for file_name, frame in zip(files, frames):
+                    #print('FILE ', file_name)
+                    #if file_name not in TRACKING_GLOBALS:
+                    TRACKING_GLOBALS.add(file_name)
+                    frame.f_globals[last_artifact.__name__] = last_artifact.replacement
+                    last_artifact.applied_at.append(frame.f_globals)
+
+                # original = last_artifact.original
+                # frame.f_globals[last_artifact.__name__] = last_artifact.replacement
+                # last_artifact.applied_at.append(frame.f_globals)
+
+           
             with patch_built_ins('/home/papaggalos/workspace/python_projects/tINI-test'):
 
                 yield
 
+
+
+            # We must keep track of the current index of the TRACKING_GLOBALS
+            # At this point so we can know to what point we can revert it back 
+            # Since during patch_built_ins more artifacts maybe be appended to the ARTIFACT_TRACKER.
+
+
         finally:
+            TRACKING_GLOBALS.clear()
             _mock.restore()
 
-            # Here we need 
-
+            
             if not relevant_mocks:
                 _mock._cx_unregister()
 
             MockDefinition.patch_all(relevant_mocks)
-            # In this case we need to reapply the previously restored mocks for built ins.
+
+            if _mock._isbuiltin:
+
+                while ARTIFACT_TRACKER:
+                    artifact = ARTIFACT_TRACKER.pop()
+
+                    if artifact == 'X':
+                        break
+
+                    for global_dict in artifact.applied_at:
+                        global_dict[artifact.__name__] = artifact.original
+
+                to_add = []
+                while ARTIFACT_TRACKER:
+                    artifact = ARTIFACT_TRACKER.pop()
+                    to_add.append(artifact)
+
+                    if artifact == 'X':
+                        break
+
+                    for global_dict in artifact.applied_at:
+                        global_dict[artifact.__name__] = artifact.replacement
+
+                ARTIFACT_TRACKER.extend(reversed(to_add))
 

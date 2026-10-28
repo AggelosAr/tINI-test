@@ -18,7 +18,7 @@ from .misc.annotations import (CleanupCallable, CoverageStore, DirectoryPath,
                                TestWrappedHolder, TestWrappedObject, _NoOp)
 from .misc.exceptions import (ExpectedWasDifferentFromActual,
                               TestArgumentsShouldBeCallables)
-from .mock import MockDefinition
+from .mock import BuiltInArtifact, MockDefinition
 from .state.state import OperationState
 
 _minimals_discard = {Verbosity.MINIMAL_NO_STACK, Verbosity.SUPER_MINIMAL}
@@ -369,6 +369,9 @@ class _XTest:
                     self.run_steps(root)
                     self.run_for_cleanup_if_needed(root)
 
+
+        BuiltInArtifact.restore()
+        
         self.attach_end_state()
         self.close_state()
 
