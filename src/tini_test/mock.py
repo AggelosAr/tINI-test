@@ -6,7 +6,7 @@ import types
 from collections import deque
 from functools import partial
 from types import FrameType
-from typing import Any, Callable, Optional, Self, Union, cast
+from typing import Any, Callable, Iterable, Optional, Self, Union, cast
 
 from tini_test._internals._registry import attach_state
 from tini_test._internals.consts import _R_M_REG, _R_T_REG, _SETNINEL, SALT
@@ -83,7 +83,7 @@ class BuiltInArtifact:
         return obj
 
     @classmethod
-    def _CX_PATCH_INITIAL(cls, frames: list[FrameType]) -> None:
+    def _CX_PATCH_INITIAL(cls, frames: Iterable[FrameType]) -> None:
         last_artifact = ARTIFACT_TRACKER[-1]
 
         for frame in frames:

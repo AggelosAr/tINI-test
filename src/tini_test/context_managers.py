@@ -205,7 +205,7 @@ class Mock:
         * (Should only be used inside a `@Test.case` decorated function.)
         '''
         # TODO fix isolate... ~1 / 1_000_000+? error rate ?
-        ARTIFACT_TRACKER.append(_SETNINEL)
+        ARTIFACT_TRACKER.append(_SETNINEL) # type: ignore [arg-type]
 
         frame = inspect.currentframe()
         previous = frame
@@ -249,7 +249,7 @@ class Mock:
             _mock.patch()
 
             if _mock._isbuiltin:
-                BuiltInArtifact._CX_PATCH_INITIAL(frames)
+                BuiltInArtifact._CX_PATCH_INITIAL(filter(None, frames))
                
             with patch_built_ins(*_ROOT):
                 yield
