@@ -9,7 +9,7 @@ from types import FrameType
 from typing import Any, Callable, Optional, Self, Union, cast
 
 from tini_test._internals._registry import attach_state
-from tini_test._internals.consts import _R_M_REG, _R_T_REG, SALT
+from tini_test._internals.consts import _R_M_REG, _R_T_REG, _SETNINEL, SALT
 from tini_test.enums import MockType, Plugs
 from tini_test.misc.annotations import (CellName, DirectoryPath,
                                         GlobalRegistry, HexStr,
@@ -30,17 +30,10 @@ from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
 from tini_test.shared import MetaSharedVar, SharedVar, direct_access
 
 
-# File to globals 
-TRACKING_GLOBALS = set()
+TRACKING_GLOBALS: set[DirectoryPath] = set()
 
-ARTIFACT_TRACKER: list['BuiltInArtifact'] = []
+ARTIFACT_TRACKER: list['BuiltInArtifact'] = [] # | _SETNINEL
 
-
-# We need a map from file -> globals
-
-# We need to append to the globals the current applied artifacts 
-# Then we need to pop the last one 
-# And see if we need to reapply the last remaining .
 
 
 _container_types = (list, dict, set)
@@ -72,7 +65,7 @@ class BuiltInArtifact:
         # In case of a built-in *ONLY* , since we are replacing direcly
         # the global reference to it. We may receive it again as a patched object.
         for artifact in ARTIFACT_TRACKER:
-            if artifact == 'X':
+            if artifact is _SETNINEL:
                 continue
             if hex(id(artifact.replacement)) == hex(id(obj)):
                 return artifact.original
@@ -81,7 +74,7 @@ class BuiltInArtifact:
     @classmethod
     def restore(cls) -> None:
         for artifact in ARTIFACT_TRACKER:
-            if artifact == 'X':
+            if artifact is _SETNINEL:
                 continue
             for files_globals in artifact.applied_at:
                 files_globals[artifact.__name__] = artifact.original
@@ -114,9 +107,11 @@ class BuiltInArtifact:
 
             for _artifact in ARTIFACT_TRACKER:
 
-                if _artifact != 'X':
-                    globals_dict[_artifact.__name__] = _artifact.replacement
-                    _artifact.applied_at.append(frame.f_globals)
+                if _artifact is _SETNINEL:
+                    continue
+
+                globals_dict[_artifact.__name__] = _artifact.replacement
+                _artifact.applied_at.append(frame.f_globals)
 
 
         return _return
@@ -173,12 +168,12 @@ class CreateMock:
         return cast(GlobalRegistry['MockDefinition', SharedVar], self._lambda_context.__globals__)
 
     @staticmethod
-    def transfer_closure(target: Callable, source: Callable | types.CodeType, is_code: bool = False) -> Callable:
+    def transfer_closure(target: Callable, source: Callable | types.CodeType) -> Callable:
         cells = source.__closure__ or ()
         names = source.__code__.co_freevars
 
         # if targer is alredy code object, we just replace the freevars
-        if is_code:
+        if isinstance(target, types.CodeType):
             target = target.replace(co_freevars=names)
             code = target
             return types.FunctionType(
@@ -276,7 +271,7 @@ class CreateMock:
 
     def _compile_mock(self, source: str) -> None:
         new_code = compile(textwrap.dedent(source), '<string>', 'exec').co_consts[0]
-        new_code = CreateMock.transfer_closure(new_code, self.mock, True)
+        new_code = CreateMock.transfer_closure(new_code, self.mock)
         self.mock.__code__ = new_code.__code__
 
     def _restore(self) -> None:

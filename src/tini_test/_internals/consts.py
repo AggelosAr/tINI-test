@@ -70,3 +70,6 @@ _R_T_REG = __R_T_REG(SALT)
 
 _I_DEC = ('_XMock.mock', '_XTest.test', '_XShared.shared', '_XIsolate.isolate') # XXX remove magic strings.
 E_DEC  = frozenset({'Test.case', 'Mock.mock', 'Shared', 'Isolate'})
+
+
+_SETNINEL = object

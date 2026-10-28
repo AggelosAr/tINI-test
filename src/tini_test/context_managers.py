@@ -1,20 +1,20 @@
-import builtins
-from collections import deque
 import inspect
 import os
 import sys
 import threading
+from collections import deque
 from contextlib import contextmanager
 from functools import partial
 from io import StringIO
 from threading import Lock
 from typing import Any, Generator, Optional
 
+from tini_test._internals.consts import _SETNINEL
 from tini_test.coverage._coverage import CoverageTracker
 from tini_test.misc.annotations import (CoverageStore, DirectoryPath,
                                         TestCallable)
-from tini_test.mock import (ARTIFACT_TRACKER, TRACKING_GLOBALS, BuiltInArtifact, MockDefinition,
-                            MockNone)
+from tini_test.mock import (ARTIFACT_TRACKER, TRACKING_GLOBALS,
+                            BuiltInArtifact, MockDefinition, MockNone)
 from tini_test.shared import MetaSharedVar, SharedVar, direct_access
 
 from .misc.exceptions import (ExceptionWasNotRaised,
@@ -243,7 +243,7 @@ class Mock:
         # This mock is also closer to any local mocks that may exist in the current scope.
         relevant_mocks = _mock._cx_get_previous_mocks()
 
-        ARTIFACT_TRACKER.append('X')
+        ARTIFACT_TRACKER.append(_SETNINEL)
         
         if not relevant_mocks:
             _mock._cx_register()
@@ -255,7 +255,6 @@ class Mock:
 
             if _mock._isbuiltin:
 
-                
                 current_frame_file = os.path.abspath(frame.f_code.co_filename)
 
                 last_artifact = ARTIFACT_TRACKER[-1]
@@ -263,26 +262,14 @@ class Mock:
                 TRACKING_GLOBALS.add(current_frame_file)
 
                 for file_name, frame in zip(files, frames):
-                    #print('FILE ', file_name)
-                    #if file_name not in TRACKING_GLOBALS:
                     TRACKING_GLOBALS.add(file_name)
                     frame.f_globals[last_artifact.__name__] = last_artifact.replacement
                     last_artifact.applied_at.append(frame.f_globals)
-
-                # original = last_artifact.original
-                # frame.f_globals[last_artifact.__name__] = last_artifact.replacement
-                # last_artifact.applied_at.append(frame.f_globals)
 
            
             with patch_built_ins('/home/papaggalos/workspace/python_projects/tINI-test'):
 
                 yield
-
-
-
-            # We must keep track of the current index of the TRACKING_GLOBALS
-            # At this point so we can know to what point we can revert it back 
-            # Since during patch_built_ins more artifacts maybe be appended to the ARTIFACT_TRACKER.
 
 
         finally:
@@ -300,7 +287,7 @@ class Mock:
                 while ARTIFACT_TRACKER:
                     artifact = ARTIFACT_TRACKER.pop()
 
-                    if artifact == 'X':
+                    if artifact is _SETNINEL:
                         break
 
                     for global_dict in artifact.applied_at:
@@ -311,7 +298,7 @@ class Mock:
                     artifact = ARTIFACT_TRACKER.pop()
                     to_add.append(artifact)
 
-                    if artifact == 'X':
+                    if artifact is _SETNINEL:
                         break
 
                     for global_dict in artifact.applied_at:
