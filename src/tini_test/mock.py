@@ -82,8 +82,6 @@ class BuiltInArtifact:
         TRACKING_GLOBALS.clear()
         ARTIFACT_TRACKER.clear()
 
-    # TODO maybe apply similar logic to the coverage tracker ? 
-    # Also merge them into one.
     @staticmethod
     def built_in_replacer(apply_at: DirectoryPath, frame: FrameType, event: str, *args):
         _return = partial(BuiltInArtifact.built_in_replacer, apply_at)
@@ -102,7 +100,6 @@ class BuiltInArtifact:
         
         if filename not in TRACKING_GLOBALS:
 
-            # print('Tracking new file for built-in artifacts:', filename)
             TRACKING_GLOBALS.add(filename)
 
             for _artifact in ARTIFACT_TRACKER:
@@ -112,7 +109,6 @@ class BuiltInArtifact:
 
                 globals_dict[_artifact.__name__] = _artifact.replacement
                 _artifact.applied_at.append(frame.f_globals)
-
 
         return _return
 
@@ -159,7 +155,7 @@ class CreateMock:
         return self._type == MockType.BUILTIN
     
     @property
-    def test_name(self) -> str:
+    def test_name(self) -> TestFunctionName:
         return self.test.__name__
 
     @property
@@ -169,22 +165,21 @@ class CreateMock:
     @staticmethod
     def transfer_closure(target: Callable, source: Callable | types.CodeType) -> Callable:
         cells = source.__closure__ or ()
-        names = source.__code__.co_freevars
+        _freevars = source.__code__.co_freevars
 
         # if targer is alredy code object, we just replace the freevars
         if isinstance(target, types.CodeType):
-            target = target.replace(co_freevars=names)
-            code = target
+            target = target.replace(co_freevars=_freevars)
+
             return types.FunctionType(
-                code,
+                target,
                 {},
                 target.co_name,
                 None,
                 cells or None,
             )
         else:
-            code = target.__code__.replace(co_freevars=names)
-
+            code = target.__code__.replace(co_freevars=_freevars)
 
             return types.FunctionType(
                 code,
@@ -326,12 +321,14 @@ class MockCall(CreateMock):
         if not isinstance(kwargs, dict):
             raise MockCallDefinitionError('Keyword arguments should be of type dict.')
 
-    def _patch(self) -> BuiltInArtifact | None:
+    def _patch(self) -> None:
         if self._isbuiltin:
             _args = lambda: CreateMock.replace_shared(self.args)
             _kwargs = lambda: CreateMock.replace_shared(self.kwargs)
             replacement = lambda *args, **kwargs: self.mock(*_args(), **_kwargs())
-            return BuiltInArtifact(self, self.mock, replacement)
+
+            ARTIFACT_TRACKER.append(BuiltInArtifact(self, self.mock, replacement))
+            return
         
         _, _view_name = self._proxy_generator(use_anchor=True)
         
@@ -393,10 +390,12 @@ class MockReturn(CreateMock):
     def _vars(self) -> dict[CellName, list[SharedVar]]:
         return CreateMock.find_shared(self.return_value)
     
-    def _patch(self) -> BuiltInArtifact | None:
+    def _patch(self) -> None:
         if self._isbuiltin:
             replacement = lambda *args, **kwargs: CreateMock.replace_shared(self.return_value)
-            return BuiltInArtifact(self, self.mock, replacement)
+            
+            ARTIFACT_TRACKER.append(BuiltInArtifact(self, self.mock, replacement))
+            return 
         
         _, _view_name = self._proxy_generator(use_anchor=True)
         _, self._anchor = self._proxy_generator(use_anchor=True)
@@ -589,11 +588,7 @@ class MockDefinition:
     ####################################
 
     def patch(self) -> None:
-
-        artifact = self.body._patch()
-
-        if artifact:
-            ARTIFACT_TRACKER.append(artifact)
+        artifact = self.body._patch()    
 
     def restore(self) -> None:
         self.body._restore()
@@ -606,10 +601,6 @@ class MockDefinition:
     def restore_all(cls, mocks: list['MockDefinition']) -> None:
         deque(map(lambda mock: mock.restore(), mocks), maxlen=0)
         BuiltInArtifact.restore()
-
-        # Here we must return what built ins we restored for the context manager so we can reapply thyem .
-
-        
 
 
 class Mock:

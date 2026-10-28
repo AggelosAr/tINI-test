@@ -28,7 +28,7 @@ def initialize_test_suite(run_mode: RunMode,
 
     _ROOT[0] = search_dir if search_dir != '.' else os.getcwd()
 
-    test_suite = TestSuite(root=_ROOT[0],
+    test_suite = TestSuite(*_ROOT,
                            run_mode=run_mode,
                            verbosity=verbosity,
                            coverage=coverage,
