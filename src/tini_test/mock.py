@@ -11,14 +11,15 @@ from typing import Any, Callable, Optional, Self, Union, cast
 from tini_test._internals._registry import attach_state
 from tini_test._internals.consts import _R_M_REG, _R_T_REG, _SETNINEL, SALT
 from tini_test.enums import MockType, Plugs
-from tini_test.misc.annotations import (CellName, DirectoryPath,
+from tini_test.misc.annotations import (BuiltIn, CellName, DirectoryPath,
                                         GlobalRegistry, HexStr,
                                         IsolateWrappedObject, MaybeRealTest,
                                         MockDefinitionWrappedHolder,
                                         MockedCBuiltin, MockedClass,
                                         MockedClassInit, MockedFunction,
                                         MockedItem, MockedRawItem,
-                                        MockWrappedObject, ProxyItem, RealTest,
+                                        MockProxyObject, MockWrappedObject,
+                                        ProxyItem, RealTest,
                                         SharedDefinitionHolder,
                                         SharedWrappedObject, TestFunctionName,
                                         TestWrappedHolder, TestWrappedObject)
@@ -29,11 +30,10 @@ from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
                                        MockMissingFunctionOrClass)
 from tini_test.shared import MetaSharedVar, SharedVar, direct_access
 
-
+# TODO can this be handled in a cleaner way?
 TRACKING_GLOBALS: set[DirectoryPath] = set()
 
 ARTIFACT_TRACKER: list['BuiltInArtifact'] = [] # | _SETNINEL
-
 
 
 _container_types = (list, dict, set)
@@ -46,13 +46,20 @@ class MockNone:
 
 
 class BuiltInArtifact:
-
-    def __init__(self, mock: Union['MockCall', 'MockReturn'], original: Any, replacement: Any) -> None:
+    '''
+    Handles mocking of Built-in objects
+    Takes care of both normal `@Mock.mock` and `@Mock.mocking` scenarios
+    '''
+    def __init__(self, 
+                 mock: Union['MockCall', 'MockReturn'], 
+                 original: BuiltIn, 
+                 replacement: MockProxyObject) -> None:
+        
         self._name = mock.mock.__name__
         self.original = original
         self.replacement = replacement
 
-        self.mock_anchor = hex(id(mock))
+        # self.mock_anchor = hex(id(mock))
 
         self.applied_at: list[dict] = []
         
@@ -61,26 +68,50 @@ class BuiltInArtifact:
         return self._name
 
     @classmethod
-    def get_original_if_exists(cls, obj: Any) -> Callable:
-        # In case of a built-in *ONLY* , since we are replacing direcly
-        # the global reference to it. We may receive it again as a patched object.
+    def get_original_if_exists(cls, obj: Any) -> Any | Callable | BuiltIn | MockProxyObject:
+        '''
+        In case of cx mocking there is a case where the object we receive might already be a patched version.
+        This method helps retrieve the original object if it exists.
+        '''
         for artifact in ARTIFACT_TRACKER:
             if artifact is _SETNINEL:
                 continue
+
             if hex(id(artifact.replacement)) == hex(id(obj)):
                 return artifact.original
+            
         return obj
 
     @classmethod
-    def restore(cls) -> None:
+    def _CX_PATCH_INITIAL(cls, files, frames, frame) -> None:
+        current_frame_file = os.path.abspath(frame.f_code.co_filename)
+        
+        last_artifact = ARTIFACT_TRACKER[-1]
+
+        TRACKING_GLOBALS.add(current_frame_file)
+
+        for file_name, frame in zip(files, frames):
+            TRACKING_GLOBALS.add(file_name)
+            frame.f_globals[last_artifact.__name__] = last_artifact.replacement
+            last_artifact.applied_at.append(frame.f_globals)
+        
+
+    @classmethod
+    def full_restore(cls) -> int:
+        updates = 0
+
         for artifact in ARTIFACT_TRACKER:
             if artifact is _SETNINEL:
                 continue
+
             for files_globals in artifact.applied_at:
+                updates += 1
                 files_globals[artifact.__name__] = artifact.original
 
         TRACKING_GLOBALS.clear()
         ARTIFACT_TRACKER.clear()
+
+        return updates
 
     @staticmethod
     def built_in_replacer(apply_at: DirectoryPath, frame: FrameType, event: str, *args):
@@ -167,7 +198,6 @@ class CreateMock:
         cells = source.__closure__ or ()
         _freevars = source.__code__.co_freevars
 
-        # if targer is alredy code object, we just replace the freevars
         if isinstance(target, types.CodeType):
             target = target.replace(co_freevars=_freevars)
 
@@ -393,7 +423,7 @@ class MockReturn(CreateMock):
     def _patch(self) -> None:
         if self._isbuiltin:
             replacement = lambda *args, **kwargs: CreateMock.replace_shared(self.return_value)
-            
+
             ARTIFACT_TRACKER.append(BuiltInArtifact(self, self.mock, replacement))
             return 
         
@@ -588,7 +618,7 @@ class MockDefinition:
     ####################################
 
     def patch(self) -> None:
-        artifact = self.body._patch()    
+        self.body._patch()    
 
     def restore(self) -> None:
         self.body._restore()
@@ -596,11 +626,13 @@ class MockDefinition:
     @classmethod
     def patch_all(cls, mocks: list['MockDefinition']) -> None:
         deque(map(lambda mock: mock.patch(), mocks), maxlen=0)
+        # At this point in time we can't actually patch the 
+        # Built-ins like this.
         
     @classmethod
     def restore_all(cls, mocks: list['MockDefinition']) -> None:
         deque(map(lambda mock: mock.restore(), mocks), maxlen=0)
-        BuiltInArtifact.restore()
+        BuiltInArtifact.full_restore()
 
 
 class Mock:

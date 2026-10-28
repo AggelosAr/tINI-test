@@ -369,8 +369,9 @@ class _XTest:
                     self.run_steps(root)
                     self.run_for_cleanup_if_needed(root)
 
-
-        BuiltInArtifact.restore()
+        # XXX this is tested and is not breaking.
+        # Anyway the suite breaks instead of silently passing
+        assert BuiltInArtifact.full_restore() == 0
         
         self.attach_end_state()
         self.close_state()

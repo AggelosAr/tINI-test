@@ -87,6 +87,11 @@ _NoOp           : TypeAlias = Callable[..., Any]
 
 
 PartialObject   : TypeAlias = Callable[..., Any] #!!!!!!!!!!!!!
+
+
+
+BuiltIn         : TypeAlias = Callable[..., Any]
+MockProxyObject : TypeAlias = Callable[..., Any]
 # ---------------- SOME CALLABLES ----------------
 
 

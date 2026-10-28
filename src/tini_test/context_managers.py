@@ -204,16 +204,18 @@ class Mock:
 
         * (Should only be used inside a `@Test.case` decorated function.)
         '''
+        ARTIFACT_TRACKER.append(_SETNINEL)
+
         frame = inspect.currentframe()
         previous = frame
 
 
         # In case of built-in mocks, we need to manually track the frames 
-        # Untill we reach the entry point ...................
+        # Until we reach the entry point ...................
         frames = []
         files = []
 
-        # Go back ~two frames to find the `run_step` ... bad but necessary, breaks on async I suppose
+        # Go back ~two frames to find the `run_step` ... bad but necessary
         while frame and frame.f_code.co_name != 'run_step':
             previous = frame
             frame = frame.f_back
@@ -243,7 +245,6 @@ class Mock:
         # This mock is also closer to any local mocks that may exist in the current scope.
         relevant_mocks = _mock._cx_get_previous_mocks()
 
-        ARTIFACT_TRACKER.append(_SETNINEL)
         
         if not relevant_mocks:
             _mock._cx_register()
@@ -254,18 +255,8 @@ class Mock:
             _mock.patch()
 
             if _mock._isbuiltin:
-
-                current_frame_file = os.path.abspath(frame.f_code.co_filename)
-
-                last_artifact = ARTIFACT_TRACKER[-1]
-
-                TRACKING_GLOBALS.add(current_frame_file)
-
-                for file_name, frame in zip(files, frames):
-                    TRACKING_GLOBALS.add(file_name)
-                    frame.f_globals[last_artifact.__name__] = last_artifact.replacement
-                    last_artifact.applied_at.append(frame.f_globals)
-
+                BuiltInArtifact._CX_PATCH_INITIAL(files, frames, frame)
+               
            
             with patch_built_ins(*_ROOT):
 
