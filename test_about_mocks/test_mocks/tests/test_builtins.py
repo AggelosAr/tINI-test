@@ -476,7 +476,75 @@ def test_MOCKING_ABC():
         C_open()
 
 
-# names?
+
+
+# Test returns 
+
+@Isolate
+@Test.case
+@Shared(var.root)
+def test_MOCKING_ABC_returns():
+
+    var.root = os.path.join(os.path.dirname(__file__), 'txts', 'a.txt')
+
+    with Mock.mocking(open, returns='step 1') as f:
+        from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import \
+            C_open
+        from test_about_mocks.test_mocks.tests.import_a.import_b.m_b import \
+            B_open
+        from test_about_mocks.test_mocks.tests.import_a.m_a import A_open
+
+        with WillRaise(TypeError) as context:
+            must_equal('step 1', A_open())
+            must_equal('step 1', B_open())
+            must_equal('step 1', C_open())
+
+        must_equal("'str' object does not support the context manager protocol", str(context.exception))
+
+    with Mock.mocking(open, returns=io.StringIO('step 1')) as f:
+        from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import \
+            C_open
+        from test_about_mocks.test_mocks.tests.import_a.import_b.m_b import \
+            B_open
+        from test_about_mocks.test_mocks.tests.import_a.m_a import A_open
+
+        must_equal('step 1', A_open())
+
+    with Mock.mocking(open, returns=io.StringIO('step 1')) as f:
+        must_equal('step 1', B_open())
+
+    with Mock.mocking(open, returns=io.StringIO('step 1')) as f:
+        must_equal('step 1', C_open())
+        # must_equal('step 1', C_open()) # XXX ValueError: I/O operation on closed file.
+
+    from test_about_mocks.test_mocks.tests.import_a.m_a import A_open_MOCKING
+    must_equal('inside A', A_open_MOCKING())
+    print('[--------- A PASSED ---------]')
+
+    
+    from test_about_mocks.test_mocks.tests.import_a.import_b.m_b import \
+        B_open_MOCKING
+    var.root = os.path.join(os.path.dirname(__file__), 'txts', 'b.txt')
+    must_equal('inside B', B_open_MOCKING())
+    print('[--------- B PASSED ---------]')
+
+    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import \
+        C_open_MOCKING
+    var.root = os.path.join(os.path.dirname(__file__), 'txts', 'c.txt')
+    must_equal('inside C', C_open_MOCKING())
+    print('[--------- C PASSED ---------]')
+
+
+    with WillRaise(FileNotFoundError):
+        res = A_open()
+
+    with WillRaise(FileNotFoundError):
+        B_open()
+
+    with WillRaise(FileNotFoundError):
+        C_open()
+
+
+
 # TODO test more builtints?
-# TODO add 1 big test as the last with returns 
-# TODO add 1 test where u globally import instead of inside functions
+# TODO add 1 test where u globally import instead of inside functions  -> COPY PASTE THIS AS IS 

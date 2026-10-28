@@ -12,7 +12,7 @@ from tini_test._internals._registry import attach_state
 from tini_test._internals.consts import _R_M_REG, _R_T_REG, _SETNINEL, SALT
 from tini_test.enums import MockType, Plugs
 from tini_test.misc.annotations import (BuiltIn, CellName, DirectoryPath,
-                                        GlobalRegistry, HexStr,
+                                        GlobalRegistry,
                                         IsolateWrappedObject, MaybeRealTest,
                                         MockDefinitionWrappedHolder,
                                         MockedCBuiltin, MockedClass,
