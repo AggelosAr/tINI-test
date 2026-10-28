@@ -52,4 +52,17 @@ def C_open_MOCKING(*args, **kwargs):
 
 
 def _len(*args, **kwargs):
+    print('GOT ', args, kwargs, ' ---- > ', len(args), ' --- ', len(kwargs))
+
     return len(args) + len(kwargs)
+
+
+
+def xyz(args):
+    return len(args)
+
+def _xyz(*args, **kwargs):
+    return xyz(args) + xyz(kwargs)
+
+
+#////////////////////////////////////

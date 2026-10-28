@@ -620,10 +620,92 @@ def test_len():
     # Test mocking
     with Mock.mocking(len, args=((1, 2, 3, 4), )) as f:
         must_equal(4, len('?'))
-        must_equal(4 + 4, _len('?'))
 
-    must_equal(3, len('?'))
-    must_equal(3 + 3, _len('?'))
+
+# ///////////////////////////////////////////////////////////////////////
+# ///////////////////////////////////////////////////////////////////////
+# ///////////////////////////////////////////////////////////////////////
+# IMPORTANT TESTS: XXX
+@Isolate
+@Test.case
+# @Mock.mock(len, args=((1, 2, 3), ))
+def test_call_graph_patch():
+    must_equal(1, len('?'))
+    # must_equal(3, len('?'))
+
+    # Test import
+    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import _len
+    must_equal(1, _len('?'))
+    # must_equal(3 + 3, _len('?'))
+    
+    
+    # Test mocking
+    with Mock.mocking(len, args=((1, ), )) as f:
+        must_equal(1, len('?'))
+        print('?????')
+        must_equal(1 + 1, _len('?'))
+
+        with Mock.mocking(_len, args=((1, 2, ), )) as g:
+            must_equal(1, len('?'))
+            must_equal(1 + 1, _len('?'))
+
+            with Mock.mocking(_len, args=((1, 2, 3, ), )) as g:
+                must_equal(1, len('?'))
+                must_equal(1 + 1, _len('?'))
+
+            must_equal(1, len('?'))
+            must_equal(1 + 1, _len('?'))
+
+        must_equal(1, len('?'))
+        must_equal(1 + 1, _len('?'))
+
+
+    # must_equal(3, len('?'))
+    # must_equal(3 + 3, _len('?'))
+
+    must_equal(1, len('?'))
+    must_equal(1, _len('?'))
+
+
+
+# def xyz(args):
+#     return len(args)
+
+# @Isolate
+# @Test.case
+# @Mock.mock(xyz, args=((1, 2, 3), ))
+# def test_call_graph_patch_normal():
+#     must_equal(3, xyz('?'))
+
+#     # Test import
+#     from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import _xyz
+#     must_equal(3 + 3, _xyz('?'))
+
+#     # Test mocking
+#     with Mock.mocking(xyz, args=((1, ), )) as f:
+#         must_equal(1, xyz('?'))
+#         must_equal(1 + 1, _xyz('?'))
+
+#         with Mock.mocking(_xyz, args=((1, 2, ), )) as g:
+#             must_equal(2, xyz('?'))
+#             must_equal(2 + 2, _xyz('?'))
+
+#             with Mock.mocking(_xyz, args=((1, 2, 3, ), )) as g:
+#                 must_equal(3, xyz('?'))
+#                 must_equal(3 + 3, _xyz('?'))
+
+#             must_equal(2, xyz('?'))
+#             must_equal(2 + 2, _xyz('?'))
+
+#         must_equal(1, xyz('?'))
+#         must_equal(1 + 1, _xyz('?'))
+
+#     must_equal(3, xyz('?'))
+#     must_equal(3 + 3, _xyz('?'))
+# ///////////////////////////////////////////////////////////////////////
+# ///////////////////////////////////////////////////////////////////////
+# ///////////////////////////////////////////////////////////////////////
+
 
 
 @Isolate

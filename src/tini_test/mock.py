@@ -8,7 +8,7 @@ from collections import deque
 from functools import partial
 from types import FrameType
 from typing import Any, Callable, Iterable, Optional, Self, Union, cast
-from unittest import mock
+
 
 from tini_test._internals._registry import attach_state
 from tini_test._internals.consts import _R_M_REG, _R_T_REG, _SETNINEL, SALT
@@ -32,11 +32,10 @@ from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
                                        MockMissingFunctionOrClass)
 from tini_test.shared import MetaSharedVar, SharedVar, direct_access
 
-# TODO can this be handled in a cleaner way?
-TRACKING_GLOBALS: set[DirectoryPath] = set()
 
 ARTIFACT_TRACKER: list['BuiltInArtifact'] = [] # | _SETNINEL
 
+CALL_GRAPH: dict[DirectoryPath, dict] = {}
 
 _container_types = (list, dict, set)
 
@@ -95,7 +94,9 @@ class BuiltInArtifact:
 
         for frame in frames:
             file_name = os.path.abspath(frame.f_code.co_filename)
-            TRACKING_GLOBALS.add(file_name)
+
+            CALL_GRAPH.setdefault(file_name, frame.f_globals)
+
             frame.f_globals[last_artifact.__name__] = last_artifact.replacement
             last_artifact.applied_at.append(frame.f_globals)
 
@@ -135,11 +136,31 @@ class BuiltInArtifact:
                 updates += 1
                 files_globals[artifact.__name__] = artifact.original
 
-        TRACKING_GLOBALS.clear()
+        CALL_GRAPH.clear()
         ARTIFACT_TRACKER.clear()
 
         return updates
 
+    @staticmethod
+    def filter_by_name(filename: str, apply_at: DirectoryPath) -> bool:
+        '''
+        Determines whether the given filename should be considered for patching
+        based on the apply_at directory and other filtering rules.
+        '''
+        if not filename.endswith('.py'):
+            return False
+
+        if not filename.startswith(apply_at):
+            return False
+
+        if 'site-packages' in filename:
+            return False
+
+        if 'tINI-test/src' in filename:
+            return False
+
+        return True
+    
     @staticmethod
     def built_in_replacer(apply_at: DirectoryPath, frame: FrameType, event: str, *args):
         _return = partial(BuiltInArtifact.built_in_replacer, apply_at)
@@ -149,22 +170,15 @@ class BuiltInArtifact:
         
         filename = os.path.abspath(frame.f_code.co_filename)
 
-        # TODO maybe add this to tracer. also time it.
-        # Minor inconveniences ...
-        if not filename.startswith(apply_at) or not filename.endswith('.py') or 'site-packages' in filename:
-            return _return
-
-        # If the file is inside the tini-test directory, we must not patch built-ins for it
-        # Since we are already using them...
-        if 'tINI-test/src' in filename:
+        if not BuiltInArtifact.filter_by_name(filename, apply_at):
             return _return
 
         globals_dict = frame.f_globals
 
         
-        if filename not in TRACKING_GLOBALS:
+        if filename not in CALL_GRAPH:
 
-            TRACKING_GLOBALS.add(filename)
+            CALL_GRAPH[filename] = frame.f_globals
 
             for _artifact in ARTIFACT_TRACKER:
 

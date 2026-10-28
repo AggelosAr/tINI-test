@@ -13,7 +13,7 @@ from tini_test._internals.consts import _ROOT, _SETNINEL
 from tini_test.coverage._coverage import CoverageTracker
 from tini_test.misc.annotations import (CoverageStore, DirectoryPath,
                                         TestCallable)
-from tini_test.mock import (ARTIFACT_TRACKER, TRACKING_GLOBALS,
+from tini_test.mock import (ARTIFACT_TRACKER, CALL_GRAPH,
                             BuiltInArtifact, MockDefinition, MockNone)
 from tini_test.shared import MetaSharedVar, SharedVar, direct_access
 
@@ -263,7 +263,7 @@ class Mock:
             # And then revert those patches to the previous state.
 
         finally:
-            TRACKING_GLOBALS.clear()
+            CALL_GRAPH.clear()
 
             _mock.restore()
 
