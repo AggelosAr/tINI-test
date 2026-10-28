@@ -72,4 +72,6 @@ _I_DEC = ('_XMock.mock', '_XTest.test', '_XShared.shared', '_XIsolate.isolate') 
 E_DEC  = frozenset({'Test.case', 'Mock.mock', 'Shared', 'Isolate'})
 
 
+_ROOT = [None]
+
 _SETNINEL = object

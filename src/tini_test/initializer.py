@@ -1,6 +1,8 @@
+import os
 from time import perf_counter
 from typing import Optional
 
+from tini_test._internals.consts import _ROOT
 from tini_test.core import TestSuite
 from tini_test.enums import Coverage, RunMode, Verbosity
 from tini_test.misc.annotations import (DirectoryPath, FileName,
@@ -24,8 +26,9 @@ def initialize_test_suite(run_mode: RunMode,
     test_collector.normalize_collected_data()
     test_collector.discovery_time = perf_counter()
 
+    _ROOT[0] = search_dir if search_dir != '.' else os.getcwd()
 
-    test_suite = TestSuite(root=search_dir,
+    test_suite = TestSuite(root=_ROOT[0],
                            run_mode=run_mode,
                            verbosity=verbosity,
                            coverage=coverage,

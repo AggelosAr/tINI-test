@@ -144,7 +144,6 @@ class CreateMock:
         # This refers to the context of the test that this mock is associated with.
         # The test doesn't exit until we unwrap the dependency chain,
         # or find it from the globals in the case of the context manager.
-        # TODO Consider initializing the test context properly to avoid relying on a lambda placeholder.
         self._lambda_context: RealTest | MaybeRealTest = lambda: None
 
     @property

@@ -1,5 +1,4 @@
 import asyncio
-import os
 import traceback
 from functools import cached_property
 from itertools import repeat
@@ -34,7 +33,7 @@ class TestSuite:
                  store_coverage_at: DirectoryPath | FileName | None,
                  test_function: Optional[TestFunctionName] = None
                  ) -> None:
-        self.root = root if root != '.' else os.getcwd()
+        self.root = root
 
         self.run_mode = run_mode
         self.verbosity = verbosity

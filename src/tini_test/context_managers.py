@@ -9,7 +9,7 @@ from io import StringIO
 from threading import Lock
 from typing import Any, Generator, Optional
 
-from tini_test._internals.consts import _SETNINEL
+from tini_test._internals.consts import _ROOT, _SETNINEL
 from tini_test.coverage._coverage import CoverageTracker
 from tini_test.misc.annotations import (CoverageStore, DirectoryPath,
                                         TestCallable)
@@ -200,7 +200,7 @@ class Mock:
         No guarantee is made that the mocked object will not intefere with the original
         during `async` mode.
 
-        * Use the the `@Isolate` decorator to ensure isolation. TODO fix isolate...
+        * Use the the `@Isolate` decorator to ensure isolation. TODO fix isolate... ~1 / 1_000_000+? error rate ?
 
         * (Should only be used inside a `@Test.case` decorated function.)
         '''
@@ -267,7 +267,7 @@ class Mock:
                     last_artifact.applied_at.append(frame.f_globals)
 
            
-            with patch_built_ins('/home/papaggalos/workspace/python_projects/tINI-test'):
+            with patch_built_ins(*_ROOT):
 
                 yield
 
