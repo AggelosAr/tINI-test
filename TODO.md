@@ -24,9 +24,3 @@ add docstring to var
 
 Maybe udate isolate to take a snapshot for true isolation
 
-
-
-
-# !!! nesting mocks @mocking -> it is forbidden to mock the same function on normal mode .
-# not in mocking context tho .... ???? ----> closures of premocked function to be mocked --->>> ????? XXX
-

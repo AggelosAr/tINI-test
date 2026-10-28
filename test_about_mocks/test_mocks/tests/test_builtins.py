@@ -600,16 +600,30 @@ def test_built_in_refreshes():
 @Isolate
 @Test.case
 @Mock.mock(len, args=((1, 2, 3), ))
+def test_len_as_different_name():
+    ___len = len
+    must_equal(3, ___len('?'))
+
+
+
+
+@Isolate
+@Test.case
+@Mock.mock(len, args=((1, 2, 3), ))
 def test_len():
     must_equal(3, len('?'))
 
     # Test import
     from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import _len
-    must_equal(3+ 3, _len('?'))
+    must_equal(3 + 3, _len('?'))
 
     # Test mocking
     with Mock.mocking(len, args=((1, 2, 3, 4), )) as f:
         must_equal(4, len('?'))
+        must_equal(4 + 4, _len('?'))
+
+    must_equal(3, len('?'))
+    must_equal(3 + 3, _len('?'))
 
 
 @Isolate
@@ -809,6 +823,8 @@ def test_list():
     # Test mocking
     with Mock.mocking(list, args=((4, 5, 6),)) as f:
         must_equal([4, 5, 6], list())
+
+    must_equal([1, 2, 3], list())
 
 
 @Isolate

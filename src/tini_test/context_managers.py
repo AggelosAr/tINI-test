@@ -258,6 +258,10 @@ class Mock:
             with patch_built_ins(*_ROOT):
                 yield
 
+            # TODO we must also patch it again in all the places we 
+            # visited so far....
+            # And then revert those patches to the previous state.
+
         finally:
             TRACKING_GLOBALS.clear()
 

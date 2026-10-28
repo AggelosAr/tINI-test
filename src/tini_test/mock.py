@@ -389,6 +389,7 @@ class MockCall(CreateMock):
         if self._isbuiltin:
             _args = lambda: CreateMock.replace_shared(self.args)
             _kwargs = lambda: CreateMock.replace_shared(self.kwargs)
+            
             replacement = lambda *args, **kwargs: self.mock(*_args(), **_kwargs())
 
             ARTIFACT_TRACKER.append(BuiltInArtifact(self, self.mock, replacement))
@@ -468,10 +469,12 @@ class MockReturn(CreateMock):
     
     def _patch(self) -> None:
         if self._isbuiltin:
+
             replacement = (
                 lambda *args, **kwargs: 
                     MockReturn.go_rebuild_yourself(lambda: self.return_value, self.mock.__name__)
             )
+
             ARTIFACT_TRACKER.append(BuiltInArtifact(self, self.mock, replacement))
             return 
         

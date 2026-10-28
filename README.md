@@ -315,26 +315,40 @@ or
 ```
 
 
-Here is a more complex example. The function call of func_e during the test will be proxied to the Mock as a result it will receive as args the lambda and the 1 and as kwargs the function f. Also the the top and bottom Mock decorators are ignored.
+### Mocking built-ins
 
 ```python
 
-def func_e(arg1: Callable, arg2, k_val_1: Optional[Callable]=None, k_val_2=None):
-    return (arg1() or 0) + arg2 + (k_val_1() if k_val_1 else 0) + (k_val_2 or 0)
-
-def func_f():
-    return 100
-
-
-@Mock.mock
-@Mock.mock(func_e, args=(lambda: 999, 1), kwargs={'k_val_1': lambda: func_f, 'k_val_2': None})
+@Isolate
 @Test.case
-@Mock.mock()
-def test_mock_anon_callable_none_in_args_kwargs():
-    print('Perfect!')
-    must_equal(999 + 1 + 100, func_e(func_f, 1, k_val_1=func_f, k_val_2=100))
+@Mock.mock(len, args=((1, 2, 3), ))
+def test_len():
+    must_equal(3, len('?'))
+
+    from somewhere import _len
+    '''
+    def _len(*args, **kwargs):
+        return len(args) + len(kwargs)
+    '''
+    must_equal(3 + 3, _len('?'))
+
+
+    with Mock.mocking(len, args=((1, 2, 3, 4), )) as f:
+        must_equal(4, len('?'))
+
+
+@Isolate
+@Test.case
+@Mock.mock(list, args=((1, 2, 3),))
+def test_list():
+    must_equal([1, 2, 3], list())
+
+    with Mock.mocking(list, args=((4, 5, 6),)) as f:
+        must_equal([4, 5, 6], list())
 
 ```
+
+> More examples can be found `@test_builtins`
 
 
 #### NOTES:
