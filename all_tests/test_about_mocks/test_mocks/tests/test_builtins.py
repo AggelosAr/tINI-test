@@ -497,9 +497,11 @@ def test_MOCKING_ABC_returns():
             must_equal('step 1', B_open())
             must_equal('step 1', C_open())
 
-        # XXX Y  from 3.12 to 3.12 ++ (missed __exit__ method) Python version: 3.12.13
-        print(str(context.exception))
-        must_equal("'str' object does not support the context manager protocol", str(context.exception))
+        import sys
+        if sys.version_info >= (3, 14):
+            must_equal("'str' object does not support the context manager protocol (missed __exit__ method)", str(context.exception))
+        else:
+            must_equal("'str' object does not support the context manager protocol", str(context.exception))
 
     with Mock.mocking(open, returns=io.StringIO('step 1')) as f:
         from all_tests.test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import \

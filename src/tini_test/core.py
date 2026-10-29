@@ -219,7 +219,7 @@ class TestSuite:
 
         return '\n'.join(_r if self.file_load_failures else _r[:-2]) 
 
-    def get_detail(self) -> str:
+    def get_detail(self) -> None:
         import sys
         print()
         print()
@@ -260,10 +260,10 @@ class TestSuite:
                 continue
 
             finally:
-                tests.reset_shared_meta()
+                tests.reset_shared_meta()   
 
-                if not tests.has_tests:
-                    continue
+            if not tests.has_tests:
+                continue
 
             if self.searching_single_test:
 
