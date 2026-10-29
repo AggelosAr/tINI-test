@@ -267,7 +267,7 @@ class Mock:
 
             
             # Here we must check if the mock was a built-in and re-patch if necessary
-            # Of we generated any artifacts during the process, we need to re-patch them
+            # If we generated any artifacts during the process, we need to re-patch them
             if _mock._isbuiltin or len(ARTIFACT_TRACKER) > current_builtins:
                 BuiltInArtifact._CX_maybe_re_patch_level()
 
