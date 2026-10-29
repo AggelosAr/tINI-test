@@ -628,21 +628,17 @@ def test_len():
 # IMPORTANT TESTS: XXX
 @Isolate
 @Test.case
-# @Mock.mock(len, args=((1, 2, 3), ))
-def test_call_graph_patch():
-    must_equal(1, len('?'))
-    # must_equal(3, len('?'))
+@Mock.mock(len, args=((1, 2, 3), ))
+def test_call_graph_patch_with_mock():
+    must_equal(3, len('?'))
 
     # Test import
     from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import _len
-    must_equal(1, _len('?'))
-    # must_equal(3 + 3, _len('?'))
-    
+    must_equal(3 + 3, _len('?'))
     
     # Test mocking
     with Mock.mocking(len, args=((1, ), )) as f:
         must_equal(1, len('?'))
-        print('?????')
         must_equal(1 + 1, _len('?'))
 
         with Mock.mocking(_len, args=((1, 2, ), )) as g:
@@ -660,14 +656,43 @@ def test_call_graph_patch():
         must_equal(1 + 1, _len('?'))
 
 
-    # must_equal(3, len('?'))
-    # must_equal(3 + 3, _len('?'))
+    must_equal(3, len('?'))
+    must_equal(3 + 3, _len('?'))
+
+
+@Isolate
+@Test.case
+def test_call_graph_patch_no_mock():
+    must_equal(1, len('?'))
+
+    # Test import
+    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import _len
+    must_equal(1, _len('?'))
+    
+    # Test mocking
+    with Mock.mocking(len, args=((1, ), )) as f:
+        must_equal(1, len('?'))
+        must_equal(1 + 1, _len('?'))
+
+        with Mock.mocking(_len, args=((1, 2, ), )) as g:
+            must_equal(1, len('?'))
+            must_equal(1 + 1, _len('?'))
+
+            with Mock.mocking(_len, args=((1, 2, 3, ), )) as g:
+                must_equal(1, len('?'))
+                must_equal(1 + 1, _len('?'))
+
+            must_equal(1, len('?'))
+            must_equal(1 + 1, _len('?'))
+
+        must_equal(1, len('?'))
+        must_equal(1 + 1, _len('?'))
 
     must_equal(1, len('?'))
     must_equal(1, _len('?'))
 
 
-
+# XXX what do we do in this case ???????
 # def xyz(args):
 #     return len(args)
 
@@ -679,7 +704,7 @@ def test_call_graph_patch():
 
 #     # Test import
 #     from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import _xyz
-#     must_equal(3 + 3, _xyz('?'))
+#     must_equal(1, _xyz('?'))
 
 #     # Test mocking
 #     with Mock.mocking(xyz, args=((1, ), )) as f:
@@ -900,6 +925,7 @@ def test_int():
 @Test.case
 @Mock.mock(list, args=((1, 2, 3),))
 def test_list():
+    print('-------> ', list())
     must_equal([1, 2, 3], list())
 
     # Test mocking
@@ -1067,6 +1093,7 @@ def test_enumerate():
 @Test.case
 @Mock.mock(zip, args=((1, 2), ('a', 'b')))
 def test_zip():
+    # print('---------> ', list(zip([], [])))
     must_equal([(1, 'a'), (2, 'b')], list(zip([], [])))
 
     # Test mocking

@@ -11,7 +11,7 @@ from typing import Any, Callable, Iterable, Optional, Self, Union, cast
 
 
 from tini_test._internals._registry import attach_state
-from tini_test._internals.consts import _R_M_REG, _R_T_REG, _SETNINEL, SALT
+from tini_test._internals.consts import _R_M_REG, _R_T_REG, _ROOT_SENTINEL, _SETNINEL, SALT
 from tini_test.enums import MockType, Plugs
 from tini_test.misc.annotations import (BuiltIn, CellName, DirectoryPath,
                                         GlobalRegistry, IsolateWrappedObject,
@@ -37,6 +37,8 @@ ARTIFACT_TRACKER: list['BuiltInArtifact'] = [] # | _SETNINEL
 
 CALL_GRAPH: dict[DirectoryPath, dict] = {}
 
+FILE_TRACKER: set[DirectoryPath] = set()
+
 _container_types = (list, dict, set)
 
 _meta = MetaSharedVar.get_meta_var()
@@ -60,8 +62,6 @@ class BuiltInArtifact:
         self.original = original
         self.replacement = replacement
 
-        # self.mock_anchor = hex(id(mock))
-
         self.applied_at: list[dict] = []
         
     @property
@@ -77,53 +77,93 @@ class BuiltInArtifact:
         for artifact in ARTIFACT_TRACKER:
             if artifact is _SETNINEL:
                 continue
+            if artifact is _ROOT_SENTINEL:
+                continue
 
             if hex(id(artifact.replacement)) == hex(id(obj)):
                 return artifact.original
-            
+
         return obj
 
     @classmethod
-    def _CX_patch_initial(cls, frames: Iterable[FrameType]) -> None:
+    def _CX_patch_initial(cls, frames: Iterable[FrameType], apply_at: DirectoryPath) -> None:
         '''
         Applies the last built-in artifact to the given frames.
         This is used in the context of cx mocking to ensure that the replacement 
         is applied to the correct frames.
         '''
         last_artifact = ARTIFACT_TRACKER[-1]
-
+    
         for frame in frames:
+
             file_name = os.path.abspath(frame.f_code.co_filename)
 
+            if not BuiltInArtifact.filter_by_name(file_name, apply_at):
+                continue
+
             CALL_GRAPH.setdefault(file_name, frame.f_globals)
+            FILE_TRACKER.add(file_name)
 
             frame.f_globals[last_artifact.__name__] = last_artifact.replacement
             last_artifact.applied_at.append(frame.f_globals)
 
     @classmethod
     def _CX_maybe_re_patch_level(cls) -> None:
+        found_root = 0
+
         while ARTIFACT_TRACKER:
             artifact = ARTIFACT_TRACKER.pop()
 
             if artifact is _SETNINEL:
+                break
+            if artifact is _ROOT_SENTINEL:
+                found_root += 1
                 break
 
             for global_dict in artifact.applied_at:
                 global_dict[artifact.__name__] = artifact.original
 
-        to_add = []
+        # We must only repatch if we are not at the top level .
+
+        to_repatch = []
         while ARTIFACT_TRACKER:
             artifact = ARTIFACT_TRACKER.pop()
-            to_add.append(artifact)
-
+            
             if artifact is _SETNINEL:
                 break
+            if artifact is _ROOT_SENTINEL:
+                found_root += 1
+                break
+
+            to_repatch.append(artifact)
+
+        # We need to determine if we are at the top level of the artifact tracker.
+        # Root level is alwats <Artifact> + <_ROOT_SENTINEL> + <_ROOT_SENTINEL>
+        if found_root > 0:
+            # Stabilize the root level by ensuring the last two elements are _ROOT_SENTINEL
+            for _ in range(abs(found_root - ARTIFACT_TRACKER.count(_ROOT_SENTINEL))):
+                ARTIFACT_TRACKER.append(_ROOT_SENTINEL)
+
+        if found_root > 0:
+            # In this case, we are at the top level and should repatch with the original 
+            artifact = ARTIFACT_TRACKER[0]
+            for global_dict in artifact.applied_at:
+                global_dict[artifact.__name__] = artifact.replacement
+
+            return 
+        
+        for artifact in to_repatch:
+
+            if artifact is _SETNINEL:
+                continue
+            if artifact is _ROOT_SENTINEL:
+                continue
 
             for global_dict in artifact.applied_at:
                 global_dict[artifact.__name__] = artifact.replacement
 
-        ARTIFACT_TRACKER.extend(reversed(to_add))
-        
+        ARTIFACT_TRACKER.extend(reversed(to_repatch))
+
     @classmethod
     def full_restore(cls) -> int:
         updates = 0
@@ -131,12 +171,26 @@ class BuiltInArtifact:
         for artifact in ARTIFACT_TRACKER:
             if artifact is _SETNINEL:
                 continue
+            if artifact is _ROOT_SENTINEL:
+                continue
 
             for files_globals in artifact.applied_at:
                 updates += 1
                 files_globals[artifact.__name__] = artifact.original
 
+            for _, _globals in CALL_GRAPH.items():
+                updates += 1
+
+                for artifact in ARTIFACT_TRACKER:
+                    if artifact is _SETNINEL:
+                        continue
+                    if artifact is _ROOT_SENTINEL:
+                        continue
+
+                    _globals[artifact.__name__] = artifact.original
+
         CALL_GRAPH.clear()
+        FILE_TRACKER.clear()
         ARTIFACT_TRACKER.clear()
 
         return updates
@@ -162,8 +216,8 @@ class BuiltInArtifact:
         return True
     
     @staticmethod
-    def built_in_replacer(apply_at: DirectoryPath, frame: FrameType, event: str, *args):
-        _return = partial(BuiltInArtifact.built_in_replacer, apply_at)
+    def built_in_replacer(apply_at: DirectoryPath, is_root: bool, frame: FrameType, event: str, *args):
+        _return = partial(BuiltInArtifact.built_in_replacer, apply_at, is_root)
 
         if event != 'call':
             return _return
@@ -176,18 +230,25 @@ class BuiltInArtifact:
         globals_dict = frame.f_globals
 
         
-        if filename not in CALL_GRAPH:
+        if filename not in FILE_TRACKER:
 
             CALL_GRAPH[filename] = frame.f_globals
+            FILE_TRACKER.add(filename)
 
-            for _artifact in ARTIFACT_TRACKER:
+        for _artifact in ARTIFACT_TRACKER:
 
-                # TODO at this point shouldn't only after the Sentinel be applied?
-                if _artifact is _SETNINEL:
-                    continue
+            if _artifact is _SETNINEL:
+                continue
+            if _artifact is _ROOT_SENTINEL:
+                continue
+            
+            globals_dict[_artifact.__name__] = _artifact.replacement
+            _artifact.applied_at.append(frame.f_globals)
 
-                globals_dict[_artifact.__name__] = _artifact.replacement
-                _artifact.applied_at.append(frame.f_globals)
+        if is_root:
+            ARTIFACT_TRACKER.append(_ROOT_SENTINEL)
+            ARTIFACT_TRACKER.append(_ROOT_SENTINEL)
+            
 
         return _return
 

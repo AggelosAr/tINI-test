@@ -13,7 +13,7 @@ from tini_test._internals.consts import _ROOT, _SETNINEL
 from tini_test.coverage._coverage import CoverageTracker
 from tini_test.misc.annotations import (CoverageStore, DirectoryPath,
                                         TestCallable)
-from tini_test.mock import (ARTIFACT_TRACKER, CALL_GRAPH,
+from tini_test.mock import (ARTIFACT_TRACKER, FILE_TRACKER,
                             BuiltInArtifact, MockDefinition, MockNone)
 from tini_test.shared import MetaSharedVar, SharedVar, direct_access
 
@@ -119,9 +119,9 @@ def with_lock(use: bool) -> Generator[None, None, None]:
 
 
 @contextmanager
-def patch_built_ins(apply_at: DirectoryPath):
+def patch_built_ins(apply_at: DirectoryPath, is_root: bool = False):
     previous = sys.gettrace()
-    sys.settrace(partial(BuiltInArtifact.built_in_replacer, apply_at))
+    sys.settrace(partial(BuiltInArtifact.built_in_replacer, apply_at, is_root))
     try:
         yield
     finally:
@@ -135,7 +135,7 @@ def patch_mocks(mocks: list[MockDefinition], replace_at: DirectoryPath) -> Gener
         try:
             MockDefinition.patch_all(mocks)
 
-            with patch_built_ins(replace_at):
+            with patch_built_ins(replace_at, is_root=True):
 
                 yield
 
@@ -243,6 +243,7 @@ class Mock:
         # This mock is also closer to any local mocks that may exist in the current scope.
         relevant_mocks = _mock._CX_get_previous_mocks()
 
+        current_builtins = len(ARTIFACT_TRACKER)
         
         if not relevant_mocks:
             _mock._CX_register()
@@ -252,26 +253,28 @@ class Mock:
 
             _mock.patch()
 
+            # If we found built-in patch it.
             if _mock._isbuiltin:
-                BuiltInArtifact._CX_patch_initial(filter(None, frames))
-               
+                BuiltInArtifact._CX_patch_initial(filter(None, frames), *_ROOT)
+
+            # If we will find any built-ins patch them.
             with patch_built_ins(*_ROOT):
                 yield
 
-            # TODO we must also patch it again in all the places we 
-            # visited so far....
-            # And then revert those patches to the previous state.
 
         finally:
-            CALL_GRAPH.clear()
+
+            FILE_TRACKER.clear()
 
             _mock.restore()
 
             if not relevant_mocks:
                 _mock._CX_unregister()
 
-            MockDefinition.patch_all(relevant_mocks)
-
-            if _mock._isbuiltin:
+            
+            # Here we must check if the mock was a built-in and re-patch if necessary
+            # Of we generated any artifacts during the process, we need to re-patch them
+            if _mock._isbuiltin or len(ARTIFACT_TRACKER) > current_builtins:
                 BuiltInArtifact._CX_maybe_re_patch_level()
-                
+
+            MockDefinition.patch_all(relevant_mocks)

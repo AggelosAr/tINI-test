@@ -371,8 +371,8 @@ class _XTest:
 
         # XXX this is tested and is not breaking.
         # Anyway the suite breaks instead of silently passing
-        # assert BuiltInArtifact.full_restore() == 0
-        
+        assert BuiltInArtifact.full_restore() == 0
+
         self.attach_end_state()
         self.close_state()
 

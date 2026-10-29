@@ -20,7 +20,6 @@ _USING_COVERAGE = False
 _PROFILING      = False
 
 
-
 _RESET             = '\033[0m'       # Reset line colours
 
 _LINE_UP           = '\033[1A'       # Used on minimal dots
@@ -75,3 +74,4 @@ E_DEC  = frozenset({'Test.case', 'Mock.mock', 'Shared', 'Isolate'})
 _ROOT = ['']
 
 _SETNINEL = object
+_ROOT_SENTINEL = object()
