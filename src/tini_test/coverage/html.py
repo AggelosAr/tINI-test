@@ -1,5 +1,6 @@
+from __future__ import annotations
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional
 
 from tini_test.coverage.consts import STYLE_FILE
 from tini_test.coverage.enums import HTMLNodeType
@@ -30,7 +31,7 @@ class HTMLNode:
                  _type: HTMLNodeType,
                  classes: Optional[dict[str, str] | list[dict[str, str]]] = None,
                  content: Optional[HTMLContent] = None,
-                 children: Optional[Union['HTMLNode', list['HTMLNode']]] = None) -> None:
+                 children: Optional[HTMLNode | list[HTMLNode]] = None) -> None:
         
         self._type = _type
 
@@ -59,7 +60,7 @@ class HTMLNode:
     def set_content(self, content: HTMLContent) -> None:
         self.content = content
 
-    def add_children(self, children: Union['HTMLNode', list['HTMLNode']]) -> None:
+    def add_children(self, children: HTMLNode | list[HTMLNode]) -> None:
         if isinstance(children, list):
             self.children.extend(children)
         else:

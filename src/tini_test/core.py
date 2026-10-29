@@ -302,6 +302,9 @@ class TestSuite:
 
     def pprint(self) -> None:
         print(self.get_summary())
+        import sys
+        print('Python executable:', sys.executable)
+        print('Python version:', '.'.join(map(str, sys.version_info[:3])))
 
     def get_coverage(self) -> None:
         if self.coverage == Coverage.DISABLED:

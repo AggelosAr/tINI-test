@@ -1,4 +1,6 @@
+from __future__ import annotations
 import html
+import io
 import json
 import os
 import shutil
@@ -6,6 +8,7 @@ from collections import Counter
 from datetime import datetime
 from functools import cached_property, partial
 from pathlib import Path
+import tokenize
 from types import FrameType
 from typing import Optional
 
@@ -28,19 +31,60 @@ from tini_test.misc.exceptions import (CoverageDeserializationError,
 # Fall back behavior for to_html of report?
 # Top levels are gathered manually @core?
 # Use target @tracer?
-# @update_state this misses inline comments. @Comments
+
+
+class InlineComment:
+
+    def __init__(self, _start: int) -> None:
+        self.start = _start
+
+    @classmethod
+    def from_source(cls, source: str) -> dict[CodeLineNumber, InlineComment]:
+        comments = {}
+
+        tokens = tokenize.generate_tokens(io.StringIO(source).readline)
+       
+        for token in tokens:
+            if token.type != tokenize.COMMENT:
+                continue
+
+            line_number = token.start[0]  # 1-based
+            comment_start = token.start[1]
+
+            comments[line_number] = InlineComment(comment_start)
+
+        return comments
+
 
 class Line:
+
     def __init__(self, 
                  line_number: CodeLineNumber, 
                  line_content: LineContent, 
                  status: LineStatus,
-                 is_continuation: Optional[bool] = False) -> None:
+                 is_continuation: Optional[bool] = False,
+                 inline_comment: Optional[InlineComment] = None) -> None:
         self.line_number = line_number
         self.line_content = line_content
         self.status = status
         # Not the first line of a multi line statement.
         self.is_continuation = is_continuation
+
+        self.inline_comment = inline_comment
+
+    @property
+    def is_inline_commented(self) -> bool:
+        return self.inline_comment is not None
+
+    def add_inline_comment(self, inline_comment: InlineComment) -> None:
+        self.inline_comment = inline_comment
+
+    def get_split_line(self) -> tuple[str, str]:
+        if self.inline_comment:
+            _code = self.line_content[:self.inline_comment.start]
+            comment = self.line_content[self.inline_comment.start:]
+            return _code, comment
+        return self.line_content, ''
 
 
 class FileCoverage:
@@ -53,6 +97,8 @@ class FileCoverage:
 
         with open(self.file_path, 'r') as f:
             source = f.read()
+
+        self.inline_comments = InlineComment.from_source(source)
 
         self._statement_status: dict[StatementId, LineStatus] = {}
         self._statement_counts: Counter[LineStatus] = Counter()
@@ -151,6 +197,8 @@ class FileCoverage:
             owner = self.line_to_statement.get(l_no)
             stripped = l_cont.strip()
 
+            inline_comment = self.inline_comments.get(l_no)
+
             if owner is None or not stripped or stripped.startswith('#'):
 
                 # Line is empty
@@ -174,7 +222,9 @@ class FileCoverage:
                     # Else/finally blocks are skipped @extract_line_to_statement
                     if stripped.startswith('else:') or stripped.startswith('finally:'):
                         # @Comments are allowed here
-                        self.lines[l_no] = Line(l_no, l_cont, LineStatus.EXCLUDED)
+                        if inline_comment:
+                            self._statement_counts[LineStatus.COMMENT] += 1
+                        self.lines[l_no] = Line(l_no, l_cont, LineStatus.EXCLUDED, inline_comment=inline_comment)
                         self._statement_counts[LineStatus.EXCLUDED] += 1
                     else:
                         self.lines[l_no] = Line(l_no, l_cont, LineStatus.DOCSTRING)
@@ -190,11 +240,17 @@ class FileCoverage:
 
                                 case True:
                                     # @Comments are allowed at the end of the docstring
+                                    if inline_comment:
+                                        self.lines[l_no].add_inline_comment(inline_comment)
+                                        self._statement_counts[LineStatus.COMMENT] += 1
                                     have_docstring_open = False
+                                    
             else:
                 is_continuation = l_no != self.statement_to_lines[owner][0]
                 status = self._statement_status[owner]
-                self.lines[l_no] = Line(l_no, l_cont, status, is_continuation)
+                self.lines[l_no] = Line(l_no, l_cont, status, is_continuation, inline_comment)
+                if inline_comment:
+                    self._statement_counts[LineStatus.COMMENT] += 1
 
     def set_href(self, href: str) -> None:
         self.href = href      
@@ -241,7 +297,7 @@ class CoverageTracker:
     @classmethod
     def init_from_store(cls, 
                         source: DirectoryPath | FileName | None, 
-                        store: DirectoryPath | FileName | None) -> 'CoverageTracker':
+                        store: DirectoryPath | FileName | None) -> CoverageTracker:
         return cls(source=source, runtime_covered_lines=CoverageTracker.deserialize(store))
     
     @staticmethod
@@ -524,19 +580,61 @@ class HTMLLine:
 
 
         child_two = HTMLNode(HTMLNodeType.SPAN)
+        child_three = None
+
 
         match line.status:
             case LineStatus.COMMENT:
                 child_two.add_class({'class': 'line-content code-comment'})
+                child_two.set_content(html.escape(line.line_content))
+
             case LineStatus.DOCSTRING:
-                child_two.add_class({'class': 'line-content code-docstring'})
+                match line.is_inline_commented:
+
+                    case True:
+                        _code, comment = line.get_split_line()
+
+                        child_two.add_class({'class': 'code-docstring'})
+                        child_two.set_content(html.escape(_code))
+                        
+                        child_three = HTMLNode(HTMLNodeType.SPAN)
+                        child_three.add_class({'class': 'inline-comment'})
+                        child_three.set_content(html.escape(comment))
+
+                    case False:
+                        child_two.add_class({'class': 'line-content code-docstring'})
+                        child_two.set_content(html.escape(line.line_content))
+
             case _:
-                child_two.add_class({'class': 'line-content'})
+                match line.is_inline_commented:
 
-        child_two.set_content(html.escape(line.line_content))
+                    case True:
+                        _code, comment = line.get_split_line()
 
+                       
+                        child_two.set_content(html.escape(_code))
+  
+                        child_three = HTMLNode(HTMLNodeType.SPAN)
+                        child_three.add_class({'class': 'inline-comment'})                        
+                        child_three.set_content(html.escape(comment))
+
+                    case False:
+                        child_two.add_class({'class': 'line-content'})
+                        child_two.set_content(html.escape(line.line_content))
+
+        
         main_node.add_children(child_one)
-        main_node.add_children(child_two)
+
+        if child_three:
+            code_line = HTMLNode(HTMLNodeType.SPAN)
+            code_line.add_class({'class': 'line-content'})
+
+            code_line.add_children(child_two)
+            code_line.add_children(child_three)
+            main_node.add_children(code_line)
+
+        else:
+            main_node.add_children(child_two)
 
         return main_node
 

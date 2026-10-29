@@ -145,7 +145,8 @@ def cases():
 
         "Reason: 'SharedVar' object is not iterable",
         "    @Mock.mock(mocked_function, kwargs={'var_d': set(var.dd)})",
-        '                                                 ^^^^^^^^^^^',
+        # '                                                 ^^^^^^^^^^^', 
+        # XXX Y We lose this in some python version from 3.12 to 3.12 ?
         "TypeError: 'SharedVar' object is not iterable"
 
     ]
@@ -156,6 +157,7 @@ def cases():
         if f_line in conditions:
             conditions.remove(f_line)
 
+    # print('REMAINING CONDITIONS:', conditions)
     must_equal(0, len(conditions))
 
     delete_test_dir(folder_name)

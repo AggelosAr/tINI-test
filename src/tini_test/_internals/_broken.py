@@ -8,7 +8,11 @@ from typing import Optional
 from tini_test._internals.consts import _USING_COVERAGE
 from tini_test._internals.consts import _V2_COVERAGE as _V2
 from tini_test._internals.consts import (COVERAGE_ROOT, GENERATED_TESTS_ROOT,
-                                         PROJECT_ROOT, PYTHON_PATH)
+                                         PROJECT_ROOT)
+import sys
+
+
+PYTHON_PATH          = sys.executable
 
 TINI_TEST_COVERAGE_SOURCE = os.path.join(PROJECT_ROOT, 'src')
 

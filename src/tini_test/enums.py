@@ -1,3 +1,4 @@
+from __future__ import annotations
 import builtins
 import inspect
 from enum import Enum
@@ -27,7 +28,7 @@ class RunMode(Enum):
         return 'Supported run modes are <SYNC> and <ASYNC>'
     
     @classmethod
-    def arg_parser_type(cls, value: str) -> 'RunMode':
+    def arg_parser_type(cls, value: str) -> RunMode:
         for member in cls:
             if member.value.lower() == value.lower():
                 return member
@@ -62,7 +63,7 @@ class Verbosity(Enum):
         return 'Supported verbosity modes are <%s>' % (modes, )
     
     @classmethod
-    def arg_parser_type(cls, value: str) -> 'Verbosity':
+    def arg_parser_type(cls, value: str) -> Verbosity:
         for member in cls:
             if member.value.lower() == value.lower():
                 return member
@@ -119,7 +120,7 @@ class ScoreClass(Enum):
     POOR        = 'POOR'
 
     @classmethod
-    def get_score_category(cls, score: float) -> 'ScoreClass':
+    def get_score_category(cls, score: float) -> ScoreClass:
         if score >= 80:
             return ScoreClass.EXCELLENT
         
@@ -152,7 +153,7 @@ class TestStatus(Enum):
     
     @classmethod
     @lru_cache
-    def fail_operations(cls) -> set['TestStatus']:
+    def fail_operations(cls) -> set[TestStatus]:
         return set([cls.FAIL,
                     cls.SET_UP_FAIL, 
                     cls.BREAK_DOWN_FAIL,
@@ -163,7 +164,7 @@ class TestStatus(Enum):
     
     @classmethod
     @lru_cache
-    def is_fail_cause(cls, status: 'TestStatus') -> bool:
+    def is_fail_cause(cls, status: TestStatus) -> bool:
         return status in cls.fail_operations()
 
 
@@ -180,7 +181,7 @@ class MockType(Enum):
     FUNCTION    = 'FUNCTION'
 
     @classmethod
-    def get_type(cls, mock: Any) -> tuple['MockType', MockedRawItem] | tuple[None, None]:
+    def get_type(cls, mock: Any) -> tuple[MockType, MockedRawItem] | tuple[None, None]:
         # Builtin method
         if inspect.isbuiltin(mock):
             return MockType.BUILTIN, mock

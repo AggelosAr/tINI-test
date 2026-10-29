@@ -6,7 +6,7 @@ from tini_test._internals._dynamic_reg_ids import (__C_REG, __I_REG, __M_REG,
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
-PYTHON_PATH          = '312venv/bin/python'
+
 COVERAGE_ROOT        = '/tmp/coverages/tini_test/'
 GENERATED_TESTS_ROOT = '/tmp/python/tini_test'
 
@@ -35,7 +35,6 @@ INVALID_PYTHON_MODULE_SYMBOLS = frozenset(['.', '/', '\\'])
 
 SKIP_DIRS = frozenset({
         '__pycache__',
-        '312venv',
         '.venv',
         'venv',
         'env',
@@ -45,7 +44,6 @@ SKIP_DIRS = frozenset({
         '.pytest_cache',
         '.mypy_cache',
         'node_modules',
-        'jeepney'
     })
 
 
