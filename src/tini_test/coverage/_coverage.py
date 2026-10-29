@@ -258,7 +258,10 @@ class FileCoverage:
                     # @Comments are allowed here
                     if inline_comment:
                         self._statement_counts[LineStatus.COMMENT] += 1
+
                     self._statement_counts[LineStatus.EXCLUDED] += 1
+                    self._statement_counts[LineStatus.RUN] -= 1
+
                     self.lines[l_no] = Line(l_no, l_cont, LineStatus.EXCLUDED, inline_comment=inline_comment)
 
                 else:
