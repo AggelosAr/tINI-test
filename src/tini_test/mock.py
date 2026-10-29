@@ -34,7 +34,6 @@ from tini_test.shared import MetaSharedVar, SharedVar, direct_access
 
 ARTIFACT_TRACKER: list['BuiltInArtifact'] = [] # | _SETNINEL
 
-CALL_GRAPH: dict[DirectoryPath, dict] = {}
 
 FILE_TRACKER: set[DirectoryPath] = set()
 
@@ -74,8 +73,10 @@ class BuiltInArtifact:
         This method helps retrieve the original object if it exists.
         '''
         for artifact in ARTIFACT_TRACKER:
+
             if artifact is _SETNINEL:
                 continue
+
             if artifact is _ROOT_SENTINEL:
                 continue
 
@@ -100,7 +101,6 @@ class BuiltInArtifact:
             if not BuiltInArtifact.filter_by_name(file_name, apply_at):
                 continue
 
-            CALL_GRAPH.setdefault(file_name, frame.f_globals)
             FILE_TRACKER.add(file_name)
 
             frame.f_globals[last_artifact.__name__] = last_artifact.replacement
@@ -115,6 +115,7 @@ class BuiltInArtifact:
 
             if artifact is _SETNINEL:
                 break
+
             if artifact is _ROOT_SENTINEL:
                 found_root += 1
                 break
@@ -130,6 +131,7 @@ class BuiltInArtifact:
             
             if artifact is _SETNINEL:
                 break
+
             if artifact is _ROOT_SENTINEL:
                 found_root += 1
                 break
@@ -155,6 +157,7 @@ class BuiltInArtifact:
 
             if artifact is _SETNINEL:
                 continue
+
             if artifact is _ROOT_SENTINEL:
                 continue
 
@@ -168,8 +171,10 @@ class BuiltInArtifact:
         updates = 0
 
         for artifact in ARTIFACT_TRACKER:
+
             if artifact is _SETNINEL:
                 continue
+            
             if artifact is _ROOT_SENTINEL:
                 continue
 
@@ -177,18 +182,6 @@ class BuiltInArtifact:
                 updates += 1
                 files_globals[artifact.__name__] = artifact.original
 
-            for _, _globals in CALL_GRAPH.items():
-                updates += 1
-
-                for artifact in ARTIFACT_TRACKER:
-                    if artifact is _SETNINEL:
-                        continue
-                    if artifact is _ROOT_SENTINEL:
-                        continue
-
-                    _globals[artifact.__name__] = artifact.original
-
-        CALL_GRAPH.clear()
         FILE_TRACKER.clear()
         ARTIFACT_TRACKER.clear()
 
@@ -231,7 +224,6 @@ class BuiltInArtifact:
         
         if filename not in FILE_TRACKER:
 
-            CALL_GRAPH[filename] = frame.f_globals
             FILE_TRACKER.add(filename)
 
         for _artifact in ARTIFACT_TRACKER:
