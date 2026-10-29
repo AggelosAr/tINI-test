@@ -548,7 +548,8 @@ def test_MOCKING_ABC_returns():
 @Test.case
 @Shared(var.root)
 def test_built_in_refreshes():
-    from test_about_mocks.test_mocks.tests.import_a.m_a import A_open, A_open_MOCKING
+    from test_about_mocks.test_mocks.tests.import_a.m_a import (A_open,
+                                                                A_open_MOCKING)
     var.root = os.path.join(os.path.dirname(__file__), 'txts', 'a.txt')
     with Mock.mocking(open, returns=io.StringIO('step 1')) as f:
         must_equal('step 1', A_open())
@@ -614,7 +615,8 @@ def test_len():
     must_equal(3, len('?'))
 
     # Test import
-    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import _len
+    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import \
+        _len
     must_equal(3 + 3, _len('?'))
 
     # Test mocking
@@ -633,7 +635,8 @@ def test_call_graph_patch_with_mock():
     must_equal(3, len('?'))
 
     # Test import
-    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import _len
+    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import \
+        _len
     must_equal(3 + 3, _len('?'))
     
     # Test mocking
@@ -666,7 +669,8 @@ def test_call_graph_patch_no_mock():
     must_equal(1, len('?'))
 
     # Test import
-    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import _len
+    from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import \
+        _len
     must_equal(1, _len('?'))
     
     # Test mocking

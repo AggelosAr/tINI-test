@@ -1,10 +1,14 @@
 import io
 import os
 
-from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.closure_mocking_utils import test_imported_builtin_open
-from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import C_open, C_open_MOCKING
-from test_about_mocks.test_mocks.tests.import_a.import_b.m_b import B_open, B_open_MOCKING
-from test_about_mocks.test_mocks.tests.import_a.m_a import A_open, A_open_MOCKING
+from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.closure_mocking_utils import \
+    test_imported_builtin_open
+from test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import (
+    C_open, C_open_MOCKING)
+from test_about_mocks.test_mocks.tests.import_a.import_b.m_b import (
+    B_open, B_open_MOCKING)
+from test_about_mocks.test_mocks.tests.import_a.m_a import (A_open,
+                                                            A_open_MOCKING)
 from tini_test import Isolate, Mock, Shared, Test, WillRaise, must_equal, var
 
 # mock builtins file open

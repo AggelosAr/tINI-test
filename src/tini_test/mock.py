@@ -9,9 +9,9 @@ from functools import partial
 from types import FrameType
 from typing import Any, Callable, Iterable, Optional, Self, Union, cast
 
-
 from tini_test._internals._registry import attach_state
-from tini_test._internals.consts import _R_M_REG, _R_T_REG, _ROOT_SENTINEL, _SETNINEL, SALT
+from tini_test._internals.consts import (_R_M_REG, _R_T_REG, _ROOT_SENTINEL,
+                                         _SETNINEL, SALT)
 from tini_test.enums import MockType, Plugs
 from tini_test.misc.annotations import (BuiltIn, CellName, DirectoryPath,
                                         GlobalRegistry, IsolateWrappedObject,
@@ -31,7 +31,6 @@ from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
                                        MockDefinitionError,
                                        MockMissingFunctionOrClass)
 from tini_test.shared import MetaSharedVar, SharedVar, direct_access
-
 
 ARTIFACT_TRACKER: list['BuiltInArtifact'] = [] # | _SETNINEL
 
