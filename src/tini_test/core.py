@@ -219,6 +219,16 @@ class TestSuite:
 
         return '\n'.join(_r if self.file_load_failures else _r[:-2]) 
 
+    def get_detail(self) -> str:
+        import sys
+        print()
+        print()
+        print('Python executable    :', sys.executable)
+        print('Python version       :', '.'.join(map(str, sys.version_info[:3])))
+        print()
+        print('tINI-test version    :', tini_test.__version__)
+        print()
+
     def initialize_tests(self, _from: ModuleCollector) -> None:
         self.discovery_time = _from.discovery_time
 
@@ -303,14 +313,8 @@ class TestSuite:
 
     def pprint(self) -> None:
         print(self.get_summary())
-        import sys
-        print()
-        print()
-        print('Python executable    :', sys.executable)
-        print('Python version       :', '.'.join(map(str, sys.version_info[:3])))
-        print()
-        print('tINI-test version    :', tini_test.__version__)
-        print()
+        self.get_detail()
+        
 
     def get_coverage(self) -> None:
         if self.coverage == Coverage.DISABLED:
