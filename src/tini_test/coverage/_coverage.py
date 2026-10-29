@@ -253,11 +253,20 @@ class FileCoverage:
                                     have_docstring_open = False
                                     
             else:
-                is_continuation = l_no != self.statement_to_lines[owner][0]
-                status = self._statement_status[owner]
-                self.lines[l_no] = Line(l_no, l_cont, status, is_continuation, inline_comment)
-                if inline_comment:
-                    self._statement_counts[LineStatus.COMMENT] += 1
+                # If line is ellipsis...
+                if stripped == '...':
+                    # @Comments are allowed here
+                    if inline_comment:
+                        self._statement_counts[LineStatus.COMMENT] += 1
+                    self._statement_counts[LineStatus.EXCLUDED] += 1
+                    self.lines[l_no] = Line(l_no, l_cont, LineStatus.EXCLUDED, inline_comment=inline_comment)
+
+                else:
+                    is_continuation = l_no != self.statement_to_lines[owner][0]
+                    status = self._statement_status[owner]
+                    self.lines[l_no] = Line(l_no, l_cont, status, is_continuation, inline_comment)
+                    if inline_comment:
+                        self._statement_counts[LineStatus.COMMENT] += 1
 
     def set_href(self, href: str) -> None:
         self.href = href      
@@ -486,7 +495,7 @@ class CoverageTracker:
             for file in files:
                 if file.endswith('.py'):
                     file_path = os.path.join(root, file)
-
+                    
                     add_top_levels = file_path in self._store
                     store = self._store.get(file_path, set())
 
