@@ -59,6 +59,14 @@ This will also generate a coverage badge at the same directory with the HTML rep
 python3 -m tini_test [--coverage-generate-report] [--coverage-target] [--coverage-store]
 ```
 
+
+A typical workflow could look like this.
+```bash
+python -m tini_test -v minimal --coverage --coverage-target src --coverage-store /tmp/coverages/tini_test/.coverage.run_MAIN
+python -m tini_test --coverage-merge /tmp/coverages/tini_test/
+python -m tini_test --coverage-generate-report --coverage-target src --coverage-store /tmp/coverages/tini_test/.coverage_merged
+```
+
 #### NOTES:
 
 > `--coverage-target`, `--coverage-store` and `--coverage-merge` are all optional and accept both relative and absolute paths.

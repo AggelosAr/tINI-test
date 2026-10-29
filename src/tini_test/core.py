@@ -66,6 +66,10 @@ class TestSuite:
     @cached_property
     def searching_single_test(self) -> bool:
         return self.test_function is not None
+
+    @property
+    def use_coverage(self) -> bool:
+        return self.coverage == Coverage.ENABLED
     
     @property
     def discovery_time(self) -> TimeTakenForTestDiscovery:
@@ -154,7 +158,7 @@ class TestSuite:
         self.file_load_failures = current_file_load_failures
 
     def update_coverage_stores(self, test_collection: TestCollection) -> None:
-        if self.coverage == Coverage.DISABLED:
+        if not self.use_coverage:
             return
 
         for test in test_collection.collector.values():
@@ -243,9 +247,12 @@ class TestSuite:
                                    shared_meta=shared_meta)
             
             try:
+                # TODO remove _V2_COVERAGE ?
                 with coverage(_V2_COVERAGE, self._coverage_total):
 
-                    tests._import(single_func_name=self.test_function)
+                    with coverage(self.use_coverage, self._coverage_total):
+
+                        tests._import(single_func_name=self.test_function)
     
                     collected_tests = tests.gather_tests(single_func_name=self.test_function)
 
@@ -317,7 +324,7 @@ class TestSuite:
         
 
     def get_coverage(self) -> None:
-        if self.coverage == Coverage.DISABLED:
+        if not self.use_coverage:
             return
 
         tracker = CoverageTracker(source=self.coverage_target, 
