@@ -89,7 +89,11 @@ class Line:
 
 class FileCoverage:
     # Maybe split it into functions class for better modularity
-    def __init__(self, file_path: Path, runtime_covered_lines: set[CodeLineNumber]) -> None:
+    def __init__(self, 
+                 file_path: Path, 
+                 runtime_covered_lines: set[CodeLineNumber],
+                 autocomplete_top_levels: bool) -> None:
+        self._autocomplete_top_levels = autocomplete_top_levels
         self.href = ''
 
         self.file_path = file_path
@@ -127,6 +131,9 @@ class FileCoverage:
     
     @property
     def top_levels(self) -> list[CodeLineNumber]:
+        if not self._autocomplete_top_levels:
+            return []
+        
         return self.parser.extract_top_level_lines()
     
     @property
@@ -455,6 +462,8 @@ class CoverageTracker:
         with open(save_path, 'w') as f:
             json.dump({file: list(lines) for file, lines in self._store.items()}, f)
 
+        print('Saved coverage metadata to:', save_path)
+
     def collect_files_from_source(self) -> None:
         search_path = CoverageTracker.normalize_path(self._source)
 
@@ -464,17 +473,24 @@ class CoverageTracker:
             if not search_path.exists(follow_symlinks=False) or not search_path.suffix == '.py':
                 raise CoverageRequestedForInvalidFile(search_path)
 
-            
+            # Important: the requested root dir we consider source 
+            # May exist but there may not be any lines covered yet.
+            # If the path exists in the store, we will automplete top levels.
+            add_top_levels = search_path in self._store
             store = self._store.get(str(search_path), set())
-            self.files[str(search_path)] = FileCoverage(search_path, store)
+
+            self.files[str(search_path)] = FileCoverage(search_path, store, add_top_levels)
             return
 
         for root, _, files in os.walk(search_path):
             for file in files:
                 if file.endswith('.py'):
                     file_path = os.path.join(root, file)
+
+                    add_top_levels = file_path in self._store
                     store = self._store.get(file_path, set())
-                    self.files[file_path] = FileCoverage(Path(file_path), store)
+
+                    self.files[file_path] = FileCoverage(Path(file_path), store, add_top_levels)
 
     @staticmethod
     def pad(s: str | int | float, width: int) -> str:
