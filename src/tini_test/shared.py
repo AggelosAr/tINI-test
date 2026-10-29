@@ -1,3 +1,4 @@
+from __future__ import annotations
 import traceback
 from contextlib import contextmanager
 from traceback import FrameSummary
@@ -32,7 +33,7 @@ class Cell:
 
 class SharedVar:
 
-    def __new__(cls, *args, **kwargs) -> 'SharedVar':
+    def __new__(cls, *args, **kwargs) -> SharedVar:
         instance = super().__new__(cls)
         return instance
 
@@ -76,7 +77,7 @@ class SharedVar:
                 return stored_value
     
     @classmethod
-    def validate(cls, args: Any) -> tuple['SharedVar']:
+    def validate(cls, args: Any) -> tuple[SharedVar]:
         args_types = tuple(type(arg) for arg in args)
 
         for _type in args_types:
@@ -86,7 +87,7 @@ class SharedVar:
         return args
 
     @classmethod
-    def raise_for_duplicate_vars(cls, shared_vars: list['SharedVar'], test_name: TestFunctionName) -> None:
+    def raise_for_duplicate_vars(cls, shared_vars: list[SharedVar], test_name: TestFunctionName) -> None:
         unique_shared_vars = set()
         
         for shared_var in shared_vars:
@@ -95,7 +96,7 @@ class SharedVar:
             unique_shared_vars.add(shared_var.__key__)
 
     @classmethod
-    def add_scope(cls, shared_vars: list['SharedVar'], scope: TestFunctionName) -> None:
+    def add_scope(cls, shared_vars: list[SharedVar], scope: TestFunctionName) -> None:
         for shared_var in shared_vars:
             shared_var._scope = scope
 
@@ -173,12 +174,12 @@ class _XShared:
 
 
 @contextmanager
-def direct_access(obj: 'MetaSharedVar') -> Generator['MetaSharedVar', None, None]:
-    object.__setattr__(obj, '_direct_mode', True)
+def direct_access(_meta: MetaSharedVar) -> Generator[MetaSharedVar, None, None]:
+    object.__setattr__(_meta, '_direct_mode', True)
     try:
-        yield obj
+        yield _meta
     finally:
-        object.__setattr__(obj, '_direct_mode', False)
+        object.__setattr__(_meta, '_direct_mode', False)
 
 
 class MetaSharedVar:
@@ -227,7 +228,7 @@ class MetaSharedVar:
                 shard.key.value = value
 
     @classmethod
-    def get_meta_var(cls) -> 'MetaSharedVar':
+    def get_meta_var(cls) -> MetaSharedVar:
         return var
 
     @staticmethod

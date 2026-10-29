@@ -1,3 +1,4 @@
+from __future__ import annotations
 import ast
 from importlib.machinery import ModuleSpec
 from pathlib import Path
@@ -15,18 +16,18 @@ class AstParser:
         self.source_lines = source.splitlines()
 
     @classmethod
-    def from_spec(cls, spec: ModuleSpec) -> 'AstParser':
+    def from_spec(cls, spec: ModuleSpec) -> AstParser:
         if spec.origin is None:
             raise ValueError('ModuleSpec has no origin') # TODO this is internal tINI-test exception?
         return cls.from_path(spec.origin)
 
     @classmethod
-    def from_path(cls, path: str | Path) -> 'AstParser':
+    def from_path(cls, path: str | Path) -> AstParser:
         with open(path, 'r', encoding='utf-8') as f:
             return cls(f.read(), str(path))
 
     @classmethod
-    def from_file_read(cls, data: str, filename: str = '<string>') -> 'AstParser':
+    def from_file_read(cls, data: str, filename: str = '<string>') -> AstParser:
         return cls(data, filename)
 
     # def extract_line_to_statement(self) -> dict[CodeLineNumber, StatementId]:

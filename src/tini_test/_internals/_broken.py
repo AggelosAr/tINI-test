@@ -12,7 +12,7 @@ from tini_test._internals.consts import (COVERAGE_ROOT, GENERATED_TESTS_ROOT,
 import sys
 
 
-PYTHON_PATH          = sys.executable
+PYTHON_PATH               = sys.executable
 
 TINI_TEST_COVERAGE_SOURCE = os.path.join(PROJECT_ROOT, 'src')
 

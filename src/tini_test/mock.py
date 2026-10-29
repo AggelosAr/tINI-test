@@ -1,3 +1,4 @@
+from __future__ import annotations
 from collections import deque
 import inspect
 import io
@@ -8,7 +9,7 @@ from types import CodeType, FrameType
 from types import FunctionType
 from functools import partial
 from types import CodeType, FrameType
-from typing import Any, Callable, Iterable, Optional, Self, Union, cast
+from typing import Any, Callable, Iterable, Optional, Self, cast
 
 from tini_test._internals._registry import attach_state
 from tini_test._internals.consts import (_R_M_REG, _R_T_REG, _ROOT_SENTINEL,
@@ -33,7 +34,7 @@ from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
                                        MockMissingFunctionOrClass)
 from tini_test.shared import MetaSharedVar, SharedVar, direct_access
 
-ARTIFACT_TRACKER: list['BuiltInArtifact'] = [] # | _SETNINEL | _ROOT_SENTINEL TODO 
+ARTIFACT_TRACKER: list[BuiltInArtifact] = [] # | _SETNINEL | _ROOT_SENTINEL TODO 
 
 
 FILE_TRACKER: set[DirectoryPath] = set()
@@ -53,7 +54,7 @@ class BuiltInArtifact:
     Takes care of both normal `@Mock.mock` and `@Mock.mocking` scenarios
     '''
     def __init__(self, 
-                 mock: Union['MockCall', 'MockReturn'], 
+                 mock: MockCall | MockReturn, 
                  original: BuiltIn, 
                  replacement: MockProxyObject) -> None:
         
@@ -298,8 +299,8 @@ class CreateMock:
         return self.test.__name__
 
     @property
-    def __globals__(self) -> GlobalRegistry['MockDefinition', SharedVar]:
-        return cast(GlobalRegistry['MockDefinition', SharedVar], self._lambda_context.__globals__)
+    def __globals__(self) -> GlobalRegistry[MockDefinition, SharedVar]:
+        return cast(GlobalRegistry[MockDefinition, SharedVar], self._lambda_context.__globals__)
 
     @staticmethod
     def transfer_closure(target: Callable | CodeType, source: Callable) -> Callable:
@@ -592,7 +593,7 @@ class MockDefinition:
         return self.test.__name__
 
     @property
-    def __globals__(self) -> GlobalRegistry['MockDefinition', SharedVar]:
+    def __globals__(self) -> GlobalRegistry[MockDefinition, SharedVar]:
         return self.body.__globals__
 
     @property
@@ -676,7 +677,7 @@ class MockDefinition:
         raise MockDefinitionError
         
     @classmethod
-    def raise_for_duplicate_mocks(cls, mocks: list['MockDefinition'], test_name: TestFunctionName) -> None:
+    def raise_for_duplicate_mocks(cls, mocks: list[MockDefinition], test_name: TestFunctionName) -> None:
         '''
         Raise an error if there are duplicate mocks registered for the same test.
         In case of mocking as context manager, such checks are not done.
@@ -692,7 +693,7 @@ class MockDefinition:
 
     @classmethod
     def add_scope(cls, 
-                  mocks: Union['MockDefinition', list['MockDefinition']],
+                  mocks: MockDefinition | list[MockDefinition],
                   test: RealTest | MaybeRealTest) -> None:
         if not isinstance(mocks, list):
             mocks = [mocks]
@@ -704,11 +705,11 @@ class MockDefinition:
     # Mocking utils for context manager
     ####################################
     @classmethod
-    def _CX_get_globals(cls, frame: FrameType) -> GlobalRegistry['MockDefinition', SharedVar]:
+    def _CX_get_globals(cls, frame: FrameType) -> GlobalRegistry[MockDefinition, SharedVar]:
         _reg = frame.f_globals
         if _R_M_REG not in _reg:
             raise RuntimeError('Global registry for mocks not found') # TODO Exception
-        return cast(GlobalRegistry['MockDefinition', SharedVar], _reg)
+        return cast(GlobalRegistry[MockDefinition, SharedVar], _reg)
     
     @classmethod
     def _CX_get_real_test(cls, frame: FrameType | None) -> RealTest:
@@ -722,13 +723,13 @@ class MockDefinition:
         
         return real_test
     
-    def _CX_cmp_mock_body(_cx_mock: Self, other: 'MockDefinition') -> bool:
+    def _CX_cmp_mock_body(_cx_mock: Self, other: MockDefinition) -> bool:
         return hex(id(_cx_mock.body.mock)) == hex(id(other.body.mock))
 
-    def _CX_cmp_mock(_cx_mock: Self, other: 'MockDefinition') -> bool:
+    def _CX_cmp_mock(_cx_mock: Self, other: MockDefinition) -> bool:
         return hex(id(_cx_mock)) == hex(id(other))
     
-    def _CX_get_previous_mocks(_cx_mock: Self) -> list['MockDefinition']:
+    def _CX_get_previous_mocks(_cx_mock: Self) -> list[MockDefinition]:
         # Find all mocks that have a similar signature in the current namespace
         relevant_mocks = _cx_mock.__globals__[_R_M_REG][_cx_mock.test_name]
         return list(filter(lambda m: _cx_mock._CX_cmp_mock_body(m), relevant_mocks))
@@ -749,13 +750,13 @@ class MockDefinition:
         self.body._restore()
 
     @classmethod
-    def patch_all(cls, mocks: list['MockDefinition']) -> None:
+    def patch_all(cls, mocks: list[MockDefinition]) -> None:
         deque(map(lambda mock: mock.patch(), mocks), maxlen=0)
         # At this point in time we can't actually patch the 
         # Built-ins like this.
         
     @classmethod
-    def restore_all(cls, mocks: list['MockDefinition']) -> None:
+    def restore_all(cls, mocks: list[MockDefinition]) -> None:
         deque(map(lambda mock: mock.restore(), mocks), maxlen=0)
         BuiltInArtifact.full_restore()
 
