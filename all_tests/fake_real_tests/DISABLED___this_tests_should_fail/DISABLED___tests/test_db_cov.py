@@ -1,5 +1,5 @@
-from all_tests.fake_real_tests.tests.test_db_setup_cleanup import (_cleanup_test_db,
-                                                         _create_test_db)
+from all_tests.fake_real_tests.tests.test_db_setup_cleanup import (
+    _cleanup_test_db, _create_test_db)
 from tini_test import Test
 
 

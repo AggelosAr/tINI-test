@@ -1,5 +1,6 @@
 
-from all_tests.test_about_mocks.test_mocks.tests.test_imports import add_args_function
+from all_tests.test_about_mocks.test_mocks.tests.test_imports import \
+    add_args_function
 from tini_test import Mock, Test, must_equal
 
 

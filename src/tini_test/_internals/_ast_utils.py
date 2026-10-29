@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import ast
 from importlib.machinery import ModuleSpec
 from pathlib import Path

@@ -328,7 +328,8 @@ def MOCK_A_OPEN():
 @Mock.mock(open, args=(var.root, 'r'))
 def MOCK_B_OPEN():
     var.root = os.path.join(os.path.dirname(__file__), 'txts', 'b.txt')
-    from all_tests.test_about_mocks.test_mocks.tests.import_a.import_b.m_b import B_open
+    from all_tests.test_about_mocks.test_mocks.tests.import_a.import_b.m_b import \
+        B_open
     must_equal('inside B', B_open())
 
 
@@ -354,7 +355,8 @@ def test_MOCK_ABC():
     from all_tests.test_about_mocks.test_mocks.tests.import_a.m_a import A_open
     must_equal('inside A', A_open())
 
-    from all_tests.test_about_mocks.test_mocks.tests.import_a.import_b.m_b import B_open
+    from all_tests.test_about_mocks.test_mocks.tests.import_a.import_b.m_b import \
+        B_open
     must_equal('inside A', B_open())
 
     from all_tests.test_about_mocks.test_mocks.tests.import_a.import_b.import_c.m_c import \
@@ -367,7 +369,8 @@ def test_MOCK_ABC():
             C_open
         from all_tests.test_about_mocks.test_mocks.tests.import_a.import_b.m_b import \
             B_open
-        from all_tests.test_about_mocks.test_mocks.tests.import_a.m_a import A_open
+        from all_tests.test_about_mocks.test_mocks.tests.import_a.m_a import \
+            A_open
         must_equal('inside B', A_open())
         must_equal('inside B', B_open())
         must_equal('inside B', C_open())
@@ -378,7 +381,8 @@ def test_MOCK_ABC():
             C_open
         from all_tests.test_about_mocks.test_mocks.tests.import_a.import_b.m_b import \
             B_open
-        from all_tests.test_about_mocks.test_mocks.tests.import_a.m_a import A_open
+        from all_tests.test_about_mocks.test_mocks.tests.import_a.m_a import \
+            A_open
         must_equal('inside C', A_open())
         must_equal('inside C', B_open())
         must_equal('inside C', C_open())
@@ -403,7 +407,8 @@ def test_MOCK_ABC():
 @Shared(var.root)
 def MOCKING_A_OPEN():
     var.root = os.path.join(os.path.dirname(__file__), 'txts', 'a.txt')
-    from all_tests.test_about_mocks.test_mocks.tests.import_a.m_a import A_open_MOCKING
+    from all_tests.test_about_mocks.test_mocks.tests.import_a.m_a import \
+        A_open_MOCKING
     must_equal('inside A', A_open_MOCKING())
 
 
@@ -442,13 +447,15 @@ def test_MOCKING_ABC():
             C_open
         from all_tests.test_about_mocks.test_mocks.tests.import_a.import_b.m_b import \
             B_open
-        from all_tests.test_about_mocks.test_mocks.tests.import_a.m_a import A_open
+        from all_tests.test_about_mocks.test_mocks.tests.import_a.m_a import \
+            A_open
         must_equal('inside A', A_open())
         must_equal('inside A', B_open())
         must_equal('inside A', C_open())
 
 
-    from all_tests.test_about_mocks.test_mocks.tests.import_a.m_a import A_open_MOCKING
+    from all_tests.test_about_mocks.test_mocks.tests.import_a.m_a import \
+        A_open_MOCKING
     must_equal('inside A', A_open_MOCKING())
     print('[--------- A PASSED ---------]')
 
@@ -490,7 +497,8 @@ def test_MOCKING_ABC_returns():
             C_open
         from all_tests.test_about_mocks.test_mocks.tests.import_a.import_b.m_b import \
             B_open
-        from all_tests.test_about_mocks.test_mocks.tests.import_a.m_a import A_open
+        from all_tests.test_about_mocks.test_mocks.tests.import_a.m_a import \
+            A_open
 
         with WillRaise(TypeError) as context:
             must_equal('step 1', A_open())
@@ -508,7 +516,8 @@ def test_MOCKING_ABC_returns():
             C_open
         from all_tests.test_about_mocks.test_mocks.tests.import_a.import_b.m_b import \
             B_open
-        from all_tests.test_about_mocks.test_mocks.tests.import_a.m_a import A_open
+        from all_tests.test_about_mocks.test_mocks.tests.import_a.m_a import \
+            A_open
 
         must_equal('step 1', A_open())
 
@@ -518,7 +527,8 @@ def test_MOCKING_ABC_returns():
     with Mock.mocking(open, returns=io.StringIO('step 1')) as f:
         must_equal('step 1', C_open())
 
-    from all_tests.test_about_mocks.test_mocks.tests.import_a.m_a import A_open_MOCKING
+    from all_tests.test_about_mocks.test_mocks.tests.import_a.m_a import \
+        A_open_MOCKING
     must_equal('inside A', A_open_MOCKING())
     print('[--------- A PASSED ---------]')
 
@@ -552,8 +562,8 @@ def test_MOCKING_ABC_returns():
 @Test.case
 @Shared(var.root)
 def test_built_in_refreshes():
-    from all_tests.test_about_mocks.test_mocks.tests.import_a.m_a import (A_open,
-                                                                A_open_MOCKING)
+    from all_tests.test_about_mocks.test_mocks.tests.import_a.m_a import (
+        A_open, A_open_MOCKING)
     var.root = os.path.join(os.path.dirname(__file__), 'txts', 'a.txt')
     with Mock.mocking(open, returns=io.StringIO('step 1')) as f:
         must_equal('step 1', A_open())

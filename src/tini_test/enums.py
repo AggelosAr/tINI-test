@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import builtins
 import inspect
 from enum import Enum

@@ -1,14 +1,13 @@
 from __future__ import annotations
-from collections import deque
+
 import inspect
 import io
 import os
 import secrets
 import textwrap
-from types import CodeType, FrameType
-from types import FunctionType
+from collections import deque
 from functools import partial
-from types import CodeType, FrameType
+from types import CodeType, FrameType, FunctionType
 from typing import Any, Callable, Iterable, Optional, Self, cast
 
 from tini_test._internals._registry import attach_state

@@ -1,5 +1,5 @@
-from all_tests.test_about_mocks.test_mocks.tests.test_imports import (add_args_function,
-                                                            f1, f2)
+from all_tests.test_about_mocks.test_mocks.tests.test_imports import (
+    add_args_function, f1, f2)
 from tini_test import Mock, Test, WillRaise, must_equal
 from tini_test.misc.exceptions import ExpectedWasDifferentFromActual
 

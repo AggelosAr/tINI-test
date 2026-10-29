@@ -1,14 +1,15 @@
 from __future__ import annotations
+
 import html
 import io
 import json
 import os
 import shutil
+import tokenize
 from collections import Counter
 from datetime import datetime
 from functools import cached_property, partial
 from pathlib import Path
-import tokenize
 from types import FrameType
 from typing import Optional
 
