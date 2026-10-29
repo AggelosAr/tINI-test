@@ -30,7 +30,6 @@ from tini_test.misc.exceptions import (CoverageDeserializationError,
 # Add someting for exclude?
 # Fall back behavior for to_html of report?
 # Top levels are gathered manually @core?
-# Use target @tracer?
 
 
 class InlineComment:
@@ -405,6 +404,24 @@ class CoverageTracker:
     def tracer(storage: CoverageStore, frame: FrameType, *args, **kwargs):
         code = frame.f_code
         file = code.co_filename
+
+        # Very slow
+        # filename = os.path.abspath(frame.f_code.co_filename)
+
+        # _return  = partial(CoverageTracker.tracer, storage)
+
+        # if not filename.endswith('.py'):
+        #     return _return
+        
+        # if not filename.startswith(apply_at):
+        #     return _return
+
+        # if 'site-packages' in filename:
+        #     return _return
+
+        # if 'tINI-test/src' in filename:
+        #     return _return
+        
         file_no = frame.f_lineno
 
         if file not in storage:

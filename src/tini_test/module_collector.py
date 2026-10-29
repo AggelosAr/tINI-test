@@ -35,7 +35,7 @@ class ModuleCollector:
 
         if search_dir != '.':
             # here we need to connect the 2 dirs
-            self.search_dir = search_dir
+            self.search_dir = search_dir.removesuffix('/')
 
             dest_parts = path.split(self.search_dir)
             self.dest_prefix, _ = dest_parts

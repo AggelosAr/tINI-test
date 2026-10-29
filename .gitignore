@@ -250,3 +250,5 @@ test_broken_imports
 CoverageReport
 
 CoverageReport_*
+
+coverages

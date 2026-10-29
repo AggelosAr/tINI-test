@@ -5,6 +5,7 @@ from itertools import repeat
 from time import perf_counter
 from typing import Optional
 
+import tini_test
 from tini_test._internals.consts import _V2_COVERAGE
 from tini_test.context_managers import coverage
 from tini_test.coverage._coverage import CoverageTracker
@@ -303,8 +304,13 @@ class TestSuite:
     def pprint(self) -> None:
         print(self.get_summary())
         import sys
-        print('Python executable:', sys.executable)
-        print('Python version:', '.'.join(map(str, sys.version_info[:3])))
+        print()
+        print()
+        print('Python executable    :', sys.executable)
+        print('Python version       :', '.'.join(map(str, sys.version_info[:3])))
+        print()
+        print('tINI-test version    :', tini_test.__version__)
+        print()
 
     def get_coverage(self) -> None:
         if self.coverage == Coverage.DISABLED:

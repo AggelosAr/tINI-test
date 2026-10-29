@@ -7,6 +7,8 @@ from .must_equals import must_equal
 from .shared import NotInitialized, Shared, var
 from .test_utils import Test
 
+__version__ = '0.9.5'
+
 
 class Mock(_Mock, _Mocking): ...
 
@@ -20,4 +22,5 @@ __all__ = [
     'var',
     'NotInitialized',
     'Isolate',
+    '__version__',
 ]

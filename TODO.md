@@ -6,11 +6,18 @@ fail some to format errors
 @consts  V2 const set to True
 @consts set python path
 for V2 coverage
-uv run --active
+
 
 python -m tini_test -v minimal --coverage --coverage-target src --coverage-store /tmp/coverages/tini_test/.coverage.run_MAIN
 python -m tini_test --coverage-merge /tmp/coverages/tini_test/
 python -m tini_test --coverage-generate-report --coverage-target src --coverage-store /tmp/coverages/tini_test/.coverage_merged
+
+
+
+uv run --active python -m tini_test -v minimal --coverage --coverage-target src --coverage-store /tmp/coverages/tini_test/.coverage.run_MAIN
+uv run --active python -m tini_test --coverage-merge /tmp/coverages/tini_test/
+uv run --active python -m tini_test --coverage-generate-report --coverage-target src --coverage-store /tmp/coverages/tini_test/.coverage_merged
+
 
 ----
 

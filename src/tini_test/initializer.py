@@ -19,14 +19,14 @@ def initialize_test_suite(run_mode: RunMode,
                           file_name: Optional[FileName] = None, 
                           test_function: Optional[TestFunctionName] = None
                           ) -> TestSuite:
-    
+    _ROOT[0] = os.getcwd()
+
     test_collector = ModuleCollector(search_dir, file_name)
 
     test_collector.walk_and_collect_test_files(test_collector.root)
     test_collector.normalize_collected_data()
     test_collector.discovery_time = perf_counter()
 
-    _ROOT[0] = search_dir if search_dir != '.' else os.getcwd()
 
     test_suite = TestSuite(root=_ROOT[0],
                            run_mode=run_mode,
