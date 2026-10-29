@@ -220,13 +220,7 @@ class Mock:
             frame = frame.f_back
 
             frames.append(frame)
-        # XXX TODO maybe filter based on root?
-        if frames and 'test_utils.py' in frames[-1].f_code.co_filename:
-            frames.pop()
-        if frames and 'contextlib.py' in frames[0].f_code.co_filename:
-            frames.pop(0)
-        # print(frames)
-        
+
         frame = previous
 
     
@@ -258,7 +252,7 @@ class Mock:
                 BuiltInArtifact._CX_patch_initial(filter(None, frames), *_ROOT)
 
             # If we will find any built-ins patch them.
-            with patch_built_ins(*_ROOT):
+            with patch_built_ins(apply_at=_ROOT[0]):
                 yield
 
 

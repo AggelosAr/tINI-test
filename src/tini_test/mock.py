@@ -1,12 +1,13 @@
+from collections import deque
 import inspect
 import io
 import os
 import secrets
 import textwrap
-import types
-from collections import deque
+from types import CodeType, FrameType
+from types import FunctionType
 from functools import partial
-from types import FrameType
+from types import CodeType, FrameType
 from typing import Any, Callable, Iterable, Optional, Self, Union, cast
 
 from tini_test._internals._registry import attach_state
@@ -32,7 +33,7 @@ from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
                                        MockMissingFunctionOrClass)
 from tini_test.shared import MetaSharedVar, SharedVar, direct_access
 
-ARTIFACT_TRACKER: list['BuiltInArtifact'] = [] # | _SETNINEL
+ARTIFACT_TRACKER: list['BuiltInArtifact'] = [] # | _SETNINEL | _ROOT_SENTINEL TODO 
 
 
 FILE_TRACKER: set[DirectoryPath] = set()
@@ -60,6 +61,7 @@ class BuiltInArtifact:
         self.original = original
         self.replacement = replacement
 
+        # TODO refactor this 
         self.applied_at: list[dict] = []
         
     @property
@@ -142,8 +144,14 @@ class BuiltInArtifact:
         # Root level is alwats <Artifact> + <_ROOT_SENTINEL> + <_ROOT_SENTINEL>
         if found_root > 0:
             # Stabilize the root level by ensuring the last two elements are _ROOT_SENTINEL
-            for _ in range(abs(found_root - ARTIFACT_TRACKER.count(_ROOT_SENTINEL))):
-                ARTIFACT_TRACKER.append(_ROOT_SENTINEL)
+            current_sentinels = 0
+            for item in ARTIFACT_TRACKER:
+
+                if item is _ROOT_SENTINEL:
+                    current_sentinels += 1
+             
+            for _ in range(abs(found_root - current_sentinels)):
+                ARTIFACT_TRACKER.append(_ROOT_SENTINEL) # type: ignore [arg-type]
 
         if found_root > 0:
             # In this case, we are at the top level and should repatch with the original 
@@ -174,7 +182,7 @@ class BuiltInArtifact:
 
             if artifact is _SETNINEL:
                 continue
-            
+
             if artifact is _ROOT_SENTINEL:
                 continue
 
@@ -237,8 +245,8 @@ class BuiltInArtifact:
             _artifact.applied_at.append(frame.f_globals)
 
         if is_root:
-            ARTIFACT_TRACKER.append(_ROOT_SENTINEL)
-            ARTIFACT_TRACKER.append(_ROOT_SENTINEL)
+            ARTIFACT_TRACKER.append(_ROOT_SENTINEL) # type: ignore [arg-type]
+            ARTIFACT_TRACKER.append(_ROOT_SENTINEL) # type: ignore [arg-type]
             
 
         return _return
@@ -294,14 +302,14 @@ class CreateMock:
         return cast(GlobalRegistry['MockDefinition', SharedVar], self._lambda_context.__globals__)
 
     @staticmethod
-    def transfer_closure(target: Callable, source: Callable | types.CodeType) -> Callable:
+    def transfer_closure(target: Callable | CodeType, source: Callable) -> Callable:
         cells = source.__closure__ or ()
         _freevars = source.__code__.co_freevars
 
-        if isinstance(target, types.CodeType):
+        if isinstance(target, CodeType):
             target = target.replace(co_freevars=_freevars)
 
-            return types.FunctionType(
+            return FunctionType(
                 target,
                 {},
                 target.co_name,
@@ -311,7 +319,7 @@ class CreateMock:
         else:
             code = target.__code__.replace(co_freevars=_freevars)
 
-            return types.FunctionType(
+            return FunctionType(
                 code,
                 target.__globals__,
                 target.__name__,
