@@ -176,12 +176,21 @@ def patch_shared(patching: TestCallable, shared_vars: list[SharedVar]) -> Genera
 @contextmanager
 def coverage(trace: bool, storage: CoverageStore) -> Generator[None, None, None]:
     if trace:
-        previous = sys.gettrace()
-        sys.settrace(partial(_tracer, storage))
+        tracer = partial(_tracer, storage)
+
+        previous_sys_trace = sys.gettrace()
+        previous_thread_trace = threading.gettrace()
+
+        sys.settrace(tracer)
+        threading.settrace(tracer)
+
         try:
             yield
+
         finally:
-            sys.settrace(previous)
+            sys.settrace(previous_sys_trace)
+            threading.settrace(previous_thread_trace)
+            
     else:
         yield
 
