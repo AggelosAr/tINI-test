@@ -59,14 +59,12 @@ def delete_test_dir(folder_name: Optional[str] = '') -> None:
         shutil.rmtree(temp_dir)
 
 
-def run_test(folder_name: Optional[str] = None, 
-             test_name: Optional[str] = None, 
-             test_file: Optional[str] = None,
-             timeout: int = 10) -> subprocess.CompletedProcess:
-
+def create_command(folder_name: Optional[str] = None, 
+                   test_name: Optional[str] = None, 
+                   test_file: Optional[str] = None) -> list[str]:
     if not folder_name:
-        folder_name = 'tini_test'
-
+            folder_name = 'tini_test'
+    
     _python3 = os.path.join(PROJECT_ROOT, PYTHON_PATH)
 
     commands = [
@@ -83,15 +81,15 @@ def run_test(folder_name: Optional[str] = None,
 
         if _V2:
             coverage_command = (
-                                '--coverage '                      \
-                                '--coverage-target %s '            \
-                                '--coverage-store %s/.coverage_%s' \
+                                '--coverage '                     \
+                                '--coverage-target %s '           \
+                                '--coverage-store %s.coverage_%s' \
                                     % 
                                     (   
                                         TINI_TEST_COVERAGE_SOURCE,
                                         COVERAGE_ROOT, get_unique_folder_name(), 
                                     )
-                               )
+                                )
             run_tini_test_command = 'tini_test %s -d %s' % (coverage_command, folder_name, )
 
         else:
@@ -119,10 +117,21 @@ def run_test(folder_name: Optional[str] = None,
     
     commands.append(python3 + run_tini_test_command)
 
+    return commands
+
+
+def run_test(folder_name: Optional[str] = None, 
+             test_name: Optional[str] = None, 
+             test_file: Optional[str] = None,
+             timeout: Optional[int] = 10,
+             env: Optional[dict] = None) -> subprocess.CompletedProcess:
+
+    commands = create_command(folder_name, test_name, test_file)
 
     completed_process = subprocess.run(' && '.join(commands),
                                        timeout=timeout, 
                                        text=True, 
                                        capture_output=True,
-                                       shell=True)
+                                       shell=True,
+                                       env=env)
     return completed_process

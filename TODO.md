@@ -32,3 +32,8 @@ add docstring to var
 
 Maybe udate isolate to take a snapshot for true isolation
 
+
+
+
+
+python -m tini_test --coverage --coverage-target src --coverage-store /tmp/coverages/tini_test/.coverage.run_MAIN -t test_FullSuiteRunsInSubprocessWithCoverage

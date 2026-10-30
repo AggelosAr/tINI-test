@@ -14,7 +14,7 @@ from types import FrameType
 from typing import Optional
 
 from tini_test._internals._ast_utils import AstParser
-from tini_test.coverage.consts import (_TOGGLE_SCRIPT, METADATA_FILE, STORE,
+from tini_test.coverage.consts import (_TOGGLE_SCRIPT, EXCLUDED_MARKER, METADATA_FILE, STORE,
                                        STYLE_FILE, SVG_FILE)
 from tini_test.coverage.enums import HTMLNodeType, LineStatus
 from tini_test.coverage.html import HTMLHyperLink, HTMLNode, HTMLTemplate
@@ -27,9 +27,6 @@ from tini_test.misc.exceptions import (CoverageDeserializationError,
                                        CoverageDeserializationFileNameError,
                                        CoverageRequestedForInvalidFile)
 
-# TODO
-# Add someting for exclude?
-# Fall back behavior for to_html of report?
 
 
 class InlineComment:
@@ -38,7 +35,7 @@ class InlineComment:
         self.start = _start
 
     @classmethod
-    def from_source(cls, source: str) -> dict[CodeLineNumber, InlineComment]:
+    def from_file_read(cls, source: str) -> dict[CodeLineNumber, InlineComment]:
         comments = {}
 
         tokens = tokenize.generate_tokens(io.StringIO(source).readline)
@@ -98,23 +95,24 @@ class FileCoverage:
         self.file_path = file_path
         self.lines: dict[CodeLineNumber, Line] = {}
 
-        with open(self.file_path, 'r') as f:
-            source = f.read()
-
-        self.inline_comments = InlineComment.from_source(source)
-
         self._statement_status: dict[StatementId, LineStatus] = {}
         self._statement_counts: Counter[LineStatus] = Counter()
+        
+        
+        self._source = ''
 
-        self.parser = AstParser.from_file_read(source, str(self.file_path))
-        self.update_covered_statements(runtime_covered_lines)
 
-        self.update_state(source.splitlines())
+        runtime_covered_lines.discard(0)
+        self.runtime_covered_lines = runtime_covered_lines
 
     @staticmethod
     def is_docstring_se(line: str) -> bool:
         return line.startswith('"""') or line.startswith("'''") or line.endswith('"""') or line.endswith("'''")
-    
+
+    @cached_property
+    def parser(self) -> AstParser:
+        return AstParser.from_file_read(self.source, str(self.file_path))
+
     @cached_property
     def line_to_statement(self) -> dict[CodeLineNumber, StatementId]:
         return self.parser.extract_line_to_statement()
@@ -127,7 +125,23 @@ class FileCoverage:
             _statement_to_lines.setdefault(statement, []).append(line_number)
 
         return _statement_to_lines
-    
+
+    @cached_property
+    def inline_comments(self) -> dict[CodeLineNumber, InlineComment]:
+        return InlineComment.from_file_read(self.source)
+
+    @cached_property
+    def raw_lines(self) -> list[str]:
+        return self.source.splitlines()
+
+    @property
+    def source(self) -> str:
+        return self._source
+
+    @source.setter
+    def source(self, value: str) -> None:
+        self._source = value
+
     @property
     def top_levels(self) -> list[CodeLineNumber]:
         # Important: the requested root dir we consider source 
@@ -176,13 +190,27 @@ class FileCoverage:
         total = run + missing
         return 100.0 * run / total if total else 100.0
 
-    def update_covered_statements(self, runtime_covered_lines: set[CodeLineNumber]) -> None:
+    # TODO add exclude as an option to statements.
+    def handle_excluded_file(self) -> bool:
+        lines = self.raw_lines
+
+        if lines and lines[0].startswith(EXCLUDED_MARKER):
+
+            for l_no, l_cont in enumerate(lines, start=1):
+                self.lines[l_no] = Line(l_no, l_cont, LineStatus.EXCLUDED)
+                self._statement_counts[LineStatus.EXCLUDED] += 1
+
+            self.statement_to_lines.clear()
+
+            return True
+        
+        return False
+
+    def update_covered_statements(self) -> None:
         run_statements = set()
 
-        runtime_covered_lines.discard(0)
-        
         # Update covered statements based on runtime covered.
-        for line in runtime_covered_lines:
+        for line in self.runtime_covered_lines:
             if line in self.line_to_statement:
                 run_statements.add(self.line_to_statement[line])
 
@@ -201,28 +229,16 @@ class FileCoverage:
             self._statement_status[statement] = status
             self._statement_counts[status] += 1
 
-    # TODO refactor this and add exclude at file level for now.
-    def update_state(self, data: list[str]) -> None:
+    # TODO refactor this 
+    def update_state(self) -> None:
         have_docstring_open = False
 
-        for l_no, l_cont in enumerate(data, start=1):
+        for l_no, l_cont in enumerate(self.raw_lines, start=1):
             owner = self.line_to_statement.get(l_no)
             stripped = l_cont.strip()
 
             inline_comment = self.inline_comments.get(l_no)
-
-            # TODO fix ellipsis counting for statement coverage
-            # If line is ellipsis...
-            if stripped == '...':
-                # @Comments are allowed here
-                if inline_comment:
-                    self._statement_counts[LineStatus.COMMENT] += 1
-
-                self._statement_counts[LineStatus.EXCLUDED] += 1
-
-                self.lines[l_no] = Line(l_no, l_cont, LineStatus.EXCLUDED, inline_comment=inline_comment)
-                continue
-
+            
             if owner is None or not stripped or stripped.startswith('#'):
 
                 # Line is empty
@@ -270,16 +286,38 @@ class FileCoverage:
                                     have_docstring_open = False
                                     
             else:
-                
-                is_continuation = l_no != self.statement_to_lines[owner][0]
-                status = self._statement_status[owner]
-                self.lines[l_no] = Line(l_no, l_cont, status, is_continuation, inline_comment)
+
                 if inline_comment:
                     self._statement_counts[LineStatus.COMMENT] += 1
 
+                # If line is ellipsis ...           
+                # For some times, the ... ellispis may have run. WHY?
+                # e.g. in a context manager with small indent ...
+                if stripped == '...' and l_no not in self.runtime_covered_lines:
+                   
+                    self._statement_counts[LineStatus.MISSING] -= 1
+                    self._statement_counts[LineStatus.EXCLUDED] += 1
+                
+                    self.lines[l_no] = Line(l_no, l_cont, LineStatus.EXCLUDED, inline_comment=inline_comment)
+
+                else:
+                    is_continuation = l_no != self.statement_to_lines[owner][0]
+                    status = self._statement_status[owner]
+                    self.lines[l_no] = Line(l_no, l_cont, status, is_continuation, inline_comment)
+                    
     def set_href(self, href: str) -> None:
         self.href = href      
-      
+
+    def parse_file(self) -> None:
+        with open(self.file_path, 'r') as f:
+            self.source = f.read()
+
+        if self.handle_excluded_file():
+            return
+        
+        self.update_covered_statements()
+        self.update_state()
+    
 
 class CoverageTracker:
 
@@ -318,13 +356,20 @@ class CoverageTracker:
         missing = self.missing
         return 100.0 * covered / (covered + missing) if covered + missing else 100.0
 
-
     @classmethod
     def init_from_store(cls, 
                         source: DirectoryPath | FileName | None, 
                         store: DirectoryPath | FileName | None) -> CoverageTracker:
         return cls(source=source, runtime_covered_lines=CoverageTracker.deserialize(store))
-    
+
+    @classmethod
+    def _serialize(cls,
+                   _store: CoverageStore, 
+                   _metadata_save_path: Optional[DirectoryPath | FileName | None] = None) -> None:
+        CoverageTracker(source=None, 
+                        runtime_covered_lines=_store, 
+                        metadata_save_path=_metadata_save_path).serialize()
+
     @staticmethod
     def normalize_path(path: str | None) -> Path:
         # If no directory is provided, use the current working directory as the default.
@@ -430,26 +475,9 @@ class CoverageTracker:
     def tracer(storage: CoverageStore, frame: FrameType, *args, **kwargs):
         code = frame.f_code
         file = code.co_filename
-
-        # Very slow
-        # filename = os.path.abspath(frame.f_code.co_filename)
-
-        # _return  = partial(CoverageTracker.tracer, storage)
-
-        # if not filename.endswith('.py'):
-        #     return _return
-        
-        # if not filename.startswith(apply_at):
-        #     return _return
-
-        # if 'site-packages' in filename:
-        #     return _return
-
-        # if 'tINI-test/src' in filename:
-        #     return _return
         
         file_no = frame.f_lineno
-
+    
         if file not in storage:
             storage[file] = set()
         storage[file].add(file_no)
@@ -460,7 +488,7 @@ class CoverageTracker:
         save_path = CoverageTracker.normalize_path(self._metadata_save_path)
 
         # Check if the path is a file
-        if save_path.is_file():
+        if save_path.is_file() or save_path.name.startswith(METADATA_FILE):
             # Validate the path follows the convention.
             # It should start with <.coverage...>
             if not save_path.name.startswith(METADATA_FILE):
@@ -473,15 +501,26 @@ class CoverageTracker:
                 # If it doesn't exist, we will create it.
                 os.makedirs(save_path.parent, exist_ok=True)
         else:
-            # If the path is not a file, we will create the necessary directories.
-            os.makedirs(save_path, exist_ok=True)
-            save_path = Path(os.path.join(save_path, METADATA_FILE))
+            # The provided path is a path.
+            # There are 2 cases for the provided path:
+            # 1. The last part of the path follows the convention (starts with METADATA_FILE)
+            #       > We save to the requested file after we create the necessary directories
+            # 2. The last part of the path does not follow the convention
+            #       > We create the necessary directories and the metadata file inside it.
+
+            if not os.path.basename(save_path).startswith(METADATA_FILE):
+                save_path = os.path.join(save_path, METADATA_FILE)
+                os.makedirs(os.path.dirname(save_path), exist_ok=True)
+            else:
+                os.makedirs(os.path.dirname(save_path), exist_ok=True)
+            
+           # os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
         with open(save_path, 'w') as f:
             json.dump({file: list(lines) for file, lines in self._store.items()}, f)
 
         print('Saved coverage metadata to:', save_path)
-
+    
     def collect_files_from_source(self) -> None:
         search_path = CoverageTracker.normalize_path(self._source)
 
@@ -491,13 +530,12 @@ class CoverageTracker:
             if not search_path.exists(follow_symlinks=False) or not search_path.suffix == '.py':
                 raise CoverageRequestedForInvalidFile(search_path)
 
-
-            add_top_levels = search_path in self._store
-
-
             store = self._store.get(str(search_path), set())
+            add_top_levels = search_path in self._store
+            file_coverage = FileCoverage(search_path, store, add_top_levels)
+            file_coverage.parse_file()
 
-            self.files[str(search_path)] = FileCoverage(search_path, store, add_top_levels)
+            self.files[str(search_path)] = file_coverage
             return
 
         for root, _, files in os.walk(search_path):
@@ -505,13 +543,12 @@ class CoverageTracker:
                 if file.endswith('.py'):
                     file_path = os.path.join(root, file)
 
-                    
-                    add_top_levels = file_path in self._store
-
-
                     store = self._store.get(file_path, set())
+                    add_top_levels = file_path in self._store
+                    file_coverage = FileCoverage(Path(file_path), store, add_top_levels)
+                    file_coverage.parse_file()
 
-                    self.files[file_path] = FileCoverage(Path(file_path), store, add_top_levels)
+                    self.files[file_path] = file_coverage
 
     @staticmethod
     def pad(s: str | int | float, width: int) -> str:

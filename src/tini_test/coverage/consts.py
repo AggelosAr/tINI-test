@@ -1,8 +1,11 @@
 
-STORE             = 'CoverageReport'
-METADATA_FILE     = '.coverage'
-STYLE_FILE        = 'style.css'
-SVG_FILE          = '.coverage.svg'
+STORE               = 'CoverageReport'
+METADATA_FILE       = '.coverage'
+STYLE_FILE          = 'style.css'
+SVG_FILE            = '.coverage.svg'
+
+
+EXCLUDED_MARKER     = '# >>> excluded'
 
 
 _TOGGLE_SCRIPT = '''
