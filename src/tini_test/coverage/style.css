@@ -61,6 +61,11 @@ body {
     color: rgba(7, 161, 179, 0.771);
 }
 
+.line-content .code-docstring {
+    font-style: italic;
+    color: rgba(7, 161, 179, 0.771);
+}
+
 
 .code-line:hover {
     background-color: #1e1e1e;

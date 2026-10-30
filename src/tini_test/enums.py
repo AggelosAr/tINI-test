@@ -13,10 +13,16 @@ from tini_test.misc.exceptions import (NotSupportedRunMode,
 from .misc.annotations import ColorValue, MockedRawItem
 
 
+class TiniTestInternalError(Enum):
+    ...
+
+
+
 class TiniTestMode(Enum):
     MERGE           = 'MERGE'
     HTML_REPORT     = 'HTML_REPORT'
     RUN             = 'RUN'
+
 
 
 class RunMode(Enum):

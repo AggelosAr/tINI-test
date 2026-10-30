@@ -120,12 +120,20 @@ def with_lock(use: bool) -> Generator[None, None, None]:
 
 @contextmanager
 def patch_built_ins(apply_at: DirectoryPath, is_root: bool = False):
-    previous = sys.gettrace()
-    sys.settrace(partial(BuiltInArtifact.built_in_replacer, apply_at, is_root))
+    previous_sys_trace = sys.gettrace()
+    previous_thread_trace = threading.gettrace()
+
+    tracer = partial(BuiltInArtifact.built_in_replacer, apply_at, is_root)
+
+    sys.settrace(tracer)
+    threading.settrace(tracer)
+
     try:
         yield
+        
     finally:
-        sys.settrace(previous)
+        sys.settrace(previous_sys_trace)
+        threading.settrace(previous_thread_trace)
 
 
 

@@ -30,7 +30,7 @@ from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
                                        MockCallDefinitionError,
                                        MockClassDefinitionError,
                                        MockDefinitionError,
-                                       MockMissingFunctionOrClass)
+                                       MockMissingFunctionOrClass, TiniTestInternalException)
 from tini_test.shared import MetaSharedVar, SharedVar, direct_access
 
 ARTIFACT_TRACKER: list[BuiltInArtifact] = [] # | _SETNINEL | _ROOT_SENTINEL TODO 
@@ -707,18 +707,18 @@ class MockDefinition:
     def _CX_get_globals(cls, frame: FrameType) -> GlobalRegistry[MockDefinition, SharedVar]:
         _reg = frame.f_globals
         if _R_M_REG not in _reg:
-            raise RuntimeError('Global registry for mocks not found') # TODO Exception
+            raise TiniTestInternalException('Global registry for mocks not found')
         return cast(GlobalRegistry[MockDefinition, SharedVar], _reg)
     
     @classmethod
     def _CX_get_real_test(cls, frame: FrameType | None) -> RealTest:
         if frame is None:
-            raise RuntimeError('Frame is None') # TODO Exception
+            raise TiniTestInternalException('Frame is None')
 
         real_test = cls._CX_get_globals(frame).get(_R_T_REG).get(frame.f_code.co_name)
 
         if real_test is None:
-            raise RuntimeError('Real test not found') # TODO Exception
+            raise TiniTestInternalException('Real test not found')
         
         return real_test
     

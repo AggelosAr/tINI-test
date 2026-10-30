@@ -63,7 +63,7 @@ def create_command(folder_name: Optional[str] = None,
                    test_name: Optional[str] = None, 
                    test_file: Optional[str] = None) -> list[str]:
     if not folder_name:
-            folder_name = 'tini_test'
+        folder_name = 'tini_test'
     
     _python3 = os.path.join(PROJECT_ROOT, PYTHON_PATH)
 
@@ -81,9 +81,9 @@ def create_command(folder_name: Optional[str] = None,
 
         if _V2:
             coverage_command = (
-                                '--coverage '                     \
-                                '--coverage-target %s '           \
-                                '--coverage-store %s.coverage_%s' \
+                                '--coverage '                      \
+                                '--coverage-target %s '            \
+                                '--coverage-store %s/.coverage_%s' \
                                     % 
                                     (   
                                         TINI_TEST_COVERAGE_SOURCE,

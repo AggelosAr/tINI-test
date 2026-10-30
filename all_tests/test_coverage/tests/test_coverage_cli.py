@@ -38,6 +38,9 @@ def test_CoverageCliCasesPassInsideSubprocess() -> None:
     # The subprocess runs the cases with coverage enabled so the cli code is traced.
     completed_process = run_test(FOLDER)
 
+    # print(completed_process.stdout)
+    # print(completed_process.stderr)
+    
     total = content.count('@Test.case(')
     summary = _summary(completed_process.stdout)
 

@@ -266,3 +266,9 @@ class CoverageRequestedForInvalidFile(Exception):
     def __init__(self, file_path: Path) -> None:
         msg = 'Coverage requested for an invalid file <%s>.' % (file_path, )
         super().__init__(msg)
+
+
+class TiniTestInternalException(Exception):
+    
+    def __init__(self, message: str) -> None:
+        super().__init__(message)

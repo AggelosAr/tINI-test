@@ -1,25 +1,67 @@
+# >>> excluded
 import os
+from types import FrameType
+from typing import Callable
+
 
 _saved = False
-_store = {}
+_store: dict[str, set] = {}
+
+
+
+def register(tracer: Callable) -> None:
+    sys.settrace(tracer)
+    threading.settrace(tracer)
+
+    if hasattr(threading, 'settrace_all_threads'):
+        threading.settrace_all_threads(tracer)
+
+
+
+def clear() -> None:
+    sys.settrace(None)
+    threading.settrace(None)
+
+    if hasattr(threading, 'settrace_all_threads'):
+        threading.settrace_all_threads(None)
+
 
 
 if os.environ.get('TINI_TEST_COVERAGE') == '1':
     _storage_path = os.environ['TINI_TEST_COVERAGE_STORAGE']
 
+    import atexit
     import signal
     import sys
     import threading
-    import atexit
     from functools import partial
+
 
     if os.environ.get('USE_V2_COVERAGE'):
         # Coverage over coverage....
-        from tini_test.integrations.coverage_v2 import tracer
+        def tracer(storage: dict[str, set], frame: FrameType, *args, **kwargs):
+            code = frame.f_code
+            file = code.co_filename
+            
+            file_no = frame.f_lineno
+
+            if file not in storage:
+                storage[file] = set()
+
+            storage[file].add(file_no)
+            
+            return tracer
+
         tracer = partial(tracer, _store)
-    else:
-        from tini_test.coverage._coverage import CoverageTracker
-        tracer = partial(CoverageTracker.tracer, _store)
+        register(tracer)
+
+
+    from tini_test.coverage._coverage import CoverageTracker
+
+
+    clear()
+    tracer = partial(CoverageTracker.tracer, _store)
+    register(tracer)
 
     
     def save_coverage() -> None:
@@ -30,7 +72,6 @@ if os.environ.get('TINI_TEST_COVERAGE') == '1':
         if _saved:
             return
 
-        from tini_test.coverage._coverage import CoverageTracker
         CoverageTracker._serialize(_store=_store, _metadata_save_path=_storage_path)
 
         _saved = True
@@ -44,11 +85,3 @@ if os.environ.get('TINI_TEST_COVERAGE') == '1':
     signal.signal(signal.SIGTERM, shutdown)
     atexit.register(save_coverage) 
 
-
-    sys.settrace(tracer)
-    threading.settrace(tracer)
-
-    # TODO does the default context manager needs this as well?
-    # XXX general insight: can we have multiple tracers active at the same time?
-    if hasattr(threading, 'settrace_all_threads'):
-        threading.settrace_all_threads(tracer)

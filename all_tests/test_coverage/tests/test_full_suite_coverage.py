@@ -1,13 +1,14 @@
 import os
 import re
 import subprocess
+import uuid
 
 from tini_test import Test, must_equal
-from tini_test._internals._broken import (create_command, delete_test_dir, get_temp_file)
+from tini_test._internals._broken import (create_command, delete_test_dir,
+                                          get_temp_file)
 from tini_test._internals._isolate import Isolate
 from tini_test._internals.consts import COVERAGE_ROOT, PROJECT_ROOT
 from tini_test.coverage.consts import METADATA_FILE
-import uuid
 
 FOLDER = 'test_full_suite_coverage'
 
@@ -56,10 +57,11 @@ def test_FullSuiteRunsInSubprocessWithCoverage() -> None:
                                shell=True,
                                env=env,
                                stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE,
-                               #stderr=subprocess.DEVNULL,
+                               stderr=subprocess.DEVNULL,
+                               # stderr=subprocess.DEVNULL,
                                text=True)
     stdout, _ = process.communicate(timeout=80)
+    # print(stdout)
     
     summary = dict(re.findall(r'\|\s*([A-Za-z ]+?)\s*:\s*(\d+)', stdout))
 

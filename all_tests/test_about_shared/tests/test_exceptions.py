@@ -383,3 +383,35 @@ def %s() -> None:
 
     delete_test_dir(test_name)
 
+
+# Doesn't belong here. But just add it
+@Test.case
+def test_IsolateWasUsedOnWithoutTestDecorator() -> None:
+    test_name = 'test_IsolateWasUsedOnWithoutTestDecorator'
+
+    content = '''
+from tini_test import Isolate
+
+@Isolate
+def %s() -> None:
+    1/0
+''' % test_name
+
+    get_temp_file(content, test_name)
+    
+    completed_process = run_test(test_name, test_name)
+
+    must_equal(0, completed_process.returncode)
+
+    conditions = [
+        '| Test file load failures : 1',
+        'tini_test.misc.exceptions.IsolateWasUsedOnWithoutTestDecorator: Missing test decorator for function decorated with Isolate < %s >' % test_name
+    ]
+    for line in completed_process.stdout.splitlines():
+        for condition in conditions:
+            if condition in line:
+                conditions.remove(condition)
+
+    must_equal(0, len(conditions))
+
+    delete_test_dir(test_name)

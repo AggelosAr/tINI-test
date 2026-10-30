@@ -14,8 +14,9 @@ from types import FrameType
 from typing import Optional
 
 from tini_test._internals._ast_utils import AstParser
-from tini_test.coverage.consts import (_TOGGLE_SCRIPT, EXCLUDED_MARKER, METADATA_FILE, STORE,
-                                       STYLE_FILE, SVG_FILE)
+from tini_test.coverage.consts import (_TOGGLE_SCRIPT, EXCLUDED_MARKER,
+                                       METADATA_FILE, STORE, STYLE_FILE,
+                                       SVG_FILE)
 from tini_test.coverage.enums import HTMLNodeType, LineStatus
 from tini_test.coverage.html import HTMLHyperLink, HTMLNode, HTMLTemplate
 from tini_test.enums import Color, ScoreClass
@@ -26,7 +27,6 @@ from tini_test.misc.exceptions import (CoverageDeserializationError,
                                        CoverageDeserializationFileContentError,
                                        CoverageDeserializationFileNameError,
                                        CoverageRequestedForInvalidFile)
-
 
 
 class InlineComment:
