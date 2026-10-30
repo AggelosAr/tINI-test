@@ -1,4 +1,4 @@
-
+# >>> excluded
 
 def profiler(is_profiling: bool = False):           # pragma: no cover
 

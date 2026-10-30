@@ -247,13 +247,11 @@ class TestSuite:
                                    shared_meta=shared_meta)
             
             try:
-                # TODO remove _V2_COVERAGE ?
                 with coverage(_V2_COVERAGE, self._coverage_total):
-
                     with coverage(self.use_coverage, self._coverage_total):
 
                         tests._import(single_func_name=self.test_function)
-    
+
                     collected_tests = tests.gather_tests(single_func_name=self.test_function)
 
                     tests.raise_for_shared_globals()

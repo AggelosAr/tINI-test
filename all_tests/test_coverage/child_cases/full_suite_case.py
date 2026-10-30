@@ -37,7 +37,7 @@ def test_FullSuiteRunsFromCli() -> None:
         os.chdir(PROJECT_ROOT)
         del os.environ[NESTED_ENV]
 
-    with open(os.path.join(store, METADATA_FILE), 'r') as f:
+    with open(os.path.join(store), 'r') as f:
         covered = json.load(f)
 
     for expected in EXPECTED_COVERED:

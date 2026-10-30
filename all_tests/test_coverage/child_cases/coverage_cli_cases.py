@@ -364,16 +364,30 @@ def test_GenerateReportCountsMultiLineStatementOnce() -> None:
 
     coverage = _tracker(pkg_a, os.path.join(root, STORE_NAME)).files[pkg_a]
 
+    # Here we added autocomplete check .
+    
     # import, x = dict(...), def f(), return 1
     must_equal(4, coverage.total_statements)
     # `import` and `def` are top level so they ran on import, `x` was hit on its first line.
-    must_equal(3, coverage.covered_statements)
-    must_equal(1, coverage.missing_statements)
-    must_equal(75.0, coverage.score)
+    must_equal(1, coverage.covered_statements)
+    must_equal(3, coverage.missing_statements)
+    must_equal(25.0, coverage.score)
 
     # Every line of the multi line statement shares the status of its first line.
-    must_equal(['run', 'run', 'run', 'run'], [str(coverage.lines[n].status) for n in (2, 3, 4, 5)])
-    must_equal([False, True, True, True], [coverage.lines[n].is_continuation for n in (2, 3, 4, 5)])
+    must_equal(['missing',
+                'run', 
+                'run', 
+                'run', 
+                'run', 
+                'missing', 
+                'missing'], [str(coverage.lines[n].status) for n in range(1, len(coverage.lines) + 1)])
+    must_equal([False, 
+                False, 
+                True, 
+                True, 
+                True, 
+                False, 
+                False], [coverage.lines[n].is_continuation for n in range(1, len(coverage.lines) + 1)])
     must_equal('missing', str(coverage.lines[7].status))
 
 

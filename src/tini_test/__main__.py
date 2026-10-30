@@ -10,12 +10,13 @@ from .initializer import initialize_test_suite
 from .misc.exceptions import CantFindRelativePathToRoot
 
 
+
 @profiler(_PROFILING)
 def _tini_test(kwargs: CoreArgsDict 
                         | CoverageMergeArgsDict 
                         | CoverageGenerateReportArgsDict,
                mode: TiniTestMode):
-    
+
     match mode:
 
         case TiniTestMode.MERGE:
@@ -33,15 +34,15 @@ def _tini_test(kwargs: CoreArgsDict
 
             else:
 
-                command='python manage.py runserver --settings main.test_settings 127.0.0.1:8000'
-                health_url='http://127.0.0.1:8000/'
-                server = ServerManager(command=command, health_url=health_url)
+                # command='python manage.py runserver --settings main.test_settings 127.0.0.1:8000'
+                # health_url='http://127.0.0.1:8000/'
+                # server = ServerManager(command=command, health_url=health_url)
 
-                server.start()
+                # server.start()
           
                 test_suite.runner()
 
-                server.stop()
+                # server.stop()
             
 
                 test_suite.pprint()
