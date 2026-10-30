@@ -206,6 +206,18 @@ class FileCoverage:
 
             inline_comment = self.inline_comments.get(l_no)
 
+            # TODO fix ellipsis counting for statement coverage
+            # If line is ellipsis...
+            if stripped == '...':
+                # @Comments are allowed here
+                if inline_comment:
+                    self._statement_counts[LineStatus.COMMENT] += 1
+
+                self._statement_counts[LineStatus.EXCLUDED] += 1
+
+                self.lines[l_no] = Line(l_no, l_cont, LineStatus.EXCLUDED, inline_comment=inline_comment)
+                continue
+
             if owner is None or not stripped or stripped.startswith('#'):
 
                 # Line is empty
@@ -253,23 +265,12 @@ class FileCoverage:
                                     have_docstring_open = False
                                     
             else:
-                # If line is ellipsis...
-                if stripped == '...':
-                    # @Comments are allowed here
-                    if inline_comment:
-                        self._statement_counts[LineStatus.COMMENT] += 1
-
-                    self._statement_counts[LineStatus.EXCLUDED] += 1
-                    self._statement_counts[LineStatus.MISSING] -= 1
-
-                    self.lines[l_no] = Line(l_no, l_cont, LineStatus.EXCLUDED, inline_comment=inline_comment)
-
-                else:
-                    is_continuation = l_no != self.statement_to_lines[owner][0]
-                    status = self._statement_status[owner]
-                    self.lines[l_no] = Line(l_no, l_cont, status, is_continuation, inline_comment)
-                    if inline_comment:
-                        self._statement_counts[LineStatus.COMMENT] += 1
+                
+                is_continuation = l_no != self.statement_to_lines[owner][0]
+                status = self._statement_status[owner]
+                self.lines[l_no] = Line(l_no, l_cont, status, is_continuation, inline_comment)
+                if inline_comment:
+                    self._statement_counts[LineStatus.COMMENT] += 1
 
     def set_href(self, href: str) -> None:
         self.href = href      
