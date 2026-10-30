@@ -30,7 +30,6 @@ from tini_test.misc.exceptions import (CoverageDeserializationError,
 # TODO
 # Add someting for exclude?
 # Fall back behavior for to_html of report?
-# Top levels are gathered manually @core?  -> deprecate them?
 
 
 class InlineComment:
@@ -131,6 +130,11 @@ class FileCoverage:
     
     @property
     def top_levels(self) -> list[CodeLineNumber]:
+        # Important: the requested root dir we consider source 
+        # May exist but there may not be any lines covered yet.
+        # If the path exists in the store, we will automplete top levels.
+        # Since coverege is now implemented on the import level as well
+        # It would be better if the <add_top_levels> is removed all together.
         if not self._autocomplete_top_levels:
             return []
         
@@ -196,7 +200,8 @@ class FileCoverage:
 
             self._statement_status[statement] = status
             self._statement_counts[status] += 1
-    
+
+    # TODO refactor this and add exclude at file level for now.
     def update_state(self, data: list[str]) -> None:
         have_docstring_open = False
 
@@ -486,10 +491,10 @@ class CoverageTracker:
             if not search_path.exists(follow_symlinks=False) or not search_path.suffix == '.py':
                 raise CoverageRequestedForInvalidFile(search_path)
 
-            # Important: the requested root dir we consider source 
-            # May exist but there may not be any lines covered yet.
-            # If the path exists in the store, we will automplete top levels.
+
             add_top_levels = search_path in self._store
+
+
             store = self._store.get(str(search_path), set())
 
             self.files[str(search_path)] = FileCoverage(search_path, store, add_top_levels)
@@ -499,8 +504,11 @@ class CoverageTracker:
             for file in files:
                 if file.endswith('.py'):
                     file_path = os.path.join(root, file)
+
                     
                     add_top_levels = file_path in self._store
+
+
                     store = self._store.get(file_path, set())
 
                     self.files[file_path] = FileCoverage(Path(file_path), store, add_top_levels)
