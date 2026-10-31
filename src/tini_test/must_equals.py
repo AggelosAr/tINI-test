@@ -69,8 +69,6 @@ def must_equal(expected: Any,
     except ComperatorIsNotValid as e:
         raise ComperatorIsNotValid(str(e)) from here
 
-    except Exception as e:
-        raise e from here
     
 
 # =========================================================
