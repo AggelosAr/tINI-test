@@ -69,8 +69,8 @@ def must_equal(expected: Any,
     except ComperatorIsNotValid as e:
         raise ComperatorIsNotValid(str(e)) from here
 
-    except Exception as e:                                      # >>> assert missing 
-        raise TiniTestInternalException(str(e)) from here       # >>> assert missing
+    except Exception as e:
+        raise TiniTestInternalException(str(e)) from here
     
 
 # =========================================================
