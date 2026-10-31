@@ -13,6 +13,8 @@ class LineStatus(Enum):
     DOCSTRING           = 'docstring'
     EMPTY               = 'empty'
 
+    NULL                = 'null'
+
     def __str__(self) -> str:
         return self.value.lower()
 

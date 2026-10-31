@@ -103,6 +103,7 @@ def create_command(folder_name: Optional[str] = None,
                                         TINI_TEST_COVERAGE_SOURCE, 
                                         COVERAGE_ROOT, get_unique_folder_name(), 
                                     )
+                                    
                                 ) 
         
             run_tini_test_command = '%s tini_test -d %s' % (coverage_command, folder_name, )    # >>> assert missing

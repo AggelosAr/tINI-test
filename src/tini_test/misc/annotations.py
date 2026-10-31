@@ -11,8 +11,9 @@ DotPythonPath   : TypeAlias = str
 
 
 # -------------- COVERAGE --------------
-CodeLineNumber  : TypeAlias = int
-LineContent     : TypeAlias = str
+CodeLineNumber      : TypeAlias = int
+LineContent         : TypeAlias = str
+StrippedLineContent : TypeAlias = str
 
 StatementId     : TypeAlias = int
 
