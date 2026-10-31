@@ -9,7 +9,7 @@ from tini_test.context_managers import (_thread_redirect_stdout, coverage,
                                         patch_mocks, patch_shared, with_lock)
 from tini_test.shared import SharedVar
 
-from .enums import Plugs, TestStatus, TiniTestInternalError, Verbosity
+from .enums import Plugs, TestStatus, Verbosity
 from .misc.annotations import (CleanupCallable, CoverageStore, DirectoryPath,
                                IsolateWrappedObject,
                                MockDefinitionWrappedHolder, MockWrappedObject,
@@ -18,7 +18,7 @@ from .misc.annotations import (CleanupCallable, CoverageStore, DirectoryPath,
                                TestWrappedHolder, TestWrappedObject, _NoOp)
 from .misc.exceptions import (ExpectedWasDifferentFromActual,
                               TestArgumentsShouldBeCallables,
-                              TiniTestInternalException)
+                              TiniTestInternalError, TiniTestInternalException)
 from .mock import BuiltInArtifact, MockDefinition
 from .state.state import OperationState
 

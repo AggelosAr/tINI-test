@@ -5,10 +5,8 @@ from typing import Any, Optional
 
 from tini_test._internals.consts import _RESET, capture_flag
 from tini_test.coverage.consts import METADATA_FILE
-from tini_test.enums import Plugs, RunMode, TiniTestInternalError
 from tini_test.misc.annotations import (CellName, RealTest, StackTrace,
                                         TestFunctionName)
-from tini_test.mock import BuiltInArtifact
 
 RED = '\033[91m'
 # XXX APPLY colors to our exceptions for better readability
@@ -270,11 +268,17 @@ class CoverageRequestedForInvalidFile(Exception):
         super().__init__(msg)
 
 
+class TiniTestInternalError(Exception):
+    ...
+    
 class TiniTestInternalException(Exception):
     
     def __init__(self, msg_or_type: str | type[Any]) -> None:
         if isinstance(msg_or_type, str):
             super().__init__(msg_or_type)
+
+        from tini_test.enums import Plugs, RunMode  # >>> assert missing
+        from tini_test.mock import BuiltInArtifact  # >>> assert missing
 
         if msg_or_type is RunMode:                                # >>> assert missing
             super().__init__('[ERROR] Async failure occurred.')   # >>> assert missing
