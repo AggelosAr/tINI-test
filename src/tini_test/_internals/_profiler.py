@@ -7,8 +7,7 @@ def profiler(is_profiling: bool = False):           # pragma: no cover
         def _wrapped(*args, **kwargs):
 
             if is_profiling:
-                from pyinstrument import \
-                    Profiler  # type: ignore [import-not-found]
+                from pyinstrument import Profiler   # type: ignore [import-not-found] # isort: skip
                 profiler = Profiler()
                 profiler.start()
                 

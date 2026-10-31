@@ -8,7 +8,8 @@ from typing import Any, Mapping
 
 from tini_test.coverage.consts import STORE
 from tini_test.misc.exceptions import (NotSupportedRunMode,
-                                       NotSupportedVerbosity)
+                                       NotSupportedVerbosity,
+                                       TiniTestInternalException)
 
 from .misc.annotations import ColorValue, MockedRawItem
 
@@ -188,22 +189,26 @@ class MockType(Enum):
     FUNCTION    = 'FUNCTION'
 
     @classmethod
-    def get_type(cls, mock: Any) -> tuple[MockType, MockedRawItem] | tuple[None, None]:
-        # Builtin method
-        if inspect.isbuiltin(mock):
-            return MockType.BUILTIN, mock
+    def get_type(cls, mock: Any) -> tuple[MockType, MockedRawItem]:
+        try:
+            # Builtin method
+            if inspect.isbuiltin(mock):
+                return MockType.BUILTIN, mock
 
-        # Builtin class/type
-        if getattr(builtins, mock.__name__, None):
-            return MockType.BUILTIN, mock
-        
-        if inspect.isclass(mock):
-            return MockType.CLASS, mock
-        
-        if callable(mock):
-            return MockType.FUNCTION, mock
+            # Builtin class/type
+            if getattr(builtins, mock.__name__, None):
+                return MockType.BUILTIN, mock
+            
+            if inspect.isclass(mock):
+                return MockType.CLASS, mock
+            
+            if callable(mock):
+                return MockType.FUNCTION, mock
+            
+        except Exception as e:
+            raise TiniTestInternalException('Unsupported mock type') from e
 
-        return None, None
+        raise TiniTestInternalException('Unsupported mock type')    # >>> assert missing
 
 
 class Color(Enum):

@@ -18,6 +18,7 @@ from tini_test.misc.annotations import (CoverageStore, DirectoryPath,
                                         TimeTakenForSuiteInitialization,
                                         TimeTakenForTestDiscovery,
                                         TimeTakenToRunSuite)
+from tini_test.misc.exceptions import TiniTestInternalException
 from tini_test.module_collector import ModuleCollector
 from tini_test.shared import MetaSharedVar
 from tini_test.test import TestCollection
@@ -298,7 +299,7 @@ class TestSuite:
         )
         
         for test_collection, current_errors in zip(all_test_collections, results):
-            assert isinstance(current_errors, int)
+            assert isinstance(current_errors, int), TiniTestInternalException(RunMode)
 
             self.update_summary_stats(total_tests=test_collection.total_tests, new_errors=current_errors)
             self.update_coverage_stores(test_collection)

@@ -14,9 +14,9 @@ from types import FrameType
 from typing import Optional
 
 from tini_test._internals._ast_utils import AstParser
-from tini_test.coverage.consts import (_TOGGLE_SCRIPT, ASSERT_NOT_COVERED, EXCLUDED_MARKER,
-                                       METADATA_FILE, STORE, STYLE_FILE,
-                                       SVG_FILE)
+from tini_test.coverage.consts import (_TOGGLE_SCRIPT, ASSERT_NOT_COVERED,
+                                       EXCLUDED_MARKER, METADATA_FILE, STORE,
+                                       STYLE_FILE, SVG_FILE)
 from tini_test.coverage.enums import HTMLNodeType, LineStatus
 from tini_test.coverage.html import HTMLHyperLink, HTMLNode, HTMLTemplate
 from tini_test.enums import Color, ScoreClass
@@ -290,9 +290,16 @@ class FileCoverage:
                         self._statement_counts[LineStatus.EXCLUDED] += 1
                     else:
                         self.lines[l_no] = Line(l_no, l_cont, LineStatus.DOCSTRING)
-                        
+
+                        # Check if the docstring is starting and ending on this line
+                        if stripped.count('"""') == 2 or stripped.count("'''") == 2:
+                            self._statement_counts[LineStatus.DOCSTRING] += 1
+                            if inline_comment:
+                                self.lines[l_no].add_inline_comment(inline_comment)
+                                self._statement_counts[LineStatus.COMMENT] += 1
+
                         # We are inside a valid syntaxed Python file.
-                        if self.is_docstring_se(stripped):
+                        elif self.is_docstring_se(stripped):
 
                             match have_docstring_open:
 
@@ -326,7 +333,7 @@ class FileCoverage:
                     new_status = None
                     if inline_comment:    
                         if InlineComment.assert_not_covered(l_cont, inline_comment):
-                            print('LINE IS  ---------> ', l_cont)
+
                             if status == LineStatus.MISSING:
                                 # We must mark it as correclty missing
                                 new_status = LineStatus.CORRECTLY_MISSING
@@ -597,7 +604,7 @@ class CoverageTracker:
             #       > We create the necessary directories and the metadata file inside it.
 
             if not os.path.basename(save_path).startswith(METADATA_FILE):
-                save_path = os.path.join(save_path, METADATA_FILE)
+                save_path = Path(os.path.join(save_path, METADATA_FILE))
                 os.makedirs(os.path.dirname(save_path), exist_ok=True)
             else:
                 os.makedirs(os.path.dirname(save_path), exist_ok=True)

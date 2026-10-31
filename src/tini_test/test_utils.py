@@ -9,7 +9,7 @@ from tini_test.context_managers import (_thread_redirect_stdout, coverage,
                                         patch_mocks, patch_shared, with_lock)
 from tini_test.shared import SharedVar
 
-from .enums import Plugs, TestStatus, Verbosity
+from .enums import Plugs, TestStatus, TiniTestInternalError, Verbosity
 from .misc.annotations import (CleanupCallable, CoverageStore, DirectoryPath,
                                IsolateWrappedObject,
                                MockDefinitionWrappedHolder, MockWrappedObject,
@@ -17,7 +17,8 @@ from .misc.annotations import (CleanupCallable, CoverageStore, DirectoryPath,
                                SharedWrappedObject, StackTrace,
                                TestWrappedHolder, TestWrappedObject, _NoOp)
 from .misc.exceptions import (ExpectedWasDifferentFromActual,
-                              TestArgumentsShouldBeCallables)
+                              TestArgumentsShouldBeCallables,
+                              TiniTestInternalException)
 from .mock import BuiltInArtifact, MockDefinition
 from .state.state import OperationState
 
@@ -247,7 +248,7 @@ class _XTest:
                          ____coverage    : Optional[bool] = None,
                          **kwargs        : Any) -> TestWrappedHolder:
 
-                assert ____test_func
+                assert ____test_func, TiniTestInternalException(TiniTestInternalError)
 
                 test_case = _XTest(_no_op,
                                    verbosity=____verbosity,
@@ -269,8 +270,8 @@ class _XTest:
             if _test_reg is None or _conn_reg is None:
                 return _wrapper
             
-            assert hex(id(_wrapper)) not in _test_reg
-            assert hex(id(_wrapper)) not in _conn_reg
+            assert hex(id(_wrapper)) not in _test_reg, TiniTestInternalException(Plugs)
+            assert hex(id(_wrapper)) not in _conn_reg, TiniTestInternalException(Plugs)
 
             _test_reg[hex(id(_wrapper))] = _wrapper
             _conn_reg[hex(id(_wrapper))] = hex(id(test_func))
@@ -369,9 +370,7 @@ class _XTest:
                     self.run_steps(root)
                     self.run_for_cleanup_if_needed(root)
 
-        # XXX this is tested and is not breaking.
-        # Anyway the suite breaks instead of silently passing
-        assert BuiltInArtifact.full_restore() == 0
+        assert BuiltInArtifact.full_restore() == 0, TiniTestInternalException(BuiltInArtifact)
 
         self.attach_end_state()
         self.close_state()

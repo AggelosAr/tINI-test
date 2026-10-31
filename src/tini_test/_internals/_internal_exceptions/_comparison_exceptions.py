@@ -4,7 +4,7 @@ from ...misc.annotations import DiffMessage
 
 
 class _MustEqualError(Exception):
-    '''Base exception for all must_equal failures.'''
+    '''Base exception for all must_equal failures.''' # Deprecated
     def __init__(self, message: DiffMessage):
         super().__init__(message)
 

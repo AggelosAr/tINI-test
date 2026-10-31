@@ -57,6 +57,7 @@ def test_GlobalRegistry():
 @Test.case
 def test_OperationState():
     from tini_test.state.state import OperationState
+
     # Maybe remove this? since it `seems` that it is not used...
     state = OperationState(status=TestStatus.SUCCESS)
     state.entry_msg = ['x']
@@ -67,8 +68,10 @@ def test_OperationState():
 def test_MockType_none_none():
     from tini_test.enums import MockType
 
-    result = MockType.get_type('unsupported_mock')
-    must_equal((None, None), result)
+    with WillRaise(TiniTestInternalException) as context:
+        MockType.get_type('unsupported_mock')
+
+    must_equal('Unsupported mock type', str(context.exception))
 
 
 @Test.case
@@ -77,6 +80,7 @@ def mock_internals_for_mock():
 
     with WillRaise(TiniTestInternalException) as context:
         import inspect
+
         from tini_test._internals.consts import _R_M_REG
 
         new_frame = inspect.currentframe()
@@ -94,6 +98,7 @@ def mock_internals_for_mock():
 
     with WillRaise(TiniTestInternalException) as context:
         import inspect
+
         from tini_test._internals.consts import _R_M_REG
         
         new_frame = inspect.currentframe()

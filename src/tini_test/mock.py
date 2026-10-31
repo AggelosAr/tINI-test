@@ -30,7 +30,8 @@ from tini_test.misc.exceptions import (DuplicateMockRegisteredOnTest,
                                        MockCallDefinitionError,
                                        MockClassDefinitionError,
                                        MockDefinitionError,
-                                       MockMissingFunctionOrClass, TiniTestInternalException)
+                                       MockMissingFunctionOrClass,
+                                       TiniTestInternalException)
 from tini_test.shared import MetaSharedVar, SharedVar, direct_access
 
 ARTIFACT_TRACKER: list[BuiltInArtifact] = [] # | _SETNINEL | _ROOT_SENTINEL TODO 
@@ -835,8 +836,8 @@ class _XMock:
             if _mock_reg is None or _conn_reg is None:
                 return wrapper
             
-            assert hex(id(_wrapper)) not in _mock_reg
-            assert hex(id(_wrapper)) not in _conn_reg
+            assert hex(id(_wrapper)) not in _mock_reg, TiniTestInternalException(Plugs)
+            assert hex(id(_wrapper)) not in _conn_reg, TiniTestInternalException(Plugs)
 
             _mock_reg[hex(id(_wrapper))] = _wrapper
             _conn_reg[hex(id(_wrapper))] = hex(id(func))

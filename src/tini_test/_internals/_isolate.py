@@ -8,6 +8,7 @@ from tini_test.misc.annotations import (IsolateWrappedObject,
                                         SharedDefinitionHolder,
                                         SharedWrappedObject, TestWrappedHolder,
                                         TestWrappedObject, WrapperInput)
+from tini_test.misc.exceptions import TiniTestInternalException
 
 
 class Isolate:
@@ -59,8 +60,8 @@ class _XIsolate:
             if _isol_reg is None or _conn_reg is None:
                 return wrapper
             
-            assert hex(id(_wrapper)) not in _isol_reg
-            assert hex(id(_wrapper)) not in _conn_reg
+            assert hex(id(_wrapper)) not in _isol_reg, TiniTestInternalException(Plugs)
+            assert hex(id(_wrapper)) not in _conn_reg, TiniTestInternalException(Plugs)
 
             _isol_reg[hex(id(_wrapper))] = _wrapper
             _conn_reg[hex(id(_wrapper))] = hex(id(func))

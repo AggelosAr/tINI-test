@@ -6,7 +6,8 @@ from typing import Any, Optional
 
 from .misc.annotations import Comperator
 from .misc.exceptions import (ComperatorIsNotValid, ComperatorWasNotProvided,
-                              ExpectedWasDifferentFromActual)
+                              ExpectedWasDifferentFromActual,
+                              TiniTestInternalException)
 
 _known_types = set([type,
                     bool,
@@ -67,6 +68,9 @@ def must_equal(expected: Any,
     
     except ComperatorIsNotValid as e:
         raise ComperatorIsNotValid(str(e)) from here
+
+    except Exception as e:                                      # >>> assert missing 
+        raise TiniTestInternalException(str(e)) from here       # >>> assert missing
     
 
 # =========================================================

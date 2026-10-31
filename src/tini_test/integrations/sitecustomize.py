@@ -3,7 +3,6 @@ import os
 from types import FrameType
 from typing import Callable
 
-
 _saved = False
 _store: dict[str, set] = {}
 

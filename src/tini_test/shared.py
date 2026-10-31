@@ -18,7 +18,8 @@ from tini_test.misc.exceptions import (GlobalSharedVarsAreNotSupported,
                                        SharedAcceptedInvalidArguments,
                                        SharedOnlyAcceptsArguments,
                                        SharedVarAlreadyDefined,
-                                       SharedVarDoesNotExistInThisContext)
+                                       SharedVarDoesNotExistInThisContext,
+                                       TiniTestInternalException)
 
 
 class _NotInitialized:
@@ -156,8 +157,8 @@ class _XShared:
             if _shared_reg is None or _conn_reg is None:
                 return wrapper
             
-            assert hex(id(_wrapper)) not in _shared_reg
-            assert hex(id(_wrapper)) not in _conn_reg
+            assert hex(id(_wrapper)) not in _shared_reg, TiniTestInternalException(Plugs)
+            assert hex(id(_wrapper)) not in _conn_reg  , TiniTestInternalException(Plugs)
 
             _shared_reg[hex(id(_wrapper))] = _wrapper
             _conn_reg[hex(id(_wrapper))] = hex(id(func))

@@ -5,8 +5,10 @@ from typing import Any, Optional
 
 from tini_test._internals.consts import _RESET, capture_flag
 from tini_test.coverage.consts import METADATA_FILE
+from tini_test.enums import Plugs, RunMode, TiniTestInternalError
 from tini_test.misc.annotations import (CellName, RealTest, StackTrace,
                                         TestFunctionName)
+from tini_test.mock import BuiltInArtifact
 
 RED = '\033[91m'
 # XXX APPLY colors to our exceptions for better readability
@@ -270,5 +272,18 @@ class CoverageRequestedForInvalidFile(Exception):
 
 class TiniTestInternalException(Exception):
     
-    def __init__(self, message: str) -> None:
-        super().__init__(message)
+    def __init__(self, msg_or_type: str | type[Any]) -> None:
+        if isinstance(msg_or_type, str):
+            super().__init__(msg_or_type)
+
+        if msg_or_type is RunMode:                                # >>> assert missing
+            super().__init__('[ERROR] Async failure occurred.')   # >>> assert missing
+
+        if msg_or_type is TiniTestInternalError:                                # >>> assert missing
+            super().__init__('[ERROR] Failed to unwrap the test function.')     # >>> assert missing
+
+        if msg_or_type is Plugs:                                                        # >>> assert missing
+            super().__init__('[ERROR] Internal exception related to Plugs occurred.')   # >>> assert missing
+
+        if msg_or_type is BuiltInArtifact:                                                          # >>> assert missing
+            super().__init__('[WARNING] Internal exception. Mocks should be properly restored.')    # >>> assert missing
