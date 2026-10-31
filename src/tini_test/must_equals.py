@@ -70,7 +70,7 @@ def must_equal(expected: Any,
         raise ComperatorIsNotValid(str(e)) from here
 
     except Exception as e:
-        raise TiniTestInternalException(str(e)) from here
+        raise e from here
     
 
 # =========================================================
