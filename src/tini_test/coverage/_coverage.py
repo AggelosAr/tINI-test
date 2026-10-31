@@ -14,7 +14,7 @@ from types import FrameType
 from typing import Optional
 
 from tini_test._internals._ast_utils import AstParser
-from tini_test.coverage.consts import (_TOGGLE_SCRIPT, EXCLUDED_MARKER,
+from tini_test.coverage.consts import (_TOGGLE_SCRIPT, ASSERT_NOT_COVERED, EXCLUDED_MARKER,
                                        METADATA_FILE, STORE, STYLE_FILE,
                                        SVG_FILE)
 from tini_test.coverage.enums import HTMLNodeType, LineStatus
@@ -34,6 +34,16 @@ class InlineComment:
     def __init__(self, _start: int) -> None:
         self.start = _start
 
+    @classmethod
+    def assert_not_covered(cls, line_content: LineContent, inline_comment: InlineComment) -> bool:
+        '''
+        If a line has the < ASSERT_NOT_COVERED > marker. We Must assert 
+        that it correctly is < MISSING >
+
+        >>> e.g. we want it to not be covered at runtime.
+        '''
+        return line_content[inline_comment.start:].strip() == ASSERT_NOT_COVERED
+    
     @classmethod
     def from_file_read(cls, source: str) -> dict[CodeLineNumber, InlineComment]:
         comments = {}
@@ -163,8 +173,16 @@ class FileCoverage:
         return self._statement_counts[LineStatus.RUN]
 
     @property
+    def _X_correctly_missing_statements(self) -> int:
+        return self._statement_counts[LineStatus.CORRECTLY_MISSING]
+    
+    @property
     def missing_statements(self) -> int:
         return self._statement_counts[LineStatus.MISSING]
+
+    @property
+    def _X_incorrectly_covered_statements(self) -> int:
+        return self._statement_counts[LineStatus.INCORRECTLY_RUN]
     
     @property
     def excluded_statements(self) -> int:
@@ -187,6 +205,10 @@ class FileCoverage:
     @property
     def score(self) -> float:
         run, missing = self.covered_statements, self.missing_statements
+
+        run += self._X_correctly_missing_statements
+        missing += self._X_incorrectly_covered_statements
+
         total = run + missing
         return 100.0 * run / total if total else 100.0
 
@@ -229,7 +251,7 @@ class FileCoverage:
             self._statement_status[statement] = status
             self._statement_counts[status] += 1
 
-    # TODO refactor this 
+    # TODO refactor this XXX
     def update_state(self) -> None:
         have_docstring_open = False
 
@@ -286,10 +308,6 @@ class FileCoverage:
                                     have_docstring_open = False
                                     
             else:
-
-                if inline_comment:
-                    self._statement_counts[LineStatus.COMMENT] += 1
-
                 # If line is ellipsis ...           
                 # For some times, the ... ellispis may have run. WHY?
                 # e.g. in a context manager with small indent ...
@@ -304,7 +322,69 @@ class FileCoverage:
                     is_continuation = l_no != self.statement_to_lines[owner][0]
                     status = self._statement_status[owner]
                     self.lines[l_no] = Line(l_no, l_cont, status, is_continuation, inline_comment)
-                    
+
+                    new_status = None
+                    if inline_comment:    
+                        if InlineComment.assert_not_covered(l_cont, inline_comment):
+                            print('LINE IS  ---------> ', l_cont)
+                            if status == LineStatus.MISSING:
+                                # We must mark it as correclty missing
+                                new_status = LineStatus.CORRECTLY_MISSING
+                                
+                            elif status == LineStatus.RUN:
+                                # We must add it wrongly passed
+                                new_status = LineStatus.INCORRECTLY_RUN
+                                
+                        else:
+                            ...
+                    if new_status:
+                        # Since this is done in reverse order
+                        # We already parsed the < RUN > and < MISSING > categories.
+                        # As a result we must update them here. 
+                        # If the line is continuation the update in counts must 
+                        # Happen only ONCE!
+                        match is_continuation:
+
+                            case True:
+
+                                already_happened = True
+
+                                for __line in self.statement_to_lines[owner]:
+
+                                    ___line = self.lines[__line]
+                                    if ___line.status == new_status:
+                                        already_happened = False
+
+                                    if ___line.status != new_status:
+                                        ___line.status = new_status
+                                        ___line.status = new_status
+                                    
+                                match already_happened:
+
+                                    case True:
+                                        ...
+
+                                    case False:
+                                        if new_status == LineStatus.CORRECTLY_MISSING:
+                                            self._statement_counts[LineStatus.MISSING] -= 1
+                                            self._statement_counts[LineStatus.CORRECTLY_MISSING] += 1
+        
+                                        elif new_status == LineStatus.INCORRECTLY_RUN:
+                                            self._statement_counts[LineStatus.RUN] -= 1
+                                            self._statement_counts[LineStatus.INCORRECTLY_RUN] += 1
+                                    
+                            case False:
+                                # Update counts for non-continuation lines
+                                if new_status == LineStatus.CORRECTLY_MISSING:
+                                    self._statement_counts[LineStatus.MISSING] -= 1
+                                    self._statement_counts[LineStatus.CORRECTLY_MISSING] += 1
+
+                                elif new_status == LineStatus.INCORRECTLY_RUN:
+                                    self._statement_counts[LineStatus.RUN] -= 1
+                                    self._statement_counts[LineStatus.INCORRECTLY_RUN] += 1
+
+                                self.lines[l_no].status = new_status
+                          
     def set_href(self, href: str) -> None:
         self.href = href      
 
@@ -343,17 +423,25 @@ class CoverageTracker:
         return sum(file_coverage.covered_statements for file_coverage in self.files.values())
 
     @cached_property
+    def incorrectly_covered(self) -> int:
+        return sum(file_coverage._X_incorrectly_covered_statements for file_coverage in self.files.values())
+
+    @cached_property
     def missing(self) -> int:
         return sum(file_coverage.missing_statements for file_coverage in self.files.values())
 
+    @cached_property
+    def correctly_missing(self) -> int:
+        return sum(file_coverage._X_correctly_missing_statements for file_coverage in self.files.values())
+    
     @cached_property
     def excluded(self) -> int:
         return sum(file_coverage.excluded_statements for file_coverage in self.files.values())
 
     @cached_property
     def total_score(self) -> float:
-        covered = self.covered
-        missing = self.missing
+        covered = self.covered + self.correctly_missing
+        missing = self.missing + self.incorrectly_covered
         return 100.0 * covered / (covered + missing) if covered + missing else 100.0
 
     @classmethod
@@ -581,12 +669,14 @@ class CoverageTracker:
         self.collect_files_from_source()
         self.files = dict(sorted(self.files.items()))
         
-        titles = ('Total', 'Covered', 'Missing', 'Excluded', 'Score')
+        titles = ('Total', 'Run', 'Correctly Missing', 'Missing', 'Incorrectly Run', 'Excluded', 'Score')
 
         max_titles = max(len(title) for title in titles)
         max_digits = max(len(str(self.total)), 
-                         len(str(self.covered)), 
-                         len(str(self.missing)), 
+                         len(str(self.covered)),
+                         len(str(self.correctly_missing)),
+                         len(str(self.missing)),
+                         len(str(self.incorrectly_covered)), 
                          len(str(self.excluded)), 
                          len('100.0'))
         _max = max(max_titles, max_digits)
@@ -604,7 +694,9 @@ class CoverageTracker:
                     '\t'.join([
                         self.pad(self.total, _max), 
                         self.pad(self.covered, _max), 
+                        self.pad(self.correctly_missing, _max), 
                         self.pad(self.missing, _max), 
+                        self.pad(self.incorrectly_covered, _max), 
                         self.pad(self.excluded, _max), 
                         self.pad(self._terminal_score_color(self.total_score), _max)
                     ])
@@ -617,7 +709,7 @@ class CoverageTracker:
         if not long:
             return
         
-        _titles = ('File', 'Statements', 'Run', 'Missing', 'Excluded', 'Score')
+        _titles = ('File', 'Statements', 'Run', 'Correctly Missing', 'Missing', 'Incorrectly Run', 'Excluded', 'Score')
 
         max_titles = max(len(title) for title in _titles)
         max_digits = 0
@@ -625,7 +717,9 @@ class CoverageTracker:
         for file_path, coverage in self.files.items():
             max_digits = max(max_digits, len(str(coverage.total_statements)))
             max_digits = max(max_digits, len(str(coverage.covered_statements)))
+            max_digits = max(max_digits, len(str(coverage._X_correctly_missing_statements)))
             max_digits = max(max_digits, len(str(coverage.missing_statements)))
+            max_digits = max(max_digits, len(str(coverage._X_incorrectly_covered_statements)))
             max_digits = max(max_digits, len(str(coverage.excluded_statements)))
             max_digits = max(max_digits, len(str(coverage.score)))
 
@@ -642,7 +736,9 @@ class CoverageTracker:
                     self.pad('', _max), 
                     self.pad(coverage.total_statements, _max), 
                     self.pad(coverage.covered_statements, _max), 
+                    self.pad(coverage._X_correctly_missing_statements, _max), 
                     self.pad(coverage.missing_statements, _max), 
+                    self.pad(coverage._X_incorrectly_covered_statements, _max), 
                     self.pad(coverage.excluded_statements, _max), 
                     self.pad(self._terminal_score_color(coverage.score), _max)
                 ])
@@ -776,8 +872,8 @@ class HTMLFileCoverage:
     @staticmethod
     def _toolbar_button(status: LineStatus, count: int) -> HTMLNode:
         button = HTMLNode(HTMLNodeType.BUTTON)
-        button.add_class({'class': 'cov-toggle %s' % status, 'data-status': str(status)})
-        button.set_content('%d %s' % (count, status))
+        button.add_class({'class': 'cov-toggle %s' % status.value, 'data-status': status.value})
+        button.set_content('%d %s' % (count, status.value.replace('-', ' ')))
         return button
 
     @staticmethod
@@ -786,9 +882,15 @@ class HTMLFileCoverage:
 
         covered = HTMLFileCoverage._toolbar_button(LineStatus.RUN, 
                                                    coverage.covered_statements)
+
+        correctly_missing = HTMLFileCoverage._toolbar_button(LineStatus.CORRECTLY_MISSING, 
+                                                             coverage._X_correctly_missing_statements) 
         
         missing = HTMLFileCoverage._toolbar_button(LineStatus.MISSING, 
                                                    coverage.missing_statements)
+
+        incorrectly_covered = HTMLFileCoverage._toolbar_button(LineStatus.INCORRECTLY_RUN, 
+                                                               coverage._X_incorrectly_covered_statements)
 
         excluded = HTMLFileCoverage._toolbar_button(LineStatus.EXCLUDED, 
                                                     coverage.excluded_statements)
@@ -803,7 +905,9 @@ class HTMLFileCoverage:
                                                  coverage.empty_lines)
         
         toolbar.add_children(covered)
+        toolbar.add_children(correctly_missing)
         toolbar.add_children(missing)
+        toolbar.add_children(incorrectly_covered)
         toolbar.add_children(excluded)
         toolbar.add_children(comment)
         toolbar.add_children(docstring)
@@ -945,7 +1049,7 @@ class HTMLReport:
 
         head_row = HTMLNode(HTMLNodeType.TR)
 
-        for title in ('File', 'Statements', 'Run', 'Missing', 'Excluded', 'Score'):
+        for title in ('File', 'Statements', 'Run', 'Correctly Missing', 'Missing', 'Incorrectly Run','Excluded', 'Score'):
             title_node = HTMLNode(HTMLNodeType.TH,
                                   {'class': 'index-file' if title == 'File' else 'index-num'},
                                   title)
@@ -959,7 +1063,9 @@ class HTMLReport:
                 HTMLNode(HTMLNodeType.TD, {'class': 'index-file'}, link.to_html()),
                 HTMLNode(HTMLNodeType.TD, {'class': 'index-num'}, str(coverage.total_statements)),
                 HTMLNode(HTMLNodeType.TD, {'class': 'index-num'}, str(coverage.covered_statements)),
+                HTMLNode(HTMLNodeType.TD, {'class': 'index-num'}, str(coverage._X_correctly_missing_statements)),
                 HTMLNode(HTMLNodeType.TD, {'class': 'index-num'}, str(coverage.missing_statements)),
+                HTMLNode(HTMLNodeType.TD, {'class': 'index-num'}, str(coverage._X_incorrectly_covered_statements)),
                 HTMLNode(HTMLNodeType.TD, {'class': 'index-num'}, str(coverage.excluded_statements)),
             ])
             _score = HTMLNode(HTMLNodeType.TD)
@@ -974,7 +1080,9 @@ class HTMLReport:
             HTMLNode(HTMLNodeType.TD, {'class': 'index-file'}, 'Total'),
             HTMLNode(HTMLNodeType.TD, {'class': 'index-num'}, str(tracker.total)),
             HTMLNode(HTMLNodeType.TD, {'class': 'index-num'}, str(tracker.covered)),
+            HTMLNode(HTMLNodeType.TD, {'class': 'index-num'}, str(tracker.correctly_missing)),
             HTMLNode(HTMLNodeType.TD, {'class': 'index-num'}, str(tracker.missing)),
+            HTMLNode(HTMLNodeType.TD, {'class': 'index-num'}, str(tracker.incorrectly_covered)),
             HTMLNode(HTMLNodeType.TD, {'class': 'index-num'}, str(tracker.excluded)),
         ])
         _total_score = HTMLNode(HTMLNodeType.TD)

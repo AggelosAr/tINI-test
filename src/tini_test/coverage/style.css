@@ -98,6 +98,41 @@ body {
     border-radius: 50%;
 }
 
+
+.code-line.correctly-missing .line-number::after {
+    content: "\2713";
+    
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #22c55e;
+    font-family: Arial, sans-serif;
+    font-weight: bold;
+    width: 0.5rem;
+    height: 0.5rem;
+    z-index: 1;
+}
+
+
+
+.code-line.incorrectly-run .line-number::after {
+    content: "\2717";
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    
+    color: #ef4444;
+    font-family: Arial, sans-serif;
+    font-weight: bold;
+    width: 0.5rem;
+    height: 0.5rem;
+    z-index: 1;
+}
+
+
+
 .code-line.run .line-number::after     { background: #2ecc40; }
 .code-line.missing .line-number::after { background: #ff4136; }
 
@@ -164,38 +199,45 @@ body {
 }
 
 
-.cov-toggle.run             { background: #7be08a; }
-.cov-toggle.missing         { background: #ff8a84; }
-.cov-toggle.excluded        { background: #8ab4f8; }
-.cov-toggle.comment         { background: #bdbdbd; }
-.cov-toggle.docstring       { background: #bdbdbd; }
-.cov-toggle.empty           { background: #bdbdbd; }
+.cov-toggle.run                 { background: #7be08a; }
+.cov-toggle.correctly-missing   { background: #a5d6a7; }
+.cov-toggle.missing             { background: #ff8a84; }
+.cov-toggle.incorrectly-run     { background: #ff6f61; }
+.cov-toggle.excluded            { background: #8ab4f8; }
+.cov-toggle.comment             { background: #bdbdbd; }
+.cov-toggle.docstring           { background: #bdbdbd; }
+.cov-toggle.empty               { background: #bdbdbd; }
 
 
 
-.cov-toggle.run.active              { background: #3bdd51; color: #fff; }
-.cov-toggle.missing.active          { background: #c4261d; color: #fff; }
-.cov-toggle.excluded.active         { background: #3a6fd1; color: #fff; }
-.cov-toggle.comment.active          { background: #6b6b6b; color: #fff; }
-.cov-toggle.docstring.active        { background: #6b6b6b; color: #fff; }
-.cov-toggle.empty.active            { background: #6b6b6b; color: #fff; }
+.cov-toggle.run.active                 { background: #3bdd51; color: #fff; }
+.cov-toggle.correctly-missing.active   { background: #7cb342; color: #fff; }
+.cov-toggle.missing.active             { background: #c4261d; color: #fff; }
+.cov-toggle.incorrectly-run.active     { background: #d32f2f; color: #fff; }
+.cov-toggle.excluded.active            { background: #3a6fd1; color: #fff; }
+.cov-toggle.comment.active             { background: #6b6b6b; color: #fff; }
+.cov-toggle.docstring.active           { background: #6b6b6b; color: #fff; }
+.cov-toggle.empty.active               { background: #6b6b6b; color: #fff; }
 
 
 
-.code-block.show-run .code-line.run .line-content               { background-color: rgba(164, 255, 175, 0.2); }
-.code-block.show-missing .code-line.missing .line-content       { background-color: rgba(237, 142, 151, 0.2); }
-.code-block.show-excluded .code-line.excluded .line-content     { background-color: rgba(58, 111, 209, 0.3); }
-.code-block.show-comment .code-line.comment .line-content       { background-color: rgba(160, 160, 160, 0.3); }
-.code-block.show-inline-comment .inline-comment                 { background-color: rgba(160, 160, 160, 0.3); }
-.code-block.show-docstring .code-line.docstring .line-content   { background-color: rgba(160, 160, 160, 0.3); }
-.code-block.show-empty .code-line.empty .line-content           { background-color: rgba(160, 160, 160, 0.3); }
+.code-block.show-run .code-line.run .line-content                               { background-color: rgba(164, 255, 175, 0.2); }
+.code-block.show-correctly-missing .code-line.correctly-missing .line-content   { background-color: rgba(165, 214, 167, 0.2); }
+.code-block.show-missing .code-line.missing .line-content                       { background-color: rgba(237, 142, 151, 0.2); }
+.code-block.show-incorrectly-run .code-line.incorrectly-run .line-content       { background-color: rgba(211, 47, 47, 0.2);   }
+.code-block.show-excluded .code-line.excluded .line-content                     { background-color: rgba(58, 111, 209, 0.3);  }
+.code-block.show-comment .code-line.comment .line-content                       { background-color: rgba(160, 160, 160, 0.3); }
+.code-block.show-inline-comment .inline-comment                                 { background-color: rgba(160, 160, 160, 0.3); }
+.code-block.show-docstring .code-line.docstring .line-content                   { background-color: rgba(160, 160, 160, 0.3); }
+.code-block.show-empty .code-line.empty .line-content                           { background-color: rgba(160, 160, 160, 0.3); }
 
 
 
 
-.code-block.show-run .code-line.run.continuation .line-content           { background-color: rgba(164, 255, 175, 0.1); }
-.code-block.show-missing .code-line.missing.continuation .line-content   { background-color: rgba(255, 159, 168, 0.1); }
-.code-block.show-excluded .code-line.excluded.continuation .line-content { background-color: rgba(58, 111, 209, 0.15); }
+.code-block.show-run .code-line.run.continuation .line-content                               { background-color: rgba(164, 255, 175, 0.1); }
+.code-block.show-correctly-missing .code-line.correctly-missing.continuation .line-content   { background-color: rgba(165, 214, 167, 0.1); }
+.code-block.show-missing .code-line.missing.continuation .line-content                       { background-color: rgba(255, 159, 168, 0.1); }
+.code-block.show-excluded .code-line.excluded.continuation .line-content                     { background-color: rgba(58, 111, 209, 0.15); }
 
 
 .code-line.continuation .line-number::after { opacity: 0.4; width: 0.35rem; height: 0.35rem; margin-left: 0.15rem;}

@@ -6,6 +6,7 @@ SVG_FILE            = '.coverage.svg'
 
 
 EXCLUDED_MARKER     = '# >>> excluded'
+ASSERT_NOT_COVERED  = '# >>> assert missing'
 
 
 _TOGGLE_SCRIPT = '''

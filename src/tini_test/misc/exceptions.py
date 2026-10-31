@@ -101,9 +101,9 @@ class TestDecoratorUsedMoreThanOnce(Exception):
         if callable(test):
             test_name = test.__name__
             if test_name == '_wrapper':
-                test_name = '<unknown>'
+                test_name = '<unknown>'         # >>> assert missing
         else:
-            test_name = '<unknown>'
+            test_name = '<unknown>'             # >>> assert missing
             
         reason = 'Test decorator used more than once on test < %s >' % (test_name, )
         super().__init__(reason)
@@ -113,7 +113,7 @@ class MockWasUsedOnWithoutTestDecorator(Exception):
 
     def __init__(self, test: RealTest | None) -> None:
         if not test:
-            test_name = '<unknown>'
+            test_name = '<unknown>'             # >>> assert missing
         else:
             test_name = test.__name__
 
@@ -125,7 +125,7 @@ class SharedWasUsedOnWithoutTestDecorator(Exception):
 
     def __init__(self, test: RealTest | None) -> None:
         if not test:
-            test_name = '<unknown>'
+            test_name = '<unknown>'             # >>> assert missing
         else:
             test_name = test.__name__
 
@@ -137,7 +137,7 @@ class IsolateWasUsedOnWithoutTestDecorator(Exception):
 
     def __init__(self, test: RealTest | None) -> None:
         if not test:
-            test_name = '<unknown>'
+            test_name = '<unknown>'             # >>> assert missing
         else:
             test_name = test.__name__
 

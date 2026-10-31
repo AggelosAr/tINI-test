@@ -2,12 +2,16 @@ from enum import Enum
 
 
 class LineStatus(Enum):
-    RUN       = 'RUN'
-    MISSING   = 'MISSING'
-    EXCLUDED  = 'EXCLUDED'
-    COMMENT   = 'COMMENT'
-    DOCSTRING = 'DOCSTRING'
-    EMPTY     = 'EMPTY'
+    RUN                 = 'run'
+    CORRECTLY_MISSING   = 'correctly-missing'
+
+    MISSING             = 'missing'
+    INCORRECTLY_RUN     = 'incorrectly-run'
+
+    EXCLUDED            = 'excluded'
+    COMMENT             = 'comment'
+    DOCSTRING           = 'docstring'
+    EMPTY               = 'empty'
 
     def __str__(self) -> str:
         return self.value.lower()
