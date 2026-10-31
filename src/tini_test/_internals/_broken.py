@@ -81,9 +81,9 @@ def create_command(folder_name: Optional[str] = None,
 
         if _V2:
             coverage_command = (
-                                '--coverage '                      \
-                                '--coverage-target %s '            \
-                                '--coverage-store %s/.coverage_%s' \
+                                '--coverage                       ' \
+                                '--coverage-target %s             ' \
+                                '--coverage-store %s/.coverage_%s ' \
                                     % 
                                     (   
                                         TINI_TEST_COVERAGE_SOURCE,
@@ -93,19 +93,19 @@ def create_command(folder_name: Optional[str] = None,
             run_tini_test_command = 'tini_test %s -d %s' % (coverage_command, folder_name, )
 
         else:
-            coverage_command = (
-                                'coverage run '                   \
-                                '--source=%s '                    \
+            coverage_command = (                                  # >>> assert missing
+                                'coverage run                   ' \
+                                '--source=%s                    ' \
                                 '--data-file=%s.coverage.run_%s ' \
-                                '-m '                             \
+                                '-m                             ' \
                                     % 
                                     (
                                         TINI_TEST_COVERAGE_SOURCE, 
                                         COVERAGE_ROOT, get_unique_folder_name(), 
                                     )
-                                )
+                                ) 
         
-            run_tini_test_command = '%s tini_test -d %s' % (coverage_command, folder_name, )
+            run_tini_test_command = '%s tini_test -d %s' % (coverage_command, folder_name, )    # >>> assert missing
 
     
     if test_name:

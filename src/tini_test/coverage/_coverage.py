@@ -255,6 +255,9 @@ class FileCoverage:
     def update_state(self) -> None:
         have_docstring_open = False
 
+        # Used to update the status for the conditional statements
+        has_changed_status = None
+
         for l_no, l_cont in enumerate(self.raw_lines, start=1):
             owner = self.line_to_statement.get(l_no)
             stripped = l_cont.strip()
@@ -262,6 +265,8 @@ class FileCoverage:
             inline_comment = self.inline_comments.get(l_no)
             
             if owner is None or not stripped or stripped.startswith('#'):
+
+                has_changed_status = None
 
                 # Line is empty
                 if not stripped:
@@ -319,7 +324,8 @@ class FileCoverage:
                 # For some times, the ... ellispis may have run. WHY?
                 # e.g. in a context manager with small indent ...
                 if stripped == '...' and l_no not in self.runtime_covered_lines:
-                   
+                    has_changed_status = None
+
                     self._statement_counts[LineStatus.MISSING] -= 1
                     self._statement_counts[LineStatus.EXCLUDED] += 1
                 
@@ -330,57 +336,22 @@ class FileCoverage:
                     status = self._statement_status[owner]
                     self.lines[l_no] = Line(l_no, l_cont, status, is_continuation, inline_comment)
 
-                    new_status = None
-                    if inline_comment:    
-                        if InlineComment.assert_not_covered(l_cont, inline_comment):
+                    if has_changed_status and status != has_changed_status:
+                        status = has_changed_status
+                        self.lines[l_no].status = has_changed_status
 
-                            if status == LineStatus.MISSING:
-                                # We must mark it as correclty missing
-                                new_status = LineStatus.CORRECTLY_MISSING
-                                
-                            elif status == LineStatus.RUN:
-                                # We must add it wrongly passed
-                                new_status = LineStatus.INCORRECTLY_RUN
-                                
-                        else:
-                            ...
-                    if new_status:
-                        # Since this is done in reverse order
-                        # We already parsed the < RUN > and < MISSING > categories.
-                        # As a result we must update them here. 
-                        # If the line is continuation the update in counts must 
-                        # Happen only ONCE!
-                        match is_continuation:
+                    else:
+                        if inline_comment:    
+                            if InlineComment.assert_not_covered(l_cont, inline_comment):
 
-                            case True:
-
-                                already_happened = True
-
-                                for __line in self.statement_to_lines[owner]:
-
-                                    ___line = self.lines[__line]
-                                    if ___line.status == new_status:
-                                        already_happened = False
-
-                                    if ___line.status != new_status:
-                                        ___line.status = new_status
-                                        ___line.status = new_status
+                                if status == LineStatus.MISSING:
+                                    # We must mark it as correclty missing
+                                    new_status = LineStatus.CORRECTLY_MISSING
                                     
-                                match already_happened:
-
-                                    case True:
-                                        ...
-
-                                    case False:
-                                        if new_status == LineStatus.CORRECTLY_MISSING:
-                                            self._statement_counts[LineStatus.MISSING] -= 1
-                                            self._statement_counts[LineStatus.CORRECTLY_MISSING] += 1
-        
-                                        elif new_status == LineStatus.INCORRECTLY_RUN:
-                                            self._statement_counts[LineStatus.RUN] -= 1
-                                            self._statement_counts[LineStatus.INCORRECTLY_RUN] += 1
+                                elif status == LineStatus.RUN:
+                                    # We must add it wrongly passed
+                                    new_status = LineStatus.INCORRECTLY_RUN
                                     
-                            case False:
                                 # Update counts for non-continuation lines
                                 if new_status == LineStatus.CORRECTLY_MISSING:
                                     self._statement_counts[LineStatus.MISSING] -= 1
@@ -391,7 +362,14 @@ class FileCoverage:
                                     self._statement_counts[LineStatus.INCORRECTLY_RUN] += 1
 
                                 self.lines[l_no].status = new_status
-                          
+                                has_changed_status = new_status
+
+                                _l_no = l_no
+                                while _l_no > self.statement_to_lines[owner][0]:
+                                    _l_no -= 1
+                                    self.lines[_l_no].status = has_changed_status
+
+
     def set_href(self, href: str) -> None:
         self.href = href      
 

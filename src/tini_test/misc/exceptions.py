@@ -276,6 +276,7 @@ class TiniTestInternalException(Exception):
     def __init__(self, msg_or_type: str | type[Any]) -> None:
         if isinstance(msg_or_type, str):
             super().__init__(msg_or_type)
+            return
 
         from tini_test.enums import Plugs, RunMode  # >>> assert missing
         from tini_test.mock import BuiltInArtifact  # >>> assert missing
