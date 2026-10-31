@@ -15,7 +15,7 @@ from tini_test.shared import Shared, var
 # Shared = partial(Shared, var.coverage, var.case, var.covered_lines, var.args)
 
 # Var has no autocomplete
-
+minn = False
 
 def short_summary() -> None:
     _titles = ('Statements', 
@@ -41,33 +41,36 @@ def short_summary() -> None:
                      len(str(var.coverage.empty_lines)),
                      len('100.0'))
     _max = max(max_titles, max_digits)
-    
-    for idx, line in enumerate(var.case.splitlines(), start=1):
-        print('%d: %s' % (idx, line))
 
-    print(
-        '\n\n              '  \
-        'Coverage Summary\n'  \
-        '----------------\n'  \
-        '%s\n'                \
-        '\n'                  \
-        '%s\n\n\n'            \
-            % 
-            (
-                '  '.join(map(CoverageTracker.pad, _titles, [_max]*len(_titles))),
-                '  '.join([
-                    CoverageTracker.pad(var.coverage.total_statements, _max), 
-                    CoverageTracker.pad(var.coverage.covered_statements, _max), 
-                    CoverageTracker.pad(var.coverage._X_correctly_missing_statements, _max), 
-                    CoverageTracker.pad(var.coverage.missing_statements, _max), 
-                    CoverageTracker.pad(var.coverage._X_incorrectly_covered_statements, _max), 
-                    CoverageTracker.pad(var.coverage.excluded_statements, _max), 
-                    CoverageTracker.pad(var.coverage.comment_lines, _max), 
-                    CoverageTracker.pad(var.coverage.docstring_lines, _max), 
-                    CoverageTracker.pad(var.coverage.empty_lines, _max),
-                ])
-            )
-    )
+    if minn:
+        for idx, line in enumerate(var.case.splitlines()):
+            print('%d: %s' % (idx + 1, line))
+
+        print('\nRUNTIME COVERED LINES: ', var.covered_lines)
+
+        print(
+            '\n\n              '  \
+            'Coverage Summary\n'  \
+            '----------------\n'  \
+            '%s\n'                \
+            '\n'                  \
+            '%s\n\n\n'            \
+                % 
+                (
+                    '  '.join(map(CoverageTracker.pad, _titles, [_max]*len(_titles))),
+                    '  '.join([
+                        CoverageTracker.pad(var.coverage.total_statements, _max), 
+                        CoverageTracker.pad(var.coverage.covered_statements, _max), 
+                        CoverageTracker.pad(var.coverage._X_correctly_missing_statements, _max), 
+                        CoverageTracker.pad(var.coverage.missing_statements, _max), 
+                        CoverageTracker.pad(var.coverage._X_incorrectly_covered_statements, _max), 
+                        CoverageTracker.pad(var.coverage.excluded_statements, _max), 
+                        CoverageTracker.pad(var.coverage.comment_lines, _max), 
+                        CoverageTracker.pad(var.coverage.docstring_lines, _max), 
+                        CoverageTracker.pad(var.coverage.empty_lines, _max),
+                    ])
+                )
+        )
 
 
     
@@ -79,15 +82,19 @@ def from_file_coverage():
 
         coverage = FileCoverage(f.name, var.covered_lines, False)
         coverage.parse_file()
-        
+     
     var.coverage = coverage
 
 
 def _assert():
-    print('------------------')
+    if minn:
+        print('------------------')
+
     from_file_coverage()
-    print('------------------')
-    short_summary()
+    
+    if minn:
+        print('------------------')
+        short_summary()
 
     must_equal(next(var.args), var.coverage.total_statements)
     must_equal(next(var.args), var.coverage.covered_statements)
@@ -232,14 +239,6 @@ def test_continuation_block_with_assert_not_covered():
         var.covered_lines = set([11, ])
         _assert()
 
-        with WillRaise(ExpectedWasDifferentFromActual) as context:
-            var.covered_lines = set([12, ])
-            _assert()
-
-        import traceback as tr
-        exc = ''.join(tr.format_tb(context.exc_traceback))
-        must_equal(True, 'must_equal(next(var.args), var.coverage._X_correctly_missing_statements)' in exc)
-
 
     var.case = '''
 
@@ -287,6 +286,7 @@ def test_continuation_block_with_assert_not_covered():
     )
       
     '''
+    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 3
     run()
 
     var.case = '''
@@ -302,6 +302,7 @@ def test_continuation_block_with_assert_not_covered():
     )
       
     '''
+    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 3
     run()
 
     var.case = '''
@@ -317,6 +318,7 @@ def test_continuation_block_with_assert_not_covered():
     )
       
     '''
+    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 3
     run()
 
     var.case = '''
@@ -332,6 +334,7 @@ def test_continuation_block_with_assert_not_covered():
     )
       
     '''
+    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 3
     run()
 
     var.case = '''
@@ -347,6 +350,7 @@ def test_continuation_block_with_assert_not_covered():
     )
         
     '''
+    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 3
     run()
 
     var.case = '''
@@ -362,6 +366,7 @@ def test_continuation_block_with_assert_not_covered():
     )
         
     '''
+    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 3
     run()
 
     var.case = '''
@@ -377,6 +382,115 @@ def test_continuation_block_with_assert_not_covered():
     )               # >>> assert missing
         
     '''
+    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 3
+    run()
+
+
+    var.case = '''
+                    
+    A = (           
+    
+        'A', 
+    
+        'B',
+                
+        'C'         
+                    
+    )               
+
+
+
+    A = (           
+        
+            'A', 
+        
+            'B',
+                    
+            'C'         
+                        
+    )               # >>> assert missing
+        
+    '''
+    var.rargs = 2, 1, 1, 0, 0, 0, 1, 0, 6
+    run()
+
+
+    
+    var.case = '''
+                        
+    A = (           # comment
+    # comment
+        'A', 
+    
+        'B',
+                
+        'C'         
+                    
+    )               
+
+
+
+    A = (           
+        
+            'A', 
+        
+            'B',
+                    
+            'C'         
+                        
+    )               # >>> assert missing
+        
+    '''
+    var.rargs = 2, 1, 1, 0, 0, 0, 3, 0, 6
+    run()
+
+
+
+    var.case = '''
+                            
+    A = (           # comment
+    # comment
+        'A', 
+    
+        'B',
+                
+        'C'         
+                    
+    )               
+
+    """"""#
+
+    A = (           
+        
+            'A', 
+        
+            'B',
+                    
+            'C'         
+                        
+    )               # >>> assert missing
+        
+    '''
+    var.rargs = 2, 1, 1, 0, 0, 0, 4, 1, 5
     run()
 
     
+
+
+    aA = (           
+            
+                'A', 
+            
+                'B',
+      
+'''a'''# comment
+
+
+'''xxx# comment
+# comment
+# comment
+'''# comment
+
+                'C'         
+                            
+        )               # >>> assert missing

@@ -68,6 +68,13 @@ class InlineComment:
 
         return comments
 
+    @classmethod
+    def get_slice(cls, line_content: LineContent, inline_comment: InlineComment | None) -> Line:
+        if inline_comment:
+            _slice = line_content[:inline_comment.start]
+            return Line(0, _slice, LineStatus.NULL, inline_comment=inline_comment)
+        return Line(0, line_content, LineStatus.NULL)
+
 
 class Line:
 
@@ -110,7 +117,7 @@ class Line:
         
             if self.sline.startswith("'''") and self.sline.endswith("'''"):
                 return True
-        
+            
         return False
     
     def is_docstring_se(self) -> bool:
@@ -162,17 +169,15 @@ class FileCoverage:
 
         self._statement_counts: Counter[LineStatus] = Counter()
         
-
         self._source = ''
-
 
         runtime_covered_lines.discard(0)
         self.runtime_covered_lines = runtime_covered_lines
 
         # Used to keep track of whether a docstring is currently open
         self._have_docstring_open = False
-        # Used to keep track of the last changed status of a line
-        self._look_behind_status = LineStatus.NULL
+        self._look_behind_status = False
+
 
     @cached_property
     def parser(self) -> AstParser:
@@ -226,11 +231,11 @@ class FileCoverage:
         self._have_docstring_open = value
 
     @property
-    def look_behind_status(self) -> LineStatus:
+    def look_behind_status(self) -> bool:
         return self._look_behind_status
     
     @look_behind_status.setter
-    def look_behind_status(self, value: LineStatus) -> None:
+    def look_behind_status(self, value: bool) -> None:
         self._look_behind_status = value
    
     @property
@@ -317,7 +322,7 @@ class FileCoverage:
     def handle_empty_line(self, line: Line):
         match self.have_docstring_open:
             case True:
-                self.look_behind_status = LineStatus.NULL
+                self.look_behind_status = False
                 line.status = LineStatus.DOCSTRING
 
             case False:
@@ -327,7 +332,7 @@ class FileCoverage:
     def handle_comment(self, line: Line):
         match self.have_docstring_open:
             case True:
-                self.look_behind_status = LineStatus.NULL
+                self.look_behind_status = False
                 line.status = LineStatus.DOCSTRING
 
             case False:
@@ -351,7 +356,7 @@ class FileCoverage:
         self._statement_counts[LineStatus.EXCLUDED] += 1
 
     def clean_up_else_or_finally(self, line: Line):
-        self.look_behind_status = LineStatus.NULL
+        self.look_behind_status = False
 
         line.status = LineStatus.EXCLUDED
         self._statement_counts[LineStatus.EXCLUDED] += 1
@@ -362,77 +367,70 @@ class FileCoverage:
             line.add_inline_comment(inline_comment)
             self._statement_counts[LineStatus.COMMENT] += 1
 
-    def handle_normal_line(self, line: Line):
-        match line.line_number in self.runtime_covered_lines:
-            case True:
-                line.status = LineStatus.RUN
-            case False:
-                line.status = LineStatus.MISSING
 
+    def handle_normal_line(self, line: Line, owner: StatementId) -> None:
+        statement_lines = self.statement_to_lines[owner]
 
-        inline_comment = self.inline_comments.get(line.line_number)
+        # Wait until all lines belonging to this statement are initialized.
+        if line.line_number != statement_lines[-1]:
+            return
 
-        if InlineComment.assert_not_covered(line.line_content, inline_comment):
-            if self.look_behind_status != LineStatus.NULL:
-                raise TiniTestInternalException(LineStatus)  # >>> assert missing
-            
-            if line.status == LineStatus.MISSING:
-                self.look_behind_status = LineStatus.CORRECTLY_MISSING
-                
-            if line.status == LineStatus.RUN:
-                self.look_behind_status = LineStatus.INCORRECTLY_RUN
+        is_single_line = len(statement_lines) == 1
+        statuses = []
 
-        owner = self.line_to_statement.get(line.line_number)
-        is_single_line = len(self.statement_to_lines[owner]) == 1
+        for l_no in statement_lines:
+            _line = self.lines[l_no]
 
-        if line.line_number == self.statement_to_lines[owner][-1] or is_single_line:
+            # Determine coverage using runtime data.
+            _line.status = (
+                LineStatus.RUN
+                if l_no in self.runtime_covered_lines
+                else LineStatus.MISSING
+            )
 
-            first_line = self.statement_to_lines[owner][0]
+            inline_comment = self.inline_comments.get(l_no)
 
-            statuses = []
-            for l_no in range(first_line, line.line_number + 1):
+            if inline_comment:
+                _line.add_inline_comment(inline_comment)
+                self._statement_counts[LineStatus.COMMENT] += 1
 
-                p_line = self.lines[l_no]
+                if InlineComment.assert_not_covered(
+                    _line.line_content, inline_comment
+                ):
+                    self.look_behind_status = True
 
-                if (inline_comment := self.inline_comments.get(p_line.line_number)):
-                    p_line.add_inline_comment(inline_comment)
-                    self._statement_counts[LineStatus.COMMENT] += 1
+            statuses.append(_line.status)
+            _line.is_continuation = not is_single_line
 
-                self._statement_counts[p_line.status] -= 1
-                if self._statement_counts[p_line.status] < 0:
-                    self._statement_counts[p_line.status] = 0
+        status = (
+            LineStatus.RUN
+            if LineStatus.RUN in statuses
+            else LineStatus.MISSING
+        )
 
-                statuses.append(p_line.status)
+        if self.look_behind_status:
+            status = (
+                LineStatus.INCORRECTLY_RUN
+                if status == LineStatus.RUN
+                else LineStatus.CORRECTLY_MISSING
+            )
 
-                p_line.is_continuation = not is_single_line
+        self.lines[statement_lines[0]].is_continuation = False
 
-            # In case somethings come out of order we don't depend on it.
-            # We simply validate all the statuses we got
-
-            line.status = LineStatus.RUN if any(s == LineStatus.RUN for s in statuses) else LineStatus.MISSING
-
-            if line.status == LineStatus.MISSING:
-                if self.look_behind_status == LineStatus.CORRECTLY_MISSING:
-                    line.status = LineStatus.CORRECTLY_MISSING
-                
-            if line.status == LineStatus.RUN:
-                if self.look_behind_status == LineStatus.INCORRECTLY_RUN:
-                    line.status = LineStatus.INCORRECTLY_RUN
-
-            self.lines[first_line].is_continuation = False
-
-            self._statement_counts[line.status] = 1
-            self.look_behind_status = LineStatus.NULL
+        self._statement_counts[status] += 1
+        self.look_behind_status = False
 
     def handle_docstring(self, line: Line):
-        self.look_behind_status = LineStatus.NULL
-
-        line.status = LineStatus.DOCSTRING
-
-        inline_comment = self.inline_comments.get(line.line_number)
-
         # Check if the docstring is starting and ending on this line
-        if line.is_inline_docstring():
+        # take the comment and subtracty the inline comment to see if the docstinr g is inline 
+        inline_comment = self.inline_comments.get(line.line_number)
+        c_line = InlineComment.get_slice(line.line_content, inline_comment)
+
+        if c_line.is_inline_docstring():
+            self.look_behind_status = False
+            
+            line.status = LineStatus.DOCSTRING
+    
             self._statement_counts[LineStatus.DOCSTRING] += 1
 
             if inline_comment:
@@ -457,9 +455,19 @@ class FileCoverage:
                     self.have_docstring_open = True
                     self._statement_counts[LineStatus.DOCSTRING] += 1
 
+    
     def handle_python_line(self, l_no: CodeLineNumber, l_cont: LineContent) -> None:
-        self.lines[l_no] = (line := Line(l_no, l_cont, LineStatus.NULL))
+        line = self.lines.get(l_no)
 
+        if line is None:
+            line = Line(l_no, l_cont, LineStatus.MISSING)
+            self.lines[l_no] = line
+
+        owner = self.line_to_statement.get(line.line_number)
+
+        if owner:
+            return self.handle_normal_line(line, owner)
+        
         if line.is_empty():
             return self.handle_empty_line(line)
         
@@ -467,25 +475,22 @@ class FileCoverage:
             return self.handle_comment(line)
 
         if line.is_ellipsis():
-            self.look_behind_status = LineStatus.NULL
+            self.look_behind_status = False
             return self.handle_ellipsis(line)
 
         # Else/finally blocks are skipped @extract_line_to_statement
         if line.is_else_or_finally():
             return self.clean_up_else_or_finally(line)
+    
+        if line.is_inline_docstring() or line.is_docstring_se():
+            return self.handle_docstring(line)
 
-        # Line is part of a statement
-        if self.line_to_statement.get(l_no):
-            return self.handle_normal_line(line)
-
-        # Line must be part of a docstring
-        return self.handle_docstring(line)
-
+        
+    
     def iterate_python_file(self) -> None:
         for l_no, l_cont in enumerate(self.raw_lines, start=1):
-           # print(f"Processing line {l_no}: {l_cont}")
             self.handle_python_line(l_no, l_cont)
-                
+
     def parse_file(self) -> None:
         with open(self.file_path, 'r') as f:
             self.source = f.read()
