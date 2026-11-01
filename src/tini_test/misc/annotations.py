@@ -15,7 +15,10 @@ CodeLineNumber      : TypeAlias = int
 LineContent         : TypeAlias = str
 StrippedLineContent : TypeAlias = str
 
-StatementId     : TypeAlias = int
+Offset              : TypeAlias = int
+
+StatementId         : TypeAlias = int
+DocstringId         : TypeAlias = int
 
 
 HTML        : TypeAlias = str

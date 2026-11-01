@@ -6,8 +6,9 @@ from pathlib import Path
 from typing import no_type_check
 
 from tini_test._internals.consts import E_DEC as decorators
-from tini_test.misc.annotations import (CodeLineNumber, StatementId,
-                                        TestFunctionName)
+from tini_test.misc.annotations import (CodeLineNumber, DocstringId,
+                                        StatementId, TestFunctionName)
+from tini_test.misc.exceptions import TiniTestInternalException
 
 
 class AstParser:
@@ -30,22 +31,54 @@ class AstParser:
     @classmethod
     def from_file_read(cls, data: str, filename: str = '<string>') -> AstParser:
         return cls(data, filename)
+    
+    def get_docstrings_info(self) -> list[tuple[int, int]]:
+        tree = self.root_node
+        docstrings = []
 
-    # def extract_line_to_statement(self) -> dict[CodeLineNumber, StatementId]:
-    #     tree = ast.parse(self.root_node)
-    #     result: dict[CodeLineNumber, StatementId] = {}
-    #     statement_id = 0
+        for _, node in enumerate(ast.walk(tree)):
 
-    #     for node in ast.walk(tree):
-    #         if not isinstance(node, ast.stmt):
-    #             continue
+            # if not isinstance(node, ast.Module):
+            #     continue
 
-    #         statement_id += 1
+            # if not isinstance(node, ast.FunctionDef):
+            #     continue
 
-    #         for line in range(node.lineno, node.end_lineno + 1):
-    #             result[line] = statement_id
+            # if not isinstance(node, ast.AsyncFunctionDef):
+            #     continue
 
-    #     return result
+            # if not isinstance(node, ast.ClassDef):
+            #     continue
+
+            # if not ast.get_docstring(node):
+            #     continue
+
+            if not isinstance(node, ast.Expr):
+                continue
+
+            value = node.value
+            
+            if not(isinstance(value, ast.Constant) and isinstance(value.value, str)):
+                continue
+            
+            expr = node
+
+            assert expr.end_lineno is not None, TiniTestInternalException(AstParser)
+            _node = (expr.lineno, expr.end_lineno)
+            docstrings.append(_node)
+
+        return docstrings
+
+    def extract_line_to_docstring(self) -> dict[CodeLineNumber, DocstringId]:
+        line_to_docstring: dict[CodeLineNumber, DocstringId] = {}
+        docstring_id = 0
+        for _, (line, end_line) in enumerate(self.get_docstrings_info()):
+            docstring_id += 1
+
+            for l in range(line, end_line + 1):
+                line_to_docstring[l] = docstring_id
+            
+        return line_to_docstring
     
     @no_type_check                                                                              #comment
     def extract_line_to_statement(self) -> dict[CodeLineNumber, StatementId]:                   #comment

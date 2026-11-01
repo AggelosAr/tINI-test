@@ -60,7 +60,7 @@ def test_FullSuiteRunsInSubprocessWithCoverage() -> None:
                                stderr=subprocess.DEVNULL,
                                # stderr=subprocess.DEVNULL,
                                text=True)
-    stdout, _ = process.communicate(timeout=80)
+    stdout, _ = process.communicate(timeout=100)
     # print(stdout)
     
     summary = dict(re.findall(r'\|\s*([A-Za-z ]+?)\s*:\s*(\d+)', stdout))

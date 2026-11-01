@@ -1,13 +1,9 @@
-from functools import partial
 from itertools import cycle
 from tini_test import Test
-from tini_test.context_managers import WillRaise
 from tini_test.coverage._coverage import CoverageTracker, FileCoverage
-from tini_test.coverage.consts import ASSERT_NOT_COVERED
 import tempfile
 import textwrap
 
-from tini_test.misc.exceptions import ExpectedWasDifferentFromActual
 from tini_test.must_equals import must_equal
 from tini_test.shared import Shared, var
 
@@ -15,9 +11,10 @@ from tini_test.shared import Shared, var
 # Shared = partial(Shared, var.coverage, var.case, var.covered_lines, var.args)
 
 # Var has no autocomplete
-minn = False
+minn = True
 
 def short_summary() -> None:
+
     _titles = ('Statements', 
                'Run',
                'Correctly Missing', 
@@ -129,7 +126,7 @@ A = (
 
 '''
 
-    var_args(1, 0, 0, 1, 0, 0, 0, 0, 3)
+    var_args(1, 0, 0, 1, 0, 0, 0, 0, 7)
 
     var.covered_lines = set([0, 1])
     _assert()
@@ -169,7 +166,7 @@ A = (
 
 
 '''
-    var_args(1, 1, 0, 0, 0, 0, 0, 0, 5)
+    var_args(1, 1, 0, 0, 0, 0, 0, 0, 10)
 
     var.covered_lines = set([4, ])
     _assert()
@@ -253,7 +250,7 @@ def test_continuation_block_with_assert_not_covered():
     )
     
     '''
-    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 3
+    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 7
     run()
 
     
@@ -270,7 +267,7 @@ def test_continuation_block_with_assert_not_covered():
     )
       
     '''
-    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 3
+    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 6
     run()
 
     var.case = '''
@@ -286,7 +283,7 @@ def test_continuation_block_with_assert_not_covered():
     )
       
     '''
-    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 3
+    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 7
     run()
 
     var.case = '''
@@ -302,7 +299,7 @@ def test_continuation_block_with_assert_not_covered():
     )
       
     '''
-    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 3
+    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 6
     run()
 
     var.case = '''
@@ -318,7 +315,7 @@ def test_continuation_block_with_assert_not_covered():
     )
       
     '''
-    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 3
+    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 7
     run()
 
     var.case = '''
@@ -334,7 +331,7 @@ def test_continuation_block_with_assert_not_covered():
     )
       
     '''
-    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 3
+    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 6
     run()
 
     var.case = '''
@@ -350,7 +347,7 @@ def test_continuation_block_with_assert_not_covered():
     )
         
     '''
-    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 3
+    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 7
     run()
 
     var.case = '''
@@ -366,7 +363,7 @@ def test_continuation_block_with_assert_not_covered():
     )
         
     '''
-    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 3
+    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 6
     run()
 
     var.case = '''
@@ -382,7 +379,7 @@ def test_continuation_block_with_assert_not_covered():
     )               # >>> assert missing
         
     '''
-    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 3
+    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 7
     run()
 
 
@@ -411,86 +408,169 @@ def test_continuation_block_with_assert_not_covered():
     )               # >>> assert missing
         
     '''
-    var.rargs = 2, 1, 1, 0, 0, 0, 1, 0, 6
+    var.rargs = 2, 1, 1, 0, 0, 0, 1, 0, 14
     run()
 
 
     
+
+@Test.case
+@Shared(var.coverage, var.case, var.covered_lines, var.args, var.rargs)
+def test_comments_docstrings():
+
     var.case = '''
-                        
+    # comment                        
     A = (           # comment
-    # comment
-        'A', 
-    
-        'B',
-                
-        'C'         
-                    
-    )               
-
-
-
-    A = (           
-        
-            'A', 
-        
-            'B',
-                    
-            'C'         
-                        
-    )               # >>> assert missing
-        
+                    # comment
+        'A',        # comment
+                    # comment
+        'B',        # comment
+                    # comment
+        'C'         # comment
+                    # comment
+    )               # comment
+    # comment    
     '''
-    var.rargs = 2, 1, 1, 0, 0, 0, 3, 0, 6
-    run()
 
+    var.covered_lines = set([2])
+
+    from_file_coverage()
+    # short_summary()
+    must_equal(1,  var.coverage.total_statements)
+    must_equal(0,  var.coverage.covered_statements)
+    must_equal(0,  var.coverage._X_correctly_missing_statements)
+    must_equal(1,  var.coverage.missing_statements)
+    must_equal(0,  var.coverage._X_incorrectly_covered_statements)
+    must_equal(0,  var.coverage.excluded_statements)
+    must_equal(11, var.coverage.comment_lines)
+    must_equal(0,  var.coverage.docstring_lines)
+    must_equal(1,  var.coverage.empty_lines)
+
+
+    var.case = r'''
+    %s # comment
+    """""" # comment
+    A = (           # comment
+                    # comment
+        'A',        # comment
+                    # comment
+        'B',        # comment
+                    # comment
+        'C'         # comment
+                    # comment
+    )               
+                    
+    """""" # comment
+    """""" # comment
+    """""" # comment
+    """""" # comment
+    """""" # comment
+    A = (           # comment
+                    # comment
+            'A',    # comment
+                    # comment
+            'B',    # comment
+                    # comment
+            'C'     # comment
+                    # comment    
+    )               
+                    
+    """""" # comment ^^ this is not allowed
+    """""" # comment
+    """""" # comment
+    """""" # comment
+    ''' % "''''''"
+    var.covered_lines = set([3])
+
+    from_file_coverage()
+    # short_summary()
+
+    must_equal(2,  var.coverage.total_statements)
+    must_equal(0,  var.coverage.covered_statements)
+    must_equal(0,  var.coverage._X_correctly_missing_statements)
+    must_equal(2,  var.coverage.missing_statements)
+    must_equal(0,  var.coverage._X_incorrectly_covered_statements)
+    must_equal(0,  var.coverage.excluded_statements)
+    must_equal(27, var.coverage.comment_lines)
+    must_equal(11, var.coverage.docstring_lines)
+    must_equal(3,  var.coverage.empty_lines)
+
+
+    '''#
+    '''#
+    var.case = r'''
+                       
+    A = (           
+                    
+        'A',       
+                   
+        'B',       
+                    
+        'C'        
+                  
+    )              
+    
+    x = 10
+
+    %s         # comment ?
+    Docstring   # comment ?
+                # comment ?
+    %s         # comment
+
+    """         # comment ?
+                # comment ?
+    Docstring   # comment ?
+    """         # comment
+    ''' % ("'''", "'''")
+
+
+     # >>> assert missing
+
+    var.covered_lines = set([3])
+    
+    from_file_coverage()
+    # short_summary()
+
+    must_equal(2,  var.coverage.total_statements)
+    must_equal(1,  var.coverage.covered_statements)
+    must_equal(0,  var.coverage._X_correctly_missing_statements)
+    must_equal(1,  var.coverage.missing_statements)
+    must_equal(0,  var.coverage._X_incorrectly_covered_statements)
+    must_equal(0,  var.coverage.excluded_statements)
+    must_equal(2,  var.coverage.comment_lines)
+    must_equal(2,  var.coverage.docstring_lines)
+    must_equal(9,  var.coverage.empty_lines)
+    
 
 
     var.case = '''
-                            
-    A = (           # comment
-    # comment
-        'A', 
-    
-        'B',
-                
-        'C'         
-                    
-    )               
+    def example():
+        """Function docstring."""
 
-    """"""#
+        x = 10
 
-    A = (           
-        
-            'A', 
-        
-            'B',
-                    
-            'C'         
-                        
-    )               # >>> assert missing
-        
+        """
+        Some random multiline string.
+        """
+
+        if x:
+            """Another string."""
+
+    class Example:
+        """Class docstring."""
     '''
-    var.rargs = 2, 1, 1, 0, 0, 0, 4, 1, 5
-    run()
 
+    var.covered_lines = set([])
     
+    from_file_coverage()
+    # short_summary()
 
-
-    aA = (           
-            
-                'A', 
-            
-                'B',
-      
-'''a'''# comment
-
-
-'''xxx# comment
-# comment
-# comment
-'''# comment
-
-                'C'         
-                            
-        )               # >>> assert missing
+    must_equal(4,  var.coverage.total_statements)
+    must_equal(0,  var.coverage.covered_statements)
+    must_equal(0,  var.coverage._X_correctly_missing_statements)
+    must_equal(4,  var.coverage.missing_statements)
+    must_equal(0,  var.coverage._X_incorrectly_covered_statements)
+    must_equal(0,  var.coverage.excluded_statements)
+    must_equal(0,  var.coverage.comment_lines)
+    must_equal(4,  var.coverage.docstring_lines)
+    must_equal(5,  var.coverage.empty_lines)

@@ -5,7 +5,6 @@ from typing import Any, Optional
 
 from tini_test._internals.consts import _RESET, capture_flag
 from tini_test.coverage.consts import METADATA_FILE
-
 from tini_test.misc.annotations import (CellName, RealTest, StackTrace,
                                         TestFunctionName)
 
@@ -279,21 +278,26 @@ class TiniTestInternalException(Exception):
             super().__init__(msg_or_type)
             return
 
-        from tini_test.enums import Plugs, RunMode      # >>> assert missing
-        from tini_test.coverage.enums import LineStatus # >>> assert missing
-        from tini_test.mock import BuiltInArtifact      # >>> assert missing
-        
+        from tini_test.coverage.enums import LineStatus         # >>> assert missing
+        from tini_test.enums import Plugs, RunMode              # >>> assert missing
+        from tini_test.mock import BuiltInArtifact              # >>> assert missing
+        from tini_test._internals._ast_utils import AstParser   # >>> assert missing
+
+    
         if msg_or_type is RunMode:                                # >>> assert missing
             super().__init__('[ERROR] Async failure occurred.')   # >>> assert missing
 
         if msg_or_type is TiniTestInternalError:                              # >>> assert missing
             super().__init__('[ERROR] Failed to unwrap the test function.')   # >>> assert missing
-        
+
+        if msg_or_type is AstParser:                                                 # >>> assert missing
+            super().__init__('[ERROR] Coverage related, docstring parsing failed.')  # >>> assert missing
+
         if msg_or_type is Plugs:                                                        # >>> assert missing
             super().__init__('[ERROR] Internal exception related to Plugs occurred.')   # >>> assert missing
-
+        
         if msg_or_type is LineStatus:                                                       # >>> assert missing
             super().__init__('[ERROR] Internal exception while parsing the python file.')   # >>> assert missing
-
+        
         if msg_or_type is BuiltInArtifact:                                                          # >>> assert missing
             super().__init__('[WARNING] Internal exception. Mocks should be properly restored.')    # >>> assert missing
