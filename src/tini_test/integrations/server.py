@@ -46,7 +46,8 @@ class ServerManager:
 
     @staticmethod
     def null() -> _ProcessGuard:
-        return _ProcessGuard(process=subprocess.Popen([],
+        return _ProcessGuard(None)
+        return _ProcessGuard(process=subprocess.Popen(shlex.split('echo'),
                                                       stdout=subprocess.DEVNULL,
                                                       stderr=subprocess.DEVNULL))
     def _start(self) -> None:
@@ -61,8 +62,8 @@ class ServerManager:
 
         _process = subprocess.Popen(shlex.split(self.command),
                                     env=env,
-                                    stdout=subprocess.DEVNULL,
-                                    stderr=subprocess.DEVNULL)
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.PIPE)
 
         self.process = _ProcessGuard(process=_process)
 
@@ -74,6 +75,7 @@ class ServerManager:
             return_code = self.process.poll()
 
             if return_code is not None:
+                print('STDERR:', self.process.stderr.read().decode())
                 raise RuntimeError('Server exited unexpectedly with code %d' % return_code)
 
             try:

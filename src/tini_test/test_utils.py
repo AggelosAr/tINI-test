@@ -15,7 +15,8 @@ from .misc.annotations import (CleanupCallable, CoverageStore, DirectoryPath,
                                MockDefinitionWrappedHolder, MockWrappedObject,
                                RealTest, SetupCallable, SharedDefinitionHolder,
                                SharedWrappedObject, StackTrace,
-                               TestWrappedHolder, TestWrappedObject, _NoOp)
+                               TestFunctionName, TestWrappedHolder,
+                               TestWrappedObject, _NoOp)
 from .misc.exceptions import (ExpectedWasDifferentFromActual,
                               TestArgumentsShouldBeCallables,
                               TiniTestInternalError, TiniTestInternalException)
@@ -82,6 +83,7 @@ class TestStep:
             return OperationState(entry_status=self.entry_status,
                                   status=self.fail_status,
                                   detail=str(e) if not apply_filters else '',
+                                  exception=e if not apply_filters else None,
                                   exception_trace=exception_trace if not apply_filters else '',
                                   redirected_output=buffer if not apply_filters else StringIO(''))
 
@@ -90,6 +92,7 @@ class TestStep:
             exception_trace = format_exc()
             return OperationState(entry_status=self.entry_status,
                                   status=self.fail_status,
+                                  exception=e if not apply_filters else None,
                                   redirected_output=buffer if not apply_filters else StringIO(''),
                                   exception_trace=exception_trace if not apply_filters else '')
         
@@ -184,9 +187,17 @@ class _XTest:
     @cached_property
     def is_fail(self) -> bool:
         return any(TestStatus.is_fail_cause(op.status) for op in self.operation_states)
+
+    @property
+    def exceptions(self) -> list[BaseException]:
+        _exceptions: list[BaseException] = []
+        for op in self.operation_states:
+            if op.exception:
+                _exceptions.append(op.exception)
+        return _exceptions
     
     @property
-    def test_name(self) -> str:
+    def test_name(self) -> TestFunctionName:
         return self.test.__name__
 
     @property

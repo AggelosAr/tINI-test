@@ -8,7 +8,9 @@ from ..enums import CONFIG, TestStatus
 
 _x_f = ['']
 
-# Maybe add another state like exit so we have entry, main, exit.
+# TODO Refactor to discard based on verbosity for non-essential messages
+# TODO remove the stacktraces and use the BaseException.
+
 class OperationState:
 
     def __init__(self, 
@@ -16,6 +18,7 @@ class OperationState:
                  entry_status: Optional[TestStatus] = None,
                  redirected_output: Optional[StringIO] = None,
                  detail: Optional[str] = None,
+                 exception: Optional[BaseException] = None,
                  exception_trace: Optional[str] = None):
         
         if not entry_status:
@@ -35,6 +38,7 @@ class OperationState:
         self.redirected_output = redirected_output
 
         self.exception_trace = exception_trace
+        self.exception = exception
 
         self.status = status
         self.detail = detail

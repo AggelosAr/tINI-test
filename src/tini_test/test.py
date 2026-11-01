@@ -3,6 +3,7 @@ import importlib.util
 from collections import deque
 from functools import cached_property, lru_cache, partial
 from importlib.machinery import ModuleSpec
+from traceback import print_exception
 from types import FunctionType, ModuleType
 from typing import Callable, Counter, Optional
 
@@ -15,8 +16,9 @@ from tini_test.misc.annotations import (C_Reg, DirectoryPath, DotPythonPath,
                                         Errors, FileName, I_Reg, M_Reg,
                                         PartialObject,
                                         ResolvedMockDependencies,
-                                        ResolvedTestDependencies, S_Reg, T_Reg,
-                                        TestCollectionSize, TestFunctionName,
+                                        ResolvedTestDependencies, S_Reg,
+                                        StackTrace, T_Reg, TestCollectionSize,
+                                        TestFunctionName,
                                         _ReverseWrapConnections)
 from tini_test.misc.exceptions import DuplicateTestFound
 from tini_test.mock import MockDefinition
@@ -342,9 +344,11 @@ class Printer:
                             idx, collection.total_tests,
                             collection.module_name,
                             test_case.test_name, 
-                            str(test_case), 
+                            str(test_case),
                         )
                     )
+                # TODO add colorize to exceptions here and refactor how the 
+                # exceptions are stored
 
 
                 failed_tests += test_case.is_fail
@@ -365,7 +369,8 @@ class Printer:
         progress = ['[']+[e_symbol for _ in range(bucket_size)]+[']']
 
         errors = 0
-        failed_tests, stacktraces = [], []
+        failed_tests: list[TestFunctionName] = []
+        exceptions: list[list[BaseException]] = []
 
 
         for idx, test_case in enumerate(collection.collector.values()):
@@ -375,7 +380,7 @@ class Printer:
             if test_case.is_fail:
 
                 failed_tests.append(test_case.test_name)
-                stacktraces.append(test_case.fail_reasons)
+                exceptions.append(test_case.exceptions)
 
                 progress[bucket_idx+1] = s_symbol
 
@@ -435,7 +440,7 @@ class Printer:
             return errors
         
         idx = 0
-        for test, traces in zip(failed_tests, stacktraces):
+        for test, _exceptions in zip(failed_tests, exceptions):
             idx += 1
             print(
                 '              \n' \
@@ -448,9 +453,10 @@ class Printer:
                     )
                 )
 
-            for trace in traces:
 
-                print(trace)
+            for idx, exception in enumerate(_exceptions):
+
+                print_exception(exception, colorize=True)
 
                 if idx != errors:
                     print('%s ~~~ %s' % (Color.RED.value, _RESET, ))
