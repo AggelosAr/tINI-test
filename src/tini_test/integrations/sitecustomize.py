@@ -7,6 +7,19 @@ _saved = False
 _store: dict[str, set] = {}
 
 
+def v2_tracer(storage: dict[str, set], frame: FrameType, *args, **kwargs):
+    code = frame.f_code
+    file = code.co_filename
+    
+    file_no = frame.f_lineno
+
+    if file not in storage:
+        storage[file] = set()
+
+    storage[file].add(file_no)
+    
+    return v2_tracer
+
 
 def register(tracer: Callable) -> None:
     sys.settrace(tracer)
@@ -38,20 +51,7 @@ if os.environ.get('TINI_TEST_COVERAGE') == '1':
 
     if os.environ.get('USE_V2_COVERAGE'):
         # Coverage over coverage....
-        def tracer(storage: dict[str, set], frame: FrameType, *args, **kwargs):
-            code = frame.f_code
-            file = code.co_filename
-            
-            file_no = frame.f_lineno
-
-            if file not in storage:
-                storage[file] = set()
-
-            storage[file].add(file_no)
-            
-            return tracer
-
-        tracer = partial(tracer, _store)
+        tracer = partial(v2_tracer, _store)
         register(tracer)
 
 
@@ -76,7 +76,7 @@ if os.environ.get('TINI_TEST_COVERAGE') == '1':
         _saved = True
 
 
-    def shutdown() -> None:
+    def shutdown(*args) -> None:
         save_coverage()
         sys.exit(0)
 

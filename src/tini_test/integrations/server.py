@@ -4,8 +4,16 @@ import subprocess
 import time
 import urllib.error
 import urllib.request
+from typing import TypedDict, TypeGuard
 
 
+class _ProcessGuard:
+
+    def __init__(self, process: subprocess.Popen[bytes]):
+        self.process = process
+
+
+    
 class ServerManager:
 
     def __init__(self,
@@ -16,13 +24,32 @@ class ServerManager:
         self.command = command
         self.health_url = health_url
         self.timeout = timeout
-        self.process = None
+        self._process = _ProcessGuard(self.null().process)
 
     @property
     def deadline(self) -> float:
         return time.monotonic() + self.timeout
 
-    def start(self) -> None:
+    @property
+    def process(self) -> subprocess.Popen[bytes]:
+        return self._process.process
+
+    @process.setter
+    def process(self, value: _ProcessGuard) -> None:
+        self._process = value
+
+    @staticmethod
+    def _is_process(process: _ProcessGuard | None) -> TypeGuard[_ProcessGuard]:
+        if process is None:
+            raise RuntimeError('Failed to start server process')
+        return True
+
+    @staticmethod
+    def null() -> _ProcessGuard:
+        return _ProcessGuard(process=subprocess.Popen([],
+                                                      stdout=subprocess.DEVNULL,
+                                                      stderr=subprocess.DEVNULL))
+    def _start(self) -> None:
         env = os.environ.copy()
 
         env['TINI_TEST_COVERAGE'] = '1'
@@ -32,12 +59,12 @@ class ServerManager:
 
         env['PYTHONPATH'] = instrumentation_path + os.pathsep + env.get('PYTHONPATH', '')
 
-        self.process = subprocess.Popen(shlex.split(self.command),
-                                        env=env,
-                                        stdout=subprocess.DEVNULL,
-                                        stderr=subprocess.DEVNULL)
+        _process = subprocess.Popen(shlex.split(self.command),
+                                    env=env,
+                                    stdout=subprocess.DEVNULL,
+                                    stderr=subprocess.DEVNULL)
 
-        self.wait_until_ready()
+        self.process = _ProcessGuard(process=_process)
 
     def wait_until_ready(self) -> None:
 
@@ -64,6 +91,10 @@ class ServerManager:
 
         raise TimeoutError('Server did not become ready within the timeout period')
 
+    def start(self) -> None:
+        self._start()
+        self.wait_until_ready()
+
     def stop(self) -> None:
         if self.process and self.process.poll() is None:
             self.process.terminate()
@@ -74,4 +105,4 @@ class ServerManager:
                 self.process.kill()
                 self.process.wait()
 
-        self.process = None
+        self._process = _ProcessGuard(self.null().process)
