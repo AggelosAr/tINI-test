@@ -158,27 +158,17 @@ class TestSuite:
         self.successes = current_successes
         self.errors = new_errors
         self.file_load_failures = current_file_load_failures
-
-    # TODO move these at coverage 
+ 
     def update_coverage_stores(self, test_collection: TestCollection) -> None:
         if not self.use_coverage:
             return
 
         for test in test_collection.collector.values():
 
-            for file, lines in test.coverage_store.items():
-                self._coverage_total.setdefault(file, set()).update(lines)
+            self.coverage_tracker.update_store(test.coverage_store)
 
-                if test.is_fail:
-                    self._coverage_fails.setdefault(file, set()).update(lines)
-
-    # TODO move these at coverage
-    def get_covered_store(self) -> CoverageStore:
-        store = {}
-        for file, lines in self._coverage_total.items():
-            store[file] = set(lines) - self._coverage_fails.get(file, set())
-
-        return store
+            if test.is_fail:
+                self.coverage_tracker.update_fails(test.coverage_store)
 
     def get_summary(self) -> str:
         _r = [
@@ -333,7 +323,6 @@ class TestSuite:
         if not self.use_coverage:
             return
 
-        self.coverage_tracker.update_store(self.get_covered_store())
         reconcile = self.server.is_enabled
 
         if reconcile:

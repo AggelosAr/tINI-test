@@ -466,7 +466,11 @@ class CoverageTracker:
                  metadata_save_path: Optional[DirectoryPath | FileName | None] = None) -> None:
         self.files: dict[str, FileCoverage] = {}
         self._source = source
+
         self._store = runtime_covered_lines if runtime_covered_lines is not None else {}
+        self._coverage_fails: CoverageStore = {}
+
+
         self._metadata_save_path = metadata_save_path
 
     @cached_property
@@ -669,13 +673,19 @@ class CoverageTracker:
 
         return save_path
 
-    def update_store(self, store: CoverageStore) -> None:
-        for file, lines in store.items():
-            
-            if file not in self._store:
-                self._store[file] = set()
+    def update_store(self, ext_store: CoverageStore) -> None:
+        for file, lines in ext_store.items():
+            self._store.setdefault(file, set()).update(lines)
 
-            self._store[file].update(lines)
+    def update_fails(self, ext_store: CoverageStore) -> None:
+        for file, lines in ext_store.items():
+            self._coverage_fails.setdefault(file, set()).update(lines)
+
+    def update_covered_store(self) -> None:
+        new_store = {}
+        for file, lines in self._store.items():
+            new_store[file] = set(lines) - self._coverage_fails.get(file, set())
+        self._store = new_store
 
     def reconcile(self) -> None:
         # TODO maybe change the exception traces to indicate the reconciliation context
@@ -772,8 +782,9 @@ class CoverageTracker:
         return '\033[48;2;0;0;0m%s%*.1f%% \033[0m' % (color, 7, score)
 
     def show_short_summary(self, long: Optional[bool] = False) -> None:
-
+        self.update_covered_store()
         self.collect_files_from_source()
+
         self.files = dict(sorted(self.files.items()))
         
         titles = ('Total', 'Run', 'Correctly Missing', 'Missing', 'Incorrectly Run', 'Excluded', 'Score')
@@ -1207,7 +1218,9 @@ class HTMLReport:
 
     @staticmethod
     def to_html(tracker: CoverageTracker) -> None:
+        tracker.update_covered_store()
         tracker.collect_files_from_source()
+        
         tracker.files = dict(sorted(tracker.files.items()))
 
         dest_dir = HTMLReport.init_store()
