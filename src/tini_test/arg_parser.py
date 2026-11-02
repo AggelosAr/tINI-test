@@ -15,6 +15,9 @@ class CoreArgsDict(TypedDict):
     coverage_target: DirectoryPath | FileName | None
     store_coverage_at: DirectoryPath | FileName | None
 
+    server_command: str | None
+    health_url: str | None
+
     search_dir: DirectoryPath
     file_name: FileName | None
     test_function: TestFunctionName | None
@@ -180,6 +183,9 @@ for the source files and for the coverage metadata file.
         'coverage': args.coverage,
         'coverage_target': args.coverage_target,
         'store_coverage_at': args.coverage_store,
+        
+        'server_command': args.server_command,
+        'health_url': args.health_url,
 
         'search_dir': args.directory,
         'file_name': args.file,

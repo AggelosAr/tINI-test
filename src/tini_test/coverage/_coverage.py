@@ -462,11 +462,11 @@ class CoverageTracker:
 
     def __init__(self, 
                  source: DirectoryPath | FileName | None,
-                 runtime_covered_lines: CoverageStore, 
+                 runtime_covered_lines: Optional[CoverageStore] = None, 
                  metadata_save_path: Optional[DirectoryPath | FileName | None] = None) -> None:
         self.files: dict[str, FileCoverage] = {}
         self._source = source
-        self._store = runtime_covered_lines
+        self._store = runtime_covered_lines if runtime_covered_lines is not None else {}
         self._metadata_save_path = metadata_save_path
 
     @cached_property
@@ -669,6 +669,14 @@ class CoverageTracker:
 
         return save_path
 
+    def update_store(self, store: CoverageStore) -> None:
+        for file, lines in store.items():
+            
+            if file not in self._store:
+                self._store[file] = set()
+
+            self._store[file].update(lines)
+
     def reconcile(self) -> None:
         # TODO maybe change the exception traces to indicate the reconciliation context
         save_path = CoverageTracker.get_serialized_path(self._metadata_save_path)
@@ -685,10 +693,7 @@ class CoverageTracker:
         shutil.rmtree(reconcile_path, ignore_errors=True)
 
         # Merge the stored coverage data with the current store
-        for file, lines in stored_coverage.items():
-            if file not in self._store:
-                self._store[file] = set()
-            self._store[file].update(lines)
+        self.update_store(stored_coverage)
 
     def serialize(self, reconcile: bool = False) -> None:
         '''

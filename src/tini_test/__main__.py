@@ -1,7 +1,6 @@
 from tini_test._internals.consts import _PROFILING
 from tini_test.coverage._coverage import CoverageTracker
 from tini_test.enums import TiniTestMode
-from tini_test.integrations.server import ServerManager
 
 from ._internals._profiler import profiler
 from .arg_parser import (CoreArgsDict, CoverageGenerateReportArgsDict,
@@ -32,21 +31,11 @@ def _tini_test(kwargs: CoreArgsDict
                 raise
 
             else:
-                
-                command='python manage.py runserver --settings main.test_settings 127.0.0.1:8000 --noreload'
-                health_url='http://127.0.0.1:8000/'
-                server = ServerManager(command=command, health_url=health_url)
-
-                server.start()
-          
+                # 'python manage.py runserver --settings main.test_settings 127.0.0.1:8000 --noreload'
                 test_suite.runner()
-
-                server.stop()
-            
-
                 test_suite.pprint()
 
-            test_suite.get_coverage(reconcile=True)
+            test_suite.get_coverage()
 
 
 if __name__=='__main__':

@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from itertools import repeat
 import os
 import shlex
@@ -5,7 +6,7 @@ import subprocess
 import time
 import urllib.error
 import urllib.request
-from typing import TypeGuard
+from typing import Generator, TypeGuard
 
 from tini_test.coverage._coverage import CoverageTracker
 from tini_test.misc.annotations import DirectoryPath, FileName
@@ -28,10 +29,10 @@ class _ProcessGuard:
 class ServerManager:
 
     def __init__(self,
-                 command: str,
+                 command: str | None,
                  store_path: DirectoryPath | FileName | None,
                  health_url: str | None) -> None:
-        
+        # TODO validations/exceptions?
         self.command = command
         self.store_path = store_path
 
@@ -40,6 +41,10 @@ class ServerManager:
         
         self._process = _ProcessGuard(self.null().process)
 
+    @property
+    def is_enabled(self) -> bool:
+        return self.command is not None
+    
     @property
     def deadline(self) -> float:
         return time.monotonic() + self.timeout
@@ -125,3 +130,14 @@ class ServerManager:
                 self.process.wait()
 
         self._process = _ProcessGuard(self.null().process)
+
+    @contextmanager
+    def server_online(self) -> Generator[None, None, None]:
+        if not self.is_enabled:
+            yield
+            return
+        try:
+            self.start()
+            yield
+        finally:
+            self.stop()

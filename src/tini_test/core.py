@@ -10,6 +10,7 @@ from tini_test._internals.consts import _V2_COVERAGE
 from tini_test.context_managers import coverage
 from tini_test.coverage._coverage import CoverageTracker
 from tini_test.enums import Coverage, RunMode, Verbosity
+from tini_test.integrations.server import ServerManager
 from tini_test.misc.annotations import (CoverageStore, DirectoryPath,
                                         DotPythonPath, Errors, FileFailReason,
                                         FileLoadFailures, FileName, Successes,
@@ -31,8 +32,8 @@ class TestSuite:
                  run_mode: RunMode,
                  verbosity: Verbosity,
                  coverage: Coverage,
-                 coverage_target: DirectoryPath | FileName | None,
-                 store_coverage_at: DirectoryPath | FileName | None,
+                 coverage_tracker: CoverageTracker,
+                 server: ServerManager,
                  test_function: Optional[TestFunctionName] = None
                  ) -> None:
         self.root = root
@@ -41,9 +42,9 @@ class TestSuite:
         self.verbosity = verbosity
 
         self.coverage = coverage
+        self.coverage_tracker = coverage_tracker
 
-        self.coverage_target = coverage_target
-        self.store_coverage_at = store_coverage_at
+        self.server = server
 
         self._coverage_total: CoverageStore = {}
         self._coverage_fails: CoverageStore = {}
@@ -158,6 +159,7 @@ class TestSuite:
         self.errors = new_errors
         self.file_load_failures = current_file_load_failures
 
+    # TODO move these at coverage 
     def update_coverage_stores(self, test_collection: TestCollection) -> None:
         if not self.use_coverage:
             return
@@ -170,6 +172,7 @@ class TestSuite:
                 if test.is_fail:
                     self._coverage_fails.setdefault(file, set()).update(lines)
 
+    # TODO move these at coverage
     def get_covered_store(self) -> CoverageStore:
         store = {}
         for file, lines in self._coverage_total.items():
@@ -308,14 +311,16 @@ class TestSuite:
 
     def runner(self) -> None:
         self._start = perf_counter()
-        
-        match self.run_mode:
 
-            case RunMode.SYNC:
-                self.run_suite()
+        with self.server():
 
-            case RunMode.ASYNC:
-                asyncio.run(self._arun_suite())
+            match self.run_mode:
+
+                case RunMode.SYNC:
+                    self.run_suite()
+
+                case RunMode.ASYNC:
+                    asyncio.run(self._arun_suite())
 
         self.suite_run_time = perf_counter()
 
@@ -324,16 +329,16 @@ class TestSuite:
         self.get_detail()
         
 
-    def get_coverage(self, reconcile: bool = False) -> None:
+    def get_coverage(self) -> None:
         if not self.use_coverage:
             return
 
-        tracker = CoverageTracker(source=self.coverage_target, 
-                                  runtime_covered_lines=self.get_covered_store(),
-                                  metadata_save_path=self.store_coverage_at)
+        self.coverage_tracker.update_store(self.get_covered_store())
+        reconcile = self.server.is_enabled
+
         if reconcile:
-            tracker.reconcile()
+            self.coverage_tracker.reconcile()
             reconcile = False
 
-        tracker.show_short_summary()
-        tracker.serialize(reconcile)
+        self.coverage_tracker.show_short_summary()
+        self.coverage_tracker.serialize(reconcile)
