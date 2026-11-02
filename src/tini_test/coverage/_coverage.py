@@ -135,7 +135,6 @@ class FileCoverage:
                  file_path: Path, 
                  runtime_covered_lines: set[CodeLineNumber],
                  autocomplete_top_levels: bool) -> None:
-        self._autocomplete_top_levels = autocomplete_top_levels
         self.href = ''
 
         self.file_path = file_path
@@ -145,7 +144,12 @@ class FileCoverage:
         
         self._source = ''
 
+        self._autocomplete_top_levels = autocomplete_top_levels
+        if 0 in runtime_covered_lines:
+            self._autocomplete_top_levels = True
+
         runtime_covered_lines.discard(0)
+
         self.runtime_covered_lines = runtime_covered_lines
 
     @cached_property
@@ -440,6 +444,8 @@ class FileCoverage:
     def parse_file(self) -> None:
         with open(self.file_path, 'r') as f:
             self.source = f.read()
+
+        # self.runtime_covered_lines.update(self.top_levels)
 
         if self.handle_excluded_file():
             return

@@ -248,6 +248,8 @@ class TestSuite:
                                    shared_meta=shared_meta)
             
             try:
+                
+
                 with coverage(_V2_COVERAGE, self._coverage_total):
                     
                     with coverage(self.use_coverage, self._coverage_total):

@@ -5,7 +5,7 @@ from traceback import format_exc, format_tb
 from typing import Any, Callable, Mapping, Optional
 
 from tini_test._internals._registry import attach_state
-from tini_test.context_managers import (_thread_redirect_stdout, coverage,
+from tini_test.context_managers import (_thread_redirect_stdout, coverage, handle_tracers,
                                         patch_mocks, patch_shared, with_lock)
 from tini_test.shared import SharedVar
 
@@ -57,6 +57,10 @@ class TestStep:
         self.args = args or ()
         self.kwargs = kwargs or {}
 
+    @property
+    def should_trace(self) -> bool:
+        return self.use_coverage or len(self.mocks)
+    
     def run_step(self, root: DirectoryPath, verbosity: Verbosity) -> OperationState:
         
         if self.func is None:
@@ -70,12 +74,13 @@ class TestStep:
             
             with _thread_redirect_stdout(buffer):
 
-                # TODO concat the 2 tracers into one ...
-                with coverage(self.use_coverage, self.coverage_store):
+                with handle_tracers(self.should_trace) as trace_handle:
 
-                    with patch_mocks(self.mocks, replace_at=root):
+                    with coverage(self.use_coverage, self.coverage_store, trace_handle):
 
-                        self.func(*self.args, **self.kwargs)
+                        with patch_mocks(self.mocks, root, trace_handle):
+
+                            self.func(*self.args, **self.kwargs)
 
         except ExpectedWasDifferentFromActual as e:
 
@@ -202,6 +207,7 @@ class _XTest:
 
     @property
     def should_lock(self) -> bool:
+        # TODO support true < ASYNC >
         has_mocks = len(self.mocks) > 0
         has_shared_vars = len(self.shared_vars) > 0
         return has_mocks or has_shared_vars or self.isolate

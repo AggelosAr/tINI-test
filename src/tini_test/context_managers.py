@@ -1,5 +1,4 @@
 import inspect
-import os
 import sys
 import threading
 from collections import deque
@@ -7,9 +6,10 @@ from contextlib import contextmanager
 from functools import partial
 from io import StringIO
 from threading import Lock
-from typing import Any, Generator, Optional
+from typing import Any, Callable, Generator, Optional
 
 from tini_test._internals.consts import _ROOT, _SETNINEL
+
 from tini_test.coverage._coverage import CoverageTracker
 from tini_test.misc.annotations import (CoverageStore, DirectoryPath,
                                         TestCallable)
@@ -25,8 +25,6 @@ _exceptions = (Exception, BaseException)
 _local_thread = threading.local()
 
 _lock = Lock()
-
-_tracer = CoverageTracker.tracer
 
 
 class WillRaise(object):
@@ -117,33 +115,124 @@ def with_lock(use: bool) -> Generator[None, None, None]:
 
 
 
+class TraceHandler:
+        
+        def __init__(self):
+            self._tracers = {}
+
+        def __call__(self, *args, **kwargs) -> Callable:
+            if self._tracers:
+                # print('TRACER 0 ', list(self._tracers.values())[0])
+                # print('TRACER 1 ', list(self._tracers.values())[1])
+                # print('------------')
+                ...
+            for tracer in self._tracers.values():
+                
+                return tracer(*args, **kwargs)
+
+        @classmethod
+        def trace_on(self, tracer: Callable) -> Generator[None, None, None]:
+            previous_sys_trace = sys.gettrace()
+            previous_thread_trace = threading.gettrace()
+
+            sys.settrace(tracer)
+            threading.settrace(tracer)
+            
+            try:
+                yield
+
+            finally:
+
+                sys.settrace(previous_sys_trace)
+                threading.settrace(previous_thread_trace)
+
+        def raise_on(self) -> None:
+            raise NotImplementedError()
+
+        def attach(self, tracer: Callable) -> None:
+            # print('ATTACHING TRACER ', tracer)
+            self._tracers[hex(id(tracer))] = tracer
+
+        def detach(self, tracer: Callable) -> None:
+            del self._tracers[hex(id(tracer))]
+
+        def clear(self) -> None:
+            self._tracers.clear()
+            
+
 
 @contextmanager
-def patch_built_ins(apply_at: DirectoryPath, is_root: bool = False):
-    previous_sys_trace = sys.gettrace()
-    previous_thread_trace = threading.gettrace()
+def handle_tracers(trace: bool) -> Generator[TraceHandler, None, None]:
+    if trace:
+        previous_sys_trace = sys.gettrace()
+        previous_thread_trace = threading.gettrace()
+
+        _trace_handle = TraceHandler()
+
+        sys.settrace(_trace_handle)
+        threading.settrace(_trace_handle)
+
+        try:
+            yield _trace_handle
+
+        finally:
+            sys.settrace(previous_sys_trace)
+            threading.settrace(previous_thread_trace)
+
+            _trace_handle.clear()
+    else:
+        yield
+
+
+
+@contextmanager
+def coverage(trace_on: bool, storage: CoverageStore, 
+             handle: Optional[TraceHandler] = None) -> Generator[None, None, None]:
+    if trace_on:
+
+        tracer = partial(CoverageTracker.tracer, storage)
+
+        if handle:
+            handle.attach(tracer)
+
+        try:
+            yield from iter((None,)) if handle is None else TraceHandler.trace_on(tracer)
+
+        finally:
+            if handle:
+                handle.detach(tracer)
+    else:
+        yield
+
+
+
+@contextmanager
+def patch_built_ins(apply_at: DirectoryPath, is_root: Optional[bool] = False, 
+                    handle: Optional[TraceHandler] = None) -> Generator[None, None, None]:
 
     tracer = partial(BuiltInArtifact.built_in_replacer, apply_at, is_root)
 
-    sys.settrace(tracer)
-    threading.settrace(tracer)
+    if handle:
+        handle.attach(tracer)
 
     try:
-        yield
+        yield from iter((None,)) if handle is None else TraceHandler.trace_on(tracer)
         
     finally:
-        sys.settrace(previous_sys_trace)
-        threading.settrace(previous_thread_trace)
+        if handle:
+            handle.detach(tracer)
 
 
 
 @contextmanager
-def patch_mocks(mocks: list[MockDefinition], replace_at: DirectoryPath) -> Generator[None, None, None]:
+def patch_mocks(mocks: list[MockDefinition], replace_at: DirectoryPath, 
+                handle: Optional[TraceHandler] = None) -> Generator[None, None, None]:
+        
     if mocks:
         try:
             MockDefinition.patch_all(mocks)
 
-            with patch_built_ins(replace_at, is_root=True):
+            with patch_built_ins(handle, replace_at, is_root=True):
 
                 yield
 
@@ -176,29 +265,6 @@ def patch_shared(patching: TestCallable, shared_vars: list[SharedVar]) -> Genera
             with direct_access(meta) as _meta:
                 _meta.test_reset()
 
-    else:
-        yield
-
-
-
-@contextmanager
-def coverage(trace: bool, storage: CoverageStore) -> Generator[None, None, None]:
-    if trace:
-        tracer = partial(_tracer, storage)
-
-        previous_sys_trace = sys.gettrace()
-        previous_thread_trace = threading.gettrace()
-
-        sys.settrace(tracer)
-        threading.settrace(tracer)
-
-        try:
-            yield
-
-        finally:
-            sys.settrace(previous_sys_trace)
-            threading.settrace(previous_thread_trace)
-            
     else:
         yield
 

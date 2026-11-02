@@ -4,7 +4,7 @@ import subprocess
 import time
 import urllib.error
 import urllib.request
-from typing import TypedDict, TypeGuard
+from typing import TypeGuard
 
 
 class _ProcessGuard:

@@ -217,7 +217,11 @@ class BuiltInArtifact:
         return True
     
     @staticmethod
-    def built_in_replacer(apply_at: DirectoryPath, is_root: bool, frame: FrameType, event: str, *args):
+    def built_in_replacer(apply_at: DirectoryPath, 
+                          is_root: bool, 
+                          frame: FrameType, 
+                          event: str, 
+                          *args):
         _return = partial(BuiltInArtifact.built_in_replacer, apply_at, is_root)
 
         if event != 'call':
@@ -232,13 +236,13 @@ class BuiltInArtifact:
 
         
         if filename not in FILE_TRACKER:
-
             FILE_TRACKER.add(filename)
 
         for _artifact in ARTIFACT_TRACKER:
 
             if _artifact is _SETNINEL:
                 continue
+
             if _artifact is _ROOT_SENTINEL:
                 continue
             
