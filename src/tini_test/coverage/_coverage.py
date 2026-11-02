@@ -280,10 +280,12 @@ class FileCoverage:
         return False
 
     def handle_empty_line(self, line: Line):
+        line.is_continuation = False
         line.status = LineStatus.EMPTY
         self._statement_counts[LineStatus.EMPTY] += 1
 
     def handle_comment(self, line: Line):
+        line.is_continuation = False
         line.status = LineStatus.COMMENT
         self._statement_counts[LineStatus.COMMENT] += 1
 
@@ -335,10 +337,11 @@ class FileCoverage:
         assert_not_covered = False
 
         inline_comment = self.inline_comments.get(line.line_number)
-        
+
         if inline_comment is None:
             return assert_not_covered
-        
+
+        line.is_continuation = False
         line.add_inline_comment(inline_comment)
         self._statement_counts[LineStatus.COMMENT] += 1
 
@@ -391,17 +394,21 @@ class FileCoverage:
         self.lines[l_nos[0]].is_continuation = False
         self._statement_counts[status] += 1
 
-        for l_no in l_nos:
+        for l_no in range(l_nos[0], l_nos[-1] + 1):
 
-            if self.lines[l_no].status == LineStatus.EMPTY:
+            line = self.lines[l_no]
+
+            if line.is_empty:
+                line.status = LineStatus.EMPTY
                 line.is_continuation = False
                 continue
 
-            if self.lines[l_no].status == LineStatus.COMMENT:
+            if line.is_comment:
+                line.status = LineStatus.COMMENT
                 line.is_continuation = False
                 continue
 
-            self.lines[l_no].status = status
+            line.status = status
 
     def handle_statement_or_docstring(self, l_no: CodeLineNumber) -> Offset:
         _offset = 0
