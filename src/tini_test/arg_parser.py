@@ -7,9 +7,14 @@ from tini_test.misc.annotations import (DirectoryPath, FileName,
                                         TestFunctionName)
 
 
+# TODO refactor these to be actual optional.
 class CoreArgsDict(TypedDict):
     run_mode: RunMode
     verbosity: Verbosity
+
+    search_dir: DirectoryPath
+    file_name: FileName | None
+    test_function: TestFunctionName | None
 
     coverage: Coverage
     coverage_target: DirectoryPath | FileName | None
@@ -17,10 +22,6 @@ class CoreArgsDict(TypedDict):
 
     server_command: str | None
     health_url: str | None
-
-    search_dir: DirectoryPath
-    file_name: FileName | None
-    test_function: TestFunctionName | None
 
 
 class CoverageMergeArgsDict(TypedDict):
@@ -159,6 +160,7 @@ for the source files and for the coverage metadata file.
                               ''' % METADATA_FILE)
 
 
+
     parser.add_argument('-s',
                         '--server-command',
                         help=r'''
@@ -171,7 +173,6 @@ The server command to be executed.
 The health check URL to be used for verifying the server's health status.
                               ''')
 
-                        
 
                         
     args = parser.parse_args()

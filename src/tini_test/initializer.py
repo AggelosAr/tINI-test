@@ -18,12 +18,12 @@ def initialize_test_suite(run_mode: RunMode,
                           coverage_target: DirectoryPath | FileName | None,
                           store_coverage_at: DirectoryPath | FileName | None,
 
-                          server_command: str | None,
-                          health_url: str | None,
-
                           search_dir: DirectoryPath,
                           file_name: Optional[FileName] = None, 
-                          test_function: Optional[TestFunctionName] = None
+                          test_function: Optional[TestFunctionName] = None,
+
+                          server_command: Optional[str] = None,
+                          health_url: Optional[str] = None,
                           ) -> TestSuite:
     _ROOT[0] = os.getcwd()
 
