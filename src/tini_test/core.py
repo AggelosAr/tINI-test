@@ -324,12 +324,16 @@ class TestSuite:
         self.get_detail()
         
 
-    def get_coverage(self) -> None:
+    def get_coverage(self, reconcile: bool = False) -> None:
         if not self.use_coverage:
             return
 
         tracker = CoverageTracker(source=self.coverage_target, 
                                   runtime_covered_lines=self.get_covered_store(),
                                   metadata_save_path=self.store_coverage_at)
+        if reconcile:
+            tracker.reconcile()
+            reconcile = False
+
         tracker.show_short_summary()
-        tracker.serialize()
+        tracker.serialize(reconcile)

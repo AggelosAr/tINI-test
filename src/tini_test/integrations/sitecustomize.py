@@ -3,8 +3,11 @@ import os
 from types import FrameType
 from typing import Callable
 
+
 _saved = False
 _store: dict[str, set] = {}
+
+_reconcile = True
 
 
 def v2_tracer(storage: dict[str, set], frame: FrameType, *args, **kwargs):
@@ -54,6 +57,8 @@ if os.environ.get('TINI_TEST_COVERAGE') == '1':
         tracer = partial(v2_tracer, _store)
         register(tracer)
 
+        _reconcile = False
+
 
     from tini_test.coverage._coverage import CoverageTracker
 
@@ -71,7 +76,10 @@ if os.environ.get('TINI_TEST_COVERAGE') == '1':
         if _saved:
             return
 
-        CoverageTracker._serialize(_store=_store, _metadata_save_path=_storage_path)
+        
+        CoverageTracker._serialize(_store=_store, 
+                                   _metadata_save_path=_storage_path, 
+                                   _reconcile=_reconcile)
 
         _saved = True
 
@@ -82,5 +90,4 @@ if os.environ.get('TINI_TEST_COVERAGE') == '1':
 
 
     signal.signal(signal.SIGTERM, shutdown)
-    atexit.register(save_coverage) 
-
+    atexit.register(save_coverage)

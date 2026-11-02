@@ -32,21 +32,21 @@ def _tini_test(kwargs: CoreArgsDict
                 raise
 
             else:
+                
+                command='python manage.py runserver --settings main.test_settings 127.0.0.1:8000 --noreload'
+                health_url='http://127.0.0.1:8000/'
+                server = ServerManager(command=command, health_url=health_url)
 
-                # command='python manage.py runserver --settings main.test_settings 127.0.0.1:8000 --noreload'
-                # health_url='http://127.0.0.1:8000/'
-                # server = ServerManager(command=command, health_url=health_url)
-
-                # server.start()
+                server.start()
           
                 test_suite.runner()
 
-                #server.stop()
+                server.stop()
             
 
                 test_suite.pprint()
 
-            test_suite.get_coverage()
+            test_suite.get_coverage(reconcile=True)
 
 
 if __name__=='__main__':

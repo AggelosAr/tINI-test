@@ -20,6 +20,8 @@ from tini_test.coverage.consts import (_TOGGLE_SCRIPT, ASSERT_NOT_COVERED,
 from tini_test.coverage.enums import HTMLNodeType, LineStatus
 from tini_test.coverage.html import HTMLHyperLink, HTMLNode, HTMLTemplate
 from tini_test.enums import Color, ScoreClass
+
+from tini_test.integrations.server import _RECONCILATIONS
 from tini_test.misc.annotations import (CodeLineNumber, CoverageStore,
                                         DirectoryPath, DocstringId, FileName,
                                         LineContent, Offset, StatementId,
@@ -509,11 +511,12 @@ class CoverageTracker:
 
     @classmethod
     def _serialize(cls,
-                   _store: CoverageStore, 
-                   _metadata_save_path: Optional[DirectoryPath | FileName | None] = None) -> None:
+                   _store: CoverageStore,
+                   _metadata_save_path: Optional[DirectoryPath | FileName | None] = None,
+                   _reconcile: Optional[bool] = False) -> None:
         CoverageTracker(source=None, 
                         runtime_covered_lines=_store, 
-                        metadata_save_path=_metadata_save_path).serialize()
+                        metadata_save_path=_metadata_save_path).serialize(_reconcile)
 
     @staticmethod
     def normalize_path(path: str | None) -> Path:
@@ -631,16 +634,19 @@ class CoverageTracker:
         
         return partial(CoverageTracker.tracer, storage)
 
-    def serialize(self) -> None:
-        save_path = CoverageTracker.normalize_path(self._metadata_save_path)
+    @staticmethod
+    def get_serialized_path(metadata_save_path: DirectoryPath | FileName | None) -> Path:
+        # TODO please do this in the start ... ?
 
+        save_path = CoverageTracker.normalize_path(metadata_save_path)
+        
         # Check if the path is a file
         if save_path.is_file() or save_path.name.startswith(METADATA_FILE):
             # Validate the path follows the convention.
             # It should start with <.coverage...>
             if not save_path.name.startswith(METADATA_FILE):
                 raise CoverageDeserializationFileNameError(save_path)
-              
+                
             # If it exists, we will overwrite it.
             if save_path.exists(follow_symlinks=False):
                 ...
@@ -660,7 +666,45 @@ class CoverageTracker:
                 os.makedirs(os.path.dirname(save_path), exist_ok=True)
             else:
                 os.makedirs(os.path.dirname(save_path), exist_ok=True)
-            
+
+        return save_path
+
+    def reconcile(self) -> None:
+        # TODO maybe change the exception traces to indicate the reconciliation context
+        save_path = CoverageTracker.get_serialized_path(self._metadata_save_path)
+
+        from tini_test.integrations.server import _RECONCILATIONS
+        reconciliation = next(_RECONCILATIONS)
+        
+        prefix, suffix = os.path.split(save_path)
+        reconcile_path = os.path.join(prefix, '%s_%s' % (suffix, reconciliation))
+
+        stored_coverage = CoverageTracker.deserialize(reconcile_path)
+
+        # Delete the reconciliation file
+        shutil.rmtree(reconcile_path, ignore_errors=True)
+
+        # Merge the stored coverage data with the current store
+        for file, lines in stored_coverage.items():
+            if file not in self._store:
+                self._store[file] = set()
+            self._store[file].update(lines)
+
+    def serialize(self, reconcile: bool = False) -> None:
+        '''
+        Only in the case where sitecustomize is used, to further track 
+        initialization, there may be case where the file exists or not and may be overwritten.
+        In case of internal tests this is avoided by using a different metadata save path.
+        In any case we must mark the <2> paths in a way we can understand they refer to 
+        the same object.
+        '''
+        # TODO this needs a proper encoding, for now the chances are slim a collision is found.
+        save_path = CoverageTracker.get_serialized_path(self._metadata_save_path)
+        if reconcile:
+            from tini_test.integrations.server import _RECONCILATIONS
+            reconciliation = next(_RECONCILATIONS)
+            prefix, suffix = os.path.split(save_path)
+            save_path = Path(os.path.join(prefix, '%s_%s' % (suffix, reconciliation)))
 
         with open(save_path, 'w') as f:
             json.dump({file: list(lines) for file, lines in self._store.items()}, f)

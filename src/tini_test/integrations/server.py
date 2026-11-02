@@ -1,3 +1,4 @@
+from itertools import repeat
 import os
 import shlex
 import subprocess
@@ -5,6 +6,16 @@ import time
 import urllib.error
 import urllib.request
 from typing import TypeGuard
+
+from tini_test.coverage._coverage import CoverageTracker
+from tini_test.misc.annotations import DirectoryPath, FileName
+from tini_test._internals.consts import HEALTH_URL
+
+
+import secrets
+
+
+_RECONCILATIONS = (_ for _ in iter(int, 1) for _ in repeat('_%s' % secrets.token_hex(7), 2))
 
 
 class _ProcessGuard:
@@ -18,12 +29,15 @@ class ServerManager:
 
     def __init__(self,
                  command: str,
-                 health_url: str='http://127.0.0.1:8000/',
-                 timeout: int=30):
+                 store_path: DirectoryPath | FileName | None,
+                 health_url: str | None) -> None:
         
         self.command = command
-        self.health_url = health_url
-        self.timeout = timeout
+        self.store_path = store_path
+
+        self.health_url = health_url if health_url is not None else HEALTH_URL
+        self.timeout = 30
+        
         self._process = _ProcessGuard(self.null().process)
 
     @property
@@ -54,7 +68,7 @@ class ServerManager:
         env = os.environ.copy()
 
         env['TINI_TEST_COVERAGE'] = '1'
-        env['TINI_TEST_COVERAGE_STORAGE'] = '/home/papaggalos/workspace/python_projects/library/coverage_reports.json'
+        env['TINI_TEST_COVERAGE_STORAGE'] = CoverageTracker.normalize_path(self.store_path)
 
         instrumentation_path = os.path.dirname(__file__)
 
@@ -100,6 +114,9 @@ class ServerManager:
     def stop(self) -> None:
         if self.process and self.process.poll() is None:
             self.process.terminate()
+
+            print('STDOUT:', self.process.stdout.read().decode())
+            print('STDERR:', self.process.stderr.read().decode())
 
             try:
                 self.process.wait(timeout=5)

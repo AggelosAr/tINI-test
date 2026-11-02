@@ -44,8 +44,6 @@ __C_REG = lambda salt: ConnectionRegistry(C_ConstRegId(get_registry_key('_CONNEC
 
 
 
-
-
 @dataclass(frozen=True)
 class ResolvedMockRegistry:
     _id: R_M_ConstRegId

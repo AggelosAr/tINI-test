@@ -14,8 +14,8 @@ GENERATED_TESTS_ROOT = '/tmp/python/tini_test'
 # If we are running the Coverage in V2 mode
 # ** Assumes all tests are passing **
 # Used to track coverage over coverage
-_V2_COVERAGE    = True # True
-_USING_COVERAGE = True # True
+_V2_COVERAGE    = False # True
+_USING_COVERAGE = False # True
 
 _PROFILING      = False
 
@@ -73,3 +73,5 @@ _ROOT = ['']
 
 _SETNINEL = object
 _ROOT_SENTINEL = object()
+
+HEALTH_URL = 'http://127.0.0.1:8000/'
