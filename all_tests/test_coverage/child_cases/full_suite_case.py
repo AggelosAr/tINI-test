@@ -26,7 +26,7 @@ def test_FullSuiteRunsFromCli() -> None:
     try:
         os.chdir(PROJECT_ROOT)
         sys.path.insert(0, str(PROJECT_ROOT))
-        sys.argv = ['tini_test', '--coverage', # '-t', 'hello_yyy_1',
+        sys.argv = ['tini_test', '--coverage',  # '-t', 'hello_yyy_1',
                     '--coverage-target', os.path.join(PROJECT_ROOT, 'src'),
                     '--coverage-store', store]
         _tini_test(*receive_args())

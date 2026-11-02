@@ -18,7 +18,7 @@ def v2_tracer(storage: dict[str, set], frame: FrameType, *args, **kwargs):
 
     storage[file].add(file_no)
     
-    return v2_tracer
+    return partial(v2_tracer, storage)
 
 
 def register(tracer: Callable) -> None:

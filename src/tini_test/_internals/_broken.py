@@ -83,7 +83,7 @@ def create_command(folder_name: Optional[str] = None,
             coverage_command = (
                                 '--coverage                       ' \
                                 '--coverage-target %s             ' \
-                                '--coverage-store %s/.coverage_%s ' \
+                                '--coverage-store %s.coverage_%s  ' \
                                     % 
                                     (   
                                         TINI_TEST_COVERAGE_SOURCE,

@@ -624,7 +624,7 @@ class CoverageTracker:
         file = code.co_filename
         
         file_no = frame.f_lineno
-    
+
         if file not in storage:
             storage[file] = set()
         storage[file].add(file_no)
@@ -661,7 +661,6 @@ class CoverageTracker:
             else:
                 os.makedirs(os.path.dirname(save_path), exist_ok=True)
             
-           # os.makedirs(os.path.dirname(save_path), exist_ok=True)
 
         with open(save_path, 'w') as f:
             json.dump({file: list(lines) for file, lines in self._store.items()}, f)

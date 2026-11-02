@@ -51,6 +51,7 @@ def test_FullSuiteRunsInSubprocessWithCoverage() -> None:
     # commands = ['python -c "import sitecustomize; print(sitecustomize.__file__)"']
 
     commands = create_command(FOLDER)
+
     env = get_env()
 
     process = subprocess.Popen(' && '.join(commands),
@@ -64,7 +65,6 @@ def test_FullSuiteRunsInSubprocessWithCoverage() -> None:
     # print(stdout)
     
     summary = dict(re.findall(r'\|\s*([A-Za-z ]+?)\s*:\s*(\d+)', stdout))
-
 
     delete_test_dir(FOLDER)
 
