@@ -700,7 +700,7 @@ class CoverageTracker:
         stored_coverage = CoverageTracker.deserialize(reconcile_path)
 
         # Delete the reconciliation file
-        shutil.rmtree(reconcile_path, ignore_errors=True)
+        os.remove(reconcile_path)
 
         # Merge the stored coverage data with the current store
         self.update_store(stored_coverage)
@@ -716,10 +716,10 @@ class CoverageTracker:
         # TODO this needs a proper encoding, for now the chances are slim a collision is found.
         save_path = CoverageTracker.get_serialized_path(self._metadata_save_path)
         if reconcile:
-            from tini_test.integrations.server import _RECONCILATIONS
-            reconciliation = next(_RECONCILATIONS)
+            reconciliation = os.getenv('TINI_TEST_RECONCILE_PATH')
             prefix, suffix = os.path.split(save_path)
-            save_path = Path(os.path.join(prefix, '%s_%s' % (suffix, reconciliation)))
+            reconciliation_path = Path(os.path.join(prefix, '%s_%s' % (suffix, reconciliation)))
+            save_path = reconciliation_path
 
         with open(save_path, 'w') as f:
             json.dump({file: list(lines) for file, lines in self._store.items()}, f)

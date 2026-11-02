@@ -74,6 +74,7 @@ class ServerManager:
 
         env['TINI_TEST_COVERAGE'] = '1'
         env['TINI_TEST_COVERAGE_STORAGE'] = CoverageTracker.normalize_path(self.store_path)
+        env['TINI_TEST_RECONCILE_PATH'] = next(_RECONCILATIONS)
 
         instrumentation_path = os.path.dirname(__file__)
 
