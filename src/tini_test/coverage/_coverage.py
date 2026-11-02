@@ -332,6 +332,19 @@ class FileCoverage:
         if inline_comment:
             self.lines[l_nos[-1]].add_inline_comment(inline_comment)
             self._statement_counts[LineStatus.COMMENT] += 1
+
+    def python_handle_inline_comment(self, line: Line) -> bool:
+        assert_not_covered = False
+        inline_comment = self.inline_comments.get(line.line_number)
+        if inline_comment is None:
+            return assert_not_covered
+        
+        line.add_inline_comment(inline_comment)
+        self._statement_counts[LineStatus.COMMENT] += 1
+
+        _assert_not_covered = InlineComment.assert_not_covered
+
+        return _assert_not_covered(line.line_content, inline_comment)
     
     def handle_python_statement(self, l_nos: list[CodeLineNumber]) -> None:
         # Assume that for some reason we get missing information
@@ -346,18 +359,15 @@ class FileCoverage:
             
             self.lines[l_no] = line
             
-            inline_comment = self.inline_comments.get(l_no)
-            if inline_comment:
-                line.add_inline_comment(inline_comment)
-                self._statement_counts[LineStatus.COMMENT] += 1
-
-                _assert_not_covered = InlineComment.assert_not_covered
-                if _assert_not_covered(line.line_content, inline_comment):
-                    assert_not_covered = True
-
             # Handle empty line
             if line.is_empty:
                 self.handle_empty_line(line)
+
+            # Handle comment line that is not in-line
+            if line.is_comment:
+                self.handle_comment(line)
+            else:
+                assert_not_covered |= self.python_handle_inline_comment(line)
 
             # maybe handle ellipsis ? 
 
@@ -374,6 +384,7 @@ class FileCoverage:
             match status:
                 case LineStatus.RUN:
                     status = LineStatus.INCORRECTLY_RUN
+
                 case LineStatus.MISSING:
                     status = LineStatus.CORRECTLY_MISSING
 
@@ -382,8 +393,15 @@ class FileCoverage:
         self._statement_counts[status] += 1
 
         for l_no in l_nos:
+
             if self.lines[l_no].status == LineStatus.EMPTY:
+                line.is_continuation = False
                 continue
+
+            if self.lines[l_no].status == LineStatus.COMMENT:
+                line.is_continuation = False
+                continue
+
             self.lines[l_no].status = status
 
     def handle_statement_or_docstring(self, l_no: CodeLineNumber) -> Offset:
