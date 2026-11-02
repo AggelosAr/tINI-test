@@ -47,7 +47,6 @@ class TestSuite:
         self.server = server
 
         self._coverage_total: CoverageStore = {}
-        self._coverage_fails: CoverageStore = {}
 
         self.test_function = test_function
 
@@ -248,7 +247,7 @@ class TestSuite:
                     with coverage(self.use_coverage, self._coverage_total):
                         tests._import(single_func_name=self.test_function)
 
-                collected_tests = tests.gather_tests(single_func_name=self.test_function)
+                    collected_tests = tests.gather_tests(single_func_name=self.test_function)
 
                 tests.raise_for_shared_globals()
                     

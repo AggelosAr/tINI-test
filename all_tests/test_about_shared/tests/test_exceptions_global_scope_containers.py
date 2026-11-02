@@ -158,7 +158,7 @@ def cases():
         'Reason: Global shared variable < c > is not supported.',
         
         "def e(): _()                       # And test fails since it is not in context",
-        #'         ^^^', #  ~^^ # XXX Y  we lose this from 3.12 to 3.12 ?
+
         "_ = lambda: var.e                  # >>> Accepts to give this <var.e> as 'global'",
         '            ^^^^^',
         'tini_test.misc.exceptions.SharedVarDoesNotExistInThisContext: Shared variable < e > does not exist in this context. For test < e >',

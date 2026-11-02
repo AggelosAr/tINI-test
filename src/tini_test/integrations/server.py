@@ -32,7 +32,8 @@ class ServerManager:
                  command: str | None,
                  store_path: DirectoryPath | FileName | None,
                  health_url: str | None) -> None:
-        # TODO validations/exceptions?
+        # Server manager can also be used as a proxy for a general coverage
+        # In that case there is no need to handle the coverage tracker?
         self.command = command
         self.store_path = store_path
 
@@ -120,9 +121,6 @@ class ServerManager:
     def stop(self) -> None:
         if self.process and self.process.poll() is None:
             self.process.terminate()
-
-            print('STDOUT:', self.process.stdout.read().decode())
-            print('STDERR:', self.process.stderr.read().decode())
 
             try:
                 self.process.wait(timeout=5)
