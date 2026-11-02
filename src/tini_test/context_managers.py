@@ -121,14 +121,11 @@ class TraceHandler:
             self._tracers = {}
 
         def __call__(self, *args, **kwargs) -> Callable:
-            if self._tracers:
-                # print('TRACER 0 ', list(self._tracers.values())[0])
-                # print('TRACER 1 ', list(self._tracers.values())[1])
-                # print('------------')
-                ...
+            tracer = partial(lambda *args, **kwargs: None, *args, **kwargs)
             for tracer in self._tracers.values():
-                
-                return tracer(*args, **kwargs)
+                tracer = partial(tracer, *args, **kwargs)
+            
+            return tracer
 
         @classmethod
         @contextmanager

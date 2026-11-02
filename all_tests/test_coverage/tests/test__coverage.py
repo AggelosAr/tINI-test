@@ -125,21 +125,25 @@ A = (
 )
 
 '''
-
-    var_args(1, 0, 0, 1, 0, 0, 0, 0, 7)
+    # Autocomplete is on TODO add test with mocking on fails
+    var_args(1, 1, 0, 0, 0, 0, 0, 0, 7)
 
     var.covered_lines = set([0, 1])
     _assert()
-    
+
+    var_args(1, 0, 0, 1, 0, 0, 0, 0, 7)
     var.covered_lines = set([1, 2])
     _assert()
-    
+
+    var_args(1, 0, 0, 1, 0, 0, 0, 0, 7)
     var.covered_lines = set([2, 12])
     _assert()
 
+    var_args(1, 0, 0, 1, 0, 0, 0, 0, 7)
     var.covered_lines = set([12])
     _assert()
 
+    var_args(1, 1, 0, 0, 0, 0, 0, 0, 7)
     var.covered_lines = set([0, 1, 2, 12])
     _assert()
     

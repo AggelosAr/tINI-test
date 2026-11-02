@@ -445,7 +445,7 @@ class FileCoverage:
         with open(self.file_path, 'r') as f:
             self.source = f.read()
 
-        # self.runtime_covered_lines.update(self.top_levels)
+        self.runtime_covered_lines.update(self.top_levels)
 
         if self.handle_excluded_file():
             return

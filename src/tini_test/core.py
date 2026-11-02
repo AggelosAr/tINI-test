@@ -255,9 +255,9 @@ class TestSuite:
                     with coverage(self.use_coverage, self._coverage_total):
                         tests._import(single_func_name=self.test_function)
 
-                    collected_tests = tests.gather_tests(single_func_name=self.test_function)
+                collected_tests = tests.gather_tests(single_func_name=self.test_function)
 
-                    tests.raise_for_shared_globals()
+                tests.raise_for_shared_globals()
                     
             except Exception as e:
 
