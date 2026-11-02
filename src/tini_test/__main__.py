@@ -31,7 +31,7 @@ def _tini_test(kwargs: CoreArgsDict
                 raise
 
             else:
-                # 'python manage.py runserver --settings main.test_settings 127.0.0.1:8000 --noreload'
+
                 test_suite.runner()
                 test_suite.pprint()
 

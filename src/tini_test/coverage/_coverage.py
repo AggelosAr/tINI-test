@@ -333,7 +333,9 @@ class FileCoverage:
 
     def python_handle_inline_comment(self, line: Line) -> bool:
         assert_not_covered = False
+
         inline_comment = self.inline_comments.get(line.line_number)
+        
         if inline_comment is None:
             return assert_not_covered
         
@@ -351,7 +353,7 @@ class FileCoverage:
 
         assert_not_covered = False
 
-        for l_no in l_nos:
+        for l_no in range(l_nos[0], l_nos[-1] + 1):
             line = Line(l_no, self.raw_lines[l_no - 1], LineStatus.NULL)
             line.is_continuation = True
             
@@ -361,11 +363,10 @@ class FileCoverage:
             if line.is_empty:
                 self.handle_empty_line(line)
 
-            # Handle comment line that is not in-line
-            if line.is_comment:
-                self.handle_comment(line)
-            else:
-                assert_not_covered |= self.python_handle_inline_comment(line)
+            # Handle comment line
+            if line.is_comment or self.inline_comments.get(line.line_number):
+                res = self.python_handle_inline_comment(line)
+                assert_not_covered |= res
 
             # maybe handle ellipsis ? 
 
