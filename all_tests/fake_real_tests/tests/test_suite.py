@@ -14,8 +14,10 @@ from tini_test._internals._broken import (delete_test_dir, get_temp_file,
 from tini_test._internals.consts import PROJECT_ROOT
 from tini_test.context_managers import WillRaise, _ThreadLocalStdout
 from tini_test.core import TestSuite
+from tini_test.coverage._coverage import CoverageTracker
 from tini_test.enums import Coverage, RunMode, TiniTestMode, Verbosity
 from tini_test.initializer import initialize_test_suite
+from tini_test.integrations.server import ServerManager
 from tini_test.misc.exceptions import CantFindRelativePathToRoot
 from tini_test.module_collector import ModuleCollector
 
@@ -77,12 +79,17 @@ def test_suite_run_solved_failing_tests_for_coverage() -> None:
          'test_must_equal_breaks',
          'test_fails_to_collect']
     }
+
+    coverage_tracker = CoverageTracker(None, None, None)
+
+    server = ServerManager(None, None, None)
+    
     test_suite = TestSuite(run_mode=RunMode.ASYNC,
                            verbosity=Verbosity.NORMAL,
                            coverage=Coverage.DISABLED,
                            root='.',
-                           coverage_target=None,
-                           store_coverage_at=None)
+                           coverage_tracker=coverage_tracker,
+                           server=server)
     
     test_suite.initialize_tests(_from=test_collector)
     test_suite.suite_init_time = perf_counter()
@@ -123,8 +130,8 @@ def test_suite_run_solved_failing_tests_for_coverage() -> None:
                            verbosity=Verbosity.MINIMAL,
                            coverage=Coverage.DISABLED,
                            root='.',
-                           coverage_target=None,
-                           store_coverage_at=None)
+                           coverage_tracker=coverage_tracker,
+                           server=server)
     
     test_suite.initialize_tests(_from=test_collector)
     test_suite.suite_init_time = perf_counter()
@@ -163,8 +170,8 @@ def test_suite_run_solved_failing_tests_for_coverage() -> None:
                            verbosity=Verbosity.MINIMAL_NO_STACK,
                            coverage=Coverage.DISABLED,
                            root='.',
-                           coverage_target=None,
-                           store_coverage_at=None)
+                           coverage_tracker=coverage_tracker,
+                           server=server)
     
     test_collector.test_modules['all_tests.fake_real_tests.test_must_equals.tests'] = [
         'test_must_equal_bytes'
