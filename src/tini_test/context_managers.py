@@ -131,6 +131,7 @@ class TraceHandler:
                 return tracer(*args, **kwargs)
 
         @classmethod
+        @contextmanager
         def trace_on(self, tracer: Callable) -> Generator[None, None, None]:
             previous_sys_trace = sys.gettrace()
             previous_thread_trace = threading.gettrace()
@@ -196,7 +197,11 @@ def coverage(trace_on: bool, storage: CoverageStore,
             handle.attach(tracer)
 
         try:
-            yield from iter((None,)) if handle is None else TraceHandler.trace_on(tracer)
+            if handle:
+                yield
+            else:
+                with TraceHandler.trace_on(tracer):
+                    yield 
 
         finally:
             if handle:
@@ -216,7 +221,11 @@ def patch_built_ins(apply_at: DirectoryPath, is_root: Optional[bool] = False,
         handle.attach(tracer)
 
     try:
-        yield from iter((None,)) if handle is None else TraceHandler.trace_on(tracer)
+        if handle:
+            yield
+        else:
+            with TraceHandler.trace_on(tracer):
+                yield 
         
     finally:
         if handle:
@@ -232,7 +241,7 @@ def patch_mocks(mocks: list[MockDefinition], replace_at: DirectoryPath,
         try:
             MockDefinition.patch_all(mocks)
 
-            with patch_built_ins(handle, replace_at, is_root=True):
+            with patch_built_ins(replace_at, True, handle):
 
                 yield
 

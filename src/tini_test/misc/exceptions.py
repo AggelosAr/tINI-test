@@ -42,7 +42,7 @@ class ExpectedWasDifferentFromActual(Exception):
         self.msg = msg
     
     def _get_detail(self) -> str:
-        return f'\n\n\n\n{self.msg}\n[EOD]' # TODO remove and refactor this 
+        return f'\n{self.msg}\n[EOD]' # TODO remove and refactor this 
 
   
 class ComperatorWasNotProvided(Exception):
