@@ -5,8 +5,9 @@ from traceback import format_exc, format_tb
 from typing import Any, Callable, Mapping, Optional
 
 from tini_test._internals._registry import attach_state
-from tini_test.context_managers import (_thread_redirect_stdout, coverage, handle_tracers,
-                                        patch_mocks, patch_shared, with_lock)
+from tini_test.context_managers import (_thread_redirect_stdout, coverage,
+                                        handle_tracers, patch_mocks,
+                                        patch_shared, with_lock)
 from tini_test.shared import SharedVar
 
 from .enums import Plugs, TestStatus, Verbosity

@@ -1,9 +1,9 @@
-from itertools import cycle
-from tini_test import Test
-from tini_test.coverage._coverage import CoverageTracker, FileCoverage
 import tempfile
 import textwrap
+from itertools import cycle
 
+from tini_test import Test
+from tini_test.coverage._coverage import CoverageTracker, FileCoverage
 from tini_test.must_equals import must_equal
 from tini_test.shared import Shared, var
 

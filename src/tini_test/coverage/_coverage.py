@@ -20,8 +20,6 @@ from tini_test.coverage.consts import (_TOGGLE_SCRIPT, ASSERT_NOT_COVERED,
 from tini_test.coverage.enums import HTMLNodeType, LineStatus
 from tini_test.coverage.html import HTMLHyperLink, HTMLNode, HTMLTemplate
 from tini_test.enums import Color, ScoreClass
-
-
 from tini_test.misc.annotations import (CodeLineNumber, CoverageStore,
                                         DirectoryPath, DocstringId, FileName,
                                         LineContent, Offset, StatementId,

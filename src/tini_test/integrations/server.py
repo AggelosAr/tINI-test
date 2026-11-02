@@ -1,20 +1,17 @@
-from contextlib import contextmanager
-from itertools import repeat
 import os
+import secrets
 import shlex
 import subprocess
 import time
 import urllib.error
 import urllib.request
+from contextlib import contextmanager
+from itertools import repeat
 from typing import Generator, TypeGuard
 
+from tini_test._internals.consts import HEALTH_URL
 from tini_test.coverage._coverage import CoverageTracker
 from tini_test.misc.annotations import DirectoryPath, FileName
-from tini_test._internals.consts import HEALTH_URL
-
-
-import secrets
-
 
 _RECONCILATIONS = (_ for _ in iter(int, 1) for _ in repeat('_%s' % secrets.token_hex(7), 2))
 

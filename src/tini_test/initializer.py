@@ -3,7 +3,7 @@ from time import perf_counter
 from typing import Optional
 
 from tini_test._internals.consts import _ROOT
-from tini_test.core import TestSuite, CoverageTracker
+from tini_test.core import CoverageTracker, TestSuite
 from tini_test.enums import Coverage, RunMode, Verbosity
 from tini_test.integrations.server import ServerManager
 from tini_test.misc.annotations import (DirectoryPath, FileName,

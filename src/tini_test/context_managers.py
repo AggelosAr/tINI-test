@@ -9,7 +9,6 @@ from threading import Lock
 from typing import Any, Callable, Generator, Optional
 
 from tini_test._internals.consts import _ROOT, _SETNINEL
-
 from tini_test.coverage._coverage import CoverageTracker
 from tini_test.misc.annotations import (CoverageStore, DirectoryPath,
                                         TestCallable)
