@@ -159,6 +159,21 @@ for the source files and for the coverage metadata file.
                               ''' % METADATA_FILE)
 
 
+    parser.add_argument('-s',
+                        '--server-command',
+                        help=r'''
+The server command to be executed.
+                              ''')
+
+    parser.add_argument('-u',
+                        '--health-url',
+                        help=r'''
+The health check URL to be used for verifying the server's health status.
+                              ''')
+
+                        
+
+                        
     args = parser.parse_args()
 
     if args.coverage_merge:

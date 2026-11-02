@@ -21,7 +21,7 @@ from tini_test.coverage.enums import HTMLNodeType, LineStatus
 from tini_test.coverage.html import HTMLHyperLink, HTMLNode, HTMLTemplate
 from tini_test.enums import Color, ScoreClass
 
-from tini_test.integrations.server import _RECONCILATIONS
+
 from tini_test.misc.annotations import (CodeLineNumber, CoverageStore,
                                         DirectoryPath, DocstringId, FileName,
                                         LineContent, Offset, StatementId,
@@ -1220,7 +1220,7 @@ class HTMLReport:
     def to_html(tracker: CoverageTracker) -> None:
         tracker.update_covered_store()
         tracker.collect_files_from_source()
-        
+
         tracker.files = dict(sorted(tracker.files.items()))
 
         dest_dir = HTMLReport.init_store()

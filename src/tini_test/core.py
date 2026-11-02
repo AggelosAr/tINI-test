@@ -302,7 +302,7 @@ class TestSuite:
     def runner(self) -> None:
         self._start = perf_counter()
 
-        with self.server():
+        with self.server.server_online():
 
             match self.run_mode:
 
