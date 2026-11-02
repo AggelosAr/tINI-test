@@ -119,22 +119,26 @@ class TraceHandler:
         
         def __init__(self):
             self._tracers = {}
+            self._arguments = {}
 
         def __call__(self, *args, **kwargs) -> Callable:
-            tracer = partial(lambda *args, **kwargs: None, *args, **kwargs)
-            for tracer in self._tracers.values():
-                tracer = partial(tracer, *args, **kwargs)
-            
-            return tracer
+            _tracer = partial(lambda *args, **kwargs: None, *args, **kwargs)
+            for _id in self._tracers.keys():
+                
+                _tracer = partial(self._tracers[_id], *self._arguments[_id])
+
+            return _tracer
 
         @classmethod
         @contextmanager
-        def trace_on(self, tracer: Callable) -> Generator[None, None, None]:
+        def trace_on(self, tracer: Callable, *args) -> Generator[None, None, None]:
             previous_sys_trace = sys.gettrace()
             previous_thread_trace = threading.gettrace()
 
-            sys.settrace(tracer)
-            threading.settrace(tracer)
+            _tracer = partial(tracer, *args)
+
+            sys.settrace(_tracer)
+            threading.settrace(_tracer)
             
             try:
                 yield
@@ -147,15 +151,19 @@ class TraceHandler:
         def raise_on(self) -> None:
             raise NotImplementedError()
 
-        def attach(self, tracer: Callable) -> None:
-            # print('ATTACHING TRACER ', tracer)
-            self._tracers[hex(id(tracer))] = tracer
+        def attach(self, tracer: Callable, *args) -> None:
+            _id = hex(id(tracer))
+            self._tracers[_id] = tracer
+            self._arguments[_id] = args
 
         def detach(self, tracer: Callable) -> None:
-            del self._tracers[hex(id(tracer))]
+            _id = hex(id(tracer))
+            del self._tracers[_id]
+            del self._arguments[_id]
 
         def clear(self) -> None:
             self._tracers.clear()
+            self._arguments.clear()
             
 
 
@@ -188,16 +196,16 @@ def coverage(trace_on: bool, storage: CoverageStore,
              handle: Optional[TraceHandler] = None) -> Generator[None, None, None]:
     if trace_on:
 
-        tracer = partial(CoverageTracker.tracer, storage)
+        tracer = CoverageTracker.tracer
 
         if handle:
-            handle.attach(tracer)
+            handle.attach(tracer, storage)
 
         try:
             if handle:
                 yield
             else:
-                with TraceHandler.trace_on(tracer):
+                with TraceHandler.trace_on(CoverageTracker.tracer, storage):
                     yield 
 
         finally:
@@ -212,16 +220,16 @@ def coverage(trace_on: bool, storage: CoverageStore,
 def patch_built_ins(apply_at: DirectoryPath, is_root: Optional[bool] = False, 
                     handle: Optional[TraceHandler] = None) -> Generator[None, None, None]:
 
-    tracer = partial(BuiltInArtifact.built_in_replacer, apply_at, is_root)
+    tracer = BuiltInArtifact.built_in_replacer
 
     if handle:
-        handle.attach(tracer)
+        handle.attach(tracer, apply_at, is_root)
 
     try:
         if handle:
             yield
         else:
-            with TraceHandler.trace_on(tracer):
+            with TraceHandler.trace_on(BuiltInArtifact.built_in_replacer, apply_at, is_root):
                 yield 
         
     finally:

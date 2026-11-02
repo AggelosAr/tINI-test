@@ -157,7 +157,14 @@ class TestSuite:
         self.successes = current_successes
         self.errors = new_errors
         self.file_load_failures = current_file_load_failures
- 
+
+    def update_with_imported_modules(self) -> None:
+        if not self.use_coverage:
+            return
+
+        self.coverage_tracker.update_store(self._coverage_total)
+        self._coverage_total.clear()
+
     def update_coverage_stores(self, test_collection: TestCollection) -> None:
         if not self.use_coverage:
             return
@@ -262,6 +269,7 @@ class TestSuite:
             finally:
                 tests.reset_shared_meta()   
 
+            self.update_with_imported_modules()
             if not tests.has_tests:
                 continue
 
