@@ -1,9 +1,12 @@
 import tempfile
 import textwrap
 from itertools import cycle
+from pathlib import Path
 
 from tini_test import Test
-from tini_test.coverage._coverage import CoverageTracker, FileCoverage
+from tini_test.coverage._coverage import (CoverageTracker, FileCoverage,
+                                          InlineComment, Line)
+from tini_test.coverage.enums import LineStatus
 from tini_test.must_equals import must_equal
 from tini_test.shared import Shared, var
 
@@ -578,3 +581,66 @@ def test_comments_docstrings():
     must_equal(0,  var.coverage.comment_lines)
     must_equal(4,  var.coverage.docstring_lines)
     must_equal(5,  var.coverage.empty_lines)
+
+
+@Test.case
+def test_inline_comment_assert_not_covered():
+    line = 'value = 1  # >>> assert missing'
+    marker = InlineComment(line.index('#'))
+    must_equal(True, InlineComment.assert_not_covered(line, marker))
+
+    no_comment_line = 'value = 1'
+    must_equal(False, InlineComment.assert_not_covered(no_comment_line, None))
+
+    other_line = 'value = 1  # ordinary comment'
+    other_comment = InlineComment(other_line.index('#'))
+
+    must_equal(False, InlineComment.assert_not_covered(other_line, other_comment))
+
+
+@Test.case
+def test_line_get_split_line():
+    line_content = 'value = 1  # note'
+    line = Line(1, 
+                line_content, 
+                LineStatus.RUN,
+                inline_comment=InlineComment(line_content.index('#')))
+
+    must_equal(('value = 1  ', '# note'), line.get_split_line())
+
+    no_comment_line = 'value = 1'
+    line = Line(1, no_comment_line, LineStatus.RUN)
+    must_equal(('value = 1', ''), line.get_split_line())
+
+
+@Test.case
+def test_line_is_else_or_finally():
+    must_equal(True, Line(1, 'else:', LineStatus.RUN).is_else_or_finally)
+    must_equal(True, Line(1, 'finally:', LineStatus.RUN).is_else_or_finally)
+    must_equal(False, Line(1, 'elsewhere:', LineStatus.RUN).is_else_or_finally)
+
+
+@Test.case
+def test_file_coverage_handle_ellipsis():
+    covered = FileCoverage(Path('unused.py'), {1}, False)
+    covered.source = '...  # note'
+    covered._statement_counts[LineStatus.RUN] = 1
+    covered_line = Line(1, '...  # note', LineStatus.RUN)
+    covered.handle_ellipsis(covered_line)
+
+    must_equal(LineStatus.EXCLUDED, covered_line.status)
+    must_equal(0, covered.covered_statements)
+    must_equal(1, covered.excluded_statements)
+    must_equal(1, covered.comment_lines)
+    must_equal(True, covered_line.is_inline_commented)
+
+    missing = FileCoverage(Path('unused.py'), set(), False)
+    missing.source = '...'
+    missing._statement_counts[LineStatus.MISSING] = 1
+    missing_line = Line(1, '...', LineStatus.MISSING)
+    missing.handle_ellipsis(missing_line)
+
+    must_equal(LineStatus.EXCLUDED, missing_line.status)
+    must_equal(0, missing.missing_statements)
+    must_equal(1, missing.excluded_statements)
+    must_equal(0, missing.comment_lines)

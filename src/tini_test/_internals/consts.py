@@ -28,8 +28,8 @@ GENERATED_TESTS_ROOT = '/tmp/python/tini_test'
 # If we are running the Coverage in V2 mode
 # ** Assumes all tests are passing **
 # Used to track coverage over coverage
-_V2_COVERAGE    = False # True
-_USING_COVERAGE = False # True
+_V2_COVERAGE    = True # True
+_USING_COVERAGE = True # True
 
 _PROFILING      = False
 

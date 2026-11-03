@@ -1,7 +1,7 @@
 from all_tests.test_about_mocks.test_mocks.tests.test_imports import (
     add_args_function, f1, f2)
 from tini_test import Mock, Test, WillRaise, must_equal
-from tini_test.misc.exceptions import ExpectedWasDifferentFromActual
+from tini_test.misc.exceptions import ExpectedWasDifferentFromActual, TiniTestInternalException
 
 
 @Mock.mock
@@ -274,3 +274,64 @@ def test_multiple_mocks_with_returns():
                 f3(4_000, f=6_000, g=3_000))
     print('works')
 
+
+
+
+
+
+@Test.case
+def test_MockType_none_none():
+    from tini_test.enums import MockType
+
+    with WillRaise(TiniTestInternalException) as context:
+        MockType.get_type('unsupported_mock')
+
+    must_equal('Unsupported mock type', str(context.exception))
+
+
+@Test.case
+def mock_internals_for_mock():
+    import inspect
+    from tini_test.mock import Mocking
+    from tini_test._internals.consts import _R_M_REG, _R_T_REG
+
+    with WillRaise(TiniTestInternalException) as context:
+        Mocking(None)._rewind_frames()
+
+    must_equal("Can't rewind frames from a None frame", str(context.exception))
+
+    frame = inspect.currentframe()
+    assert frame is not None
+    mocking = Mocking(frame)
+    mocking.rewinded_frames = [frame]
+
+    missing = object()
+    mock_registry = frame.f_globals.pop(_R_M_REG, missing)
+    try:
+        with WillRaise(TiniTestInternalException) as context:
+            _ = mocking.frame_globals
+    finally:
+        if mock_registry is not missing:
+            frame.f_globals[_R_M_REG] = mock_registry
+
+    must_equal('Global registry for mocks not found', str(context.exception))
+
+    with WillRaise(TiniTestInternalException) as context:
+        old_mock_registry = frame.f_globals.get(_R_M_REG, missing)
+        old_test_registry = frame.f_globals.get(_R_T_REG, missing)
+        frame.f_globals[_R_M_REG] = {}
+        frame.f_globals[_R_T_REG] = {}
+        try:
+            _ = mocking.real_test
+        finally:
+            if old_mock_registry is missing:
+                frame.f_globals.pop(_R_M_REG, None)
+            else:
+                frame.f_globals[_R_M_REG] = old_mock_registry
+            if old_test_registry is missing:
+                frame.f_globals.pop(_R_T_REG, None)
+            else:
+                frame.f_globals[_R_T_REG] = old_test_registry
+
+    must_equal('Real test not found', str(context.exception))
+    
