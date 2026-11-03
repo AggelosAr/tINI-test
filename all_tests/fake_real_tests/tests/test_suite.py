@@ -417,7 +417,7 @@ def test_test_suite_flow_get_coverage():
     suite.get_coverage()
     must_equal([], tracker.calls)
 
-    suite, tracker = make_suite(Coverage.ENABLED, None)
+    suite, tracker = make_suite(Coverage.ENABLED, '')
     suite.get_coverage()
     must_equal(
         [('show_short_summary', False), ('serialize', False)],
