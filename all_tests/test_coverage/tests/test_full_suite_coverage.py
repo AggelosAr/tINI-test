@@ -71,3 +71,132 @@ def test_FullSuiteRunsInSubprocessWithCoverage() -> None:
     must_equal('1', summary.get('Total registered tests'))
     must_equal('1', summary.get('Total successes'))
     must_equal('0', summary.get('Total errors'))
+
+
+    # ////////////////////////////
+    test_server_manager()
+    # ////////////////////////////
+
+
+
+
+# @Test.case
+def test_server_manager():
+    # TODO this test has a side of generating a .coverage file in the current dir
+    # Also this test should run ONLY after the < all_tests/test_coverage/tests/test_full_suite_coverage.py >
+    # Since it yields  from _RECONCILATIONS. _RECONCILATIONS is not made to handle multiple concurrent tests.
+    import json
+    import os
+    import shlex
+    import socket
+    import sys
+    import tempfile
+    import textwrap
+    from pathlib import Path
+
+    from tini_test import WillRaise
+    import tini_test.integrations.server as server_module
+    from tini_test._internals.consts import HEALTH_URL
+    from tini_test.integrations.server import ServerManager
+
+    disabled = ServerManager(None, None, None)
+    must_equal(False, disabled.is_enabled)
+    must_equal(HEALTH_URL, disabled.health_url)
+    must_equal(None, disabled.process)
+    must_equal(None, ServerManager.null().process)
+
+
+    with WillRaise(RuntimeError) as context:
+        ServerManager._is_process(None)
+    must_equal('Failed to start server process', str(context.exception))
+
+
+    with socket.socket() as sock:
+        sock.bind(('127.0.0.1', 0))
+        port = sock.getsockname()[1]
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        report_path = Path(temp_dir, 'environment.json')
+        command_source = textwrap.dedent(r'''
+            import json
+            import os
+            from http.server import HTTPServer, SimpleHTTPRequestHandler
+
+            with open(%s, 'w') as report:
+                json.dump({
+                    name: os.environ[name]
+                    for name in (
+                        'TINI_TEST_COVERAGE',
+                        'TINI_TEST_COVERAGE_STORAGE',
+                        'TINI_TEST_RECONCILE_PATH',
+                        'PYTHONPATH',
+                    )
+                }, report)
+
+            HTTPServer(('127.0.0.1', %s), SimpleHTTPRequestHandler).serve_forever()
+        ''' % (repr(str(report_path)), port))
+        command = '%s -c %s' % (shlex.quote(sys.executable),
+                                shlex.quote(command_source))
+        health_url = 'http://127.0.0.1:%s/missing' % port
+        server = ServerManager(command, temp_dir, health_url)
+
+        must_equal(True, server.is_enabled)
+
+        must_equal(health_url, server.health_url)
+
+
+        must_equal(True, ServerManager._is_process(server_module._ProcessGuard(object())))
+
+
+        with server.server_online():
+            must_equal(True, server.process.poll() is None)
+
+            with report_path.open() as report:
+                environment = json.load(report)
+
+            must_equal('1', environment['TINI_TEST_COVERAGE'])
+
+            must_equal(os.fspath(CoverageTracker.normalize_path(temp_dir)),
+                       environment['TINI_TEST_COVERAGE_STORAGE'])
+            
+            must_equal(True, environment['TINI_TEST_RECONCILE_PATH'].startswith('_'))
+
+            must_equal(
+                True,
+                os.path.dirname(server_module.__file__) in environment['PYTHONPATH'],
+            )
+
+        # ------------------------------
+
+        must_equal(None, server.process)
+
+        with WillRaise(ValueError) as context:
+            with server.server_online():
+                raise ValueError('inside server context')
+            
+        must_equal(None, server.process)
+        must_equal('inside server context', str(context.exception))
+
+        # ------------------------------
+
+        command = '%s -c %s' % (shlex.quote(sys.executable),
+                                shlex.quote('import time; time.sleep(5)'))
+        timed_out = ServerManager(command, None, None)
+        timed_out.timeout = 0
+        with WillRaise(TimeoutError) as context:
+            with timed_out.server_online():
+                ...
+
+        must_equal('Server did not become ready within the timeout period',
+                   str(context.exception))
+        must_equal(None, timed_out.process)
+
+        # ------------------------------
+
+        command = '%s -c %s' % (shlex.quote(sys.executable),
+                                shlex.quote('raise SystemExit(2)'))
+        crashed = ServerManager(command, None, None)
+
+        with WillRaise(RuntimeError) as context:
+            crashed.start()
+        must_equal('Server exited unexpectedly with code 2', str(context.exception))

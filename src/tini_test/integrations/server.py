@@ -86,8 +86,10 @@ class ServerManager:
         self.process = _ProcessGuard(process=_process)
 
     def wait_until_ready(self) -> None:
+        # The deadline must be fixed before the loop, else it moves with the clock.
+        deadline = self.deadline
 
-        while time.monotonic() < self.deadline:
+        while time.monotonic() < deadline:
 
             # Check whether the server process has crashed.
             return_code = self.process.poll()

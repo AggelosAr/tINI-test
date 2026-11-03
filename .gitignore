@@ -252,3 +252,5 @@ CoverageReport
 CoverageReport_*
 
 coverages
+
+.coverage*
