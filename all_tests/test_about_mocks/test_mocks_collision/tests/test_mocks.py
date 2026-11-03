@@ -1,7 +1,8 @@
 from all_tests.test_about_mocks.test_mocks.tests.test_imports import (
     add_args_function, f1, f2)
 from tini_test import Mock, Test, WillRaise, must_equal
-from tini_test.misc.exceptions import ExpectedWasDifferentFromActual, TiniTestInternalException
+from tini_test.misc.exceptions import (ExpectedWasDifferentFromActual,
+                                       TiniTestInternalException)
 
 
 @Mock.mock
@@ -292,8 +293,9 @@ def test_MockType_none_none():
 @Test.case
 def mock_internals_for_mock():
     import inspect
-    from tini_test.mock import Mocking
+
     from tini_test._internals.consts import _R_M_REG, _R_T_REG
+    from tini_test.mock import Mocking
 
     with WillRaise(TiniTestInternalException) as context:
         Mocking(None)._rewind_frames()

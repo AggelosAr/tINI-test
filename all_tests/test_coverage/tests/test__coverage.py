@@ -619,6 +619,11 @@ def test_line_is_else_or_finally():
     must_equal(True, Line(1, 'finally:', LineStatus.RUN).is_else_or_finally)
     must_equal(False, Line(1, 'elsewhere:', LineStatus.RUN).is_else_or_finally)
 
+    for content in ('else:  # note', 'finally:  # note'):
+        line = Line(1, content, LineStatus.RUN,
+                    inline_comment=InlineComment(content.index('#')))
+        must_equal(True, line.is_else_or_finally)
+
 
 @Test.case
 def test_file_coverage_handle_ellipsis():
@@ -644,6 +649,124 @@ def test_file_coverage_handle_ellipsis():
     must_equal(0, missing.missing_statements)
     must_equal(1, missing.excluded_statements)
     must_equal(0, missing.comment_lines)
+
+
+@Test.case
+def test_file_coverage_handle_single_python_line_ellipsis():
+    coverage = FileCoverage(Path('unused.py'), set(), False)
+    coverage.source = 'def f():\n    ...'
+    coverage._statement_counts[LineStatus.MISSING] = 1
+
+    offset = coverage.handle_single_python_line(2)
+
+    must_equal(1, offset)
+    must_equal(True, coverage.lines[2].is_ellipsis)
+    must_equal(LineStatus.EXCLUDED, coverage.lines[2].status)
+    must_equal(0, coverage.missing_statements)
+    must_equal(1, coverage.excluded_statements)
+
+
+@Test.case
+def test_coverage_tracker_tracer():
+    import sys
+
+    storage = {}
+
+    def traced():
+        frame = sys._getframe()
+        first, lineno = CoverageTracker.tracer(storage, frame, 'line', None), frame.f_lineno
+        return frame, lineno, first
+
+    frame, lineno, local_tracer = traced()
+    filename = frame.f_code.co_filename
+
+    must_equal({filename}, set(storage))
+    must_equal({lineno}, storage[filename])
+
+    # The returned tracer keeps recording into the same storage.
+    must_equal(True, callable(local_tracer))
+    local_tracer(frame, 'line', None)
+    must_equal(True, lineno in storage[filename])
+
+    other = {}
+    CoverageTracker.tracer(other, frame)
+    must_equal({filename}, set(other))
+    must_equal({filename}, set(storage))
+
+
+@Test.case
+def test_html_line_get_html_node():
+    from tini_test.coverage._coverage import HTMLLine
+    from tini_test.coverage.enums import HTMLNodeType
+
+    def classes_of(node):
+        return [c['class'] for c in node.classes]
+
+    # Plain code line
+    line = Line(3, 'x = 1', LineStatus.RUN)
+    node = HTMLLine.get_html_node(line)
+    must_equal(HTMLNodeType.DIV, node._type)
+    must_equal(['code-line run'], classes_of(node))
+    must_equal(2, len(node.children))
+    number, content = node.children
+    must_equal(['line-number'], classes_of(number))
+    must_equal('3.', number.content)
+    must_equal(['line-content'], classes_of(content))
+    must_equal('x = 1', content.content)
+    must_equal(
+        '<div class="code-line run"><span class="line-number">3.</span>\n'
+        '<span class="line-content">x = 1</span></div>',
+        node.to_html())
+
+    # Continuation lines get an extra class
+    line = Line(4, '    y', LineStatus.MISSING, is_continuation=True)
+    node = HTMLLine.get_html_node(line)
+    must_equal(['code-line missing continuation'], classes_of(node))
+
+    # Comment line
+    line = Line(5, '# <note>', LineStatus.COMMENT)
+    node = HTMLLine.get_html_node(line)
+    must_equal(['code-line comment'], classes_of(node))
+    must_equal(['line-content code-comment'], classes_of(node.children[1]))
+    must_equal('# &lt;note&gt;', node.children[1].content)
+
+    # Docstring line without an inline comment
+    line = Line(6, '"""doc"""', LineStatus.DOCSTRING)
+    node = HTMLLine.get_html_node(line)
+    must_equal(['code-line docstring'], classes_of(node))
+    must_equal(['line-content code-docstring'], classes_of(node.children[1]))
+    must_equal('&quot;&quot;&quot;doc&quot;&quot;&quot;', node.children[1].content)
+
+    # Docstring line with an inline comment
+    content = '"""doc"""  # note'
+    line = Line(7, content, LineStatus.DOCSTRING,
+                inline_comment=InlineComment(content.index('#')))
+    node = HTMLLine.get_html_node(line)
+    must_equal(2, len(node.children))
+    wrapper = node.children[1]
+    must_equal(['line-content'], classes_of(wrapper))
+    code, comment = wrapper.children
+    must_equal(['code-docstring'], classes_of(code))
+    must_equal(['inline-comment'], classes_of(comment))
+    must_equal('# note', comment.content)
+
+    # Regular line with an inline comment, escaped
+    content = 'a < b  # x > y'
+    line = Line(8, content, LineStatus.RUN,
+                inline_comment=InlineComment(content.index('#')))
+    node = HTMLLine.get_html_node(line)
+    wrapper = node.children[1]
+    must_equal(['line-content'], classes_of(wrapper))
+    code, comment = wrapper.children
+    must_equal([], classes_of(code))
+    must_equal('a &lt; b  ', code.content)
+    must_equal(['inline-comment'], classes_of(comment))
+    must_equal('# x &gt; y', comment.content)
+
+    # Every status ends up in the line's css class
+    for status in LineStatus:
+        node = HTMLLine.get_html_node(Line(1, 'z', status))
+        must_equal(['code-line %s' % status.value], classes_of(node))
 
 
 @Test.case

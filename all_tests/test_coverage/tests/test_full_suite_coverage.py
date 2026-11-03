@@ -94,11 +94,11 @@ def test_server_manager():
     import textwrap
     from pathlib import Path
 
-    from tini_test import WillRaise
     import tini_test.integrations.server as server_module
+    from tini_test import WillRaise
     from tini_test._internals.consts import HEALTH_URL
-    from tini_test.integrations.server import ServerManager
     from tini_test.coverage._coverage import CoverageTracker
+    from tini_test.integrations.server import ServerManager
 
     disabled = ServerManager(None, None, None)
     must_equal(False, disabled.is_enabled)
