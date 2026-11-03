@@ -430,6 +430,24 @@ def test_GenerateReportNoStoreInCurrentDirectory() -> None:
     must_equal(True, 'No coverage metadata file found in the current directory.' in str(context.exception))
 
 
+# --coverage-target / --coverage-store without --coverage
+
+@Shared(var.root)
+@Test.case(_make_dir, lambda: shutil.rmtree(var.root))
+def test_CoverageTargetAndStoreRequireCoverage() -> None:
+    root = var.root
+
+    for args in (['--coverage-target', root],
+                 ['--coverage-store', root],
+                 ['--coverage-target', root, '--coverage-store', root]):
+
+        with WillRaise(SystemExit) as context:
+            _cli(args, cwd=root)
+
+        # argparse exits with status 2 on usage errors.
+        must_equal(2, context.exception.code)
+
+
 # Smoke tests: the real entry point, as a user would run it.
 # They are not traced since they run in yet another process.
 
