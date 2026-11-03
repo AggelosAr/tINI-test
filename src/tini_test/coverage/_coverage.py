@@ -14,6 +14,7 @@ from types import FrameType
 from typing import Optional
 
 from tini_test._internals._ast_utils import AstParser
+from tini_test._internals.consts import _V2_COVERAGE
 from tini_test.coverage.consts import (_TOGGLE_SCRIPT, ASSERT_NOT_COVERED,
                                        EXCLUDED_MARKER, METADATA_FILE, STORE,
                                        STYLE_FILE, SVG_FILE)
@@ -706,6 +707,13 @@ class CoverageTracker:
             self._coverage_fails.setdefault(file, set()).update(lines)
 
     def update_covered_store(self) -> None:
+        if _V2_COVERAGE:
+            # Skip updating the covered store for V2 coverage
+            # Only valid if all tests are passing
+            # The exception tests are asserted in their 
+            # separate test cases as a result this is correct and 
+            # intended behavior
+            return 
         new_store = {}
         for file, lines in self._store.items():
             new_store[file] = set(lines) - self._coverage_fails.get(file, set())

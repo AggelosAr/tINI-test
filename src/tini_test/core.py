@@ -248,7 +248,6 @@ class TestSuite:
             
             try:
                 
-
                 with coverage(_V2_COVERAGE, self._coverage_total):
                     
                     with coverage(self.use_coverage, self._coverage_total):
@@ -256,7 +255,7 @@ class TestSuite:
 
                     collected_tests = tests.gather_tests(single_func_name=self.test_function)
 
-                tests.raise_for_shared_globals()
+                    tests.raise_for_shared_globals()
                     
             except Exception as e:
 
@@ -267,6 +266,9 @@ class TestSuite:
                 continue
 
             finally:
+                if _V2_COVERAGE:
+                    self.update_with_imported_modules()
+
                 tests.reset_shared_meta()   
 
             self.update_with_imported_modules()
