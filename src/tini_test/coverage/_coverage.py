@@ -372,7 +372,8 @@ class FileCoverage:
                 res = self.python_handle_inline_comment(line)
                 assert_not_covered |= res
 
-            # maybe handle ellipsis ? 
+            if line.is_ellipsis:
+                self.handle_ellipsis(line)
 
             match l_no in self.runtime_covered_lines:
                 case True:
@@ -406,6 +407,12 @@ class FileCoverage:
 
             if line.is_comment:
                 line.status = LineStatus.COMMENT
+                line.is_continuation = False
+                continue
+
+            if line.is_ellipsis:
+                if line.status == LineStatus.MISSING:
+                    line.status = LineStatus.EXCLUDED
                 line.is_continuation = False
                 continue
 
