@@ -235,8 +235,9 @@ def imported_test_closure_with_namny_args():
 
 
 
-@Isolate
+
 @Test.case
+@Isolate
 def imported_test_closure_with_global_defined():
     must_equal(4, imported_closure_with_global_defined('?'))
     must_equal(4, imported_closure_with_global_defined('?'))
@@ -245,7 +246,7 @@ def imported_test_closure_with_global_defined():
 
 
 
-@Isolate
+@Isolate()
 @Test.case
 def imported_test_closure_with_global():
     must_equal(4, imported_closure_with_global('?'))
@@ -254,8 +255,9 @@ def imported_test_closure_with_global():
 
 
 
-@Isolate
+
 @Test.case
+@Isolate()
 def imported_test_combination_closure():
     must_equal(4, imported_combination_closure('?')) 
     must_equal(4, imported_combination_closure('?')) 

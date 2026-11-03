@@ -19,8 +19,7 @@ class AstParser:
 
     @classmethod
     def from_spec(cls, spec: ModuleSpec) -> AstParser:
-        if spec.origin is None:
-            raise ValueError('ModuleSpec has no origin') # TODO this is internal tINI-test exception?
+        assert spec.origin, TiniTestInternalException(ModuleSpec)
         return cls.from_path(spec.origin)
 
     @classmethod
@@ -63,7 +62,7 @@ class AstParser:
             
             expr = node
 
-            assert expr.end_lineno is not None, TiniTestInternalException(AstParser)
+            assert expr.end_lineno is not None, TiniTestInternalException(AstParser.get_docstrings_info)
             _node = (expr.lineno, expr.end_lineno)
             docstrings.append(_node)
 
@@ -80,16 +79,16 @@ class AstParser:
             
         return line_to_docstring
     
-    @no_type_check                                                                              #comment
-    def extract_line_to_statement(self) -> dict[CodeLineNumber, StatementId]:                   #comment
-        """Map every line to the id (starting at 1) of the statement that spans it.#comment
+    @no_type_check                                                                              
+    def extract_line_to_statement(self) -> dict[CodeLineNumber, StatementId]:                   
+        """Map every line to the id (starting at 1) of the statement that spans it.
 
         Compound statements (def, if, try, ...) only own their header, their bodies are
         separate statements. `case` and `except` clauses count as statements too.
         Bare strings (docstrings) and non statement lines (comments, blanks, else/finally)
         are not mapped.
-        """                                                                                     #comment
-        statements = [                                                                          #comment
+        """                                                                                     
+        statements = [                                                                        
             node for node in ast.walk(self.root_node)
             if isinstance(node, (ast.stmt, ast.match_case, ast.ExceptHandler))
             and not (isinstance(node, ast.Expr)

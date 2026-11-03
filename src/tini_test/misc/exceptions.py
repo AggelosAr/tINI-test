@@ -283,22 +283,26 @@ class TiniTestInternalException(Exception):
         from tini_test.coverage.enums import LineStatus         # >>> assert missing
         from tini_test.enums import Plugs, RunMode              # >>> assert missing
         from tini_test.mock import BuiltInArtifact              # >>> assert missing
+        from importlib.machinery import ModuleSpec              # >>> assert missing
 
-    
+
         if msg_or_type is RunMode:                                # >>> assert missing
             super().__init__('[ERROR] Async failure occurred.')   # >>> assert missing
 
         if msg_or_type is TiniTestInternalError:                              # >>> assert missing
             super().__init__('[ERROR] Failed to unwrap the test function.')   # >>> assert missing
 
-        if msg_or_type is AstParser:                                                 # >>> assert missing
+        if msg_or_type is AstParser.get_docstrings_info:                             # >>> assert missing
             super().__init__('[ERROR] Coverage related, docstring parsing failed.')  # >>> assert missing
 
         if msg_or_type is Plugs:                                                        # >>> assert missing
             super().__init__('[ERROR] Internal exception related to Plugs occurred.')   # >>> assert missing
-        
+
+        if msg_or_type is ModuleSpec:                                                      # >>> assert missing
+            super().__init__('[ERROR] ModuleSpec origin is None during import of test.')   # >>> assert missing
+
         if msg_or_type is LineStatus:                                                       # >>> assert missing
             super().__init__('[ERROR] Internal exception while parsing the python file.')   # >>> assert missing
-        
+
         if msg_or_type is BuiltInArtifact:                                                          # >>> assert missing
             super().__init__('[WARNING] Internal exception. Mocks should be properly restored.')    # >>> assert missing
