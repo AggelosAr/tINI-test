@@ -644,3 +644,54 @@ def test_file_coverage_handle_ellipsis():
     must_equal(0, missing.missing_statements)
     must_equal(1, missing.excluded_statements)
     must_equal(0, missing.comment_lines)
+
+
+@Test.case
+def test_test_suite_flow_get_coverage():
+    from tini_test.core import TestSuite
+    from tini_test.enums import Coverage, RunMode, Verbosity
+    from tini_test.integrations.server import ServerManager
+
+    class RecordingCoverageTracker(CoverageTracker):
+        def __init__(self):
+            super().__init__(None)
+            self.calls = []
+
+        def reconcile(self):
+            self.calls.append('reconcile')
+
+        def show_short_summary(self, long=False):
+            self.calls.append(('show_short_summary', long))
+
+        def serialize(self, reconcile=False):
+            self.calls.append(('serialize', reconcile))
+
+    def make_suite(coverage_mode, server_command):
+        tracker = RecordingCoverageTracker()
+        suite = TestSuite(
+            root='.',
+            run_mode=RunMode.SYNC,
+            verbosity=Verbosity.NORMAL,
+            coverage=coverage_mode,
+            coverage_tracker=tracker,
+            server=ServerManager(server_command, None, None),
+        )
+        return suite, tracker
+
+    suite, tracker = make_suite(Coverage.DISABLED, None)
+    suite.get_coverage()
+    must_equal([], tracker.calls)
+
+    suite, tracker = make_suite(Coverage.ENABLED, None)
+    suite.get_coverage()
+    must_equal(
+        [('show_short_summary', False), ('serialize', False)],
+        tracker.calls,
+    )
+
+    suite, tracker = make_suite(Coverage.ENABLED, 'unused server command')
+    suite.get_coverage()
+    must_equal(
+        ['reconcile', ('show_short_summary', False), ('serialize', False)],
+        tracker.calls,
+    )
