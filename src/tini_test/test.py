@@ -456,7 +456,7 @@ class Printer:
 
             for idx, exception in enumerate(_exceptions):
 
-                print_exception(exception, colorize=True)
+                print_exception(exception, colorize=True) # type: ignore[call-overload]
 
                 if idx != errors:
                     print('%s ~~~ %s' % (Color.RED.value, _RESET, ))

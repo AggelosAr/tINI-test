@@ -549,7 +549,9 @@ class CoverageTracker:
     def _serialize(cls,
                    _store: CoverageStore,
                    _metadata_save_path: Optional[DirectoryPath | FileName | None] = None,
-                   _reconcile: Optional[bool] = False) -> None:
+                   _reconcile: Optional[bool] = None) -> None:
+        if _reconcile is None:
+            _reconcile = False
         CoverageTracker(source=None, 
                         runtime_covered_lines=_store, 
                         metadata_save_path=_metadata_save_path).serialize(_reconcile)

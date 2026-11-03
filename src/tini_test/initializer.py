@@ -12,7 +12,6 @@ from tini_test.module_collector import ModuleCollector
 from tini_test.test_utils import TestStep
 
 
-
 def initialize_test_suite(run_mode: RunMode,
                           verbosity: Verbosity,
                           
@@ -43,7 +42,7 @@ def initialize_test_suite(run_mode: RunMode,
                                        metadata_save_path=store_coverage_at)
 
     
-    server = ServerManager(command=server_command, 
+    server = ServerManager(command=server_command if server_command is not None else str(), 
                            store_path=store_coverage_at,
                            health_url=health_url)
 

@@ -159,7 +159,7 @@ class TraceHandler:
 
 
 @contextmanager
-def handle_tracers(trace: bool) -> Generator[TraceHandler, None, None]:
+def handle_tracers(trace: bool) -> Generator[TraceHandler | None, None, None]:
     if trace:
         previous_sys_trace = sys.gettrace()
         previous_thread_trace = threading.gettrace()
@@ -178,7 +178,7 @@ def handle_tracers(trace: bool) -> Generator[TraceHandler, None, None]:
 
             _trace_handle.clear()
     else:
-        yield
+        yield None
 
 
 
@@ -208,9 +208,11 @@ def coverage(trace_on: bool, storage: CoverageStore,
 
 
 @contextmanager
-def patch_built_ins(apply_at: DirectoryPath, is_root: Optional[bool] = False, 
+def patch_built_ins(apply_at: DirectoryPath, is_root: Optional[bool] = None, 
                     handle: Optional[TraceHandler] = None) -> Generator[None, None, None]:
-
+    if is_root is None:
+        is_root = False
+        
     tracer = partial(BuiltInArtifact.built_in_replacer, apply_at, is_root)
 
     if handle:

@@ -4,7 +4,7 @@ from pathlib import Path
 from tini_test._internals._dynamic_reg_ids import (__C_REG, __I_REG, __M_REG,
                                                    __R_M_REG, __R_T_REG,
                                                    __S_REG, __T_REG)
-from tini_test.misc.annotations import HexStr, DirectoryPath
+from tini_test.misc.annotations import DirectoryPath, GenericHexStr
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
@@ -12,7 +12,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 @dataclass(frozen=True)
 class Init:
     _ROOT           : DirectoryPath
-    _ANCHOR_FRAME   : HexStr
+    _ANCHOR_FRAME   : GenericHexStr
 
 _INIT: list[Init] = []
 

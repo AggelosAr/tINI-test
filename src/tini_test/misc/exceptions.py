@@ -1,3 +1,4 @@
+from collections.abc import Callable
 import traceback
 from pathlib import Path
 from traceback import StackSummary
@@ -273,17 +274,18 @@ class TiniTestInternalError(Exception):
     
 class TiniTestInternalException(Exception):
     
-    def __init__(self, msg_or_type: str | type[Any]) -> None:
+    def __init__(self, msg_or_type: str | type[Any] | Callable[..., Any]) -> None:
         if isinstance(msg_or_type, str):
             super().__init__(msg_or_type)
             return
 
 
         from tini_test._internals._ast_utils import  AstParser  # >>> assert missing    # isort: skip
-        from tini_test.coverage.enums import LineStatus         # >>> assert missing
-        from tini_test.enums import Plugs, RunMode              # >>> assert missing
-        from tini_test.mock import BuiltInArtifact              # >>> assert missing
-        from importlib.machinery import ModuleSpec              # >>> assert missing
+        from importlib.machinery import ModuleSpec  # >>> assert missing
+
+        from tini_test.coverage.enums import LineStatus  # >>> assert missing
+        from tini_test.enums import Plugs, RunMode  # >>> assert missing
+        from tini_test.mock import BuiltInArtifact  # >>> assert missing
 
 
         if msg_or_type is RunMode:                                # >>> assert missing

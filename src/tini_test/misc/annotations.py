@@ -148,6 +148,8 @@ type SharedDefinitionHolder[T] = T3[T] | T4
 # -------------- REGISTERS --------------
 HexStr = TypeVar('HexStr')
 
+GenericHexStr : TypeAlias = HexStr
+
 TestId    : TypeAlias = HexStr
 MockId    : TypeAlias = HexStr
 SharedId  : TypeAlias = HexStr

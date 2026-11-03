@@ -11,8 +11,8 @@ from types import CodeType, FrameType, FunctionType
 from typing import Any, Callable, Iterable, Optional, cast
 
 from tini_test._internals._registry import attach_state
-from tini_test._internals.consts import (_R_M_REG, _R_T_REG, _ROOT_SENTINEL,
-                                         _SETNINEL, SALT, _INIT)
+from tini_test._internals.consts import (_INIT, _R_M_REG, _R_T_REG,
+                                         _ROOT_SENTINEL, _SETNINEL, SALT)
 from tini_test.enums import MockType, Plugs
 from tini_test.misc.annotations import (BuiltIn, CellName, DirectoryPath,
                                         GlobalRegistry, IsolateWrappedObject,
@@ -731,7 +731,7 @@ class Mocking:
     def __init__(self, base_frame: FrameType | None) -> None:
         self.base_frame = base_frame
 
-        self._rewinded_frames = []
+        self._rewinded_frames: list[FrameType] = []
 
     @property
     def rewinded_frames(self) -> list[FrameType]:

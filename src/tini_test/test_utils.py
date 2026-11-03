@@ -60,7 +60,7 @@ class TestStep:
 
     @property
     def should_trace(self) -> bool:
-        return self.use_coverage or len(self.mocks)
+        return self.use_coverage or len(self.mocks) > 0
     
     def run_step(self, root: DirectoryPath, verbosity: Verbosity) -> OperationState:
         

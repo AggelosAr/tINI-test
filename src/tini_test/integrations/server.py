@@ -26,7 +26,7 @@ class _ProcessGuard:
 class ServerManager:
 
     def __init__(self,
-                 command: str | None,
+                 command: str,
                  store_path: DirectoryPath | FileName | None,
                  health_url: str | None) -> None:
         # Server manager can also be used as a proxy for a general coverage
@@ -41,7 +41,7 @@ class ServerManager:
 
     @property
     def is_enabled(self) -> bool:
-        return self.command is not None
+        return self.command is not str()
     
     @property
     def deadline(self) -> float:
@@ -71,7 +71,7 @@ class ServerManager:
         env = os.environ.copy()
 
         env['TINI_TEST_COVERAGE']          = '1'
-        env['TINI_TEST_COVERAGE_STORAGE']  = CoverageTracker.normalize_path(self.store_path)
+        env['TINI_TEST_COVERAGE_STORAGE']  = str(CoverageTracker.normalize_path(self.store_path))
         env['TINI_TEST_RECONCILE_PATH']    = next(_RECONCILATIONS)
 
         instrumentation_path = os.path.dirname(__file__)
