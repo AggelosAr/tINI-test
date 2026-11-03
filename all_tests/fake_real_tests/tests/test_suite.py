@@ -82,7 +82,7 @@ def test_suite_run_solved_failing_tests_for_coverage() -> None:
 
     coverage_tracker = CoverageTracker(None, None, None)
 
-    server = ServerManager(None, None, None)
+    server = ServerManager('', None, None)
     
     test_suite = TestSuite(run_mode=RunMode.ASYNC,
                            verbosity=Verbosity.NORMAL,
@@ -378,3 +378,55 @@ def test_normal():
     must_equal(0, len(conditions))
 
     delete_test_dir()
+
+
+
+@Test.case
+def test_test_suite_flow_get_coverage():
+    from tini_test.core import TestSuite
+    from tini_test.enums import Coverage, RunMode, Verbosity
+    from tini_test.integrations.server import ServerManager
+
+    class RecordingCoverageTracker(CoverageTracker):
+        def __init__(self):
+            super().__init__(None)
+            self.calls = []
+
+        def reconcile(self):
+            self.calls.append('reconcile')
+
+        def show_short_summary(self, long=False):
+            self.calls.append(('show_short_summary', long))
+
+        def serialize(self, reconcile=False):
+            self.calls.append(('serialize', reconcile))
+
+    def make_suite(coverage_mode, server_command):
+        tracker = RecordingCoverageTracker()
+        suite = TestSuite(
+            root='.',
+            run_mode=RunMode.SYNC,
+            verbosity=Verbosity.NORMAL,
+            coverage=coverage_mode,
+            coverage_tracker=tracker,
+            server=ServerManager(server_command, None, None),
+        )
+        return suite, tracker
+
+    suite, tracker = make_suite(Coverage.DISABLED, None)
+    suite.get_coverage()
+    must_equal([], tracker.calls)
+
+    suite, tracker = make_suite(Coverage.ENABLED, None)
+    suite.get_coverage()
+    must_equal(
+        [('show_short_summary', False), ('serialize', False)],
+        tracker.calls,
+    )
+
+    suite, tracker = make_suite(Coverage.ENABLED, 'unused server command')
+    suite.get_coverage()
+    must_equal(
+        ['reconcile', ('show_short_summary', False), ('serialize', False)],
+        tracker.calls,
+    )
