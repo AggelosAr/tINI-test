@@ -49,13 +49,11 @@ class ResolvedMockRegistry:
     _id: R_M_ConstRegId
 
 
-__R_M_REG = lambda salt: ResolvedMockRegistry(R_M_ConstRegId(get_registry_key('_RESOLVED_MOCK_REGISTRY', salt)))._id
-
-
 @dataclass(frozen=True)
 class ResolvedTestRegistry:
     _id: R_T_ConstRegId
 
 
+__R_M_REG = lambda salt: ResolvedMockRegistry(R_M_ConstRegId(get_registry_key('_RESOLVED_MOCK_REGISTRY', salt)))._id
 __R_T_REG = lambda salt: ResolvedTestRegistry(R_T_ConstRegId(get_registry_key('_RESOLVED_TEST_REGISTRY', salt)))._id
 

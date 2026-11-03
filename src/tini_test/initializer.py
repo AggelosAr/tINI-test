@@ -2,13 +2,15 @@ import os
 from time import perf_counter
 from typing import Optional
 
-from tini_test._internals.consts import _ROOT
+from tini_test._internals.consts import _INIT, Init
 from tini_test.core import CoverageTracker, TestSuite
 from tini_test.enums import Coverage, RunMode, Verbosity
 from tini_test.integrations.server import ServerManager
 from tini_test.misc.annotations import (DirectoryPath, FileName,
                                         TestFunctionName)
 from tini_test.module_collector import ModuleCollector
+from tini_test.test_utils import TestStep
+
 
 
 def initialize_test_suite(run_mode: RunMode,
@@ -25,7 +27,9 @@ def initialize_test_suite(run_mode: RunMode,
                           server_command: Optional[str] = None,
                           health_url: Optional[str] = None,
                           ) -> TestSuite:
-    _ROOT[0] = os.getcwd()
+    
+    _INIT.append(Init(_ROOT=os.getcwd(), 
+                      _ANCHOR_FRAME=hex(id(TestStep.run_step.__code__))))
 
     test_collector = ModuleCollector(search_dir, file_name)
 
@@ -44,7 +48,7 @@ def initialize_test_suite(run_mode: RunMode,
                            health_url=health_url)
 
     
-    test_suite = TestSuite(root=_ROOT[0],
+    test_suite = TestSuite(root=_INIT[0]._ROOT,
                            run_mode=run_mode,
                            verbosity=verbosity,
                            coverage=coverage,

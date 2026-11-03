@@ -1,5 +1,5 @@
 from ._internals._isolate import Isolate
-from .context_managers import Mock as _Mocking
+from .context_managers import _CX_Mocking as _Mocking
 from .context_managers import WillRaise
 from .misc.exceptions import ExpectedWasDifferentFromActual
 from .mock import Mock as _Mock

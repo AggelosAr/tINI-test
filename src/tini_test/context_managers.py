@@ -8,13 +8,12 @@ from io import StringIO
 from threading import Lock
 from typing import Any, Callable, Generator, Optional
 
-from tini_test._internals.consts import _ROOT, _SETNINEL
-
+from tini_test._internals.consts import _INIT, _SETNINEL
 from tini_test.coverage._coverage import CoverageTracker
 from tini_test.misc.annotations import (CoverageStore, DirectoryPath,
                                         TestCallable)
 from tini_test.mock import (ARTIFACT_TRACKER, FILE_TRACKER, BuiltInArtifact,
-                            MockDefinition, MockNone)
+                            MockDefinition, Mocking, MockNone)
 from tini_test.shared import MetaSharedVar, SharedVar, direct_access
 
 from .misc.exceptions import (ExceptionWasNotRaised,
@@ -276,7 +275,7 @@ def patch_shared(patching: TestCallable, shared_vars: list[SharedVar]) -> Genera
 
 
 
-class Mock:
+class _CX_Mocking:
 
     @staticmethod
     @contextmanager
@@ -293,71 +292,57 @@ class Mock:
 
         * (Should only be used inside a `@Test.case` decorated function.)
         '''
-        # TODO fix isolate... ~1 / 1_000_000+? error rate ?
         ARTIFACT_TRACKER.append(_SETNINEL) # type: ignore [arg-type]
 
-        frame = inspect.currentframe()
-        previous = frame
-
-        # In case of built-in mocks, we need to manually track the frames 
-        # Until we reach the entry point ...................
-        frames = []
-
-        # Go back ~two frames to find the `run_step` ... bad but necessary
-        while frame and frame.f_code.co_name != 'run_step':
-            previous = frame
-            frame = frame.f_back
-
-            frames.append(frame)
-
-        frame = previous
-
-    
-        real_test = MockDefinition._CX_get_real_test(frame)
-
-        mock = BuiltInArtifact._CX_get_original_if_exists(mock)
-
+        mock      = BuiltInArtifact._CX_get_original_if_exists(mock)
         mock_body = MockDefinition.validate_definition(mock, returns, args, kwargs)
-        _mock = MockDefinition(mock_body)
+        _mock     = MockDefinition(mock_body)
 
-        MockDefinition.add_scope(_mock, real_test)
+        
+        mocking = Mocking(inspect.currentframe())
+        mocking._rewind_frames()
+
+        MockDefinition.add_scope(_mock, mocking.real_test)
 
         # This mock is closer to the actual call site than the decorator-based mocks if any.
         # This mock is also closer to any local mocks that may exist in the current scope.
-        relevant_mocks = _mock._CX_get_previous_mocks()
+        relevant_mocks = Mocking._CX_get_previous_mocks(_mock)
+        if not relevant_mocks:
+            Mocking._CX_register(_mock)
 
         current_builtins = len(ARTIFACT_TRACKER)
-        
-        if not relevant_mocks:
-            _mock._CX_register()
-        
+
         try:
+            # Restore previous mocks before applying the new mock
             deque(map(lambda mock: mock.restore(), relevant_mocks), maxlen=0)
 
+            # Patch current mock
             _mock.patch()
 
             # If we found built-in patch it.
             if _mock._isbuiltin:
-                BuiltInArtifact._CX_patch_initial(filter(None, frames), *_ROOT)
+                BuiltInArtifact._CX_patch_initial(mocking.rewinded_frames, _INIT[0]._ROOT)
 
             # If we will find any built-ins patch them.
-            with patch_built_ins(apply_at=_ROOT[0]):
+            with patch_built_ins(apply_at=_INIT[0]._ROOT):
                 yield
 
 
         finally:
-
+            # Clear the buffer
             FILE_TRACKER.clear()
 
+            # Restore the mock
             _mock.restore()
 
+            # Unregister the mock if it was registered previously
             if not relevant_mocks:
-                _mock._CX_unregister()
+                Mocking._CX_unregister(_mock)
 
-            
             # Here we must check if the mock was a built-in and re-patch if necessary
             # If we generated any artifacts during the process, we need to re-patch them
             if _mock._isbuiltin or len(ARTIFACT_TRACKER) > current_builtins:
                 BuiltInArtifact._CX_maybe_re_patch_level()
 
+            # Re-apply all relevant mocks to restore the previous state
             MockDefinition.patch_all(relevant_mocks)

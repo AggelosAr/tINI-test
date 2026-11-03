@@ -77,13 +77,13 @@ def test_MockType_none_none():
 @Test.case
 def mock_internals_for_mock():
     from tini_test.mock import MockDefinition
+    import inspect
+    from tini_test._internals.consts import _R_M_REG
 
     with WillRaise(TiniTestInternalException) as context:
-        import inspect
-
-        from tini_test._internals.consts import _R_M_REG
-
         new_frame = inspect.currentframe()
+
+    
         del new_frame.f_globals[_R_M_REG]
         MockDefinition._CX_get_globals(new_frame)
 

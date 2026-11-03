@@ -8,11 +8,11 @@ import textwrap
 from collections import deque
 from functools import partial
 from types import CodeType, FrameType, FunctionType
-from typing import Any, Callable, Iterable, Optional, Self, cast
+from typing import Any, Callable, Iterable, Optional, cast
 
 from tini_test._internals._registry import attach_state
 from tini_test._internals.consts import (_R_M_REG, _R_T_REG, _ROOT_SENTINEL,
-                                         _SETNINEL, SALT)
+                                         _SETNINEL, SALT, _INIT)
 from tini_test.enums import MockType, Plugs
 from tini_test.misc.annotations import (BuiltIn, CellName, DirectoryPath,
                                         GlobalRegistry, IsolateWrappedObject,
@@ -705,54 +705,6 @@ class MockDefinition:
         for mock in mocks:
             mock.test = test
 
-    ####################################
-    # Mocking utils for context manager
-    ####################################
-    @classmethod
-    def _CX_get_globals(cls, frame: FrameType) -> GlobalRegistry[MockDefinition, SharedVar]:
-        _reg = frame.f_globals
-        if _R_M_REG not in _reg:
-            raise TiniTestInternalException('Global registry for mocks not found')
-        return cast(GlobalRegistry[MockDefinition, SharedVar], _reg)
-    
-    @classmethod
-    def _CX_get_real_test(cls, frame: FrameType | None) -> RealTest:
-        if frame is None:
-            raise TiniTestInternalException('Frame is None')
-
-        real_test = cls._CX_get_globals(frame).get(_R_T_REG).get(frame.f_code.co_name)
-
-        if real_test is None:
-            raise TiniTestInternalException('Real test not found')
-        
-        return real_test
-    
-    def _CX_cmp_mock_body(_cx_mock: Self, other: MockDefinition) -> bool:
-        return hex(id(_cx_mock.body.mock)) == hex(id(other.body.mock))
-
-    def _CX_cmp_mock(_cx_mock: Self, other: MockDefinition) -> bool:
-        return hex(id(_cx_mock)) == hex(id(other))
-    
-    def _CX_get_previous_mocks(_cx_mock: Self) -> list[MockDefinition]:
-        # Find all mocks that have a similar signature in the current namespace
-        relevant_mocks = _cx_mock.__globals__[_R_M_REG][_cx_mock.test_name]
-        return list(filter(lambda m: _cx_mock._CX_cmp_mock_body(m), relevant_mocks))
-
-    def _CX_register(_cx_mock: Self) -> None:
-        _cx_mock.__globals__[_R_M_REG][_cx_mock.test_name].append(_cx_mock)
-
-    def _CX_unregister(_cx_mock: Self) -> None:
-        mocks = _cx_mock.__globals__[_R_M_REG][_cx_mock.test_name]
-        new_mocks = list(filter(lambda m: not _cx_mock._CX_cmp_mock(m), mocks))
-        _cx_mock.__globals__[_R_M_REG][_cx_mock.test_name] = new_mocks
-    ####################################
-
-    def patch(self) -> None:
-        self.body._patch()    
-
-    def restore(self) -> None:
-        self.body._restore()
-
     @classmethod
     def patch_all(cls, mocks: list[MockDefinition]) -> None:
         deque(map(lambda mock: mock.patch(), mocks), maxlen=0)
@@ -763,6 +715,104 @@ class MockDefinition:
     def restore_all(cls, mocks: list[MockDefinition]) -> None:
         deque(map(lambda mock: mock.restore(), mocks), maxlen=0)
         BuiltInArtifact.full_restore()
+
+    def patch(self) -> None:
+        self.body._patch()    
+
+    def restore(self) -> None:
+        self.body._restore()
+
+
+class Mocking:
+    ####################################
+    # Mocking utils for context manager
+    ####################################
+
+    def __init__(self, base_frame: FrameType | None) -> None:
+        self.base_frame = base_frame
+
+        self._rewinded_frames = []
+
+    @property
+    def rewinded_frames(self) -> list[FrameType]:
+        return self._rewinded_frames
+    
+    @rewinded_frames.setter
+    def rewinded_frames(self, value: list[FrameType]) -> None:
+        self._rewinded_frames = value
+
+    @property
+    def surface_frame(self) -> FrameType:
+        return self.rewinded_frames[-1]
+
+    @property
+    def surface_frame_co_name(self) -> str:
+        return self.surface_frame.f_code.co_name
+
+    @property
+    def frame_globals(self) -> GlobalRegistry[MockDefinition, SharedVar]:
+        _reg = self.surface_frame.f_globals
+
+        if _R_M_REG not in _reg:
+            raise TiniTestInternalException('Global registry for mocks not found')
+        
+        return cast(GlobalRegistry[MockDefinition, SharedVar], _reg)
+
+    @property
+    def real_test(self) -> RealTest:
+        real_test = self.frame_globals.get(_R_T_REG).get(self.surface_frame_co_name)
+
+        if real_test is None:
+            raise TiniTestInternalException('Real test not found')
+        
+        return real_test
+
+    @staticmethod
+    def _CX_cmp_mock_body(_cx_mock: MockDefinition, other: MockDefinition) -> bool:
+        return hex(id(_cx_mock.body.mock)) == hex(id(other.body.mock))
+
+    @staticmethod
+    def _CX_cmp_mock(_cx_mock: MockDefinition, other: MockDefinition) -> bool:
+        return hex(id(_cx_mock)) == hex(id(other))
+    
+    @staticmethod
+    def _CX_get_previous_mocks(_cx_mock: MockDefinition) -> list[MockDefinition]:
+        # Find all mocks that have a similar signature in the current namespace
+        relevant_mocks = _cx_mock.__globals__[_R_M_REG][_cx_mock.test_name]
+        return list(filter(lambda m: Mocking._CX_cmp_mock_body(_cx_mock, m), relevant_mocks))
+
+    @staticmethod
+    def _CX_register(_cx_mock: MockDefinition) -> None:
+        _cx_mock.__globals__[_R_M_REG][_cx_mock.test_name].append(_cx_mock)
+
+    @staticmethod
+    def _CX_unregister(_cx_mock: MockDefinition) -> None:
+        mocks = _cx_mock.__globals__[_R_M_REG][_cx_mock.test_name]
+        new_mocks = list(filter(lambda m: not Mocking._CX_cmp_mock(_cx_mock, m), mocks))
+        _cx_mock.__globals__[_R_M_REG][_cx_mock.test_name] = new_mocks
+
+    def _rewind_frames(self) -> None:
+        '''
+        In case of mocking from within a context manager, we need to rewind the frames
+        to find the actual entry point of the test function.
+        '''
+        frame = self.base_frame
+        
+        if frame is None:
+            raise TiniTestInternalException("Can't rewind frames from a None frame")
+
+        frames = []
+
+        while frame and hex(id(frame.f_code)) != _INIT[0]._ANCHOR_FRAME:
+            frames.append(frame)
+            frame = frame.f_back
+
+        frames = list(filter(None, frames))
+
+        if not frames:
+            raise TiniTestInternalException('Failed to rewind frames, no valid frames found')
+        
+        self.rewinded_frames = frames
 
 
 class Mock:
