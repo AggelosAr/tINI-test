@@ -98,6 +98,7 @@ def test_server_manager():
     import tini_test.integrations.server as server_module
     from tini_test._internals.consts import HEALTH_URL
     from tini_test.integrations.server import ServerManager
+    from tini_test.coverage._coverage import CoverageTracker
 
     disabled = ServerManager(None, None, None)
     must_equal(False, disabled.is_enabled)

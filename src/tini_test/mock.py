@@ -626,9 +626,9 @@ class MockDefinition:
             case MockType.FUNCTION:
                 return mock, mock.__name__
             
-            case _:
+            case _:                         # >>> assert missing
                 # classmethods and staticmethods are not supported by this Python < 3.12 >.
-                raise MockDefinitionError
+                raise MockDefinitionError   # >>> assert missing
             
     @staticmethod
     def validate_mock(mock: Any) -> tuple[MockType, MockedItem, str]:
@@ -643,7 +643,7 @@ class MockDefinition:
             __mock, view_name = MockDefinition.align_mock(_type, _mock)
             return _type, __mock, view_name
         
-        raise MockMissingFunctionOrClass
+        raise MockMissingFunctionOrClass    # >>> assert missing
 
     @staticmethod
     def validate_definition(mock: Any,
@@ -678,7 +678,7 @@ class MockDefinition:
             # Ignore returns since we can't validate it. It can be an arbitrary value.
             return MockReturn(mock_type, _mock, view_name, returns)
 
-        raise MockDefinitionError
+        raise MockDefinitionError   # >>> assert missing
         
     @classmethod
     def raise_for_duplicate_mocks(cls, mocks: list[MockDefinition], test_name: TestFunctionName) -> None:
