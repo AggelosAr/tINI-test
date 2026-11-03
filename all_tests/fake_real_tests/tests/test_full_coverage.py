@@ -76,34 +76,47 @@ def test_MockType_none_none():
 
 @Test.case
 def mock_internals_for_mock():
-    from tini_test.mock import MockDefinition
     import inspect
-    from tini_test._internals.consts import _R_M_REG
+    from tini_test.mock import Mocking
+    from tini_test._internals.consts import _R_M_REG, _R_T_REG
 
     with WillRaise(TiniTestInternalException) as context:
-        new_frame = inspect.currentframe()
+        Mocking(None)._rewind_frames()
 
-    
-        del new_frame.f_globals[_R_M_REG]
-        MockDefinition._CX_get_globals(new_frame)
+    must_equal("Can't rewind frames from a None frame", str(context.exception))
+
+    frame = inspect.currentframe()
+    assert frame is not None
+    mocking = Mocking(frame)
+    mocking.rewinded_frames = [frame]
+
+    missing = object()
+    mock_registry = frame.f_globals.pop(_R_M_REG, missing)
+    try:
+        with WillRaise(TiniTestInternalException) as context:
+            _ = mocking.frame_globals
+    finally:
+        if mock_registry is not missing:
+            frame.f_globals[_R_M_REG] = mock_registry
 
     must_equal('Global registry for mocks not found', str(context.exception))
 
-
     with WillRaise(TiniTestInternalException) as context:
-        MockDefinition._CX_get_real_test(None)
+        old_mock_registry = frame.f_globals.get(_R_M_REG, missing)
+        old_test_registry = frame.f_globals.get(_R_T_REG, missing)
+        frame.f_globals[_R_M_REG] = {}
+        frame.f_globals[_R_T_REG] = {}
+        try:
+            _ = mocking.real_test
+        finally:
+            if old_mock_registry is missing:
+                frame.f_globals.pop(_R_M_REG, None)
+            else:
+                frame.f_globals[_R_M_REG] = old_mock_registry
+            if old_test_registry is missing:
+                frame.f_globals.pop(_R_T_REG, None)
+            else:
+                frame.f_globals[_R_T_REG] = old_test_registry
 
-    must_equal('Frame is None', str(context.exception))
-
-
-    with WillRaise(TiniTestInternalException) as context:
-        import inspect
-
-        from tini_test._internals.consts import _R_M_REG
-        
-        new_frame = inspect.currentframe()
-        new_frame.f_globals[_R_M_REG] = 'x'
-        MockDefinition._CX_get_real_test(new_frame)
-    
     must_equal('Real test not found', str(context.exception))
     
