@@ -3,6 +3,7 @@ import importlib.util
 from collections import deque
 from functools import cached_property, lru_cache, partial
 from importlib.machinery import ModuleSpec
+import sys
 from traceback import print_exception
 from types import FunctionType, ModuleType
 from typing import Callable, Counter, Optional
@@ -370,6 +371,7 @@ class Printer:
 
         errors = 0
         failed_tests: list[TestFunctionName] = []
+        stacktraces: list[StackTrace] = []
         exceptions: list[list[BaseException]] = []
 
 
@@ -380,6 +382,7 @@ class Printer:
             if test_case.is_fail:
 
                 failed_tests.append(test_case.test_name)
+                stacktraces.append(test_case.fail_reasons)
                 exceptions.append(test_case.exceptions)
 
                 progress[bucket_idx+1] = s_symbol
@@ -440,7 +443,7 @@ class Printer:
             return errors
         
         idx = 0
-        for test, _exceptions in zip(failed_tests, exceptions):
+        for test, _stacktraces, _exceptions in zip(failed_tests, stacktraces, exceptions):
             idx += 1
             print(
                 '              \n' \
@@ -453,13 +456,22 @@ class Printer:
                     )
                 )
 
+            if sys.version_info < (3, 13):
+                for idx, trace in enumerate(_stacktraces):
 
-            for idx, exception in enumerate(_exceptions):
+                    print(trace)
 
-                print_exception(exception, colorize=True) # type: ignore[call-overload]
+                    if idx != errors:
+                        print('%s ~~~ %s' % (Color.RED.value, _RESET, ))
 
-                if idx != errors:
-                    print('%s ~~~ %s' % (Color.RED.value, _RESET, ))
+
+            if sys.version_info >= (3, 13):
+                for idx, exception in enumerate(_exceptions):
+                
+                    print_exception(exception, colorize=True) # type: ignore[call-overload]
+
+                    if idx != errors:
+                        print('%s ~~~ %s' % (Color.RED.value, _RESET, ))
 
         print('...\n')
         return errors

@@ -1,5 +1,13 @@
 # tINI test
 ![Coverage](.coverage.svg)
+![Python 3.12](pythons/.python.3.12.svg)
+![Python 3.13](pythons/.python.3.13.svg)
+![Python 3.14](pythons/.python.3.14.svg)
+![Python 3.15](pythons/.python.3.15.svg)
+
+
+
+
 
 A lightweight Python test framework (hand-crafted and almost full type safe) focused on simple test discovery and execution from the command line with **zero dependencies**. 
 
@@ -7,9 +15,15 @@ The main utilities provided by the suite are:
 
 - Defining test cases with via _@Test.case_ decorators (optional setup/cleanup).
 
-- Adding mocks via _@Mock.mock_ decorators (mock functions/classes) or with the _Mock.mocking_ context manager.
+- Adding mocks via _@Mock.mock_ decorators.
+    - Mock functions.
+    - Mock classes.
+    - Mock built-ins!
 
-- Adding shared/context vars via _@Shared_ decorators
+- Adding mocks via _Mock.mocking_ context manager.
+    - _Mock.mocking_ can be stacked in arbitrary orders!
+
+- Adding shared/context vars via _@Shared_ decorators.
     - Variables defined will be usable in any part of the code reachable from the test.
 
 - Isolating a test via the _@Isolate_ decorators.
@@ -20,9 +34,17 @@ The main utilities provided by the suite are:
 
 - Running coverage.
 
+    - Generating the coverage report in HTML format.
+
+    - Generating the coverage badge in SVG format.
+
+    - Running coverage on top of a server.
+
 *These utilities can be combined in any way.*
 
-The framework was developed and tested using its' own test suite. It was also stress tested and profiled on around 10K tests to test db connections on a temp sqlite3 and management of globals. Currently the base tests that run to power the suite are ~5k (x2) (to cover almost all possible combinations) with ~500-700 unique cases. It also allows pretty prints inside the tests while running and the print verbocity modes should provide plenty of options.
+The framework was developed and tested using its' own test suite. It was also stress tested and profiled on around 10K tests to test db connections on a temp sqlite3 and management of globals. Currently the base tests that run to power the suite are ~5k (x2) (to cover almost all possible combinations). 
+
+It also allows pretty prints inside the tests while running and the print verbocity modes should provide plenty of options.
 
 ## Installation
 
@@ -66,6 +88,19 @@ python -m tini_test -v minimal --coverage --coverage-target src --coverage-store
 python -m tini_test --coverage-merge /tmp/coverages/tini_test/
 python -m tini_test --coverage-generate-report --coverage-target src --coverage-store /tmp/coverages/tini_test/.coverage_merged
 ```
+
+## tINI-test also provides the option to run the tests from a server!
+
+There is also the option to run the server command from inside the tINI-test.
+
+```bash
+python -m tini_test  --coverage  --coverage-target src --coverage-store src/.coverage  -s "python manage.py runserver --settings main.test_settings 127.0.0.1:8000 --noreload" -v minimal -u 127.0.0.1:8000
+```
+
+This option enables full coverage over the endpoints being tested.
+
+Coverage was tested only with Django. But theoretically it should be framework agnostic.
+The server command should be provided in full along with the -u `health_url` option. 
 
 #### NOTES:
 
@@ -130,8 +165,15 @@ def test_database() -> None:
 @Test.case
 def test_math() -> None:
 
-    with WillRaise(NameError, ZeroDivisionError):   
+    with WillRaise(NameError, ZeroDivisionError) as context:   
         1/0
+    
+    # Catch the exception
+    str(context.exception)
+    # Or to get the traceback
+    import traceback as tb
+    traceback = context.exc_traceback
+    print(''.join(tb.format_tb(traceback)))
 ```
 Notes: If one of the provided exceptions is not raised the test will fail and raise an `ExceptionWasNotRaised` error.
 
@@ -143,35 +185,12 @@ def test_list_values() -> None:
 
     expected = [12345]
     must_equal(expected, some_func())
-```
 
-### Combo
 
-```python
+# When comparing custom objects the test suite will try to autocompare them 
+# but it is better to be explicit and pass them a callable that will apply the correct comparison.
 @Test.case
-def test_ints_dont_match() -> None:
-    a = 10
-    b = 20
-
-    with WillRaise(_IntegerMismatchError) as context: 
-        must_equal(a, b)
-
-    must_equal('10 != 20', str(context.exception))
-    # Or to get the traceback
-    # import traceback as tb
-    # traceback = context.exc_traceback
-    # print(''.join(tb.format_tb(traceback)))
-
-```
-
-
-### Misc
-
-When comparing custom objects the test suite will try to autocompare them but it is better to be explicit and pass them a callable that will apply the correct comparison.
-
-```python
-@Test.case
-def test_must_equal_alien_object_with_eq() -> None:
+def test_with_comp() -> None:
 
     expected = A(11)
     actual = A(21)
@@ -179,8 +198,8 @@ def test_must_equal_alien_object_with_eq() -> None:
     comp_func = lambda a, b: a.attr == b.attr
 
     must_equal(expected, actual, comp_func)
-
 ```
+
 
 ### Adding Mocks
 
@@ -203,7 +222,7 @@ def f1(x, a, b):
 @Mock.mock(f1, args=(1,), kwargs={'a': 8, 'b': 5})
 @Test.case
 def test_mocks():
-    must_equal(1 + 8 + 5, f1('?', a='?', b='?'))
+    must_equal(1 + 8 + 5, f1('?'))
                
 ```
 
@@ -213,7 +232,7 @@ The mocked function can also be supplied by keyword:
 @Mock.mock(mock=f1, args=(1,), kwargs={'a': 8, 'b': 5})
 @Test.case
 def test_mocks():
-    must_equal(1 + 8 + 5, f1('?', a='?', b='?'))
+    must_equal(1 + 8 + 5, f1('?'))
 ```
 
 The only requirement is that all functions to be mocked are unique and imported ( else syntax error ). Also it is not possible to mock both call and return values at the same time since that would defeat the whole point of mocking I assume (@roadmap).
@@ -221,8 +240,7 @@ The only requirement is that all functions to be mocked are unique and imported 
 Here is another example. Passing arbitrary objects to the mock handler.
 
 ```python
-c_r = lambda: 999
-c_x = lambda: 1000
+c_r, c_x = lambda: 999, lambda: 1000
 
 def func_g():
     return c_x
@@ -230,7 +248,6 @@ def func_g():
 @Mock.mock(func_g, returns=c_r)
 @Test.case()
 def test_mocks():
-    print('Functions! WuW')
     must_equal(c_r, func_g())
     result = func_g()()
     must_equal(999, result)

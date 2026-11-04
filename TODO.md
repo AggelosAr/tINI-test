@@ -12,13 +12,6 @@ python -m tini_test -v minimal --coverage --coverage-target src --coverage-store
 python -m tini_test --coverage-merge /tmp/coverages/tini_test/
 python -m tini_test --coverage-generate-report --coverage-target src --coverage-store /tmp/coverages/tini_test/.coverage_merged
 
-
-
-uv run --active python -m tini_test -v minimal --coverage --coverage-target src --coverage-store /tmp/coverages/tini_test/.coverage.run_MAIN
-uv run --active python -m tini_test --coverage-merge /tmp/coverages/tini_test/
-uv run --active python -m tini_test --coverage-generate-report --coverage-target src --coverage-store /tmp/coverages/tini_test/.coverage_merged
-
-
 ----
 
 
@@ -32,8 +25,3 @@ add docstring to var
 
 Maybe udate isolate to take a snapshot for true isolation
 
-
-
-
-
-python -m tini_test --coverage --coverage-target src --coverage-store /tmp/coverages/tini_test/.coverage.run_MAIN -t test_FullSuiteRunsInSubprocessWithCoverage
