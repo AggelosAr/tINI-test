@@ -1,7 +1,4 @@
 
-fail some to format errors
-
-----
 
 @consts  V2 const set to True
 @consts set python path
