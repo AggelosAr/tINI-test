@@ -89,6 +89,10 @@ python -m tini_test --coverage-merge /tmp/coverages/tini_test/
 python -m tini_test --coverage-generate-report --coverage-target src --coverage-store /tmp/coverages/tini_test/.coverage_merged
 ```
 
+> `# >>> excluded` When used on top of a file, it will exclude the file from the coverage.
+
+> `# >>> assert missing` When used next to a statement, it will assert the statement is missing from coverage.
+
 ## tINI-test also provides the option to run the tests from a server!
 
 There is also the option to run the server command from inside the tINI-test.
