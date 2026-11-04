@@ -34,6 +34,6 @@
 <path d="M 55 2 L 97 2 Q 99 2 99 5 L 99 9 Q 99 20 97 20 L 55 20 Z" stroke="transparent" fill="url(#greenGradient)" />
 <text x="28.5" y="14" font-size="11" text-anchor="middle" font-family="system-ui"
 fill="white">coverage</text>
-<text x="76.5" y="14" font-size="11" text-anchor="middle" font-family="system-ui"
+<text x="76.5" y="14.7" font-size="11" text-anchor="middle" font-family="system-ui"
 fill="white">96.1%</text>
 </svg>
