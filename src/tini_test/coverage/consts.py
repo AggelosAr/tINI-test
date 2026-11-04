@@ -2,7 +2,7 @@
 STORE               = 'CoverageReport'
 METADATA_FILE       = '.coverage'
 STYLE_FILE          = 'style.css'
-SVG_FILE            = '.coverage.svg'
+SVG_FILE            = 'X.coverage.svg'
 REPO_URL            = 'https://github.com/AggelosAr/tINI-test'
 
 

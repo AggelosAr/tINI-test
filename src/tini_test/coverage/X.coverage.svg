@@ -1,0 +1,39 @@
+<svg width="99" height="20" xmlns="http://www.w3.org/2000/svg">
+<defs>
+    <linearGradient id="silverGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#BFBFBF" />
+        <stop offset="25%" stop-color="#707070" />
+        <stop offset="50%" stop-color="#333333" />
+        <stop offset="75%" stop-color="#707070" />
+        <stop offset="100%" stop-color="#BFBFBF" />
+    </linearGradient>
+    <linearGradient id="greenGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#7CFC90" />
+        <stop offset="25%" stop-color="#22A447" />
+        <stop offset="50%" stop-color="#126B32" />
+        <stop offset="75%" stop-color="#22A447" />
+        <stop offset="100%" stop-color="#7CFC90" />
+    </linearGradient>
+    <linearGradient id="orangeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#FFD180" />
+        <stop offset="25%" stop-color="#FF9800" />
+        <stop offset="50%" stop-color="#C65D00" />
+        <stop offset="75%" stop-color="#FF9800" />
+        <stop offset="100%" stop-color="#FFD180" />
+        
+    </linearGradient>
+    <linearGradient id="redGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#FF7777" />
+        <stop offset="25%" stop-color="#E02020" />
+        <stop offset="50%" stop-color="#8B0000" />
+        <stop offset="75%" stop-color="#E02020" />
+        <stop offset="100%" stop-color="#FF7777" />
+    </linearGradient>
+</defs>
+<path d="M 5 2 Q 2 2 2 5 L 2 9 Q 2 20 5 20 L 55 20 L 55 2 Z" stroke="transparent" fill="url(#silverGradient)" />
+<path d="M 55 2 L 97 2 Q 99 2 99 5 L 99 9 Q 99 20 97 20 L 55 20 Z" stroke="transparent" fill="url(#greenGradient)" />
+<text x="28.5" y="14" font-size="11" text-anchor="middle" font-family="system-ui"
+fill="white">coverage</text>
+<text x="76.5" y="14.7" font-size="11" text-anchor="middle" font-family="system-ui"
+fill="white">-1%</text>
+</svg>
