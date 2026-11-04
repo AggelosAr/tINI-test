@@ -16,8 +16,8 @@ from typing import Optional
 from tini_test._internals._ast_utils import AstParser
 from tini_test._internals.consts import _V2_COVERAGE
 from tini_test.coverage.consts import (_TOGGLE_SCRIPT, ASSERT_NOT_COVERED,
-                                       EXCLUDED_MARKER, METADATA_FILE, STORE,
-                                       STYLE_FILE, SVG_FILE)
+                                       EXCLUDED_MARKER, METADATA_FILE,
+                                       REPO_URL, STORE, STYLE_FILE, SVG_FILE)
 from tini_test.coverage.enums import HTMLNodeType, LineStatus
 from tini_test.coverage.html import HTMLHyperLink, HTMLNode, HTMLTemplate
 from tini_test.enums import Color, ScoreClass
@@ -990,6 +990,8 @@ class HTMLFileCoverage:
 
     @staticmethod
     def get_header_node(coverage: FileCoverage, created_at: str) -> HTMLNode:
+        from tini_test import __version__
+
         header = HTMLNode(HTMLNodeType.DIV)
         header.add_class({'class': 'cov-header'})
 
@@ -1022,10 +1024,16 @@ class HTMLFileCoverage:
                 'Created at %s' % created_at
         )
 
+        version = HTMLNode(
+            HTMLNodeType.DIV, {'class': 'cov-version'}, 
+                HTMLHyperLink(REPO_URL, 'tINI-test %s' % __version__).to_html()
+        )
+
         header.add_children(title)
         header.add_children(total)
         header.add_children(score)
         header.add_children(created)
+        header.add_children(version)
         return header
 
     @staticmethod
@@ -1185,6 +1193,8 @@ class HTMLReport:
     
     @staticmethod
     def get_index_content(tracker: CoverageTracker) -> HTMLNode:
+        from tini_test import __version__
+
         hyper_links = HTMLReport.get_hyper_links_and_update_coverage_hrefs(tracker)
 
         header = HTMLNode(HTMLNodeType.DIV, {'class': 'cov-header'})
@@ -1200,7 +1210,10 @@ class HTMLReport:
                      'Total coverage %.1f%%' % tracker.total_score),
 
             HTMLNode(HTMLNodeType.DIV, {'class': 'cov-created'}, 
-                     'Created at %s' % tracker.created_at)
+                     'Created at %s' % tracker.created_at),
+
+            HTMLNode(HTMLNodeType.DIV, {'class': 'cov-version'}, 
+                     HTMLHyperLink(REPO_URL, 'tINI-test %s' % __version__).to_html())
         ])
 
         table = HTMLNode(HTMLNodeType.TABLE)

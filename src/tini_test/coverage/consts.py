@@ -3,6 +3,7 @@ STORE               = 'CoverageReport'
 METADATA_FILE       = '.coverage'
 STYLE_FILE          = 'style.css'
 SVG_FILE            = '.coverage.svg'
+REPO_URL            = 'https://github.com/AggelosAr/tINI-test'
 
 
 EXCLUDED_MARKER     = '# >>> excluded'

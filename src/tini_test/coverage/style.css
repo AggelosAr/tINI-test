@@ -178,6 +178,26 @@ body {
     margin-top: 4px; 
 }
 
+.cov-version { 
+    font-size: 12px; 
+    font-family: monospace; 
+    color: #888; 
+    margin-top: 2px; 
+}
+
+.cov-version a { 
+    color: inherit; 
+    text-decoration: underline dotted; 
+    text-underline-offset: 3px; 
+    cursor: pointer; 
+    transition: color 0.15s ease; 
+}
+
+.cov-version a:hover { 
+    color: #4fc3f7; 
+    text-decoration: underline solid; 
+}
+
 .cov-highlight-path,
 .cov-highlight-total,
 .cov-highlight-score {
