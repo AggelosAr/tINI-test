@@ -1,5 +1,5 @@
 # tINI test
-![Coverage](.coverage.svg)
+![Coverage](1.coverage.svg)
 ![Python 3.12](pythons/.python.3.12.svg)
 ![Python 3.13](pythons/.python.3.13.svg)
 ![Python 3.14](pythons/.python.3.14.svg)
