@@ -7,7 +7,7 @@ from .must_equals import must_equal
 from .shared import NotInitialized, Shared, var
 from .test_utils import Test
 
-__version__ = '0.9.5'
+__version__ = '0.9.9'
 
 
 class Mock(_Mock, _Mocking): ...
