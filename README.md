@@ -4,7 +4,7 @@
 ![Python 3.13](pythons/.python.3.13.svg)
 ![Python 3.14](pythons/.python.3.14.svg)
 ![Python 3.15](pythons/.python.3.15.svg)
-
+![Python 3.15](pythons/.python.3.16.svg)
 
 
 

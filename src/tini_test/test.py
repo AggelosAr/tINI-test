@@ -1,9 +1,9 @@
 import asyncio
 import importlib.util
+import sys
 from collections import deque
 from functools import cached_property, lru_cache, partial
 from importlib.machinery import ModuleSpec
-import sys
 from traceback import print_exception
 from types import FunctionType, ModuleType
 from typing import Callable, Counter, Optional

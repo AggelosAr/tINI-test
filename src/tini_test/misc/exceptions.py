@@ -1,5 +1,5 @@
-from collections.abc import Callable
 import traceback
+from collections.abc import Callable
 from pathlib import Path
 from traceback import StackSummary
 from typing import Any, Optional
