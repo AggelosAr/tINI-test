@@ -767,7 +767,7 @@ class CoverageTracker:
 
         print('Saved coverage metadata to:', save_path)
     
-    def collect_files_from_source(self) -> None:
+    def make_coverage_metadata(self) -> None:
         search_path = CoverageTracker.normalize_path(self.source)
 
         # If source is a file we must only collect a single file
@@ -824,7 +824,7 @@ class CoverageTracker:
 
     def show_short_summary(self, long: Optional[bool] = False) -> None:
         self.update_covered_store()
-        self.collect_files_from_source()
+        self.make_coverage_metadata()
 
         self.file_to_coverage = dict(sorted(self.file_to_coverage.items()))
         
@@ -1273,7 +1273,7 @@ class HTMLReport:
     @staticmethod
     def to_html(tracker: CoverageTracker) -> None:
         tracker.update_covered_store()
-        tracker.collect_files_from_source()
+        tracker.make_coverage_metadata()
 
         tracker.file_to_coverage = dict(sorted(tracker.file_to_coverage.items()))
 
