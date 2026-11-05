@@ -135,6 +135,7 @@ class FileCoverage:
     def __init__(self, 
                  file_path: Path, 
                  runtime_covered_lines: set[CodeLineNumber],
+                 runtime_failed_lines: set[CodeLineNumber],
                  autocomplete_top_levels: bool) -> None:
         self.href = ''
 
@@ -152,6 +153,7 @@ class FileCoverage:
         runtime_covered_lines.discard(0)
 
         self.runtime_covered_lines = runtime_covered_lines
+        self.runtime_failed_lines = runtime_failed_lines
 
     @cached_property
     def parser(self) -> AstParser:
@@ -349,13 +351,33 @@ class FileCoverage:
         _assert_not_covered = InlineComment.assert_not_covered
 
         return _assert_not_covered(line.line_content, inline_comment)
-    
+
+    def categorize_python_statement(self, statement_id: StatementId) -> LineStatus.RUN | LineStatus.MISSING:
+        '''
+        Categorize a Python statement based on its statement ID.
+
+        There are two cases:
+            1. The statement doesn't have children.
+                If the statement belongs to passes and fails, it is considered MISSING.
+                Otherwise, it belongs to bucket it is included in (RUN or MISSING).
+
+            2. The statement has children.
+                If any child is categorized as RUN, the statement is considered RUN.
+                Otherwise, it is considered MISSING.
+
+        raises TiniTestInternalException if it is categorized as < NULL >.
+        '''
+        ...
+
     def handle_python_statement(self, l_nos: list[CodeLineNumber]) -> None:
         # Assume that for some reason we get missing information
         # In a multi-line statement, we may get only a single line as < RUN > ?
         statuses = []
 
         assert_not_covered = False
+
+        statement_id = self.line_to_statement(l_nos[0])
+        status = self.categorize_python_statement(statement_id)
 
         for l_no in range(l_nos[0], l_nos[-1] + 1):
             line = Line(l_no, self.raw_lines[l_no - 1], LineStatus.NULL)
@@ -375,11 +397,7 @@ class FileCoverage:
             if line.is_ellipsis:
                 self.handle_ellipsis(line)
 
-            match l_no in self.runtime_covered_lines:
-                case True:
-                    statuses.append(LineStatus.RUN)
-                case False:
-                    statuses.append(LineStatus.MISSING)
+            statuses.append(status)
 
         status = LineStatus.RUN if any(s == LineStatus.RUN for s in statuses) else LineStatus.MISSING
 
@@ -715,19 +733,6 @@ class CoverageTracker:
         for file, lines in ext_store.items():
             self.coverage_fails.setdefault(file, set()).update(lines)
 
-    def update_covered_store(self) -> None:
-        if _V2_COVERAGE:
-            # Skip updating the covered store for V2 coverage
-            # Only valid if all tests are passing
-            # The exception tests are asserted in their 
-            # separate test cases as a result this is correct and 
-            # intended behavior
-            return 
-        new_store = {}
-        for file, lines in self.coverage_passes.items():
-            new_store[file] = set(lines) - self.coverage_fails.get(file, set())
-        self.coverage_passes = new_store
-
     def reconcile(self) -> None:
         # TODO maybe change the exception traces to indicate the reconciliation context
         save_path = CoverageTracker.get_serialized_path(self.metadata_save_path)
@@ -766,7 +771,18 @@ class CoverageTracker:
             json.dump({file: list(lines) for file, lines in self.coverage_passes.items()}, f)
 
         print('Saved coverage metadata to:', save_path)
-    
+
+    def update_file_to_coverage(self, path: DirectoryPath | FileName) -> None:
+        passes = self.coverage_passes.get(path, set())
+        fails = self.coverage_fails.get(path, set())
+
+        add_top_levels = path in self.coverage_passes
+
+        file_coverage = FileCoverage(Path(path), passes, fails, add_top_levels)
+        file_coverage.parse_file()
+
+        self.file_to_coverage[path] = file_coverage
+
     def make_coverage_metadata(self) -> None:
         search_path = CoverageTracker.normalize_path(self.source)
 
@@ -776,25 +792,15 @@ class CoverageTracker:
             if not search_path.exists(follow_symlinks=False) or not search_path.suffix == '.py':
                 raise CoverageRequestedForInvalidFile(search_path)
 
-            store = self.coverage_passes.get(str(search_path), set())
-            add_top_levels = search_path in self.coverage_passes
-            file_coverage = FileCoverage(search_path, store, add_top_levels)
-            file_coverage.parse_file()
-
-            self.file_to_coverage[str(search_path)] = file_coverage
+            self.update_file_to_coverage(str(search_path))
             return
 
         for root, _, files in os.walk(search_path):
             for file in files:
                 if file.endswith('.py'):
-                    file_path = os.path.join(root, file)
+                    path = os.path.join(root, file)
 
-                    store = self.coverage_passes.get(file_path, set())
-                    add_top_levels = file_path in self.coverage_passes
-                    file_coverage = FileCoverage(Path(file_path), store, add_top_levels)
-                    file_coverage.parse_file()
-
-                    self.file_to_coverage[file_path] = file_coverage
+                    self.update_file_to_coverage(path)
 
     @staticmethod
     def pad(s: str | int | float, width: int) -> str:
@@ -823,7 +829,6 @@ class CoverageTracker:
         return '\033[48;2;0;0;0m%s%*.1f%% \033[0m' % (color, 7, score)
 
     def show_short_summary(self, long: Optional[bool] = False) -> None:
-        self.update_covered_store()
         self.make_coverage_metadata()
 
         self.file_to_coverage = dict(sorted(self.file_to_coverage.items()))
@@ -1272,7 +1277,6 @@ class HTMLReport:
 
     @staticmethod
     def to_html(tracker: CoverageTracker) -> None:
-        tracker.update_covered_store()
         tracker.make_coverage_metadata()
 
         tracker.file_to_coverage = dict(sorted(tracker.file_to_coverage.items()))
