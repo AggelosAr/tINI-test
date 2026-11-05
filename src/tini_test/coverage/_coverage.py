@@ -496,7 +496,7 @@ class CoverageTracker:
                  source: DirectoryPath | FileName | None,
                  runtime_covered_lines: Optional[CoverageStore] = None, 
                  metadata_save_path: Optional[DirectoryPath | FileName | None] = None) -> None:
-        self.files: dict[str, FileCoverage] = {}
+        self.file_to_coverage: dict[str, FileCoverage] = {}
         self._source = source
 
         self._store = runtime_covered_lines if runtime_covered_lines is not None else {}
@@ -511,27 +511,27 @@ class CoverageTracker:
     
     @cached_property
     def total(self) -> int:
-        return sum(file_coverage.total_statements for file_coverage in self.files.values())
+        return sum(file_coverage.total_statements for file_coverage in self.file_to_coverage.values())
 
     @cached_property
     def covered(self) -> int:
-        return sum(file_coverage.covered_statements for file_coverage in self.files.values())
+        return sum(file_coverage.covered_statements for file_coverage in self.file_to_coverage.values())
 
     @cached_property
     def incorrectly_covered(self) -> int:
-        return sum(file_coverage._X_incorrectly_covered_statements for file_coverage in self.files.values())
+        return sum(file_coverage._X_incorrectly_covered_statements for file_coverage in self.file_to_coverage.values())
 
     @cached_property
     def missing(self) -> int:
-        return sum(file_coverage.missing_statements for file_coverage in self.files.values())
+        return sum(file_coverage.missing_statements for file_coverage in self.file_to_coverage.values())
 
     @cached_property
     def correctly_missing(self) -> int:
-        return sum(file_coverage._X_correctly_missing_statements for file_coverage in self.files.values())
+        return sum(file_coverage._X_correctly_missing_statements for file_coverage in self.file_to_coverage.values())
     
     @cached_property
     def excluded(self) -> int:
-        return sum(file_coverage.excluded_statements for file_coverage in self.files.values())
+        return sum(file_coverage.excluded_statements for file_coverage in self.file_to_coverage.values())
 
     @cached_property
     def total_score(self) -> float:
@@ -781,7 +781,7 @@ class CoverageTracker:
             file_coverage = FileCoverage(search_path, store, add_top_levels)
             file_coverage.parse_file()
 
-            self.files[str(search_path)] = file_coverage
+            self.file_to_coverage[str(search_path)] = file_coverage
             return
 
         for root, _, files in os.walk(search_path):
@@ -794,7 +794,7 @@ class CoverageTracker:
                     file_coverage = FileCoverage(Path(file_path), store, add_top_levels)
                     file_coverage.parse_file()
 
-                    self.files[file_path] = file_coverage
+                    self.file_to_coverage[file_path] = file_coverage
 
     @staticmethod
     def pad(s: str | int | float, width: int) -> str:
@@ -826,7 +826,7 @@ class CoverageTracker:
         self.update_covered_store()
         self.collect_files_from_source()
 
-        self.files = dict(sorted(self.files.items()))
+        self.file_to_coverage = dict(sorted(self.file_to_coverage.items()))
         
         titles = ('Total', 'Run', 'Correctly Missing', 'Missing', 'Incorrectly Run', 'Excluded', 'Score')
 
@@ -873,7 +873,7 @@ class CoverageTracker:
         max_titles = max(len(title) for title in _titles)
         max_digits = 0
 
-        for file_path, coverage in self.files.items():
+        for file_path, coverage in self.file_to_coverage.items():
             max_digits = max(max_digits, len(str(coverage.total_statements)))
             max_digits = max(max_digits, len(str(coverage.covered_statements)))
             max_digits = max(max_digits, len(str(coverage._X_correctly_missing_statements)))
@@ -887,7 +887,7 @@ class CoverageTracker:
         print('\t'.join(map(self.pad, _titles, [_max]*len(_titles))))
         print()
 
-        for file_path, coverage in self.files.items():
+        for file_path, coverage in self.file_to_coverage.items():
             print()
             print(file_path)
             print(
