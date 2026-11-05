@@ -143,7 +143,7 @@ class FileCoverage:
 
         self._statement_counts: Counter[LineStatus] = Counter()
         
-        self._source = ''
+        self.source = ''
 
         self._autocomplete_top_levels = autocomplete_top_levels
         if 0 in runtime_covered_lines:
@@ -183,11 +183,11 @@ class FileCoverage:
     
     @property
     def source(self) -> str:
-        return self._source
+        return self.source
 
     @source.setter
     def source(self, value: str) -> None:
-        self._source = value
+        self.source = value
    
     @property
     def top_levels(self) -> list[CodeLineNumber]:
@@ -497,7 +497,7 @@ class CoverageTracker:
                  runtime_covered_lines: Optional[CoverageStore] = None, 
                  metadata_save_path: Optional[DirectoryPath | FileName | None] = None) -> None:
         self.file_to_coverage: dict[str, FileCoverage] = {}
-        self._source = source
+        self.source = source
 
         self.coverage_passes = runtime_covered_lines if runtime_covered_lines is not None else {}
         self.coverage_fails: CoverageStore = {}
@@ -768,7 +768,7 @@ class CoverageTracker:
         print('Saved coverage metadata to:', save_path)
     
     def collect_files_from_source(self) -> None:
-        search_path = CoverageTracker.normalize_path(self._source)
+        search_path = CoverageTracker.normalize_path(self.source)
 
         # If source is a file we must only collect a single file
         if search_path.is_file():
