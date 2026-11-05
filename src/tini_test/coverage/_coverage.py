@@ -1177,7 +1177,7 @@ class HTMLReport:
     def get_hyper_links_and_update_coverage_hrefs(tracker: CoverageTracker) -> list[HTMLHyperLink]:
         links = []
 
-        for idx, (file_path, coverage) in enumerate(tracker.files.items()):
+        for idx, (file_path, coverage) in enumerate(tracker.file_to_coverage.items()):
             href = ('%d_%s.html' 
                         % 
                         (
@@ -1204,7 +1204,7 @@ class HTMLReport:
                      'Coverage report'),
 
             HTMLNode(HTMLNodeType.DIV, {'class': 'cov-total'}, 
-                     '%d files' % len(tracker.files)),
+                     '%d files' % len(tracker.file_to_coverage)),
 
             HTMLNode(HTMLNodeType.DIV, {'class': 'cov-score %s' % HTMLReport._css_score_class(tracker.total_score)},
                      'Total coverage %.1f%%' % tracker.total_score),
@@ -1229,7 +1229,7 @@ class HTMLReport:
 
         table.add_children(head_row)
         
-        for link, coverage in zip(hyper_links, tracker.files.values()):
+        for link, coverage in zip(hyper_links, tracker.file_to_coverage.values()):
             row = HTMLNode(HTMLNodeType.TR)
             row.add_children([
                 HTMLNode(HTMLNodeType.TD, {'class': 'index-file'}, link.to_html()),
@@ -1275,7 +1275,7 @@ class HTMLReport:
         tracker.update_covered_store()
         tracker.collect_files_from_source()
 
-        tracker.files = dict(sorted(tracker.files.items()))
+        tracker.file_to_coverage = dict(sorted(tracker.file_to_coverage.items()))
 
         dest_dir = HTMLReport.init_store()
         HTMLReport.add_git_ignore(dest_dir)
@@ -1285,7 +1285,7 @@ class HTMLReport:
                              content=HTMLReport.get_index_content(tracker).to_html())
         index.write_to_file()
 
-        for coverage in tracker.files.values():
+        for coverage in tracker.file_to_coverage.values():
 
             coverage_path = Path(os.path.join(dest_dir, coverage.href))
 
