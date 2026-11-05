@@ -511,27 +511,27 @@ class CoverageTracker:
     
     @cached_property
     def total(self) -> int:
-        return sum(file_coverage.total_statements for file_coverage in self.file_to_coverage.values())
+        return sum(f_cov.total_statements for f_cov in self.file_to_coverage.values())
 
     @cached_property
     def covered(self) -> int:
-        return sum(file_coverage.covered_statements for file_coverage in self.file_to_coverage.values())
+        return sum(f_cov.covered_statements for f_cov in self.file_to_coverage.values())
 
     @cached_property
     def incorrectly_covered(self) -> int:
-        return sum(file_coverage._X_incorrectly_covered_statements for file_coverage in self.file_to_coverage.values())
+        return sum(f_cov._X_incorrectly_covered_statements for f_cov in self.file_to_coverage.values())
 
     @cached_property
     def missing(self) -> int:
-        return sum(file_coverage.missing_statements for file_coverage in self.file_to_coverage.values())
+        return sum(f_cov.missing_statements for f_cov in self.file_to_coverage.values())
 
     @cached_property
     def correctly_missing(self) -> int:
-        return sum(file_coverage._X_correctly_missing_statements for file_coverage in self.file_to_coverage.values())
+        return sum(f_cov._X_correctly_missing_statements for f_cov in self.file_to_coverage.values())
     
     @cached_property
     def excluded(self) -> int:
-        return sum(file_coverage.excluded_statements for file_coverage in self.file_to_coverage.values())
+        return sum(f_cov.excluded_statements for f_cov in self.file_to_coverage.values())
 
     @cached_property
     def total_score(self) -> float:
