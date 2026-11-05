@@ -11,11 +11,44 @@ from tini_test.misc.annotations import (CodeLineNumber, DocstringId,
 from tini_test.misc.exceptions import TiniTestInternalException
 
 
+class StatementGraphNode:
+    
+    def __init__(self, statement_id: StatementId) -> None:
+        self.id = statement_id
+        self.children: set[StatementId] = set()
+
+    @property
+    def has_children(self) -> bool:
+        return len(self.children) > 0
+
+    def add_child(self, child_id: StatementId) -> None:
+        self.children.add(child_id)
+    
+
 class AstParser:
 
     def __init__(self, source: str, filename: str) -> None:
         self.root_node = ast.parse(source, filename=filename)
         self.source_lines = source.splitlines()
+
+        self._line_to_statement_cache: dict[CodeLineNumber, StatementId] = {}
+        self._statement_graph_cache: dict[StatementId, StatementGraphNode] = {}
+
+    @property
+    def line_to_statement(self) -> dict[CodeLineNumber, StatementId]:
+        return self._line_to_statement_cache
+
+    @line_to_statement.setter
+    def line_to_statement(self, value: dict[CodeLineNumber, StatementId]) -> None:
+        self._line_to_statement_cache = value
+
+    @property
+    def statement_graph(self) -> dict[StatementId, StatementGraphNode]:
+        return self._statement_graph_cache
+
+    @statement_graph.setter
+    def statement_graph(self, value: dict[StatementId, StatementGraphNode]) -> None:
+        self._statement_graph_cache = value
 
     @classmethod
     def from_spec(cls, spec: ModuleSpec) -> AstParser:
@@ -78,16 +111,10 @@ class AstParser:
                 line_to_docstring[l] = docstring_id
             
         return line_to_docstring
-    
-    @no_type_check                                                                              
-    def extract_line_to_statement(self) -> dict[CodeLineNumber, StatementId]:                   
-        """Map every line to the id (starting at 1) of the statement that spans it.
 
-        Compound statements (def, if, try, ...) only own their header, their bodies are
-        separate statements. `case` and `except` clauses count as statements too.
-        Bare strings (docstrings) and non statement lines (comments, blanks, else/finally)
-        are not mapped.
-        """                                                                                     
+    @no_type_check
+    def walk_root(self) -> None:
+        # Compute both line_to_statement and statement_graph in a single AST traversal.
         statements = [                                                                        
             node for node in ast.walk(self.root_node)
             if isinstance(node, (ast.stmt, ast.match_case, ast.ExceptHandler))
@@ -103,6 +130,8 @@ class AstParser:
         statements.sort(key=lambda n: (first_node(n).lineno, first_node(n).col_offset))
 
         line_to_statement: dict[CodeLineNumber, StatementId] = {}
+        statement_graph: dict[StatementId, StatementGraphNode] = {}
+
         statement_id = 0
 
         for node in statements:
@@ -112,6 +141,7 @@ class AstParser:
                          if n not in line_to_statement]
                 if lines:
                     statement_id += 1
+                    statement_graph[statement_id] = StatementGraphNode(statement_id, decorator.lineno, False, None)
                     for line in lines:
                         line_to_statement[line] = statement_id
 
@@ -136,10 +166,13 @@ class AstParser:
                 continue
 
             statement_id += 1
+            is_compound = bool(getattr(node, 'body', None) or getattr(node, 'cases', None))
+            statement_graph[statement_id] = StatementGraphNode(statement_id, start, is_compound, node)
             for line in lines:
                 line_to_statement[line] = statement_id
 
-        return line_to_statement
+        self.line_to_statement = line_to_statement
+        self.statement_graph = statement_graph
 
     def extract_top_level_lines(self) -> list[CodeLineNumber]:
         lines: set[CodeLineNumber] = set()

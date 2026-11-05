@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import html
 import io
 import json
@@ -13,7 +14,7 @@ from pathlib import Path
 from types import FrameType
 from typing import Optional
 
-from tini_test._internals._ast_utils import AstParser
+from tini_test._internals._ast_utils import AstParser, StatementGraphNode
 from tini_test._internals.consts import _V2_COVERAGE
 from tini_test.coverage.consts import (_TOGGLE_SCRIPT, ASSERT_NOT_COVERED,
                                        EXCLUDED_MARKER, METADATA_FILE,
@@ -137,31 +138,37 @@ class FileCoverage:
                  runtime_covered_lines: set[CodeLineNumber],
                  runtime_failed_lines: set[CodeLineNumber],
                  autocomplete_top_levels: bool) -> None:
-        self.href = ''
-
         self.file_path = file_path
-        self.lines: dict[CodeLineNumber, Line] = {}
-
-        self._statement_counts: Counter[LineStatus] = Counter()
         
-        self.source = ''
-
         self._autocomplete_top_levels = autocomplete_top_levels
         if 0 in runtime_covered_lines:
             self._autocomplete_top_levels = True
 
         runtime_covered_lines.discard(0)
-
         self.runtime_covered_lines = runtime_covered_lines
         self.runtime_failed_lines = runtime_failed_lines
 
+        self.lines: dict[CodeLineNumber, Line] = {}
+
+        self._href = ''
+
+        self._source = ''
+        self._statement_counts: Counter[LineStatus] = Counter()
+        self._statement_to_status: dict[StatementId, LineStatus] = {}
+
     @cached_property
-    def parser(self) -> AstParser:
-        return AstParser.from_file_read(self.source, str(self.file_path))
+    def ast_parser(self) -> AstParser:
+        _ast_parser = AstParser.from_file_read(self.source, str(self.file_path))
+        _ast_parser.walk_root()
+        return _ast_parser
+
+    @cached_property
+    def statement_graph(self) -> dict[StatementId, StatementGraphNode]:
+        return self.ast_parser.statement_graph
 
     @cached_property
     def line_to_statement(self) -> dict[CodeLineNumber, StatementId]:
-        return self.parser.extract_line_to_statement()
+        return self.ast_parser.line_to_statement
 
     @cached_property
     def statement_to_lines(self) -> dict[StatementId, set[CodeLineNumber]]:
@@ -169,7 +176,7 @@ class FileCoverage:
 
     @cached_property
     def line_to_docstring(self) -> dict[CodeLineNumber, DocstringId]:
-        return self.parser.extract_line_to_docstring()
+        return self.ast_parser.extract_line_to_docstring()
 
     @cached_property
     def docstring_to_lines(self) -> dict[DocstringId, set[CodeLineNumber]]:
@@ -182,14 +189,22 @@ class FileCoverage:
     @cached_property
     def raw_lines(self) -> list[str]:
         return self.source.splitlines()
-    
+
+    @property
+    def href(self) -> str:
+        return self._href
+
+    @href.setter
+    def href(self, value: str) -> None:
+        self._href = value
+
     @property
     def source(self) -> str:
-        return self.source
+        return self._source
 
     @source.setter
     def source(self, value: str) -> None:
-        self.source = value
+        self._source = value
    
     @property
     def top_levels(self) -> list[CodeLineNumber]:
@@ -201,7 +216,7 @@ class FileCoverage:
         if not self._autocomplete_top_levels:
             return []
         
-        return self.parser.extract_top_level_lines()
+        return self.ast_parser.extract_top_level_lines()
     
     @property
     def total_statements(self) -> int:
@@ -282,6 +297,47 @@ class FileCoverage:
         
         return False
 
+    def categorize_python_statement(self, statement_id: StatementId) -> LineStatus.RUN | LineStatus.MISSING:
+        '''
+        Categorize a Python statement based on its statement ID.
+
+        There are two cases:
+            1. The statement doesn't have children.
+                If the statement belongs to passes and fails, it is considered MISSING.
+                Otherwise, it belongs to bucket it is included in (RUN or MISSING).
+
+            2. The statement has children.
+                If any child is categorized as RUN, the statement is considered RUN.
+                Otherwise, it is considered MISSING.
+
+        raises TiniTestInternalException if it is categorized as < NULL >.
+        '''
+        node = self.statement_graph.get(statement_id)
+
+        status = LineStatus.NULL
+        if node.has_children:
+            in_passes = any(line in self.runtime_covered_lines for line in node.lines)
+            in_fails = any(line in self.runtime_failed_lines for line in node.lines)
+            
+            if in_passes and in_fails:
+                status = LineStatus.MISSING
+            elif in_passes:
+                status = LineStatus.RUN
+            else:
+                status = LineStatus.MISSING
+        else:
+            # Compound statement: check if any child is RUN
+            for child_id in node.children:
+                child_status = self.categorize_python_statement(child_id)
+                if child_status == LineStatus.RUN:
+                    status = LineStatus.RUN
+                    break
+        # XXX
+        return status
+        
+    def update_statement_graph(self) -> None:
+        ...
+
     def handle_empty_line(self, line: Line):
         line.is_continuation = False
         line.status = LineStatus.EMPTY
@@ -352,32 +408,12 @@ class FileCoverage:
 
         return _assert_not_covered(line.line_content, inline_comment)
 
-    def categorize_python_statement(self, statement_id: StatementId) -> LineStatus.RUN | LineStatus.MISSING:
-        '''
-        Categorize a Python statement based on its statement ID.
-
-        There are two cases:
-            1. The statement doesn't have children.
-                If the statement belongs to passes and fails, it is considered MISSING.
-                Otherwise, it belongs to bucket it is included in (RUN or MISSING).
-
-            2. The statement has children.
-                If any child is categorized as RUN, the statement is considered RUN.
-                Otherwise, it is considered MISSING.
-
-        raises TiniTestInternalException if it is categorized as < NULL >.
-        '''
-        ...
-
     def handle_python_statement(self, l_nos: list[CodeLineNumber]) -> None:
         # Assume that for some reason we get missing information
         # In a multi-line statement, we may get only a single line as < RUN > ?
         statuses = []
 
         assert_not_covered = False
-
-        statement_id = self.line_to_statement(l_nos[0])
-        status = self.categorize_python_statement(statement_id)
 
         for l_no in range(l_nos[0], l_nos[-1] + 1):
             line = Line(l_no, self.raw_lines[l_no - 1], LineStatus.NULL)
@@ -397,7 +433,7 @@ class FileCoverage:
             if line.is_ellipsis:
                 self.handle_ellipsis(line)
 
-            statuses.append(status)
+            statuses.append(line.status)
 
         status = LineStatus.RUN if any(s == LineStatus.RUN for s in statuses) else LineStatus.MISSING
 
@@ -501,6 +537,8 @@ class FileCoverage:
 
         if self.handle_excluded_file():
             return
+
+        self.update_statement_graph()
 
         self.iterate_python_file()
 
