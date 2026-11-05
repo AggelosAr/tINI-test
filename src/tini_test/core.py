@@ -162,7 +162,7 @@ class TestSuite:
         if not self.use_coverage:
             return
 
-        self.coverage_tracker.update_store(self._coverage_total)
+        self.coverage_tracker.update_passes(self._coverage_total)
         self._coverage_total.clear()
 
     def update_coverage_stores(self, test_collection: TestCollection) -> None:
@@ -171,7 +171,7 @@ class TestSuite:
 
         for test in test_collection.collector.values():
 
-            self.coverage_tracker.update_store(test.coverage_store)
+            self.coverage_tracker.update_passes(test.coverage_store)
 
             if test.is_fail:
                 self.coverage_tracker.update_fails(test.coverage_store)

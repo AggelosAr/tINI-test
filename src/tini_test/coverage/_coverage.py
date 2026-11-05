@@ -707,7 +707,7 @@ class CoverageTracker:
 
         return save_path
 
-    def update_store(self, ext_store: CoverageStore) -> None:
+    def update_passes(self, ext_store: CoverageStore) -> None:
         for file, lines in ext_store.items():
             self.coverage_passes.setdefault(file, set()).update(lines)
 
@@ -744,7 +744,7 @@ class CoverageTracker:
         os.remove(reconcile_path)
 
         # Merge the stored coverage data with the current store
-        self.update_store(stored_coverage)
+        self.update_passes(stored_coverage)
 
     def serialize(self, reconcile: bool = False) -> None:
         '''
