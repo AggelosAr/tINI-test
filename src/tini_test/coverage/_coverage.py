@@ -503,7 +503,7 @@ class CoverageTracker:
         self.coverage_fails: CoverageStore = {}
 
 
-        self._metadata_save_path = metadata_save_path
+        self.metadata_save_path = metadata_save_path
 
     @cached_property
     def created_at(self) -> str:
@@ -730,7 +730,7 @@ class CoverageTracker:
 
     def reconcile(self) -> None:
         # TODO maybe change the exception traces to indicate the reconciliation context
-        save_path = CoverageTracker.get_serialized_path(self._metadata_save_path)
+        save_path = CoverageTracker.get_serialized_path(self.metadata_save_path)
 
         from tini_test.integrations.server import _RECONCILATIONS
         reconciliation = next(_RECONCILATIONS)
@@ -755,7 +755,7 @@ class CoverageTracker:
         the same object.
         '''
         # TODO this needs a proper encoding, for now the chances are slim a collision is found.
-        save_path = CoverageTracker.get_serialized_path(self._metadata_save_path)
+        save_path = CoverageTracker.get_serialized_path(self.metadata_save_path)
         if reconcile:
             reconciliation = os.getenv('TINI_TEST_RECONCILE_PATH')
             prefix, suffix = os.path.split(save_path)
