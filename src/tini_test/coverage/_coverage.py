@@ -499,8 +499,8 @@ class CoverageTracker:
         self.file_to_coverage: dict[str, FileCoverage] = {}
         self._source = source
 
-        self._coverage_passes = runtime_covered_lines if runtime_covered_lines is not None else {}
-        self._coverage_fails: CoverageStore = {}
+        self.coverage_passes = runtime_covered_lines if runtime_covered_lines is not None else {}
+        self.coverage_fails: CoverageStore = {}
 
 
         self._metadata_save_path = metadata_save_path
@@ -709,11 +709,11 @@ class CoverageTracker:
 
     def update_store(self, ext_store: CoverageStore) -> None:
         for file, lines in ext_store.items():
-            self._coverage_passes.setdefault(file, set()).update(lines)
+            self.coverage_passes.setdefault(file, set()).update(lines)
 
     def update_fails(self, ext_store: CoverageStore) -> None:
         for file, lines in ext_store.items():
-            self._coverage_fails.setdefault(file, set()).update(lines)
+            self.coverage_fails.setdefault(file, set()).update(lines)
 
     def update_covered_store(self) -> None:
         if _V2_COVERAGE:
@@ -724,9 +724,9 @@ class CoverageTracker:
             # intended behavior
             return 
         new_store = {}
-        for file, lines in self._coverage_passes.items():
-            new_store[file] = set(lines) - self._coverage_fails.get(file, set())
-        self._coverage_passes = new_store
+        for file, lines in self.coverage_passes.items():
+            new_store[file] = set(lines) - self.coverage_fails.get(file, set())
+        self.coverage_passes = new_store
 
     def reconcile(self) -> None:
         # TODO maybe change the exception traces to indicate the reconciliation context
@@ -763,7 +763,7 @@ class CoverageTracker:
             save_path = reconciliation_path
 
         with open(save_path, 'w') as f:
-            json.dump({file: list(lines) for file, lines in self._coverage_passes.items()}, f)
+            json.dump({file: list(lines) for file, lines in self.coverage_passes.items()}, f)
 
         print('Saved coverage metadata to:', save_path)
     
@@ -776,8 +776,8 @@ class CoverageTracker:
             if not search_path.exists(follow_symlinks=False) or not search_path.suffix == '.py':
                 raise CoverageRequestedForInvalidFile(search_path)
 
-            store = self._coverage_passes.get(str(search_path), set())
-            add_top_levels = search_path in self._coverage_passes
+            store = self.coverage_passes.get(str(search_path), set())
+            add_top_levels = search_path in self.coverage_passes
             file_coverage = FileCoverage(search_path, store, add_top_levels)
             file_coverage.parse_file()
 
@@ -789,8 +789,8 @@ class CoverageTracker:
                 if file.endswith('.py'):
                     file_path = os.path.join(root, file)
 
-                    store = self._coverage_passes.get(file_path, set())
-                    add_top_levels = file_path in self._coverage_passes
+                    store = self.coverage_passes.get(file_path, set())
+                    add_top_levels = file_path in self.coverage_passes
                     file_coverage = FileCoverage(Path(file_path), store, add_top_levels)
                     file_coverage.parse_file()
 
