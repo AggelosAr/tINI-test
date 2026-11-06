@@ -351,104 +351,105 @@ def test_continuation_block_with_assert_not_covered():
     run()
     print('Finished fifth test run\n')
 
-    # var.case = '''
+    var.case = '''
     
-    # A = (           
+    A = (           
     
-    #     'A', 
+        'A', 
     
-    #     'B',
-    #                 # >>> assert missing
-    #     'C' 
+        'B',
+                    # >>> assert missing
+        'C' 
     
-    # )
+    )
       
-    # '''
-    # var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 6
-    # run()
-    # print('Finished sixth test run\n')
+    '''
+    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 6
+    run()
+    print('Finished sixth test run\n')
 
-    # var.case = '''
+    var.case = '''
         
-    # A = (           
+    A = (           
     
-    #     'A', 
+        'A', 
     
-    #     'B',
+        'B',
                 
-    #     'C'         # >>> assert missing
+        'C'         # >>> assert missing
     
-    # )
+    )
         
-    # '''
-    # var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 7
-    # run()
-    # print('Finished seventh test run\n')
+    '''
+    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 7
+    run()
+    print('Finished seventh test run\n')
 
-    # var.case = '''
+    var.case = '''
             
-    # A = (           
+    A = (           
     
-    #     'A', 
+        'A', 
     
-    #     'B',
+        'B',
                 
-    #     'C'         
-    #                 # >>> assert missing
-    # )
+        'C'         
+                    # >>> assert missing
+    )
         
-    # '''
-    # var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 6
-    # run()
-    # print('Finished eighth test run\n')
+    '''
+    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 6
+    run()
+    print('Finished eighth test run\n')
 
-    # var.case = '''
+    var.case = '''
                 
-    # A = (           
+    A = (           
     
-    #     'A', 
+        'A', 
     
-    #     'B',
+        'B',
                 
-    #     'C'         
+        'C'         
                     
-    # )               # >>> assert missing
+    )               # >>> assert missing
         
-    # '''
-    # var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 7
-    # run()
-    # print('Finished ninth test run\n')
+    '''
+    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 7
+    run()
+    print('Finished ninth test run\n')
 
 
-    # var.case = '''
+    var.case = '''
                     
-    # A = (           
+    A = (           
     
-    #     'A', 
+        'A', 
     
-    #     'B',
+        'B',
                 
-    #     'C'         
+        'C'         
                     
-    # )               
+    )               
 
 
 
-    # A = (           
+    A = (           
         
-    #         'A', 
+            'A', 
         
-    #         'B',
+            'B',
                     
-    #         'C'         
+            'C'         
                         
-    # )               # >>> assert missing
+    )               # >>> assert missing
         
-    # '''
-    # var.rargs = 2, 1, 1, 0, 0, 0, 1, 0, 14
-    # run()
-    # print('Finished tenth test run\n')
+    '''
+    var.rargs = 2, 1, 1, 0, 0, 0, 1, 0, 14
+    run()
+    print('Finished tenth test run\n')
 
+    # XXX BROKEN
 
     
 

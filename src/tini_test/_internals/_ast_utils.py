@@ -33,6 +33,7 @@ class AstParser:
 
         self._line_to_statement_cache: dict[CodeLineNumber, StatementId] = {}
         self._statement_graph_cache: dict[StatementId, StatementGraphNode] = {}
+        self._statement_id_to_node_type_cache: dict[StatementId, str] = {}
 
     @property
     def line_to_statement(self) -> dict[CodeLineNumber, StatementId]:
@@ -49,6 +50,14 @@ class AstParser:
     @statement_graph.setter
     def statement_graph(self, value: dict[StatementId, StatementGraphNode]) -> None:
         self._statement_graph_cache = value
+
+    @property
+    def statement_id_to_node_type(self) -> dict[StatementId, str]:
+        return self._statement_id_to_node_type_cache
+
+    @statement_id_to_node_type.setter
+    def statement_id_to_node_type(self, value: dict[StatementId, str]) -> None:
+        self._statement_id_to_node_type_cache = value
 
     @classmethod
     def from_spec(cls, spec: ModuleSpec) -> AstParser:
@@ -173,20 +182,16 @@ class AstParser:
                 line_to_statement[line] = statement_id
 
         # Populate children relationships based on AST structure
+        statement_id_to_node_type: dict[StatementId, str] = {}
         for node, parent_stmt_id in node_to_statement_id.items():
-            # Get direct children from body, cases, orelse, handlers, and finalbody
+            statement_id_to_node_type[parent_stmt_id] = type(node).__name__
+            
+            # Get direct children from body and cases (main control flow)
             children_nodes = []
             if hasattr(node, 'body') and node.body:
                 children_nodes.extend(node.body)
             if hasattr(node, 'cases') and node.cases:
                 children_nodes.extend(node.cases)
-            if hasattr(node, 'orelse') and node.orelse:
-                children_nodes.extend(node.orelse)
-            if hasattr(node, 'handlers') and node.handlers:
-                # ExceptHandler nodes contain statement bodies
-                children_nodes.extend(node.handlers)
-            if hasattr(node, 'finalbody') and node.finalbody:
-                children_nodes.extend(node.finalbody)
             
             # Map each child AST node to its statement ID and add as child
             for child_node in children_nodes:
@@ -196,6 +201,7 @@ class AstParser:
 
         self.line_to_statement = line_to_statement
         self.statement_graph = statement_graph
+        self.statement_id_to_node_type = statement_id_to_node_type
 
     def extract_top_level_lines(self) -> list[CodeLineNumber]:
         lines: set[CodeLineNumber] = set()

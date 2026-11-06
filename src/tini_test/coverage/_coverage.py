@@ -1,6 +1,63 @@
+"""
+Coverage Categorization Standards for Python Statements
+
+This module tests how Python statements are categorized as RUN or MISSING based on 
+runtime coverage data. The categorization follows standard code coverage conventions:
+
+COVERAGE STANDARDS:
+==================
+
+1. LEAF STATEMENTS (no children: simple assignments, expressions, etc.):
+   - RUN: The statement line appears in runtime passes (was executed successfully).
+   - MISSING: The statement line does NOT appear in runtime passes OR appears in 
+     both passes and fails (execution attempted but raised an exception).
+
+2. COMPOUND STATEMENTS (have children: if/elif/else, while, for, try/except, etc.):
+   
+   a) IF/ELIF/ELSE statements:
+      - RUN: The condition header line appears in runtime passes (condition was evaluated,
+        indicating at least one branch executed).
+      - MISSING: The condition header line does NOT appear in passes.
+      - Note: The actual body branch (if/else) depends on the condition evaluation.
+   
+   b) LOOP STATEMENTS (while, for):
+      - RUN: At least one child statement is RUN (loop body executed successfully).
+      - MISSING: No child statements are RUN (loop body never completed successfully,
+        or loop never executed).
+   
+   c) TRY/EXCEPT/FINALLY statements:
+      - RUN: At least one child (try body, except handler, or finally block) is RUN.
+      - MISSING: No child statements are RUN.
+
+STATEMENT IDENTIFICATION:
+========================
+
+Statement IDs are assigned sequentially during AST parsing:
+- Each top-level statement gets a unique ID
+- Each decorator gets its own ID
+- Each nested control flow structure (if, loop, try) gets an ID
+- The else/elif/except/finally clauses are NOT separate statements; they are children 
+  of the if/try statement that precedes them
+
+LINE MAPPING:
+=============
+
+Important: NOT every line maps to a statement ID. Specifically:
+- The else: / elif: / except: / finally: lines themselves do NOT have statement IDs
+- Only the logical statement headers and bodies have IDs
+- When testing, use actual line numbers in the code, not comment markers
+
+COMBINED PASS+FAIL BEHAVIOR:
+============================
+
+When a line appears in BOTH runtime passes AND runtime fails (fail_set):
+- It means the line was executed but raised an exception during execution
+- For leaf statements: This is treated as MISSING (incomplete/failed coverage)
+- For compound statements: Recursively check children to determine status
+
+"""
 from __future__ import annotations
 
-import ast
 import html
 import io
 import json
@@ -146,6 +203,9 @@ class FileCoverage:
 
         runtime_covered_lines.discard(0)
         self.runtime_covered_lines = runtime_covered_lines
+        
+        if _V2_COVERAGE:
+            runtime_failed_lines = set()
         self.runtime_failed_lines = runtime_failed_lines
 
         self.lines: dict[CodeLineNumber, Line] = {}
@@ -303,14 +363,19 @@ class FileCoverage:
         Categorize a Python statement based on its statement ID.
 
         There are two cases:
-            1. The statement doesn't have children.
-                If the statement belongs to passes and fails, it is considered MISSING.
-                Otherwise, it belongs to bucket it is included in (RUN or MISSING).
+            1. The statement doesn't have children (leaf statement).
+                If the statement's lines are in both passes and fails, it is MISSING.
+                If the statement's lines are in passes, it is RUN.
+                Otherwise, it is MISSING.
 
-            2. The statement has children.
-                Check if the statement's own lines are covered (RUN).
-                Otherwise, check if any child is categorized as RUN.
-                If neither, the statement is considered MISSING.
+            2. The statement has children (compound statement: if/while/for/try/etc.).
+                For definition statements (If, FunctionDef, AsyncFunctionDef):
+                If the header line is in passes, return RUN (definition/condition was evaluated).
+                
+                For all other compound statements (loops, try/except, match cases, 
+                class defs, etc.): Check the direct children. 
+                If any child is categorized as RUN, the statement is RUN. 
+                Otherwise, it is MISSING.
 
         '''
         node = self.statement_graph[statement_id]
@@ -328,9 +393,12 @@ class FileCoverage:
 
             return LineStatus.MISSING
         
-        if in_passes and not in_fails:
+        # Definition statements: header evaluation is sufficient for RUN
+        node_type = self.ast_parser.statement_id_to_node_type.get(statement_id)
+        if node_type in ('If', 'FunctionDef', 'AsyncFunctionDef') and in_passes:
             return LineStatus.RUN
         
+        # All other compound statements: check children
         for child_id in node.children:
             child_status = self.categorize_python_statement(child_id)
             if child_status == LineStatus.RUN:

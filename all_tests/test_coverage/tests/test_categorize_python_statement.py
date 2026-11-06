@@ -100,7 +100,7 @@ def test_compound_statement():
     case_code = textwrap.dedent('''
         if x > 0:  # 1
             y = 1  # 2 
-            z = 2  # 3 X
+            1/0    # 3 X
         else:      # 
             w = 3  # 4
     ''').strip()
@@ -129,6 +129,41 @@ def test_compound_statement():
 
     status = var.file_coverage.categorize_python_statement(4)
     must_equal(LineStatus.MISSING, status)
+
+
+    case_code = textwrap.dedent('''
+            if x > 0:            # 1
+                if x == 1: 1/0   # 2 X
+                if x == 2: 1/0   # 3 X
+            else:                # 
+                w = 3            # 4 (but actually line 5)
+        ''').strip()
+
+        
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+        f.write(case_code)
+        f.flush()
+        temp_path = Path(f.name)
+    
+    var.file_coverage = FileCoverage(
+        temp_path,
+        {5},
+        {2, 3},
+        False
+    )
+    var.file_coverage.parse_file()
+    
+    status = var.file_coverage.categorize_python_statement(1)
+    must_equal(LineStatus.MISSING, status)
+
+    status = var.file_coverage.categorize_python_statement(2)
+    must_equal(LineStatus.MISSING, status)
+
+    status = var.file_coverage.categorize_python_statement(3)
+    must_equal(LineStatus.MISSING, status)
+
+    status = var.file_coverage.categorize_python_statement(4)
+    must_equal(LineStatus.RUN, status)
 
 
 
@@ -366,6 +401,19 @@ def test_while_loop_with_else():
     must_equal(LineStatus.RUN, status)
 
 
+    case_code = textwrap.dedent('''
+        i = 0                   # 1     l no. 1
+        while i < 3:            # 2     l no. 2
+            1/0                 # 3     l no. 3
+        else:                   #       l no. 4
+            x = 99              # 4     l no. 5
+    ''').strip()
+    
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+        f.write(case_code)
+        f.flush()
+        temp_path = Path(f.name)
+
     var.file_coverage = FileCoverage(
         temp_path,
         {1, 2, 5},
@@ -385,4 +433,310 @@ def test_while_loop_with_else():
 
     status = var.file_coverage.categorize_python_statement(4)
     must_equal(LineStatus.RUN, status)
+
+
+
+
+@Test.case
+@Shared(var.file_coverage)
+def test_with_statement():
+    case_code = textwrap.dedent('''
+        with open("file.txt") as f:  # 1     l no. 1
+            x = f.read()             # 2     l no. 2
+    ''').strip()
     
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+        f.write(case_code)
+        f.flush()
+        temp_path = Path(f.name)
+    
+    var.file_coverage = FileCoverage(
+        temp_path,
+        {1, 2},
+        set(),
+        False
+    )
+    var.file_coverage.parse_file()
+    
+    status = var.file_coverage.categorize_python_statement(1)
+    must_equal(LineStatus.RUN, status)
+    
+    status = var.file_coverage.categorize_python_statement(2)
+    must_equal(LineStatus.RUN, status)
+
+    
+    var.file_coverage = FileCoverage(
+        temp_path,
+        {1},
+        {2},
+        False
+    )
+    var.file_coverage.parse_file()
+    
+    status = var.file_coverage.categorize_python_statement(1)
+    must_equal(LineStatus.MISSING, status)
+    
+    status = var.file_coverage.categorize_python_statement(2)
+    must_equal(LineStatus.MISSING, status)
+
+
+@Test.case
+@Shared(var.file_coverage)
+def test_function_def():
+    case_code = textwrap.dedent('''
+        def foo():              # 1     l no. 1
+            x = 1               # 2     l no. 2
+            return x            # 3     l no. 3
+        
+        foo()                   # 5     l no. 5 (not 4 - blank line on 4)
+    ''').strip()
+    
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+        f.write(case_code)
+        f.flush()
+        temp_path = Path(f.name)
+    
+    var.file_coverage = FileCoverage(
+        temp_path,
+        {1, 2, 3, 5},
+        set(),
+        False
+    )
+    var.file_coverage.parse_file()
+    
+    status = var.file_coverage.categorize_python_statement(1)
+    must_equal(LineStatus.RUN, status)
+    
+    status = var.file_coverage.categorize_python_statement(2)
+    must_equal(LineStatus.RUN, status)
+    
+    status = var.file_coverage.categorize_python_statement(3)
+    must_equal(LineStatus.RUN, status)
+    
+    status = var.file_coverage.categorize_python_statement(4)
+    must_equal(LineStatus.RUN, status)
+    
+
+    var.file_coverage = FileCoverage(
+        temp_path,
+        {1, 5},
+        set(),
+        False
+    )
+    var.file_coverage.parse_file()
+    
+    status = var.file_coverage.categorize_python_statement(1)
+    must_equal(LineStatus.RUN, status)
+    
+    status = var.file_coverage.categorize_python_statement(2)
+    must_equal(LineStatus.MISSING, status)
+    
+    status = var.file_coverage.categorize_python_statement(3)
+    must_equal(LineStatus.MISSING, status)
+
+
+
+
+@Test.case
+@Shared(var.file_coverage)
+def test_class_def():
+    case_code = textwrap.dedent('''
+        class MyClass:          # 1     l no. 1
+            x = 1               # 2     l no. 2
+            def method(self):   # 3     l no. 3
+                return self.x   # 4     l no. 4
+    ''').strip()
+    
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+        f.write(case_code)
+        f.flush()
+        temp_path = Path(f.name)
+    
+    var.file_coverage = FileCoverage(
+        temp_path,
+        {1, 2, 3},
+        set(),
+        False
+    )
+    var.file_coverage.parse_file()
+    
+    status = var.file_coverage.categorize_python_statement(1)
+    must_equal(LineStatus.RUN, status)
+    
+    status = var.file_coverage.categorize_python_statement(2)
+    must_equal(LineStatus.RUN, status)
+    
+    status = var.file_coverage.categorize_python_statement(3)
+    must_equal(LineStatus.RUN, status)
+    
+    var.file_coverage = FileCoverage(
+        temp_path,
+        {1, 3},
+        {2},
+        False
+    )
+    var.file_coverage.parse_file()
+    
+    status = var.file_coverage.categorize_python_statement(1)
+    must_equal(LineStatus.RUN, status)
+    
+    status = var.file_coverage.categorize_python_statement(2)
+    must_equal(LineStatus.MISSING, status)
+    
+    status = var.file_coverage.categorize_python_statement(3)
+    must_equal(LineStatus.RUN, status)
+
+
+
+
+@Test.case
+@Shared(var.file_coverage)
+def test_async_function():
+    case_code = textwrap.dedent('''
+        async def fetch():      # 1     l no. 1
+            x = 1               # 2     l no. 2
+            return x            # 3     l no. 3
+    ''').strip()
+    
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+        f.write(case_code)
+        f.flush()
+        temp_path = Path(f.name)
+    
+    var.file_coverage = FileCoverage(
+        temp_path,
+        {1, 2, 3},
+        set(),
+        False
+    )
+    var.file_coverage.parse_file()
+    
+    status = var.file_coverage.categorize_python_statement(1)
+    must_equal(LineStatus.RUN, status)
+    
+    status = var.file_coverage.categorize_python_statement(2)
+    must_equal(LineStatus.RUN, status)
+    
+    status = var.file_coverage.categorize_python_statement(3)
+    must_equal(LineStatus.RUN, status)
+    
+
+    var.file_coverage = FileCoverage(
+        temp_path,
+        {1},
+        set(),
+        False
+    )
+    var.file_coverage.parse_file()
+    
+    status = var.file_coverage.categorize_python_statement(1)
+    must_equal(LineStatus.RUN, status)
+    
+    status = var.file_coverage.categorize_python_statement(2)
+    must_equal(LineStatus.MISSING, status)
+
+
+
+@Test.case
+@Shared(var.file_coverage)
+def test_async_with():
+    case_code = textwrap.dedent('''
+        async def main():            # 1     l no. 1
+            async with something as x:  # 2     l no. 2
+                y = 1                # 3     l no. 3
+    ''').strip()
+    
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+        f.write(case_code)
+        f.flush()
+        temp_path = Path(f.name)
+    
+    var.file_coverage = FileCoverage(
+        temp_path,
+        {1, 2, 3},
+        set(),
+        False
+    )
+    var.file_coverage.parse_file()
+    
+    status = var.file_coverage.categorize_python_statement(1)
+    must_equal(LineStatus.RUN, status)
+    
+    status = var.file_coverage.categorize_python_statement(2)
+    must_equal(LineStatus.RUN, status)
+    
+    status = var.file_coverage.categorize_python_statement(3)
+    must_equal(LineStatus.RUN, status)
+    
+    var.file_coverage = FileCoverage(
+        temp_path,
+        {1, 2},
+        {3},
+        False
+    )
+    var.file_coverage.parse_file()
+    
+    status = var.file_coverage.categorize_python_statement(1)
+    must_equal(LineStatus.RUN, status)
+    
+    status = var.file_coverage.categorize_python_statement(2)
+    must_equal(LineStatus.MISSING, status)
+    
+    status = var.file_coverage.categorize_python_statement(3)
+    must_equal(LineStatus.MISSING, status)
+
+
+
+@Test.case
+@Shared(var.file_coverage)
+def test_match_statement():
+    case_code = textwrap.dedent('''
+        x = 1                   # 1     l no. 1
+        match x:                # 2     l no. 2
+            case 1:             #       l no. 3
+                y = "one"       # 3     l no. 4
+            case 2:             #       l no. 5
+                y = "two"       # 4     l no. 6
+    ''').strip()
+    
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False) as f:
+        f.write(case_code)
+        f.flush()
+        temp_path = Path(f.name)
+    
+    var.file_coverage = FileCoverage(
+        temp_path,
+        {1, 2, 4},
+        set(),
+        False
+    )
+    var.file_coverage.parse_file()
+    
+    status = var.file_coverage.categorize_python_statement(1)
+    must_equal(LineStatus.RUN, status)
+    
+    status = var.file_coverage.categorize_python_statement(2)
+    must_equal(LineStatus.RUN, status)
+    
+    status = var.file_coverage.categorize_python_statement(3)
+    must_equal(LineStatus.RUN, status)
+    
+    status = var.file_coverage.categorize_python_statement(4)
+    must_equal(LineStatus.RUN, status)  # Body executes -> RUN
+    
+    var.file_coverage = FileCoverage(
+        temp_path,
+        {1, 2},
+        {4, 6},
+        False
+    )
+    var.file_coverage.parse_file()
+    
+    status = var.file_coverage.categorize_python_statement(2)
+    must_equal(LineStatus.MISSING, status)
+    
+    status = var.file_coverage.categorize_python_statement(3)
+    must_equal(LineStatus.MISSING, status)
+    
+    status = var.file_coverage.categorize_python_statement(4)
+    must_equal(LineStatus.MISSING, status)
