@@ -374,20 +374,10 @@ class Printer:
         stacktraces: list[StackTrace] = []
         exceptions: list[list[BaseException]] = []
 
-        _X_test = None
-        _IDX = 0
 
         for idx, test_case in enumerate(collection.collector.values()):
             
             bucket_idx = (idx)%bucket_size
-
-            if test_case.test_name == 'test_continuation_block_with_assert_not_covered':
-                _X_test = test_case
-                _IDX = idx
-                print('===================================')
-                print('_IDX IS: ', _IDX)
-                print(str(_X_test))
-                print('===================================')
 
             if test_case.is_fail:
 
