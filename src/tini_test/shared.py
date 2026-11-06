@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from functools import lru_cache
+import sys
 import traceback
 from contextlib import contextmanager
 from traceback import FrameSummary

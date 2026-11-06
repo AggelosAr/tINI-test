@@ -85,7 +85,10 @@ def test_collector_collects_all() -> None:
                                                                                                   'test_b', 
                                                                                                   'test_imports', 
                                                                                                   'test_a'],
-                      'all_tests.test_coverage.tests': ['test_coverage_cli', 'test_full_suite_coverage', 'test__coverage']}
+                      'all_tests.test_coverage.tests': ['test_coverage_cli', 
+                                                        'test_full_suite_coverage', 
+                                                        'test_categorize_python_statement', 
+                                                        'test__coverage']}
 
     must_equal(correct_items, dict(test_collector.test_modules.items()))
 
@@ -165,7 +168,10 @@ def test_collector_collects_all_and_exclude_dir_works() -> None:
                                                                                        'test_b', 
                                                                                        'test_imports', 
                                                                                        'test_a'],
-                      'all_tests.test_coverage.tests': ['test_coverage_cli', 'test_full_suite_coverage', 'test__coverage']}
+                      'all_tests.test_coverage.tests': ['test_coverage_cli', 
+                                                        'test_full_suite_coverage',
+                                                        'test_categorize_python_statement', 
+                                                        'test__coverage']}
 
     must_equal(correct_items, dict(test_collector.test_modules.items()))
 

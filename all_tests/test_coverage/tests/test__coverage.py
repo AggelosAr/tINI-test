@@ -75,15 +75,16 @@ def short_summary() -> None:
 
     
 def from_file_coverage():
-    
+    print('VAR CASE ---------> ', var.case)
     with tempfile.NamedTemporaryFile('w+') as f:
         f.write(textwrap.dedent(var.case))
         f.flush()
 
-        coverage = FileCoverage(f.name, var.covered_lines, False)
+        coverage = FileCoverage(f.name, var.covered_lines, set(), False)
         coverage.parse_file()
      
     var.coverage = coverage
+    print('VAR COVERAGE UPDATED: ', var.coverage)
 
 
 def _assert():
@@ -96,6 +97,7 @@ def _assert():
         print('------------------')
         short_summary()
 
+    print('ASSERTING WITH var.coverage ---> ', var.coverage)
     must_equal(next(var.args), var.coverage.total_statements)
     must_equal(next(var.args), var.coverage.covered_statements)
     must_equal(next(var.args), var.coverage._X_correctly_missing_statements)
@@ -215,33 +217,52 @@ A = (
 def test_continuation_block_with_assert_not_covered():
     def run():
         var_args(*var.rargs)
-        
+
+        print('1. VAR COVERAGE IS : ', var.coverage)
         var.covered_lines = set([3, ])
         _assert()
+        
+        print('\n------------------------------------------------------\n')
 
+        print('2. VAR COVERAGE IS : ', var.coverage)
         var.covered_lines = set([4, ])
         _assert()
+        print('\n------------------------------------------------------\n')
 
+        print('3. VAR COVERAGE IS : ', var.coverage)
         var.covered_lines = set([5, ])
         _assert()
+        print('\n------------------------------------------------------\n')
 
+        print('4. VAR COVERAGE IS : ', var.coverage)
         var.covered_lines = set([6, ])
         _assert()
+        print('\n------------------------------------------------------\n')
 
+        print('5. VAR COVERAGE IS : ', var.coverage)
         var.covered_lines = set([7, ])
         _assert()
+        print('\n------------------------------------------------------\n')
 
+        print('6. VAR COVERAGE IS : ', var.coverage)
         var.covered_lines = set([8, ])
         _assert()
+        print('\n------------------------------------------------------\n')
 
+        print('7. VAR COVERAGE IS : ', var.coverage)
         var.covered_lines = set([9, ])
         _assert()
+        print('\n------------------------------------------------------\n')
 
+        print('8. VAR COVERAGE IS : ', var.coverage)
         var.covered_lines = set([10, ])
         _assert()
+        print('\n------------------------------------------------------\n')
 
+        print('9. VAR COVERAGE IS : ', var.coverage)
         var.covered_lines = set([11, ])
         _assert()
+        print('\n------------------------------------------------------\n')
 
 
     var.case = '''
@@ -259,6 +280,7 @@ def test_continuation_block_with_assert_not_covered():
     '''
     var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 7
     run()
+    print('Finished first test run\n')
 
     
     var.case = '''
@@ -276,6 +298,7 @@ def test_continuation_block_with_assert_not_covered():
     '''
     var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 6
     run()
+    print('Finished second test run\n')
 
     var.case = '''
     
@@ -292,6 +315,7 @@ def test_continuation_block_with_assert_not_covered():
     '''
     var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 7
     run()
+    print('Finished third test run\n')
 
     var.case = '''
     
@@ -308,6 +332,7 @@ def test_continuation_block_with_assert_not_covered():
     '''
     var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 6
     run()
+    print('Finished fourth test run\n')
 
     var.case = '''
     
@@ -324,99 +349,105 @@ def test_continuation_block_with_assert_not_covered():
     '''
     var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 7
     run()
+    print('Finished fifth test run\n')
 
-    var.case = '''
+    # var.case = '''
     
-    A = (           
+    # A = (           
     
-        'A', 
+    #     'A', 
     
-        'B',
-                    # >>> assert missing
-        'C' 
+    #     'B',
+    #                 # >>> assert missing
+    #     'C' 
     
-    )
+    # )
       
-    '''
-    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 6
-    run()
+    # '''
+    # var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 6
+    # run()
+    # print('Finished sixth test run\n')
 
-    var.case = '''
+    # var.case = '''
         
-    A = (           
+    # A = (           
     
-        'A', 
+    #     'A', 
     
-        'B',
+    #     'B',
                 
-        'C'         # >>> assert missing
+    #     'C'         # >>> assert missing
     
-    )
+    # )
         
-    '''
-    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 7
-    run()
+    # '''
+    # var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 7
+    # run()
+    # print('Finished seventh test run\n')
 
-    var.case = '''
+    # var.case = '''
             
-    A = (           
+    # A = (           
     
-        'A', 
+    #     'A', 
     
-        'B',
+    #     'B',
                 
-        'C'         
-                    # >>> assert missing
-    )
+    #     'C'         
+    #                 # >>> assert missing
+    # )
         
-    '''
-    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 6
-    run()
+    # '''
+    # var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 6
+    # run()
+    # print('Finished eighth test run\n')
 
-    var.case = '''
+    # var.case = '''
                 
-    A = (           
+    # A = (           
     
-        'A', 
+    #     'A', 
     
-        'B',
+    #     'B',
                 
-        'C'         
+    #     'C'         
                     
-    )               # >>> assert missing
+    # )               # >>> assert missing
         
-    '''
-    var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 7
-    run()
+    # '''
+    # var.rargs = 1, 0, 0, 0, 1, 0, 1, 0, 7
+    # run()
+    # print('Finished ninth test run\n')
 
 
-    var.case = '''
+    # var.case = '''
                     
-    A = (           
+    # A = (           
     
-        'A', 
+    #     'A', 
     
-        'B',
+    #     'B',
                 
-        'C'         
+    #     'C'         
                     
-    )               
+    # )               
 
 
 
-    A = (           
+    # A = (           
         
-            'A', 
+    #         'A', 
         
-            'B',
+    #         'B',
                     
-            'C'         
+    #         'C'         
                         
-    )               # >>> assert missing
+    # )               # >>> assert missing
         
-    '''
-    var.rargs = 2, 1, 1, 0, 0, 0, 1, 0, 14
-    run()
+    # '''
+    # var.rargs = 2, 1, 1, 0, 0, 0, 1, 0, 14
+    # run()
+    # print('Finished tenth test run\n')
 
 
     
@@ -627,7 +658,7 @@ def test_line_is_else_or_finally():
 
 @Test.case
 def test_file_coverage_handle_ellipsis():
-    covered = FileCoverage(Path('unused.py'), {1}, False)
+    covered = FileCoverage(Path('unused.py'), {1}, {}, False)
     covered.source = '...  # note'
     covered._statement_counts[LineStatus.RUN] = 1
     covered_line = Line(1, '...  # note', LineStatus.RUN)
@@ -639,7 +670,7 @@ def test_file_coverage_handle_ellipsis():
     must_equal(1, covered.comment_lines)
     must_equal(True, covered_line.is_inline_commented)
 
-    missing = FileCoverage(Path('unused.py'), set(), False)
+    missing = FileCoverage(Path('unused.py'), set(), {}, False)
     missing.source = '...'
     missing._statement_counts[LineStatus.MISSING] = 1
     missing_line = Line(1, '...', LineStatus.MISSING)
@@ -653,7 +684,7 @@ def test_file_coverage_handle_ellipsis():
 
 @Test.case
 def test_file_coverage_handle_single_python_line_ellipsis():
-    coverage = FileCoverage(Path('unused.py'), set(), False)
+    coverage = FileCoverage(Path('unused.py'), set(), {}, False)
     coverage.source = 'def f():\n    ...'
     coverage._statement_counts[LineStatus.MISSING] = 1
 

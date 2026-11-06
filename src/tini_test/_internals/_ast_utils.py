@@ -131,6 +131,7 @@ class AstParser:
 
         line_to_statement: dict[CodeLineNumber, StatementId] = {}
         statement_graph: dict[StatementId, StatementGraphNode] = {}
+        node_to_statement_id: dict[ast.AST, StatementId] = {}  # Track AST node -> statement ID mapping
 
         statement_id = 0
 
@@ -141,7 +142,7 @@ class AstParser:
                          if n not in line_to_statement]
                 if lines:
                     statement_id += 1
-                    statement_graph[statement_id] = StatementGraphNode(statement_id, decorator.lineno, False, None)
+                    statement_graph[statement_id] = StatementGraphNode(statement_id)
                     for line in lines:
                         line_to_statement[line] = statement_id
 
@@ -166,10 +167,25 @@ class AstParser:
                 continue
 
             statement_id += 1
-            is_compound = bool(getattr(node, 'body', None) or getattr(node, 'cases', None))
-            statement_graph[statement_id] = StatementGraphNode(statement_id, start, is_compound, node)
+            statement_graph[statement_id] = StatementGraphNode(statement_id)
+            node_to_statement_id[node] = statement_id
             for line in lines:
                 line_to_statement[line] = statement_id
+
+        # Populate children relationships based on AST structure
+        for node, parent_stmt_id in node_to_statement_id.items():
+            # Get direct children from body or cases
+            children_nodes = []
+            if hasattr(node, 'body') and node.body:
+                children_nodes.extend(node.body)
+            if hasattr(node, 'cases') and node.cases:
+                children_nodes.extend(node.cases)
+            
+            # Map each child AST node to its statement ID and add as child
+            for child_node in children_nodes:
+                if child_node in node_to_statement_id:
+                    child_stmt_id = node_to_statement_id[child_node]
+                    statement_graph[parent_stmt_id].add_child(child_stmt_id)
 
         self.line_to_statement = line_to_statement
         self.statement_graph = statement_graph

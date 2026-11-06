@@ -9,7 +9,7 @@ import shutil
 import tokenize
 from collections import Counter
 from datetime import datetime
-from functools import cached_property, partial
+from functools import cached_property, lru_cache, partial
 from pathlib import Path
 from types import FrameType
 from typing import Optional
@@ -297,6 +297,7 @@ class FileCoverage:
         
         return False
 
+    @lru_cache(maxsize=None)
     def categorize_python_statement(self, statement_id: StatementId) -> LineStatus.RUN | LineStatus.MISSING:
         '''
         Categorize a Python statement based on its statement ID.
@@ -307,36 +308,46 @@ class FileCoverage:
                 Otherwise, it belongs to bucket it is included in (RUN or MISSING).
 
             2. The statement has children.
-                If any child is categorized as RUN, the statement is considered RUN.
-                Otherwise, it is considered MISSING.
+                Check if the statement's own lines are covered (RUN).
+                Otherwise, check if any child is categorized as RUN.
+                If neither, the statement is considered MISSING.
 
         raises TiniTestInternalException if it is categorized as < NULL >.
         '''
-        node = self.statement_graph.get(statement_id)
+        print('CURRENT STATEMENT ID:', statement_id)
+        node = self.statement_graph[statement_id]
+        print('CHILDREN:', node.children)
+        statement_lines = self.statement_to_lines.get(statement_id, set())
 
-        status = LineStatus.NULL
-        if node.has_children:
-            in_passes = any(line in self.runtime_covered_lines for line in node.lines)
-            in_fails = any(line in self.runtime_failed_lines for line in node.lines)
-            
+        print('STATEMT LINES : ', statement_lines)
+        in_passes = any(line in self.runtime_covered_lines for line in statement_lines)
+        in_fails = any(line in self.runtime_failed_lines for line in statement_lines)
+        print('IN PASSES:', in_passes)
+        print('IN FAILS:', in_fails)
+
+        print('___________________________________')
+        if not node.has_children:
+            print('NODE DOESNT HAVE CHILDREN')
             if in_passes and in_fails:
-                status = LineStatus.MISSING
-            elif in_passes:
-                status = LineStatus.RUN
-            else:
-                status = LineStatus.MISSING
-        else:
-            # Compound statement: check if any child is RUN
-            for child_id in node.children:
-                child_status = self.categorize_python_statement(child_id)
-                if child_status == LineStatus.RUN:
-                    status = LineStatus.RUN
-                    break
-        # XXX
-        return status
+                print('STATEMENT IN BOTH PASSES AND FAILS, MARKING AS MISSING')
+                return LineStatus.MISSING
+            
+            if in_passes:
+                print('STATEMENT IN PASSES, MARKING AS RUN')
+                return LineStatus.RUN
+
+            print('STATEMENT NOT IN PASSES, MARKING AS MISSING')
+            return LineStatus.MISSING
         
-    def update_statement_graph(self) -> None:
-        ...
+        if in_passes and not in_fails:
+            return LineStatus.RUN
+        
+        for child_id in node.children:
+            child_status = self.categorize_python_statement(child_id)
+            if child_status == LineStatus.RUN:
+                return LineStatus.RUN
+        
+        return LineStatus.MISSING
 
     def handle_empty_line(self, line: Line):
         line.is_continuation = False
@@ -411,9 +422,11 @@ class FileCoverage:
     def handle_python_statement(self, l_nos: list[CodeLineNumber]) -> None:
         # Assume that for some reason we get missing information
         # In a multi-line statement, we may get only a single line as < RUN > ?
-        statuses = []
-
+        
         assert_not_covered = False
+
+        statement_id = self.line_to_statement[l_nos[0]]
+        status = self.categorize_python_statement(statement_id)
 
         for l_no in range(l_nos[0], l_nos[-1] + 1):
             line = Line(l_no, self.raw_lines[l_no - 1], LineStatus.NULL)
@@ -432,10 +445,6 @@ class FileCoverage:
 
             if line.is_ellipsis:
                 self.handle_ellipsis(line)
-
-            statuses.append(line.status)
-
-        status = LineStatus.RUN if any(s == LineStatus.RUN for s in statuses) else LineStatus.MISSING
 
         if assert_not_covered:
 
@@ -538,8 +547,6 @@ class FileCoverage:
         if self.handle_excluded_file():
             return
 
-        self.update_statement_graph()
-
         self.iterate_python_file()
 
     def set_href(self, href: str) -> None:
@@ -594,6 +601,11 @@ class CoverageTracker:
         covered = self.covered + self.correctly_missing
         missing = self.missing + self.incorrectly_covered
         return 100.0 * covered / (covered + missing) if covered + missing else 100.0
+
+    @property
+    def files(self) -> dict[str, FileCoverage]:
+        """Return a dictionary mapping file paths to their FileCoverage objects."""
+        return self.file_to_coverage
 
     @classmethod
     def init_from_store(cls, 
