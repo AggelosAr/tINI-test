@@ -312,7 +312,6 @@ class FileCoverage:
                 Otherwise, check if any child is categorized as RUN.
                 If neither, the statement is considered MISSING.
 
-        raises TiniTestInternalException if it is categorized as < NULL >.
         '''
         node = self.statement_graph[statement_id]
         statement_lines = self.statement_to_lines.get(statement_id, set())
@@ -336,7 +335,7 @@ class FileCoverage:
             child_status = self.categorize_python_statement(child_id)
             if child_status == LineStatus.RUN:
                 return LineStatus.RUN
-        
+
         return LineStatus.MISSING
 
     def handle_empty_line(self, line: Line):

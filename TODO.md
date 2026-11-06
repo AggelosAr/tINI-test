@@ -22,3 +22,11 @@ add docstring to var
 
 Maybe udate isolate to take a snapshot for true isolation
 
+
+
+
+ python -m tini_test  --coverage --coverage-target /home/papaggalos/workspace/python_projects/tINI-test/src/tini_test/coverage/_coverage.py  --coverage-store /tmp/coverages/tini_test/.coverage.run_MAIN -t test_while_loop_with_else
+
+
+
+ python -m tini_test --coverage-generate-report --coverage-target /home/papaggalos/workspace/python_projects/tINI-test/src/tini_test/coverage/_coverage.py --coverage-store /tmp/coverages/tini_test/.coverage.run_MAIN
