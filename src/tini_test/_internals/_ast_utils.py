@@ -174,12 +174,19 @@ class AstParser:
 
         # Populate children relationships based on AST structure
         for node, parent_stmt_id in node_to_statement_id.items():
-            # Get direct children from body or cases
+            # Get direct children from body, cases, orelse, handlers, and finalbody
             children_nodes = []
             if hasattr(node, 'body') and node.body:
                 children_nodes.extend(node.body)
             if hasattr(node, 'cases') and node.cases:
                 children_nodes.extend(node.cases)
+            if hasattr(node, 'orelse') and node.orelse:
+                children_nodes.extend(node.orelse)
+            if hasattr(node, 'handlers') and node.handlers:
+                # ExceptHandler nodes contain statement bodies
+                children_nodes.extend(node.handlers)
+            if hasattr(node, 'finalbody') and node.finalbody:
+                children_nodes.extend(node.finalbody)
             
             # Map each child AST node to its statement ID and add as child
             for child_node in children_nodes:

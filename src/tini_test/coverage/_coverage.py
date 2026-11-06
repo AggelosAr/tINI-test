@@ -314,29 +314,19 @@ class FileCoverage:
 
         raises TiniTestInternalException if it is categorized as < NULL >.
         '''
-        print('CURRENT STATEMENT ID:', statement_id)
         node = self.statement_graph[statement_id]
-        print('CHILDREN:', node.children)
         statement_lines = self.statement_to_lines.get(statement_id, set())
 
-        print('STATEMT LINES : ', statement_lines)
         in_passes = any(line in self.runtime_covered_lines for line in statement_lines)
         in_fails = any(line in self.runtime_failed_lines for line in statement_lines)
-        print('IN PASSES:', in_passes)
-        print('IN FAILS:', in_fails)
 
-        print('___________________________________')
         if not node.has_children:
-            print('NODE DOESNT HAVE CHILDREN')
             if in_passes and in_fails:
-                print('STATEMENT IN BOTH PASSES AND FAILS, MARKING AS MISSING')
                 return LineStatus.MISSING
             
             if in_passes:
-                print('STATEMENT IN PASSES, MARKING AS RUN')
                 return LineStatus.RUN
 
-            print('STATEMENT NOT IN PASSES, MARKING AS MISSING')
             return LineStatus.MISSING
         
         if in_passes and not in_fails:
